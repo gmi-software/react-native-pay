@@ -1,0 +1,21 @@
+{
+  "name": "monorepo",
+  "private": true,
+  "workspaces": [
+    "package",
+    "example"
+  ],
+  "trustedDependencies": [
+    "react-native-pay"
+  ],
+  "version": "1.0.0",
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "expo": "~54.0.17",
+    "react": "19.1.0",
+    "react-native": "0.81.4"
+  }
+}

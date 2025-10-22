@@ -1,0 +1,30 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "pay"
+  ],
+  "ios": {
+    "iosModuleName": "NitroPay"
+  },
+  "android": {
+    "androidNamespace": [
+      "pay"
+    ],
+    "androidCxxLibName": "NitroPay"
+  },
+  "autolinking": {
+    "Math": {
+      "swift": "HybridMath",
+      "kotlin": "HybridMath"
+    },
+    "ApplePayButton": {
+      "swift": "HybridApplePayButton"
+    },
+    "PaymentHandler": {
+      "swift": "HybridPaymentHandler"
+    }
+  },
+  "ignorePaths": [
+    "**/node_modules"
+  ]
+}
