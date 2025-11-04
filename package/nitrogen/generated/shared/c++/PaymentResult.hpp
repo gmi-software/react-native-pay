@@ -23,10 +23,12 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `PaymentToken` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentToken; }
 
 #include <string>
 #include <optional>
+#include "PaymentToken.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -37,11 +39,12 @@ namespace margelo::nitro::pay {
   public:
     bool success     SWIFT_PRIVATE;
     std::optional<std::string> transactionId     SWIFT_PRIVATE;
+    std::optional<PaymentToken> token     SWIFT_PRIVATE;
     std::optional<std::string> error     SWIFT_PRIVATE;
 
   public:
     PaymentResult() = default;
-    explicit PaymentResult(bool success, std::optional<std::string> transactionId, std::optional<std::string> error): success(success), transactionId(transactionId), error(error) {}
+    explicit PaymentResult(bool success, std::optional<std::string> transactionId, std::optional<PaymentToken> token, std::optional<std::string> error): success(success), transactionId(transactionId), token(token), error(error) {}
   };
 
 } // namespace margelo::nitro::pay
@@ -56,6 +59,7 @@ namespace margelo::nitro {
       return margelo::nitro::pay::PaymentResult(
         JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, "success")),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "transactionId")),
+        JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::fromJSI(runtime, obj.getProperty(runtime, "token")),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "error"))
       );
     }
@@ -63,6 +67,7 @@ namespace margelo::nitro {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "success", JSIConverter<bool>::toJSI(runtime, arg.success));
       obj.setProperty(runtime, "transactionId", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.transactionId));
+      obj.setProperty(runtime, "token", JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::toJSI(runtime, arg.token));
       obj.setProperty(runtime, "error", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.error));
       return obj;
     }
@@ -76,6 +81,7 @@ namespace margelo::nitro {
       }
       if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, "success"))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "transactionId"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::canConvert(runtime, obj.getProperty(runtime, "token"))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "error"))) return false;
       return true;
     }

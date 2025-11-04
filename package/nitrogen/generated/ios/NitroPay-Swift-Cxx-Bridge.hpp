@@ -10,35 +10,69 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `ApplePayStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct ApplePayStatus; }
+// Forward declaration of `CNContactType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class CNContactType; }
+// Forward declaration of `CNContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNContact; }
+// Forward declaration of `CNLabeledEmailAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledEmailAddress; }
+// Forward declaration of `CNLabeledPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPhoneNumber; }
+// Forward declaration of `CNLabeledPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
+// Forward declaration of `CNPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPhoneNumber; }
+// Forward declaration of `CNPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPostalAddress; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
-// Forward declaration of `HybridMathSpec` to properly resolve imports.
-namespace margelo::nitro::pay { class HybridMathSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
+// Forward declaration of `PKSecureElementPass` to properly resolve imports.
+namespace margelo::nitro::pay { struct PKSecureElementPass; }
+// Forward declaration of `PassActivationState` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PassActivationState; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentItem; }
+// Forward declaration of `PaymentMethodType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentMethodType; }
+// Forward declaration of `PaymentMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentMethod; }
+// Forward declaration of `PaymentNetwork` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentNetwork; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentToken` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentToken; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridApplePayButtonSpec_cxx` to properly resolve imports.
 namespace NitroPay { class HybridApplePayButtonSpec_cxx; }
-// Forward declaration of `HybridMathSpec_cxx` to properly resolve imports.
-namespace NitroPay { class HybridMathSpec_cxx; }
 // Forward declaration of `HybridPaymentHandlerSpec_cxx` to properly resolve imports.
 namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
 // Include C++ defined types
 #include "ApplePayStatus.hpp"
+#include "CNContact.hpp"
+#include "CNContactType.hpp"
+#include "CNLabeledEmailAddress.hpp"
+#include "CNLabeledPhoneNumber.hpp"
+#include "CNLabeledPostalAddress.hpp"
+#include "CNPhoneNumber.hpp"
+#include "CNPostalAddress.hpp"
 #include "HybridApplePayButtonSpec.hpp"
-#include "HybridMathSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
+#include "PKSecureElementPass.hpp"
+#include "PassActivationState.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
+#include "PaymentMethod.hpp"
+#include "PaymentMethodType.hpp"
+#include "PaymentNetwork.hpp"
 #include "PaymentResult.hpp"
+#include "PaymentToken.hpp"
 #include <NitroModules/FastVectorCopy.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
@@ -105,27 +139,6 @@ namespace margelo::nitro::pay::bridge::swift {
   using std__weak_ptr_HybridApplePayButtonSpec_ = std::weak_ptr<HybridApplePayButtonSpec>;
   inline std__weak_ptr_HybridApplePayButtonSpec_ weakify_std__shared_ptr_HybridApplePayButtonSpec_(const std::shared_ptr<HybridApplePayButtonSpec>& strong) noexcept { return strong; }
   
-  // pragma MARK: std::shared_ptr<HybridMathSpec>
-  /**
-   * Specialized version of `std::shared_ptr<HybridMathSpec>`.
-   */
-  using std__shared_ptr_HybridMathSpec_ = std::shared_ptr<HybridMathSpec>;
-  std::shared_ptr<HybridMathSpec> create_std__shared_ptr_HybridMathSpec_(void* NON_NULL swiftUnsafePointer) noexcept;
-  void* NON_NULL get_std__shared_ptr_HybridMathSpec_(std__shared_ptr_HybridMathSpec_ cppType);
-  
-  // pragma MARK: std::weak_ptr<HybridMathSpec>
-  using std__weak_ptr_HybridMathSpec_ = std::weak_ptr<HybridMathSpec>;
-  inline std__weak_ptr_HybridMathSpec_ weakify_std__shared_ptr_HybridMathSpec_(const std::shared_ptr<HybridMathSpec>& strong) noexcept { return strong; }
-  
-  // pragma MARK: Result<double>
-  using Result_double_ = Result<double>;
-  inline Result_double_ create_Result_double_(double value) noexcept {
-    return Result<double>::withValue(std::move(value));
-  }
-  inline Result_double_ create_Result_double_(const std::exception_ptr& error) noexcept {
-    return Result<double>::withError(error);
-  }
-  
   // pragma MARK: std::optional<std::string>
   /**
    * Specialized version of `std::optional<std::string>`.
@@ -138,6 +151,114 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::string get_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<PaymentNetwork>
+  /**
+   * Specialized version of `std::optional<PaymentNetwork>`.
+   */
+  using std__optional_PaymentNetwork_ = std::optional<PaymentNetwork>;
+  inline std::optional<PaymentNetwork> create_std__optional_PaymentNetwork_(const PaymentNetwork& value) noexcept {
+    return std::optional<PaymentNetwork>(value);
+  }
+  inline bool has_value_std__optional_PaymentNetwork_(const std::optional<PaymentNetwork>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentNetwork get_std__optional_PaymentNetwork_(const std::optional<PaymentNetwork>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<PKSecureElementPass>
+  /**
+   * Specialized version of `std::optional<PKSecureElementPass>`.
+   */
+  using std__optional_PKSecureElementPass_ = std::optional<PKSecureElementPass>;
+  inline std::optional<PKSecureElementPass> create_std__optional_PKSecureElementPass_(const PKSecureElementPass& value) noexcept {
+    return std::optional<PKSecureElementPass>(value);
+  }
+  inline bool has_value_std__optional_PKSecureElementPass_(const std::optional<PKSecureElementPass>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PKSecureElementPass get_std__optional_PKSecureElementPass_(const std::optional<PKSecureElementPass>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<bool>
+  /**
+   * Specialized version of `std::optional<bool>`.
+   */
+  using std__optional_bool_ = std::optional<bool>;
+  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
+    return std::optional<bool>(value);
+  }
+  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::vector<CNLabeledPhoneNumber>
+  /**
+   * Specialized version of `std::vector<CNLabeledPhoneNumber>`.
+   */
+  using std__vector_CNLabeledPhoneNumber_ = std::vector<CNLabeledPhoneNumber>;
+  inline std::vector<CNLabeledPhoneNumber> create_std__vector_CNLabeledPhoneNumber_(size_t size) noexcept {
+    std::vector<CNLabeledPhoneNumber> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::vector<CNLabeledEmailAddress>
+  /**
+   * Specialized version of `std::vector<CNLabeledEmailAddress>`.
+   */
+  using std__vector_CNLabeledEmailAddress_ = std::vector<CNLabeledEmailAddress>;
+  inline std::vector<CNLabeledEmailAddress> create_std__vector_CNLabeledEmailAddress_(size_t size) noexcept {
+    std::vector<CNLabeledEmailAddress> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::vector<CNLabeledPostalAddress>
+  /**
+   * Specialized version of `std::vector<CNLabeledPostalAddress>`.
+   */
+  using std__vector_CNLabeledPostalAddress_ = std::vector<CNLabeledPostalAddress>;
+  inline std::vector<CNLabeledPostalAddress> create_std__vector_CNLabeledPostalAddress_(size_t size) noexcept {
+    std::vector<CNLabeledPostalAddress> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<CNContact>
+  /**
+   * Specialized version of `std::optional<CNContact>`.
+   */
+  using std__optional_CNContact_ = std::optional<CNContact>;
+  inline std::optional<CNContact> create_std__optional_CNContact_(const CNContact& value) noexcept {
+    return std::optional<CNContact>(value);
+  }
+  inline bool has_value_std__optional_CNContact_(const std::optional<CNContact>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline CNContact get_std__optional_CNContact_(const std::optional<CNContact>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<PaymentToken>
+  /**
+   * Specialized version of `std::optional<PaymentToken>`.
+   */
+  using std__optional_PaymentToken_ = std::optional<PaymentToken>;
+  inline std::optional<PaymentToken> create_std__optional_PaymentToken_(const PaymentToken& value) noexcept {
+    return std::optional<PaymentToken>(value);
+  }
+  inline bool has_value_std__optional_PaymentToken_(const std::optional<PaymentToken>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentToken get_std__optional_PaymentToken_(const std::optional<PaymentToken>& optional) noexcept {
     return *optional;
   }
   
@@ -231,21 +352,6 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<PaymentItem> get_std__optional_std__vector_PaymentItem__(const std::optional<std::vector<PaymentItem>>& optional) noexcept {
-    return *optional;
-  }
-  
-  // pragma MARK: std::optional<bool>
-  /**
-   * Specialized version of `std::optional<bool>`.
-   */
-  using std__optional_bool_ = std::optional<bool>;
-  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
-    return std::optional<bool>(value);
-  }
-  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
     return *optional;
   }
   

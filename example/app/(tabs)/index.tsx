@@ -78,8 +78,8 @@ export default function TabOneScreen() {
 
       const paymentRequest: PaymentRequest = {
         merchantIdentifier: "merchant.com.yourcompany.yourapp", // Replace with your merchant ID
-        countryCode: "US",
-        currencyCode: "USD",
+        countryCode: "PL",
+        currencyCode: "PLN",
         paymentItems: [
           {
             label: "Coffee",
@@ -101,18 +101,24 @@ export default function TabOneScreen() {
       const result = await HybridPaymentHandler.startPayment(paymentRequest);
 
       if (result.success) {
-        setLastTransaction(result.transactionId || "Unknown");
+        console.log("Payment Data:", result.token);
         Alert.alert(
           "Payment Successful!",
-          `Transaction ID: ${result.transactionId}`,
+          `Payment Data: ${result.token?.paymentData}`,
           [{ text: "OK" }]
         );
       } else {
-        Alert.alert("Payment Failed", result.error || "Unknown error occurred");
+        Alert.alert(
+          "Payment Failed",
+          result.error || "Unknown error occurred",
+          [{ text: "OK" }]
+        );
       }
     } catch (error) {
       console.error("Payment error:", error);
-      Alert.alert("Error", "An error occurred during payment");
+      Alert.alert("Error", "An error occurred during payment", [
+        { text: "OK" },
+      ]);
     } finally {
       setIsProcessing(false);
     }
@@ -148,10 +154,10 @@ export default function TabOneScreen() {
       const result = await HybridPaymentHandler.startPayment(paymentRequest);
 
       if (result.success) {
-        setLastTransaction(result.transactionId || "Unknown");
+        console.log("Payment Data:", result.token?.paymentData);
         Alert.alert(
           "Subscription Successful!",
-          `Transaction ID: ${result.transactionId}`,
+          `Payment Data: ${result.token?.paymentData}`,
           [{ text: "OK" }]
         );
       } else {
@@ -207,7 +213,7 @@ export default function TabOneScreen() {
         <View style={styles.paymentExample}>
           <Text style={styles.exampleTitle}>☕ Coffee Purchase ($5.49)</Text>
           <ApplePayButton
-            buttonType="buy"
+            buttonType="order"
             buttonStyle="black"
             onPress={callback(processCoffeePurchase)}
             style={styles.applePayButton}

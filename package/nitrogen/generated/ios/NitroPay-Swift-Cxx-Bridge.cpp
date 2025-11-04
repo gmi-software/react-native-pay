@@ -9,7 +9,6 @@
 
 // Include C++ implementation defined types
 #include "HybridApplePayButtonSpecSwift.hpp"
-#include "HybridMathSpecSwift.hpp"
 #include "HybridPaymentHandlerSpecSwift.hpp"
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -36,22 +35,6 @@ namespace margelo::nitro::pay::bridge::swift {
     }
     #endif
     NitroPay::HybridApplePayButtonSpec_cxx& swiftPart = swiftWrapper->getSwiftPart();
-    return swiftPart.toUnsafe();
-  }
-  
-  // pragma MARK: std::shared_ptr<HybridMathSpec>
-  std::shared_ptr<HybridMathSpec> create_std__shared_ptr_HybridMathSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
-    NitroPay::HybridMathSpec_cxx swiftPart = NitroPay::HybridMathSpec_cxx::fromUnsafe(swiftUnsafePointer);
-    return std::make_shared<margelo::nitro::pay::HybridMathSpecSwift>(swiftPart);
-  }
-  void* NON_NULL get_std__shared_ptr_HybridMathSpec_(std__shared_ptr_HybridMathSpec_ cppType) {
-    std::shared_ptr<margelo::nitro::pay::HybridMathSpecSwift> swiftWrapper = std::dynamic_pointer_cast<margelo::nitro::pay::HybridMathSpecSwift>(cppType);
-    #ifdef NITRO_DEBUG
-    if (swiftWrapper == nullptr) [[unlikely]] {
-      throw std::runtime_error("Class \"HybridMathSpec\" is not implemented in Swift!");
-    }
-    #endif
-    NitroPay::HybridMathSpec_cxx& swiftPart = swiftWrapper->getSwiftPart();
     return swiftPart.toUnsafe();
   }
   

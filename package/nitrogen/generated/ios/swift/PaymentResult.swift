@@ -18,10 +18,16 @@ public extension PaymentResult {
   /**
    * Create a new instance of `PaymentResult`.
    */
-  init(success: Bool, transactionId: String?, error: String?) {
+  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?) {
     self.init(success, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = transactionId {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_PaymentToken_ in
+      if let __unwrappedValue = token {
+        return bridge.create_std__optional_PaymentToken_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -62,6 +68,23 @@ public extension PaymentResult {
       self.__transactionId = { () -> bridge.std__optional_std__string_ in
         if let __unwrappedValue = newValue {
           return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var token: PaymentToken? {
+    @inline(__always)
+    get {
+      return self.__token.value
+    }
+    @inline(__always)
+    set {
+      self.__token = { () -> bridge.std__optional_PaymentToken_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_PaymentToken_(__unwrappedValue)
         } else {
           return .init()
         }

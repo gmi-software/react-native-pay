@@ -73,7 +73,13 @@ class HybridApplePayButton: HybridApplePayButtonSpec {
     ])
   }
   
-    @objc private func buttonPressed() {
-        onPress?()
-    }
+  func afterUpdate() {
+    // Called after props are updated
+    // Recreate the button with new props
+    setupButton()
+  }
+  
+  @objc private func buttonPressed() {
+    onPress?()
+  }
 }

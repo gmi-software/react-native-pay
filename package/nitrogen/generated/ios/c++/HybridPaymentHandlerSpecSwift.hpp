@@ -16,6 +16,32 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 namespace margelo::nitro::pay { struct ApplePayStatus; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentToken` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `PaymentMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentMethod; }
+// Forward declaration of `PaymentNetwork` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentNetwork; }
+// Forward declaration of `PaymentMethodType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentMethodType; }
+// Forward declaration of `PKSecureElementPass` to properly resolve imports.
+namespace margelo::nitro::pay { struct PKSecureElementPass; }
+// Forward declaration of `PassActivationState` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PassActivationState; }
+// Forward declaration of `CNContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNContact; }
+// Forward declaration of `CNContactType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class CNContactType; }
+// Forward declaration of `CNLabeledPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPhoneNumber; }
+// Forward declaration of `CNPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPhoneNumber; }
+// Forward declaration of `CNLabeledEmailAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledEmailAddress; }
+// Forward declaration of `CNLabeledPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
+// Forward declaration of `CNPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPostalAddress; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -28,9 +54,22 @@ namespace margelo::nitro::pay { enum class PaymentItemType; }
 #include <NitroModules/Promise.hpp>
 #include <string>
 #include <optional>
+#include "PaymentToken.hpp"
+#include "PaymentMethod.hpp"
+#include "PaymentNetwork.hpp"
+#include "PaymentMethodType.hpp"
+#include "PKSecureElementPass.hpp"
+#include "PassActivationState.hpp"
+#include "CNContact.hpp"
+#include "CNContactType.hpp"
+#include "CNLabeledPhoneNumber.hpp"
+#include <vector>
+#include "CNPhoneNumber.hpp"
+#include "CNLabeledEmailAddress.hpp"
+#include "CNLabeledPostalAddress.hpp"
+#include "CNPostalAddress.hpp"
 #include "PaymentRequest.hpp"
 #include "PaymentItem.hpp"
-#include <vector>
 #include "PaymentItemType.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"

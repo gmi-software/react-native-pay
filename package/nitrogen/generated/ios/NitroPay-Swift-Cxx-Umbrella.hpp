@@ -14,32 +14,68 @@ namespace margelo::nitro::pay { enum class ApplePayButtonStyle; }
 namespace margelo::nitro::pay { enum class ApplePayButtonType; }
 // Forward declaration of `ApplePayStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct ApplePayStatus; }
+// Forward declaration of `CNContactType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class CNContactType; }
+// Forward declaration of `CNContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNContact; }
+// Forward declaration of `CNLabeledEmailAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledEmailAddress; }
+// Forward declaration of `CNLabeledPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPhoneNumber; }
+// Forward declaration of `CNLabeledPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
+// Forward declaration of `CNPhoneNumber` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPhoneNumber; }
+// Forward declaration of `CNPostalAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct CNPostalAddress; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
-// Forward declaration of `HybridMathSpec` to properly resolve imports.
-namespace margelo::nitro::pay { class HybridMathSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
+// Forward declaration of `PKSecureElementPass` to properly resolve imports.
+namespace margelo::nitro::pay { struct PKSecureElementPass; }
+// Forward declaration of `PassActivationState` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PassActivationState; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentItem; }
+// Forward declaration of `PaymentMethodType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentMethodType; }
+// Forward declaration of `PaymentMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentMethod; }
+// Forward declaration of `PaymentNetwork` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentNetwork; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentToken` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentToken; }
 
 // Include C++ defined types
 #include "ApplePayButtonStyle.hpp"
 #include "ApplePayButtonType.hpp"
 #include "ApplePayStatus.hpp"
+#include "CNContact.hpp"
+#include "CNContactType.hpp"
+#include "CNLabeledEmailAddress.hpp"
+#include "CNLabeledPhoneNumber.hpp"
+#include "CNLabeledPostalAddress.hpp"
+#include "CNPhoneNumber.hpp"
+#include "CNPostalAddress.hpp"
 #include "HybridApplePayButtonSpec.hpp"
-#include "HybridMathSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
+#include "PKSecureElementPass.hpp"
+#include "PassActivationState.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
+#include "PaymentMethod.hpp"
+#include "PaymentMethodType.hpp"
+#include "PaymentNetwork.hpp"
 #include "PaymentRequest.hpp"
 #include "PaymentResult.hpp"
+#include "PaymentToken.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>
@@ -61,8 +97,6 @@ namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridApplePayButtonSpec_cxx` to properly resolve imports.
 namespace NitroPay { class HybridApplePayButtonSpec_cxx; }
-// Forward declaration of `HybridMathSpec_cxx` to properly resolve imports.
-namespace NitroPay { class HybridMathSpec_cxx; }
 // Forward declaration of `HybridPaymentHandlerSpec_cxx` to properly resolve imports.
 namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 

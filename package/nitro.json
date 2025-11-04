@@ -13,10 +13,6 @@
     "androidCxxLibName": "NitroPay"
   },
   "autolinking": {
-    "Math": {
-      "swift": "HybridMath",
-      "kotlin": "HybridMath"
-    },
     "ApplePayButton": {
       "swift": "HybridApplePayButton"
     },

@@ -10,7 +10,6 @@
 #import "NitroPay-Swift-Cxx-Umbrella.hpp"
 #import <type_traits>
 
-#include "HybridMathSpecSwift.hpp"
 #include "HybridApplePayButtonSpecSwift.hpp"
 #include "HybridPaymentHandlerSpecSwift.hpp"
 
@@ -23,13 +22,6 @@
   using namespace margelo::nitro;
   using namespace margelo::nitro::pay;
 
-  HybridObjectRegistry::registerHybridObjectConstructor(
-    "Math",
-    []() -> std::shared_ptr<HybridObject> {
-      std::shared_ptr<HybridMathSpec> hybridObject = NitroPay::NitroPayAutolinking::createMath();
-      return hybridObject;
-    }
-  );
   HybridObjectRegistry::registerHybridObjectConstructor(
     "ApplePayButton",
     []() -> std::shared_ptr<HybridObject> {
