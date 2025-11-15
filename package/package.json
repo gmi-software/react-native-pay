@@ -1,5 +1,5 @@
 {
-  "name": "@gmi-software/react-native-pay",
+  "name": "@piotr-graczyk-dev/react-native-pay",
   "version": "0.0.1",
   "author": "gmi.software",
   "repository": {
@@ -9,7 +9,8 @@
   "main": "lib/index",
   "module": "lib/index",
   "dependencies": {
-    "expo": "^53.0.0"
+    "expo": "^53.0.0",
+    "react-native-nitro-modules": "^0.21.0"
   },
   "devDependencies": {
     "@react-native/eslint-config": "0.82.0",
