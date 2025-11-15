@@ -12,8 +12,8 @@
 // Forward declaration of `HybridPaymentHandlerSpec_cxx` to properly resolve imports.
 namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
-// Forward declaration of `ApplePayStatus` to properly resolve imports.
-namespace margelo::nitro::pay { struct ApplePayStatus; }
+// Forward declaration of `PayServiceStatus` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
@@ -48,8 +48,10 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 
-#include "ApplePayStatus.hpp"
+#include "PayServiceStatus.hpp"
 #include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include <string>
@@ -71,6 +73,7 @@ namespace margelo::nitro::pay { enum class PaymentItemType; }
 #include "PaymentRequest.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
+#include "GooglePayEnvironment.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -113,8 +116,8 @@ namespace margelo::nitro::pay {
 
   public:
     // Methods
-    inline ApplePayStatus applePayStatus() override {
-      auto __result = _swiftPart.applePayStatus();
+    inline PayServiceStatus payServiceStatus() override {
+      auto __result = _swiftPart.payServiceStatus();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

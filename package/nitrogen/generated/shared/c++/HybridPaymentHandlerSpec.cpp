@@ -14,7 +14,7 @@ namespace margelo::nitro::pay {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridMethod("applePayStatus", &HybridPaymentHandlerSpec::applePayStatus);
+      prototype.registerHybridMethod("payServiceStatus", &HybridPaymentHandlerSpec::payServiceStatus);
       prototype.registerHybridMethod("startPayment", &HybridPaymentHandlerSpec::startPayment);
       prototype.registerHybridMethod("canMakePayments", &HybridPaymentHandlerSpec::canMakePayments);
     });

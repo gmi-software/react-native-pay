@@ -13,14 +13,14 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-// Forward declaration of `ApplePayStatus` to properly resolve imports.
-namespace margelo::nitro::pay { struct ApplePayStatus; }
+// Forward declaration of `PayServiceStatus` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 
-#include "ApplePayStatus.hpp"
+#include "PayServiceStatus.hpp"
 #include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include "PaymentRequest.hpp"
@@ -58,7 +58,7 @@ namespace margelo::nitro::pay {
 
     public:
       // Methods
-      virtual ApplePayStatus applePayStatus() = 0;
+      virtual PayServiceStatus payServiceStatus() = 0;
       virtual std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request) = 0;
       virtual bool canMakePayments(const std::vector<std::string>& usingNetworks) = 0;
 

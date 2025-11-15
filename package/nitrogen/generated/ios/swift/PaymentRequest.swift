@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(merchantIdentifier: String, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?) {
+  init(merchantIdentifier: String, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
     self.init(std.string(merchantIdentifier), std.string(countryCode), std.string(currencyCode), { () -> bridge.std__vector_PaymentItem_ in
       var __vector = bridge.create_std__vector_PaymentItem_(paymentItems.count)
       for __item in paymentItems {
@@ -64,6 +64,24 @@ public extension PaymentRequest {
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = shippingContactRequired {
         return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_GooglePayEnvironment_ in
+      if let __unwrappedValue = googlePayEnvironment {
+        return bridge.create_std__optional_GooglePayEnvironment_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = googlePayGateway {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = googlePayGatewayMerchantId {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
       }
@@ -249,6 +267,71 @@ public extension PaymentRequest {
       self.__shippingContactRequired = { () -> bridge.std__optional_bool_ in
         if let __unwrappedValue = newValue {
           return bridge.create_std__optional_bool_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var googlePayEnvironment: GooglePayEnvironment? {
+    @inline(__always)
+    get {
+      return self.__googlePayEnvironment.value
+    }
+    @inline(__always)
+    set {
+      self.__googlePayEnvironment = { () -> bridge.std__optional_GooglePayEnvironment_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_GooglePayEnvironment_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var googlePayGateway: String? {
+    @inline(__always)
+    get {
+      return { () -> String? in
+        if bridge.has_value_std__optional_std__string_(self.__googlePayGateway) {
+          let __unwrapped = bridge.get_std__optional_std__string_(self.__googlePayGateway)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__googlePayGateway = { () -> bridge.std__optional_std__string_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var googlePayGatewayMerchantId: String? {
+    @inline(__always)
+    get {
+      return { () -> String? in
+        if bridge.has_value_std__optional_std__string_(self.__googlePayGatewayMerchantId) {
+          let __unwrapped = bridge.get_std__optional_std__string_(self.__googlePayGatewayMerchantId)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__googlePayGatewayMerchantId = { () -> bridge.std__optional_std__string_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
         } else {
           return .init()
         }

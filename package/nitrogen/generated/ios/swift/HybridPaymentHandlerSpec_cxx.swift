@@ -111,14 +111,14 @@ open class HybridPaymentHandlerSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func applePayStatus() -> bridge.Result_ApplePayStatus_ {
+  public final func payServiceStatus() -> bridge.Result_PayServiceStatus_ {
     do {
-      let __result = try self.__implementation.applePayStatus()
+      let __result = try self.__implementation.payServiceStatus()
       let __resultCpp = __result
-      return bridge.create_Result_ApplePayStatus_(__resultCpp)
+      return bridge.create_Result_PayServiceStatus_(__resultCpp)
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
-      return bridge.create_Result_ApplePayStatus_(__exceptionPtr)
+      return bridge.create_Result_PayServiceStatus_(__exceptionPtr)
     }
   }
   

@@ -12,8 +12,6 @@
 namespace margelo::nitro::pay { enum class ApplePayButtonStyle; }
 // Forward declaration of `ApplePayButtonType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class ApplePayButtonType; }
-// Forward declaration of `ApplePayStatus` to properly resolve imports.
-namespace margelo::nitro::pay { struct ApplePayStatus; }
 // Forward declaration of `CNContactType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class CNContactType; }
 // Forward declaration of `CNContact` to properly resolve imports.
@@ -28,6 +26,8 @@ namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 namespace margelo::nitro::pay { struct CNPhoneNumber; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
@@ -36,6 +36,8 @@ namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PassActivationState; }
+// Forward declaration of `PayServiceStatus` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -56,7 +58,6 @@ namespace margelo::nitro::pay { struct PaymentToken; }
 // Include C++ defined types
 #include "ApplePayButtonStyle.hpp"
 #include "ApplePayButtonType.hpp"
-#include "ApplePayStatus.hpp"
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledEmailAddress.hpp"
@@ -64,10 +65,12 @@ namespace margelo::nitro::pay { struct PaymentToken; }
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
+#include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
+#include "PayServiceStatus.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"

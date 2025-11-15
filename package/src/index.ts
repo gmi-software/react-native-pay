@@ -3,6 +3,10 @@ import type {
   ApplePayButtonProps,
   ApplePayButtonMethods,
 } from './specs/ApplePayButton.nitro'
+import type {
+  GooglePayButtonProps,
+  GooglePayButtonMethods,
+} from './specs/GooglePayButton.nitro'
 import type { PaymentHandler } from './specs/PaymentHandler.nitro'
 
 export const HybridPaymentHandler =
@@ -10,12 +14,19 @@ export const HybridPaymentHandler =
 
 export type { PaymentHandler } from './specs/PaymentHandler.nitro'
 
-export * from './types'
-
-// Import the generated view config
 import ApplePayButtonConfig from '../nitrogen/generated/shared/json/ApplePayButtonConfig.json'
+import GooglePayButtonConfig from '../nitrogen/generated/shared/json/GooglePayButtonConfig.json'
 
 export const ApplePayButton = getHostComponent<
   ApplePayButtonProps,
   ApplePayButtonMethods
 >('ApplePayButton', () => ApplePayButtonConfig)
+
+export const GooglePayButton = getHostComponent<
+  GooglePayButtonProps,
+  GooglePayButtonMethods
+>('GooglePayButton', () => GooglePayButtonConfig)
+
+export * from './types'
+export * from './utils'
+export * from './hooks'

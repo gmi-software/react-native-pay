@@ -184,10 +184,10 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     // MARK: - Public Methods
     
-    func applePayStatus() throws -> ApplePayStatus {
+    func payServiceStatus() throws -> PayServiceStatus {
         let canMakePayments = PKPaymentAuthorizationViewController.canMakePayments()
         let canSetupCards = PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: [])
-        return ApplePayStatus.init(canMakePayments, canSetupCards)
+        return PayServiceStatus.init(canMakePayments, canSetupCards)
     }
     
     func canMakePayments(usingNetworks: [String]) throws -> Bool {

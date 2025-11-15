@@ -34,6 +34,8 @@ export type PassActivationState =
   | 'suspended'
   | 'deactivated'
 
+export type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
+
 export interface PKPass {
   passTypeIdentifier: string
   serialNumber: string
@@ -80,6 +82,10 @@ export interface PaymentRequest {
   shippingMethods?: PaymentItem[]
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
+  // Google Pay specific configuration (Android only)
+  googlePayEnvironment?: GooglePayEnvironment
+  googlePayGateway?: string
+  googlePayGatewayMerchantId?: string
 }
 
 export interface PaymentResult {
@@ -89,7 +95,10 @@ export interface PaymentResult {
   error?: string
 }
 
-export interface ApplePayStatus {
+export interface PayServiceStatus {
   canMakePayments: boolean
   canSetupCards: boolean
 }
+
+// Backward compatibility alias
+export type ApplePayStatus = PayServiceStatus

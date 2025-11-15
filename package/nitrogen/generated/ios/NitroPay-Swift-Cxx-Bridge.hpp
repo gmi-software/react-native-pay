@@ -8,8 +8,6 @@
 #pragma once
 
 // Forward declarations of C++ defined types
-// Forward declaration of `ApplePayStatus` to properly resolve imports.
-namespace margelo::nitro::pay { struct ApplePayStatus; }
 // Forward declaration of `CNContactType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class CNContactType; }
 // Forward declaration of `CNContact` to properly resolve imports.
@@ -24,6 +22,8 @@ namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 namespace margelo::nitro::pay { struct CNPhoneNumber; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
@@ -32,6 +32,8 @@ namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PassActivationState; }
+// Forward declaration of `PayServiceStatus` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -54,7 +56,6 @@ namespace NitroPay { class HybridApplePayButtonSpec_cxx; }
 namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
 // Include C++ defined types
-#include "ApplePayStatus.hpp"
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledEmailAddress.hpp"
@@ -62,10 +63,12 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
+#include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
+#include "PayServiceStatus.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
@@ -355,6 +358,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return *optional;
   }
   
+  // pragma MARK: std::optional<GooglePayEnvironment>
+  /**
+   * Specialized version of `std::optional<GooglePayEnvironment>`.
+   */
+  using std__optional_GooglePayEnvironment_ = std::optional<GooglePayEnvironment>;
+  inline std::optional<GooglePayEnvironment> create_std__optional_GooglePayEnvironment_(const GooglePayEnvironment& value) noexcept {
+    return std::optional<GooglePayEnvironment>(value);
+  }
+  inline bool has_value_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline GooglePayEnvironment get_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
+    return *optional;
+  }
+  
   // pragma MARK: std::shared_ptr<HybridPaymentHandlerSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridPaymentHandlerSpec>`.
@@ -367,13 +385,13 @@ namespace margelo::nitro::pay::bridge::swift {
   using std__weak_ptr_HybridPaymentHandlerSpec_ = std::weak_ptr<HybridPaymentHandlerSpec>;
   inline std__weak_ptr_HybridPaymentHandlerSpec_ weakify_std__shared_ptr_HybridPaymentHandlerSpec_(const std::shared_ptr<HybridPaymentHandlerSpec>& strong) noexcept { return strong; }
   
-  // pragma MARK: Result<ApplePayStatus>
-  using Result_ApplePayStatus_ = Result<ApplePayStatus>;
-  inline Result_ApplePayStatus_ create_Result_ApplePayStatus_(const ApplePayStatus& value) noexcept {
-    return Result<ApplePayStatus>::withValue(value);
+  // pragma MARK: Result<PayServiceStatus>
+  using Result_PayServiceStatus_ = Result<PayServiceStatus>;
+  inline Result_PayServiceStatus_ create_Result_PayServiceStatus_(const PayServiceStatus& value) noexcept {
+    return Result<PayServiceStatus>::withValue(value);
   }
-  inline Result_ApplePayStatus_ create_Result_ApplePayStatus_(const std::exception_ptr& error) noexcept {
-    return Result<ApplePayStatus>::withError(error);
+  inline Result_PayServiceStatus_ create_Result_PayServiceStatus_(const std::exception_ptr& error) noexcept {
+    return Result<PayServiceStatus>::withError(error);
   }
   
   // pragma MARK: Result<std::shared_ptr<Promise<PaymentResult>>>

@@ -1,262 +1,278 @@
 import {
-  Button,
   StyleSheet,
   Alert,
   TouchableOpacity,
   ScrollView,
+  Platform,
+  ActivityIndicator,
 } from "react-native";
 
-import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View } from "@/components/Themed";
-import { ApplePayButton, HybridPaymentHandler } from "react-native-pay";
-import { useState } from "react";
-import type { PaymentRequest } from "react-native-pay";
+import {
+  ApplePayButton,
+  GooglePayButton,
+  usePaymentCheckout,
+} from "react-native-pay";
 import { callback } from "react-native-nitro-modules";
 
 export default function TabOneScreen() {
-  const [result, setResult] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [applePayStatus, setApplePayStatus] = useState<any>(null);
-  const [lastTransaction, setLastTransaction] = useState<string | null>(null);
+  const paymentServiceName = Platform.OS === "ios" ? "Apple Pay" : "Google Pay";
 
-  // Check Apple Pay availability
-  const checkApplePayStatus = async () => {
-    try {
-      const status = await HybridPaymentHandler.applePayStatus();
-      setApplePayStatus(status);
+  // Initialize checkout hook
+  const {
+    canMakePayments,
+    canSetupCards,
+    isCheckingStatus,
+    items,
+    total,
+    addItem,
+    addItems,
+    clearItems,
+    startPayment,
+    isProcessing,
+    result,
+    error,
+    reset,
+  } = usePaymentCheckout({
+    merchantIdentifier: "merchant.com.margelo",
+    countryCode: "US",
+    currencyCode: "USD",
+  });
 
-      if (status.canMakePayments) {
-        Alert.alert("Apple Pay Available", "Apple Pay is ready to use!");
-      } else if (status.canSetupCards) {
-        Alert.alert("Setup Required", "Please set up Apple Pay in Settings");
-      } else {
-        Alert.alert(
-          "Not Available",
-          "Apple Pay is not available on this device"
-        );
-      }
-    } catch (error) {
-      console.error("Error checking Apple Pay status:", error);
-      Alert.alert("Error", "Failed to check Apple Pay status");
-    }
-  };
-
-  // Check network support
-  const checkNetworkSupport = async () => {
-    try {
-      const networks = ["visa", "mastercard", "amex", "discover"];
-      const results = await Promise.all(
-        networks.map(async (network) => {
-          const supported = await HybridPaymentHandler.canMakePayments([
-            network,
-          ]);
-          return { network, supported };
-        })
-      );
-
-      const supportedNetworks = results
-        .filter((r) => r.supported)
-        .map((r) => r.network);
-      const unsupportedNetworks = results
-        .filter((r) => !r.supported)
-        .map((r) => r.network);
-
+  // Show status info
+  const handleCheckStatus = () => {
+    if (canMakePayments) {
       Alert.alert(
-        "Network Support",
-        `Supported: ${supportedNetworks.join(", ")}\nUnsupported: ${unsupportedNetworks.join(", ")}`
+        `${paymentServiceName} Available`,
+        `${paymentServiceName} is ready to use!`
       );
-    } catch (error) {
-      console.error("Error checking network support:", error);
-      Alert.alert("Error", "Failed to check network support");
+    } else if (canSetupCards) {
+      Alert.alert(
+        "Setup Required",
+        `Please set up ${paymentServiceName} in Settings`
+      );
+    } else {
+      Alert.alert(
+        "Not Available",
+        `${paymentServiceName} is not available on this device`
+      );
     }
   };
 
-  // Process a coffee purchase
-  const processCoffeePurchase = async () => {
-    try {
-      setIsProcessing(true);
+  // Add coffee order
+  const handleAddCoffee = () => {
+    clearItems(); // Clear previous items
+    addItems([
+      { label: "Coffee", amount: 4.99 },
+      { label: "Tax", amount: 0.5 },
+    ]);
+  };
 
-      const paymentRequest: PaymentRequest = {
-        merchantIdentifier: "merchant.com.yourcompany.yourapp", // Replace with your merchant ID
-        countryCode: "PL",
-        currencyCode: "PLN",
-        paymentItems: [
+  // Add subscription order
+  const handleAddSubscription = () => {
+    clearItems(); // Clear previous items
+    addItems([
+      { label: "Premium Subscription", amount: 9.99 },
+      { label: "Tax", amount: 0.8 },
+    ]);
+  };
+
+  // Add custom items
+  const handleAddCustom = () => {
+    addItem("Custom Item", 19.99);
+  };
+
+  // Process payment
+  const handlePayment = async () => {
+    const paymentResult = await startPayment();
+
+    if (paymentResult?.success) {
+      console.log("Payment successful:", paymentResult.token);
+      Alert.alert(
+        "Payment Successful!",
+        `Transaction ID: ${paymentResult.transactionId}`,
+        [
           {
-            label: "Coffee",
-            amount: 4.99,
-            type: "final",
+            text: "OK",
+            onPress: () => {
+              reset();
+              clearItems();
+            },
           },
-          {
-            label: "Tax",
-            amount: 0.5,
-            type: "final",
-          },
-        ],
-        merchantCapabilities: ["3DS", "EMV", "Credit", "Debit"],
-        supportedNetworks: ["visa", "mastercard", "amex"],
-        billingContactRequired: true,
-        shippingContactRequired: false,
-      };
-
-      const result = await HybridPaymentHandler.startPayment(paymentRequest);
-
-      if (result.success) {
-        console.log("Payment Data:", result.token);
-        Alert.alert(
-          "Payment Successful!",
-          `Payment Data: ${result.token?.paymentData}`,
-          [{ text: "OK" }]
-        );
-      } else {
-        Alert.alert(
-          "Payment Failed",
-          result.error || "Unknown error occurred",
-          [{ text: "OK" }]
-        );
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      Alert.alert("Error", "An error occurred during payment", [
-        { text: "OK" },
-      ]);
-    } finally {
-      setIsProcessing(false);
+        ]
+      );
+    } else if (paymentResult?.error) {
+      Alert.alert("Payment Failed", paymentResult.error, [{ text: "OK" }]);
     }
   };
 
-  // Process a subscription purchase
-  const processSubscriptionPurchase = async () => {
-    try {
-      setIsProcessing(true);
-
-      const paymentRequest: PaymentRequest = {
-        merchantIdentifier: "merchant.com.yourcompany.yourapp", // Replace with your merchant ID
-        countryCode: "US",
-        currencyCode: "USD",
-        paymentItems: [
-          {
-            label: "Premium Subscription",
-            amount: 9.99,
-            type: "final",
-          },
-          {
-            label: "Tax",
-            amount: 0.8,
-            type: "final",
-          },
-        ],
-        merchantCapabilities: ["3DS", "EMV", "Credit", "Debit"],
-        supportedNetworks: ["visa", "mastercard", "amex", "discover"],
-        billingContactRequired: true,
-        shippingContactRequired: false,
-      };
-
-      const result = await HybridPaymentHandler.startPayment(paymentRequest);
-
-      if (result.success) {
-        console.log("Payment Data:", result.token?.paymentData);
-        Alert.alert(
-          "Subscription Successful!",
-          `Payment Data: ${result.token?.paymentData}`,
-          [{ text: "OK" }]
-        );
-      } else {
-        Alert.alert(
-          "Subscription Failed",
-          result.error || "Unknown error occurred"
-        );
-      }
-    } catch (error) {
-      console.error("Subscription error:", error);
-      Alert.alert("Error", "An error occurred during subscription");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  if (isCheckingStatus) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>
+          Checking {paymentServiceName} availability...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Apple Pay Payment Examples</Text>
+      <Text style={styles.title}>{paymentServiceName} Demo</Text>
 
       {/* Status Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Apple Pay Status</Text>
-        <TouchableOpacity style={styles.button} onPress={checkApplePayStatus}>
-          <Text style={styles.buttonText}>Check Apple Pay Status</Text>
+        <Text style={styles.sectionTitle}>{paymentServiceName} Status</Text>
+        <TouchableOpacity style={styles.button} onPress={handleCheckStatus}>
+          <Text style={styles.buttonText}>Check Status</Text>
         </TouchableOpacity>
 
-        {applePayStatus && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>
-              Can Make Payments: {applePayStatus.canMakePayments ? "Yes" : "No"}
-            </Text>
-            <Text style={styles.statusText}>
-              Can Setup Cards: {applePayStatus.canSetupCards ? "Yes" : "No"}
+        <View style={styles.statusContainer}>
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Can Make Payments:</Text>
+            <Text
+              style={[
+                styles.statusValue,
+                canMakePayments ? styles.statusYes : styles.statusNo,
+              ]}
+            >
+              {canMakePayments ? "✓ Yes" : "✗ No"}
             </Text>
           </View>
-        )}
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Can Setup Cards:</Text>
+            <Text
+              style={[
+                styles.statusValue,
+                canSetupCards ? styles.statusYes : styles.statusNo,
+              ]}
+            >
+              {canSetupCards ? "✓ Yes" : "✗ No"}
+            </Text>
+          </View>
+        </View>
       </View>
 
-      {/* Network Support Section */}
+      {/* Quick Add Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Network Support</Text>
-        <TouchableOpacity style={styles.button} onPress={checkNetworkSupport}>
-          <Text style={styles.buttonText}>Check Network Support</Text>
+        <Text style={styles.sectionTitle}>Quick Add</Text>
+        <TouchableOpacity
+          style={[styles.quickButton, styles.coffeeButton]}
+          onPress={handleAddCoffee}
+        >
+          <Text style={styles.quickButtonText}>☕️ Add Coffee Order</Text>
+          <Text style={styles.quickButtonPrice}>$5.49</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickButton, styles.subscriptionButton]}
+          onPress={handleAddSubscription}
+        >
+          <Text style={styles.quickButtonText}>📱 Add Subscription</Text>
+          <Text style={styles.quickButtonPrice}>$10.79</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickButton, styles.customButton]}
+          onPress={handleAddCustom}
+        >
+          <Text style={styles.quickButtonText}>➕ Add Custom Item</Text>
+          <Text style={styles.quickButtonPrice}>$19.99</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Payment Examples Section */}
+      {/* Cart Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Examples</Text>
-
-        {/* Coffee Purchase */}
-        <View style={styles.paymentExample}>
-          <Text style={styles.exampleTitle}>☕ Coffee Purchase ($5.49)</Text>
-          <ApplePayButton
-            buttonType="order"
-            buttonStyle="black"
-            onPress={callback(processCoffeePurchase)}
-            style={styles.applePayButton}
-          />
+        <View style={styles.cartHeader}>
+          <Text style={styles.sectionTitle}>Cart ({items.length})</Text>
+          {items.length > 0 && (
+            <TouchableOpacity onPress={clearItems}>
+              <Text style={styles.clearText}>Clear</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Subscription Purchase */}
-        <View style={styles.paymentExample}>
-          <Text style={styles.exampleTitle}>
-            📱 Premium Subscription ($10.79)
+        {items.length === 0 ? (
+          <Text style={styles.emptyText}>
+            Use Quick Add buttons to add items
           </Text>
-          <ApplePayButton
-            buttonType="buy"
-            buttonStyle="whiteOutline"
-            onPress={callback(processSubscriptionPurchase)}
-            style={styles.applePayButton}
-          />
-        </View>
+        ) : (
+          <>
+            {items.map((item, index) => (
+              <View key={index} style={styles.cartItem}>
+                <Text style={styles.itemLabel}>{item.label}</Text>
+                <Text style={styles.itemAmount}>${item.amount.toFixed(2)}</Text>
+              </View>
+            ))}
 
-        {/* Setup Button */}
-        <View style={styles.paymentExample}>
-          <Text style={styles.exampleTitle}>⚙️ Setup Apple Pay</Text>
-          <ApplePayButton
-            buttonType="setUp"
-            buttonStyle="whiteOutline"
-            onPress={callback(checkApplePayStatus)}
-            style={styles.applePayButton}
-          />
-        </View>
-      </View>
-
-      {/* Status Display */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Status</Text>
-        <Text style={styles.statusText}>
-          {isProcessing ? "Processing payment..." : "Ready to pay"}
-        </Text>
-        {lastTransaction && (
-          <Text style={styles.transactionText}>
-            Last Transaction: {lastTransaction}
-          </Text>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total:</Text>
+              <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+            </View>
+          </>
         )}
       </View>
+
+      {/* Payment Result */}
+      {error && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorTitle}>❌ Payment Failed</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={reset}>
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {result?.success && (
+        <View style={styles.successBox}>
+          <Text style={styles.successTitle}>✅ Payment Successful!</Text>
+          <Text style={styles.successMessage}>
+            Transaction: {result.transactionId}
+          </Text>
+        </View>
+      )}
+
+      {/* Payment Button */}
+      {items.length > 0 && !result?.success && canMakePayments && (
+        <View style={styles.section}>
+          <Text style={styles.paymentTitle}>Complete Payment</Text>
+          {isProcessing ? (
+            <View style={styles.processingContainer}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.processingText}>Processing payment...</Text>
+            </View>
+          ) : (
+            <>
+              {Platform.OS === "ios" ? (
+                <ApplePayButton
+                  buttonType="buy"
+                  buttonStyle="black"
+                  onPress={callback(handlePayment)}
+                  style={styles.payButton}
+                />
+              ) : (
+                <GooglePayButton
+                  buttonType="buy"
+                  theme="dark"
+                  radius={8}
+                  onPress={callback(handlePayment)}
+                  style={styles.payButton}
+                />
+              )}
+            </>
+          )}
+        </View>
+      )}
+
+      {!canMakePayments && (
+        <View style={styles.unavailableBox}>
+          <Text style={styles.unavailableText}>
+            {paymentServiceName} is not available on this device
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -265,20 +281,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-    padding: 20,
+    padding: 16,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 24,
+    marginTop: 16,
     color: "#333",
   },
   section: {
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -286,59 +309,204 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 15,
+    marginBottom: 12,
     color: "#333",
   },
   button: {
     backgroundColor: "#007AFF",
-    padding: 15,
+    padding: 14,
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   buttonText: {
     color: "white",
     textAlign: "center",
-    fontWeight: "bold",
+    fontWeight: "600",
     fontSize: 16,
   },
   statusContainer: {
     backgroundColor: "#f8f9fa",
-    padding: 15,
+    padding: 12,
     borderRadius: 8,
-    marginTop: 10,
   },
-  statusText: {
-    fontSize: 16,
-    marginBottom: 5,
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+  },
+  statusLabel: {
+    fontSize: 14,
     color: "#666",
   },
-  paymentExample: {
-    backgroundColor: "#f8f9fa",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+  statusValue: {
+    fontSize: 14,
+    fontWeight: "600",
   },
-  exampleTitle: {
+  statusYes: {
+    color: "#34C759",
+  },
+  statusNo: {
+    color: "#FF3B30",
+  },
+  quickButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  coffeeButton: {
+    backgroundColor: "#8B4513",
+  },
+  subscriptionButton: {
+    backgroundColor: "#007AFF",
+  },
+  customButton: {
+    backgroundColor: "#34C759",
+  },
+  quickButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  quickButtonPrice: {
+    color: "white",
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
+  },
+  cartHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  clearText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#999",
+    paddingVertical: 20,
+    fontSize: 14,
+  },
+  cartItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  itemLabel: {
+    fontSize: 16,
     color: "#333",
   },
-  applePayButton: {
-    width: "100%",
-    height: 50,
+  itemAmount: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
   },
-  transactionText: {
-    fontSize: 14,
-    color: "#007AFF",
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 12,
+    marginTop: 8,
+    borderTopWidth: 2,
+    borderTopColor: "#333",
+  },
+  totalLabel: {
+    fontSize: 18,
     fontWeight: "bold",
-    marginTop: 5,
+    color: "#333",
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: "80%",
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#007AFF",
+  },
+  errorBox: {
+    backgroundColor: "#FFEBEE",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#D32F2F",
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: "#B71C1C",
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: "#FF3B30",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  retryText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  successBox: {
+    backgroundColor: "#E8F5E9",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#34C759",
+  },
+  successTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginBottom: 8,
+  },
+  successMessage: {
+    fontSize: 14,
+    color: "#1B5E20",
+  },
+  paymentTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#333",
+    textAlign: "center",
+  },
+  processingContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  processingText: {
+    marginTop: 12,
+    color: "#007AFF",
+    fontSize: 14,
+  },
+  payButton: {
+    width: "100%",
+    height: 56,
+  },
+  unavailableBox: {
+    backgroundColor: "#FFF3CD",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#FFC107",
+  },
+  unavailableText: {
+    fontSize: 16,
+    color: "#856404",
+    textAlign: "center",
   },
 });

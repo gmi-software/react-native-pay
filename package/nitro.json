@@ -16,8 +16,12 @@
     "ApplePayButton": {
       "swift": "HybridApplePayButton"
     },
+    "GooglePayButton": {
+      "kotlin": "HybridGooglePayButton"
+    },
     "PaymentHandler": {
-      "swift": "HybridPaymentHandler"
+      "swift": "HybridPaymentHandler",
+      "kotlin": "HybridPaymentHandler"
     }
   },
   "ignorePaths": [

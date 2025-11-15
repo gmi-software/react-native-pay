@@ -1,0 +1,13 @@
+{
+  "uiViewClassName": "GooglePayButton",
+  "supportsRawText": false,
+  "bubblingEventTypes": {},
+  "directEventTypes": {},
+  "validAttributes": {
+    "buttonType": true,
+    "theme": true,
+    "radius": true,
+    "onPress": true,
+    "hybridRef": true
+  }
+}
