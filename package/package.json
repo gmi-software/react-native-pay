@@ -1,10 +1,10 @@
 {
   "name": "react-native-pay",
   "version": "0.0.1",
-  "author": "Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
+  "author": "gmi.software",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mrousavy/nitro.git"
+    "url": "git+https://github.com/gmi-software/react-native-pay.git"
   },
   "main": "lib/index",
   "module": "lib/index",
@@ -28,9 +28,9 @@
     "expo": ">=53.0.0"
   },
   "bugs": {
-    "url": "https://github.com/mrousavy/nitro/issues"
+    "url": "https://github.com/gmi-software/react-native-pay/issues"
   },
-  "description": "Pay for iOS and Android with Nitro",
+  "description": "Pay for iOS and Android with React Native Pay",
   "eslintConfig": {
     "root": true,
     "extends": [
@@ -77,10 +77,16 @@
     "*.podspec",
     "README.md"
   ],
-  "homepage": "https://github.com/mrousavy/nitro#readme",
+  "homepage": "https://github.com/gmi-software/react-native-pay#readme",
   "keywords": [
     "react-native",
-    "nitro"
+    "react-native-pay",
+    "apple-pay",
+    "google-pay",
+    "payment",
+    "checkout",
+    "typescript",
+    "javascript"
   ],
   "license": "MIT",
   "prettier": {
