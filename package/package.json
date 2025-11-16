@@ -1,6 +1,6 @@
 {
-  "name": "@piotr-graczyk-dev/react-native-pay",
-  "version": "0.0.4",
+  "name": "@gmisoftware/react-native-pay",
+  "version": "0.0.5",
   "author": "gmi.software",
   "repository": {
     "type": "git",
