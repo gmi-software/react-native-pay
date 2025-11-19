@@ -15,6 +15,7 @@ import { createPaymentItem, calculateTotal } from '../utils'
 
 export interface UsePaymentCheckoutConfig {
   merchantIdentifier: string
+  merchantName?: string
   countryCode?: string
   currencyCode?: string
   supportedNetworks?: string[]
@@ -116,19 +117,15 @@ export interface UsePaymentCheckoutReturn {
 export function usePaymentCheckout(
   config: UsePaymentCheckoutConfig
 ): UsePaymentCheckoutReturn {
-  // Payment status state
   const [status, setStatus] = useState<PayServiceStatus | null>(null)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
 
-  // Cart state
   const [items, setItems] = useState<PaymentItem[]>([])
 
-  // Payment state
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<PaymentResult | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
-  // Check payment status on mount
   useEffect(() => {
     try {
       const paymentStatus = HybridPaymentHandler.payServiceStatus()
@@ -141,13 +138,12 @@ export function usePaymentCheckout(
     }
   }, [])
 
-  // Calculate total
   const total = useMemo(() => calculateTotal(items), [items])
 
-  // Build payment request
   const paymentRequest = useMemo<PaymentRequest>(() => {
     const {
       merchantIdentifier,
+      merchantName,
       countryCode = 'US',
       currencyCode = 'USD',
       supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
@@ -160,6 +156,7 @@ export function usePaymentCheckout(
     return {
       merchantIdentifier,
       countryCode,
+      merchantName,
       currencyCode,
       supportedNetworks,
       merchantCapabilities,
@@ -213,7 +210,6 @@ export function usePaymentCheckout(
     setItems([])
   }, [])
 
-  // Start payment
   const startPayment = useCallback(async (): Promise<PaymentResult | null> => {
     if (items.length === 0) {
       const emptyCartError = new Error('Cart is empty')
@@ -246,7 +242,6 @@ export function usePaymentCheckout(
     }
   }, [items, paymentRequest])
 
-  // Reset all state
   const reset = useCallback(() => {
     setIsProcessing(false)
     setResult(null)
