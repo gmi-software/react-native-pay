@@ -18,8 +18,14 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(merchantIdentifier: String, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
-    self.init(std.string(merchantIdentifier), std.string(countryCode), std.string(currencyCode), { () -> bridge.std__vector_PaymentItem_ in
+  init(merchantIdentifier: String, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
+    self.init(std.string(merchantIdentifier), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = merchantName {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), std.string(countryCode), std.string(currencyCode), { () -> bridge.std__vector_PaymentItem_ in
       var __vector = bridge.create_std__vector_PaymentItem_(paymentItems.count)
       for __item in paymentItems {
         __vector.push_back(__item)
@@ -96,6 +102,30 @@ public extension PaymentRequest {
     @inline(__always)
     set {
       self.__merchantIdentifier = std.string(newValue)
+    }
+  }
+  
+  var merchantName: String? {
+    @inline(__always)
+    get {
+      return { () -> String? in
+        if bridge.has_value_std__optional_std__string_(self.__merchantName) {
+          let __unwrapped = bridge.get_std__optional_std__string_(self.__merchantName)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__merchantName = { () -> bridge.std__optional_std__string_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+        } else {
+          return .init()
+        }
+      }()
     }
   }
   

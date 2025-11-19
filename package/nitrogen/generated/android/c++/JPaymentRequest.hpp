@@ -41,6 +41,8 @@ namespace margelo::nitro::pay {
       static const auto clazz = javaClassStatic();
       static const auto fieldMerchantIdentifier = clazz->getField<jni::JString>("merchantIdentifier");
       jni::local_ref<jni::JString> merchantIdentifier = this->getFieldValue(fieldMerchantIdentifier);
+      static const auto fieldMerchantName = clazz->getField<jni::JString>("merchantName");
+      jni::local_ref<jni::JString> merchantName = this->getFieldValue(fieldMerchantName);
       static const auto fieldCountryCode = clazz->getField<jni::JString>("countryCode");
       jni::local_ref<jni::JString> countryCode = this->getFieldValue(fieldCountryCode);
       static const auto fieldCurrencyCode = clazz->getField<jni::JString>("currencyCode");
@@ -67,6 +69,7 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> googlePayGatewayMerchantId = this->getFieldValue(fieldGooglePayGatewayMerchantId);
       return PaymentRequest(
         merchantIdentifier->toStdString(),
+        merchantName != nullptr ? std::make_optional(merchantName->toStdString()) : std::nullopt,
         countryCode->toStdString(),
         currencyCode->toStdString(),
         [&]() {
@@ -124,12 +127,13 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentRequest::javaobject> fromCpp(const PaymentRequest& value) {
-      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.merchantIdentifier),
+        value.merchantName.has_value() ? jni::make_jstring(value.merchantName.value()) : nullptr,
         jni::make_jstring(value.countryCode),
         jni::make_jstring(value.currencyCode),
         [&]() {
