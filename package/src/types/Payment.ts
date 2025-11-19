@@ -73,6 +73,7 @@ export interface PaymentToken {
 }
 export interface PaymentRequest {
   merchantIdentifier: string
+  merchantName?: string
   countryCode: string
   currencyCode: string
   paymentItems: PaymentItem[]

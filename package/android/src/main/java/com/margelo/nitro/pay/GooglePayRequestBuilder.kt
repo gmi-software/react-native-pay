@@ -48,7 +48,7 @@ object GooglePayRequestBuilder {
         environment: Int
     ): JSONObject {
         return JSONObject().apply {
-            put("merchantName", PaymentConstants.DEFAULT_MERCHANT_NAME)
+            put("merchantName", request.merchantName ?: PaymentConstants.DEFAULT_MERCHANT_NAME)
             // Add merchant ID only for PRODUCTION environment
             if (environment == WalletConstants.ENVIRONMENT_PRODUCTION) {
                 put("merchantId", request.merchantIdentifier)

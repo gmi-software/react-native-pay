@@ -12,7 +12,7 @@ import {
   ApplePayButton,
   GooglePayButton,
   usePaymentCheckout,
-} from "react-native-pay";
+} from "@gmisoftware/react-native-pay";
 import { callback } from "react-native-nitro-modules";
 
 export default function TabOneScreen() {
