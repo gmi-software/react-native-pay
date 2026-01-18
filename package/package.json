@@ -1,6 +1,6 @@
 {
   "name": "@gmisoftware/react-native-pay",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "author": "gmi.software",
   "repository": {
     "type": "git",
@@ -103,6 +103,8 @@
   },
   "react-native": "src/index",
   "scripts": {
+    "prepack": "cp ../README.md ./README.md",
+    "postpack": "rm ./README.md",
     "postinstall": "tsc || exit 0;",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf android/build node_modules/**/android/build lib",
