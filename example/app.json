@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.piotrgraczykgmi.example"
+      "bundleIdentifier": "com.reactnativepay.example"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.piotrgraczykgmi.example"
+      "package": "com.reactnativepay.example"
     },
     "web": {
       "bundler": "metro",
@@ -34,7 +34,7 @@
     "plugins": [
       "expo-router",
       [
-        "react-native-pay",
+        "@gmisoftware/react-native-pay",
         {
           "merchantIdentifier": "merchant.pl.sfd.sklep",
           "enableGooglePay": true
