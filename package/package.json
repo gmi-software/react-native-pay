@@ -17,7 +17,8 @@
     "eslint-plugin-prettier": "^5.2.1",
     "nitrogen": "*",
     "prettier": "^3.3.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "release-it": "^19.0.0"
   },
   "peerDependencies": {
     "react": "*",
@@ -108,7 +109,8 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "lint-ci": "eslint \"**/*.{js,ts,tsx}\" -f @jamesacarr/github-actions",
     "typescript": "tsc",
-    "specs": "typescript && nitrogen --logLevel=\"debug\""
+    "specs": "typescript && nitrogen --logLevel=\"debug\"",
+    "release": "release-it"
   },
   "source": "src/index",
   "types": "lib/index.d.ts"
