@@ -8,9 +8,6 @@
   },
   "main": "lib/index",
   "module": "lib/index",
-  "dependencies": {
-    "expo": "^53.0.0"
-  },
   "devDependencies": {
     "@react-native/eslint-config": "0.82.0",
     "@types/jest": "^29.5.12",
