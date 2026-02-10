@@ -125,6 +125,7 @@ Before submitting a PR, ensure:
 
 - [ ] TypeScript compiles without errors: `cd package && bun run typecheck`
 - [ ] Linting passes: `cd package && bun run lint`
+- [ ] Automated tests pass: `cd package && bun run test:ci`
 - [ ] Example app runs on iOS (if applicable)
 - [ ] Example app runs on Android (if applicable)
 - [ ] Tested in both TEST and PRODUCTION modes (for payment features)
@@ -176,9 +177,29 @@ export async function checkout(request: PaymentRequest): Promise<PaymentResult> 
 
 ## Testing
 
+### Automated Tests
+
+The library now includes automated tests using:
+
+- **Jest** for unit tests
+- **React Native Testing Library** for integration tests (hooks/components)
+
+Run tests from the `package/` workspace:
+
+```bash
+# Run all tests
+cd package && bun run test
+
+# Run tests in CI mode (single run, no watch)
+cd package && bun run test:ci
+
+# Run a single test file
+cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts
+```
+
 ### Manual Testing
 
-Since automated tests are not yet implemented, manual testing is required:
+Automated coverage does not replace device verification for payment flows. Manual testing is still required:
 
 1. **Test on Real Devices**: Payment features require real iOS/Android devices
 2. **Test Both Platforms**: Verify changes work on both iOS and Android
@@ -187,6 +208,7 @@ Since automated tests are not yet implemented, manual testing is required:
 
 ### Testing Checklist
 
+- [ ] Unit and integration tests pass locally (`cd package && bun run test:ci`)
 - [ ] Payment flow completes successfully
 - [ ] Error handling works for invalid inputs
 - [ ] UI components render correctly
@@ -230,6 +252,7 @@ This project uses [Nitro Modules](https://nitro.margelo.com/) for native binding
 2. **Ensure all checks pass**:
    - TypeScript compilation
    - Linting
+   - Automated tests
    - Manual testing
 
 3. **Write a clear description**:
@@ -251,6 +274,7 @@ This project uses [Nitro Modules](https://nitro.margelo.com/) for native binding
 ## Testing
 - [ ] TypeScript compiles: `cd package && bun run typecheck`
 - [ ] Linting passes: `cd package && bun run lint`
+- [ ] Automated tests pass: `cd package && bun run test:ci`
 - [ ] Tested on iOS (device)
 - [ ] Tested on Android (device)
 - [ ] Tested in TEST mode
@@ -288,7 +312,6 @@ Check the [Roadmap](README.md#roadmap) for planned features, or open an issue to
 
 ### Areas Needing Help
 
-- Automated testing suite
 - Additional payment gateway support
 - Performance optimizations
 - Documentation examples

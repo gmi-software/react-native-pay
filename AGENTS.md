@@ -21,6 +21,8 @@ cd example && bun install
 - Generate Nitro bindings: `cd package && bun run specs`
 - Typecheck: `cd package && bun run typecheck`
 - Lint: `cd package && bun run lint`
+- Test (all): `cd package && bun run test`
+- Test (single file): `cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts`
 - Run example: `cd example && npx expo prebuild && npx expo run:ios` or `npx expo run:android`
 
 ## Nitro Modules notes
@@ -54,6 +56,7 @@ Example template:
 ## Test plan
 - [ ] `cd package && bun run typecheck` (not run)
 - [ ] `cd package && bun run lint` (not run)
+- [ ] `cd package && bun run test:ci` (not run)
 - [ ] `cd example && bunx expo run:ios` (not run)
 - [ ] `cd example && bunx expo run:android` (not run)
 

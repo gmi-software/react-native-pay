@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.ReactApplicationContext
+import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wallet.AutoResolveHelper
 import com.google.android.gms.wallet.IsReadyToPayRequest
 import com.google.android.gms.wallet.PaymentData
@@ -14,6 +15,7 @@ import com.google.android.gms.wallet.Wallet
 import com.google.android.gms.wallet.WalletConstants
 import com.margelo.nitro.core.Promise
 import com.margelo.nitro.NitroModules
+import java.util.concurrent.TimeUnit
 
 /**
  * Hybrid implementation of PaymentHandler for Google Pay on Android
@@ -38,15 +40,23 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
     
     override fun payServiceStatus(): PayServiceStatus {
         return try {
-            val request = IsReadyToPayRequest.fromJson(
-                GooglePayRequestBuilder.createIsReadyToPayRequest().toString()
-            )
-            
             val client = createPaymentsClient(currentEnvironment)
-            client.isReadyToPay(request) // Trigger async check
-            
-            // Return optimistic status (actual check is async)
-            PayServiceStatus(canMakePayments = true, canSetupCards = true)
+            val canSetupCards = isReadyToPay(
+                client = client,
+                requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
+                    existingPaymentMethodRequired = false
+                )
+            )
+            val canMakePayments = isReadyToPay(
+                client = client,
+                requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
+                    existingPaymentMethodRequired = true
+                )
+            )
+            PayServiceStatus(
+                canMakePayments = canMakePayments,
+                canSetupCards = canSetupCards
+            )
         } catch (e: Exception) {
             Log.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Error checking status", e)
             PayServiceStatus(canMakePayments = false, canSetupCards = false)
@@ -142,6 +152,15 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
             GooglePayEnvironment.PRODUCTION -> WalletConstants.ENVIRONMENT_PRODUCTION
             GooglePayEnvironment.TEST, null -> WalletConstants.ENVIRONMENT_TEST
         }
+    }
+
+    private fun isReadyToPay(
+        client: PaymentsClient,
+        requestJson: org.json.JSONObject
+    ): Boolean {
+        val request = IsReadyToPayRequest.fromJson(requestJson.toString())
+        val task = client.isReadyToPay(request)
+        return Tasks.await(task, 5, TimeUnit.SECONDS) ?: false
     }
     
     private fun launchPaymentUI(

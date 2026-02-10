@@ -12,13 +12,16 @@ object GooglePayRequestBuilder {
     /**
      * Creates an IsReadyToPay request
      */
-    fun createIsReadyToPayRequest(): JSONObject {
+    fun createIsReadyToPayRequest(existingPaymentMethodRequired: Boolean? = null): JSONObject {
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
             put("allowedPaymentMethods", JSONArray().apply {
                 put(createBaseCardPaymentMethod())
             })
+            existingPaymentMethodRequired?.let {
+                put("existingPaymentMethodRequired", it)
+            }
         }
     }
     
@@ -29,6 +32,8 @@ object GooglePayRequestBuilder {
         request: PaymentRequest,
         environment: Int
     ): JSONObject {
+        validatePaymentRequest(request, environment)
+
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
@@ -88,18 +93,40 @@ object GooglePayRequestBuilder {
         request: PaymentRequest,
         environment: Int
     ): JSONObject {
+        val isProduction = environment == WalletConstants.ENVIRONMENT_PRODUCTION
+        val gateway = if (isProduction) {
+            request.googlePayGateway!!.trim()
+        } else {
+            request.googlePayGateway?.trim().takeUnless { it.isNullOrEmpty() }
+                ?: PaymentConstants.DEFAULT_GATEWAY
+        }
+        val gatewayMerchantId = if (isProduction) {
+            request.googlePayGatewayMerchantId!!.trim()
+        } else {
+            request.googlePayGatewayMerchantId?.trim().takeUnless { it.isNullOrEmpty() }
+                ?: PaymentConstants.DEFAULT_GATEWAY_MERCHANT_ID
+        }
+
         return JSONObject().apply {
             put("type", PaymentConstants.TOKENIZATION_PAYMENT_GATEWAY)
             put("parameters", JSONObject().apply {
-                val isProduction = environment == WalletConstants.ENVIRONMENT_PRODUCTION
-                put("gateway", request.googlePayGateway ?: PaymentConstants.DEFAULT_GATEWAY)
-                put(
-                    "gatewayMerchantId",
-                    request.googlePayGatewayMerchantId 
-                        ?: if (isProduction) request.merchantIdentifier 
-                        else PaymentConstants.DEFAULT_GATEWAY_MERCHANT_ID
-                )
+                put("gateway", gateway)
+                put("gatewayMerchantId", gatewayMerchantId)
             })
+        }
+    }
+
+    private fun validatePaymentRequest(request: PaymentRequest, environment: Int) {
+        if (environment != WalletConstants.ENVIRONMENT_PRODUCTION) return
+
+        require(request.merchantIdentifier.isNotBlank()) {
+            "merchantIdentifier is required in PRODUCTION"
+        }
+        require(!request.googlePayGateway.isNullOrBlank()) {
+            "googlePayGateway is required in PRODUCTION"
+        }
+        require(!request.googlePayGatewayMerchantId.isNullOrBlank()) {
+            "googlePayGatewayMerchantId is required in PRODUCTION"
         }
     }
     
