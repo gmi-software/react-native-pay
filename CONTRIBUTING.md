@@ -9,6 +9,7 @@ Thank you for your interest in contributing to React Native Pay! This document p
 - [Development Setup](#development-setup)
 - [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
+- [AI Spec-Driven Development](#ai-spec-driven-development)
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Nitro Modules](#nitro-modules)
@@ -135,6 +136,42 @@ Before submitting a PR, ensure:
 - Update `README.md` for API changes
 - Add code examples for new features
 - Update type definitions if needed
+
+## AI Spec-Driven Development
+
+This repository follows **AI spec-driven development** for important changes in `package/`.
+
+The source of truth for architecture and behavior lives in `.ai/specs/`. Code and specs must evolve together.
+
+### Core Rules
+
+- Always check for an existing relevant spec before implementing changes.
+- For significant feature/API/architecture updates, update the matching spec in `.ai/specs/`.
+- For new modules or major new features, create a new spec file.
+- Keep each spec changelog updated with a dated entry.
+- If you add a new spec file, update `.ai/specs/README.md` specification table.
+
+### Naming and Structure
+
+- New spec files must follow: `SPEC-{next-number}-{YYYY-MM-DD}-{kebab-title}.md`
+- Follow the section guidance from `.ai/specs/README.md` and `.ai/specs/AGENTS.md`.
+- Include only applicable sections (for example: Overview, Architecture, API Contracts, Configuration, Changelog).
+
+### Practical Workflow
+
+1. **Before coding**
+   - Read the related spec in `.ai/specs/`
+   - Confirm constraints, contracts, and assumptions
+2. **While implementing**
+   - Keep notes on behavior/API/config changes that must be reflected in specs
+3. **After implementation**
+   - Update existing spec(s) or create a new one
+   - Add a changelog entry with date and summary
+   - Update `.ai/specs/README.md` if a new spec was created
+
+### Pull Requests
+
+Include spec changes in the same PR as the code change whenever possible. If specs are intentionally deferred, explain why in the PR description.
 
 ## Code Style
 
