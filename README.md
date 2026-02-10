@@ -1,4 +1,4 @@
-# React Native Pay
+<img width="1660" height="512" alt="react-native-pay" src="https://github.com/user-attachments/assets/b06a4afb-5a0b-4605-a0e1-75793ab4df15" />
 
 <div align="center">
 
