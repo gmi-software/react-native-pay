@@ -42,10 +42,10 @@ Use `Platform.OS` (or equivalent) to render the correct button and to pass platf
 No. The library works in bare React Native too. The Expo plugin only simplifies adding Apple Pay entitlements and Google Pay metadata; in a bare project you configure those in Xcode and Android Studio yourself.
 
 **Can I use only Apple Pay or only Google Pay?**  
-Yes. Omit `enableGooglePay` (or set false) for iOS-only; omit `merchantIdentifier` for Android-only. In code, only render the button for the platform you support.
+Yes. Omit `enableGooglePay` (or set false) for iOS-only; omit plugin `merchantIdentifier` for Android-only. In code, only render the button for the platform you support.
 
 **Which gateways are supported for Google Pay?**  
-Any gateway that supports the [Google Pay API](https://developers.google.com/pay/api/android) and the gateway token format. Commonly used: Stripe, Braintree, Square, Adyen, Authorize.net, Checkout.com. Set `googlePayGateway` and `googlePayGatewayMerchantId` accordingly.
+Any gateway that supports the [Google Pay API](https://developers.google.com/pay/api/android) and the gateway token format. Commonly used: Stripe, Braintree, Square, Adyen, Authorize.net, Checkout.com. Set `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` accordingly.
 
 **Where do I report issues?**  
 [GitHub Issues](https://github.com/gmi-software/react-native-pay/issues).

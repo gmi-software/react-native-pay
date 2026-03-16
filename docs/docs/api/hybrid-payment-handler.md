@@ -30,12 +30,12 @@ Starts the native payment flow with the given request. Returns a promise that re
 
 ```ts
 const result = await HybridPaymentHandler.startPayment({
-  merchantIdentifier: 'merchant.com.example',
   countryCode: 'US',
   currencyCode: 'USD',
   merchantCapabilities: ['3DS'],
   supportedNetworks: ['visa', 'mastercard', 'amex'],
   paymentItems: [{ label: 'Total', amount: 29.99, type: 'final' }],
+  googlePayMerchantId: 'your_google_pay_merchant_id',
 })
 // result: PaymentResult
 ```
@@ -50,6 +50,8 @@ interface PaymentResult {
   error?: string
 }
 ```
+
+On iOS, the merchant ID is resolved from the app entitlements by default. Use `applePayMerchantIdentifier` only when you need to override the configured value at runtime.
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 

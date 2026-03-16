@@ -35,7 +35,7 @@ bun run android
 
 Use the checkout screen in the example app as a reference for:
 
-1. Calls `usePaymentCheckout` with `merchantIdentifier`, `countryCode`, and `currencyCode`.
+1. Calls `usePaymentCheckout` with `countryCode`, `currencyCode`, and optional platform-specific overrides.
 2. Shows a loading state while `isCheckingStatus` is true.
 3. Renders “Quick Add” buttons that call `addItems` or `addItem`.
 4. Displays the cart (items + total) and a “Clear” action.
@@ -46,7 +46,7 @@ Copy these patterns into your app: config setup, cart handling, button usage, an
 
 ## Plugin config in the example
 
-The example’s **`app.json`** includes the React Native Pay plugin (e.g. with a demo Merchant ID and Google Pay enabled). Change `merchantIdentifier` (and any gateway settings) to your own for real payments.
+The example’s **`app.json`** includes the React Native Pay plugin (e.g. with a demo Merchant ID and Google Pay enabled). Change the plugin `merchantIdentifier` and any Google Pay runtime settings to your own for real payments.
 
 ## Next
 

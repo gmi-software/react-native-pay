@@ -16,7 +16,7 @@ In `app.json` (or `app.config.js`), add the plugin with your Merchant ID:
 }
 ```
 
-Use the same value in your app code when calling `usePaymentCheckout({ merchantIdentifier: '...' })`.
+The runtime API reads this Merchant ID from the native app entitlements automatically. You only need `applePayMerchantIdentifier` in code if you want to override the configured value at runtime.
 
 ## 2. Apple Developer setup
 

@@ -13,15 +13,67 @@ import type {
 } from '../types'
 import { createPaymentItem, calculateTotal } from '../utils'
 
+/**
+ * Configuration for `usePaymentCheckout`.
+ */
 export interface UsePaymentCheckoutConfig {
-  merchantIdentifier: string
+  /**
+   * Merchant name shown by payment providers that support displaying it.
+   * Used primarily by Google Pay.
+   */
   merchantName?: string
+
+  /**
+   * ISO 3166-1 alpha-2 country code for the transaction.
+   * Defaults to `'US'`.
+   */
   countryCode?: string
+
+  /**
+   * ISO 4217 currency code for all payment items.
+   * Defaults to `'USD'`.
+   */
   currencyCode?: string
+
+  /**
+   * Supported card networks for the payment sheet.
+   * Defaults to `['visa', 'mastercard', 'amex', 'discover']`.
+   */
   supportedNetworks?: string[]
+
+  /**
+   * Merchant capabilities passed to Apple Pay.
+   * Defaults to `['3DS']`.
+   */
   merchantCapabilities?: string[]
+
+  /**
+   * Optional Apple Pay Merchant ID override.
+   * When omitted, iOS reads the Merchant ID from the app entitlements.
+   */
+  applePayMerchantIdentifier?: string
+
+  /**
+   * Google Pay merchant ID used in Android production requests.
+   * Not needed for iOS.
+   */
+  googlePayMerchantId?: string
+
+  /**
+   * Google Pay environment for Android requests.
+   * Use `'TEST'` for sandbox flows and `'PRODUCTION'` for live payments.
+   */
   googlePayEnvironment?: GooglePayEnvironment
+
+  /**
+   * Payment gateway identifier for Google Pay tokenization.
+   * Examples include `'stripe'`, `'braintree'`, and `'adyen'`.
+   */
   googlePayGateway?: string
+
+  /**
+   * Merchant ID provided by your payment gateway for Google Pay tokenization.
+   */
   googlePayGatewayMerchantId?: string
 }
 
@@ -62,7 +114,8 @@ export interface UsePaymentCheckoutReturn {
  * - Payment processing
  * - State management
  *
- * @param config - Payment configuration
+ * @param config - Hook configuration including locale, supported networks,
+ * Apple Pay override, and Google Pay gateway settings.
  * @returns Complete payment checkout interface
  *
  * @example
@@ -79,9 +132,9 @@ export interface UsePaymentCheckoutReturn {
  *     isProcessing,
  *     error,
  *   } = usePaymentCheckout({
- *     merchantIdentifier: 'merchant.com.example',
  *     currencyCode: 'USD',
  *     countryCode: 'US',
+ *     googlePayMerchantId: 'your_google_pay_merchant_id',
  *   })
  *
  *   // Add single item
@@ -142,19 +195,20 @@ export function usePaymentCheckout(
 
   const paymentRequest = useMemo<PaymentRequest>(() => {
     const {
-      merchantIdentifier,
       merchantName,
       countryCode = 'US',
       currencyCode = 'USD',
       supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
       merchantCapabilities = ['3DS'],
+      applePayMerchantIdentifier,
+      googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
     } = config
 
     return {
-      merchantIdentifier,
+      applePayMerchantIdentifier,
       countryCode,
       merchantName,
       currencyCode,
@@ -162,6 +216,7 @@ export function usePaymentCheckout(
       merchantCapabilities,
       paymentItems:
         items.length > 0 ? items : [createPaymentItem('Total', 0, 'final')],
+      googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,

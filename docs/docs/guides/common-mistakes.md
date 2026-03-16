@@ -18,7 +18,6 @@ Avoid these to get Apple Pay and Google Pay working reliably.
 
 - Use the **exact** Merchant ID from Apple Developer (e.g. `merchant.com.yourcompany.app`) in:
   - Expo plugin: `merchantIdentifier`
-  - `usePaymentCheckout({ merchantIdentifier: '...' })`
 - Run `npx expo prebuild --clean` after changing the plugin.
 - Ensure the App ID has Apple Pay enabled and is linked to this Merchant ID.
 
@@ -33,7 +32,7 @@ Avoid these to get Apple Pay and Google Pay working reliably.
 - In the Expo plugin, set **`enableGooglePay: true`**.
 - Run prebuild and rebuild the app.
 - On device/emulator: ensure Google Play Services is available and the user has added a card in Google Pay.
-- For production, set **googlePayGateway**, **googlePayGatewayMerchantId**, and **googlePayEnvironment: 'PRODUCTION'** in your checkout config.
+- For production, set **googlePayMerchantId**, **googlePayGateway**, **googlePayGatewayMerchantId**, and **googlePayEnvironment: 'PRODUCTION'** in your checkout config.
 
 ---
 

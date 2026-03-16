@@ -22,18 +22,18 @@ Either use a helper or build the object yourself:
 import { createPaymentRequest, HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
 const paymentRequest = createPaymentRequest({
-  merchantIdentifier: 'merchant.com.example',
   amount: 99.99,
   label: 'Premium Subscription',
   countryCode: 'US',
   currencyCode: 'USD',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'PRODUCTION',
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_merchant_id',
 })
 ```
 
-For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest`.
+For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest`. On iOS, the Merchant ID is read from the app entitlements unless you explicitly pass `applePayMerchantIdentifier`.
 
 ## 3. Handle the button press
 

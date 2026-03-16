@@ -204,7 +204,6 @@ function CheckoutScreen() {
     isProcessing,
     error,
   } = usePaymentCheckout({
-    merchantIdentifier: 'merchant.com.yourcompany.app',
     currencyCode: 'USD',
     countryCode: 'US',
   })
@@ -321,10 +320,10 @@ For Google Pay, you need to configure your payment gateway:
 
 ```typescript
 const checkout = usePaymentCheckout({
-  merchantIdentifier: 'merchant.com.yourcompany.app',
   currencyCode: 'USD',
   countryCode: 'US',
   // Google Pay specific
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'TEST', // or 'PRODUCTION'
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_stripe_merchant_id',
@@ -354,13 +353,14 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 
 ```typescript
 interface UsePaymentCheckoutConfig {
-  merchantIdentifier: string
   merchantName?: string
   countryCode?: string // Default: 'US'
   currencyCode?: string // Default: 'USD'
   supportedNetworks?: string[] // Default: ['visa', 'mastercard', 'amex', 'discover']
   merchantCapabilities?: string[] // Default: ['3DS']
+  applePayMerchantIdentifier?: string // Optional iOS override
   // Google Pay specific (Android)
+  googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
@@ -401,9 +401,9 @@ interface UsePaymentCheckoutReturn {
 
 ```typescript
 const checkout = usePaymentCheckout({
-  merchantIdentifier: 'merchant.com.example',
   currencyCode: 'USD',
   countryCode: 'US',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'TEST',
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_stripe_merchant_id',
@@ -456,12 +456,12 @@ Start a payment request.
 
 ```typescript
 const result = await HybridPaymentHandler.startPayment({
-  merchantIdentifier: 'merchant.com.example',
   countryCode: 'US',
   currencyCode: 'USD',
   merchantCapabilities: ['3DS'],
   supportedNetworks: ['visa', 'mastercard', 'amex'],
   paymentItems: [{ label: 'Total', amount: 29.99, type: 'final' }],
+  googlePayMerchantId: 'your_google_pay_merchant_id',
 })
 ```
 
@@ -586,11 +586,11 @@ Create a complete payment request from simplified config.
 import { createPaymentRequest } from '@gmisoftware/react-native-pay'
 
 const request = createPaymentRequest({
-  merchantIdentifier: 'merchant.com.example',
   amount: 29.99,
   label: 'Coffee Subscription',
   countryCode: 'US',
   currencyCode: 'USD',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'TEST',
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_merchant_id',
@@ -651,7 +651,7 @@ interface PaymentItem {
 
 // Payment Request
 interface PaymentRequest {
-  merchantIdentifier: string
+  applePayMerchantIdentifier?: string
   merchantName?: string
   countryCode: string
   currencyCode: string
@@ -663,6 +663,7 @@ interface PaymentRequest {
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
   // Google Pay specific
+  googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
@@ -773,11 +774,11 @@ if (!status.canMakePayments) {
 
 // 2. Create payment request
 const paymentRequest = createPaymentRequest({
-  merchantIdentifier: 'merchant.com.example',
   amount: 99.99,
   label: 'Premium Subscription',
   countryCode: 'US',
   currencyCode: 'USD',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'PRODUCTION',
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_merchant_id',
@@ -819,7 +820,6 @@ return Platform.OS === 'ios' ? (
 
 ```typescript
 const checkout = usePaymentCheckout({
-  merchantIdentifier: 'merchant.com.example',
   currencyCode: 'USD',
 })
 

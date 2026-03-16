@@ -64,7 +64,6 @@ function CheckoutScreen() {
     isProcessing,
     error,
   } = usePaymentCheckout({
-    merchantIdentifier: 'merchant.com.yourcompany.app',
     currencyCode: 'USD',
     countryCode: 'US',
   })
@@ -136,7 +135,7 @@ import { callback } from 'react-native-nitro-modules'
 
 - **iOS:** Real device with a card in Wallet; Simulator has limited support.
 - **Android:** Real device or emulator with Google Play Services; add a card in Google Pay.
-- For **Google Pay**, configure `googlePayEnvironment`, `googlePayGateway`, and `googlePayGatewayMerchantId` when you move to a real gateway (see [Android setup](/docs/setup/android-google-pay) and [API: usePaymentCheckout](/docs/api/use-payment-checkout)).
+- For **Google Pay**, configure `googlePayMerchantId`, `googlePayEnvironment`, `googlePayGateway`, and `googlePayGatewayMerchantId` when you move to a real gateway (see [Android setup](/docs/setup/android-google-pay) and [API: usePaymentCheckout](/docs/api/use-payment-checkout)).
 
 ## 7. Production checklist (required)
 

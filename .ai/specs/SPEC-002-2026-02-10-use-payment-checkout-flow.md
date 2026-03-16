@@ -4,7 +4,7 @@
 
 This specification documents the behavior contract for `usePaymentCheckout`, the high-level hook that manages payment availability, cart state, and payment execution.
 
-The hook is intended to be the default integration path for product teams that do not need direct low-level native calls.
+The hook is intended to be the default integration path for product teams that do not need direct low-level native calls. It also defines the runtime request contract that bridges JavaScript configuration to Apple Pay and Google Pay native behavior.
 
 ## Problem Statement
 
@@ -46,6 +46,12 @@ Primary hook models:
 - `UsePaymentCheckoutReturn`
 - `PaymentItem`, `PaymentRequest`, `PaymentResult`, `PayServiceStatus`
 
+Platform-specific request fields:
+
+- `applePayMerchantIdentifier?`: optional iOS-only override used when the app has multiple Apple Pay merchant IDs configured or needs to avoid the default entitlement-derived identifier.
+- `googlePayMerchantId?`: optional Android-only field in test mode and required by native validation in production mode.
+- `googlePayEnvironment?`, `googlePayGateway?`, `googlePayGatewayMerchantId?`: Android-only Google Pay configuration forwarded directly to native request builders.
+
 Default values in request composition:
 
 - `countryCode`: `US`
@@ -72,7 +78,16 @@ Functional contract highlights:
 5. On thrown exception:
    - `error` is set to normalized `Error`
    - function returns `null`
-6. `reset()` clears transient payment state but does not clear cart items.
+6. On iOS merchant identifier resolution:
+   - JavaScript config does not require a merchant identifier field for the default Apple Pay path.
+   - If `applePayMerchantIdentifier` is provided and not blank, native uses it as an explicit override.
+   - If the override is omitted, native resolves the first non-empty value from the app entitlement `com.apple.developer.in-app-payments`.
+   - If neither source yields a merchant identifier, native returns `success=false` with error `"No Apple Pay merchant identifier configured"`.
+7. On Android Google Pay production validation:
+   - `googlePayMerchantId` is written into `merchantInfo.merchantId` only for `googlePayEnvironment='PRODUCTION'`.
+   - In production, native validation requires non-blank `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
+   - In non-production environments, the merchant ID may be omitted and gateway values fall back to native defaults.
+8. `reset()` clears transient payment state but does not clear cart items.
 
 ## UI/UX
 
@@ -89,7 +104,7 @@ Recommended consumer pattern:
 
 Required config:
 
-- `merchantIdentifier`
+- No hook config field is universally required. Platform-specific runtime requirements are enforced when payment starts.
 
 Optional config:
 
@@ -98,6 +113,8 @@ Optional config:
 - `currencyCode`
 - `supportedNetworks`
 - `merchantCapabilities`
+- `applePayMerchantIdentifier`
+- `googlePayMerchantId`
 - `googlePayEnvironment`
 - `googlePayGateway`
 - `googlePayGatewayMerchantId`
@@ -122,7 +139,13 @@ When changing hook behavior:
 
 ## Migration Path
 
-No migration required for initial baseline documentation.
+Previous public behavior required a JS-side `merchantIdentifier` for Apple Pay-oriented integrations.
+
+Current migration contract:
+
+- Replace any hook config usage of `merchantIdentifier` with `applePayMerchantIdentifier` only when an explicit Apple Pay override is needed.
+- For standard iOS setups, rely on the merchant IDs already configured in native entitlements via Expo plugin or manual native setup.
+- For Android production Google Pay, provide `googlePayMerchantId` explicitly together with `googlePayGateway` and `googlePayGatewayMerchantId`.
 
 Future behavior changes must include:
 
@@ -141,6 +164,11 @@ Future behavior changes must include:
 - Should `reset()` optionally clear cart items via flag (`reset({ clearCart: true })`)?
 
 ## Changelog
+
+### 2026-03-16
+
+- Updated the runtime contract so iOS no longer requires a JS merchant identifier by default and instead resolves Apple Pay merchant IDs from native entitlements unless `applePayMerchantIdentifier` overrides it.
+- Recorded that Android production Google Pay now uses `googlePayMerchantId` explicitly for `merchantInfo.merchantId` and validates it alongside gateway fields.
 
 ### 2026-02-10
 

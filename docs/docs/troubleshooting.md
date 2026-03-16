@@ -6,7 +6,7 @@ Common issues and fixes for React Native Pay.
 
 ### Apple Pay button not showing
 
-- **Merchant ID:** Must match exactly in: Apple Developer Portal, Expo plugin `merchantIdentifier`, and `usePaymentCheckout({ merchantIdentifier })`.
+- **Merchant ID:** Must match exactly in Apple Developer and the Expo plugin `merchantIdentifier`. The runtime iOS API reads that entitlement automatically unless you override it with `applePayMerchantIdentifier`.
 - **Entitlements:** Run `npx expo prebuild --clean` so the plugin can write the Apple Pay entitlement. In Xcode, confirm the app has the “Apple Pay Payment Processing” capability and the correct Merchant ID.
 - **Device:** Prefer a **real device** with a card in Wallet. Simulator has limited Apple Pay support.
 
@@ -36,7 +36,7 @@ Common issues and fixes for React Native Pay.
 
 - User must have **at least one card** in Google Pay on the device.
 - For testing, use **`googlePayEnvironment: 'TEST'`** and the test gateway/merchant ID from your payment provider.
-- Check **googlePayGateway**, **googlePayGatewayMerchantId**, and **googlePayEnvironment** in your checkout config (see [Android setup](/docs/setup/android-google-pay)).
+- Check **googlePayMerchantId**, **googlePayGateway**, **googlePayGatewayMerchantId**, and **googlePayEnvironment** in your checkout config (see [Android setup](/docs/setup/android-google-pay)).
 
 ### Manifest or build errors
 

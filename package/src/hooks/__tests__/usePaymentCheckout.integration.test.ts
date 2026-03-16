@@ -25,9 +25,7 @@ describe('usePaymentCheckout integration', () => {
 
   const renderCheckout = () =>
     renderHook(() =>
-      usePaymentCheckout({
-        merchantIdentifier: 'merchant.com.test',
-      })
+      usePaymentCheckout({})
     )
 
   it('loads payment service status on mount', async () => {
@@ -142,7 +140,6 @@ describe('usePaymentCheckout integration', () => {
     expect(mockStartPayment).toHaveBeenCalledTimes(1)
     expect(mockStartPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        merchantIdentifier: 'merchant.com.test',
         paymentItems: [{ label: 'Coffee', amount: 4.99, type: 'final' }],
       })
     )
@@ -172,6 +169,38 @@ describe('usePaymentCheckout integration', () => {
       success: false,
       error: 'Declined by issuer',
     })
+  })
+
+  it('forwards Apple Pay override and Google Pay config when provided', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() =>
+      usePaymentCheckout({
+        applePayMerchantIdentifier: 'merchant.com.apple.override',
+        googlePayMerchantId: 'google-pay-merchant-id',
+        googlePayEnvironment: 'PRODUCTION',
+        googlePayGateway: 'stripe',
+        googlePayGatewayMerchantId: 'gateway-merchant-id',
+      })
+    )
+
+    act(() => {
+      result.current.addItem('Order', 12)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(mockStartPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        applePayMerchantIdentifier: 'merchant.com.apple.override',
+        googlePayMerchantId: 'google-pay-merchant-id',
+        googlePayEnvironment: 'PRODUCTION',
+        googlePayGateway: 'stripe',
+        googlePayGatewayMerchantId: 'gateway-merchant-id',
+      })
+    )
   })
 
   it('uses generic error for non-Error thrown values', async () => {

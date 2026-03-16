@@ -1,13 +1,18 @@
-import { withEntitlementsPlist, type ConfigPlugin } from 'expo/config-plugins'
+import {
+  withEntitlementsPlist,
+  withInfoPlist,
+  type ConfigPlugin,
+} from 'expo/config-plugins'
 import type { ReactNativePayPluginProps } from './type'
+
+const APPLE_PAY_ENTITLEMENT_KEY = 'com.apple.developer.in-app-payments'
+const APPLE_PAY_INFO_PLIST_KEY = 'ReactNativePayApplePayMerchantIdentifiers'
 
 export function setApplePayEntitlement(
   merchantIdentifiers: string | string[],
   entitlements: Record<string, any>
 ): Record<string, any> {
-  const key = 'com.apple.developer.in-app-payments'
-
-  const merchants: string[] = entitlements[key] ?? []
+  const merchants: string[] = entitlements[APPLE_PAY_ENTITLEMENT_KEY] ?? []
 
   if (!Array.isArray(merchantIdentifiers)) {
     merchantIdentifiers = [merchantIdentifiers]
@@ -20,9 +25,24 @@ export function setApplePayEntitlement(
   }
 
   if (merchants.length) {
-    entitlements[key] = merchants
+    entitlements[APPLE_PAY_ENTITLEMENT_KEY] = merchants
   }
   return entitlements
+}
+
+export function setApplePayMerchantIdentifiersInInfoPlist(
+  merchantIdentifiers: string | string[],
+  infoPlist: Record<string, any>
+): Record<string, any> {
+  const merchants: string[] = Array.isArray(merchantIdentifiers)
+    ? merchantIdentifiers.filter(Boolean)
+    : [merchantIdentifiers].filter(Boolean)
+
+  if (merchants.length) {
+    infoPlist[APPLE_PAY_INFO_PLIST_KEY] = [...new Set(merchants)]
+  }
+
+  return infoPlist
 }
 
 export const withApplePay: ConfigPlugin<ReactNativePayPluginProps> = (
@@ -34,8 +54,16 @@ export const withApplePay: ConfigPlugin<ReactNativePayPluginProps> = (
     return expoConfig
   }
 
-  return withEntitlementsPlist(expoConfig, (config) => {
+  const withEntitlements = withEntitlementsPlist(expoConfig, (config) => {
     config.modResults = setApplePayEntitlement(
+      merchantIdentifier,
+      config.modResults
+    )
+    return config
+  })
+
+  return withInfoPlist(withEntitlements, (config) => {
+    config.modResults = setApplePayMerchantIdentifiersInInfoPlist(
       merchantIdentifier,
       config.modResults
     )

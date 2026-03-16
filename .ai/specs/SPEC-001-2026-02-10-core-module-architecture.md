@@ -40,7 +40,7 @@ High-level request path:
 1. Consumer imports `HybridPaymentHandler` or `usePaymentCheckout` from `src/index.ts`.
 2. Hook or direct call uses Nitro object methods defined by `PaymentHandler.nitro.ts`.
 3. Nitro runtime resolves to native Kotlin/Swift implementations.
-4. Native implementation performs Apple Pay or Google Pay flow and returns mapped result.
+4. Native implementation performs Apple Pay or Google Pay flow and returns mapped result. On iOS, merchant ID resolution prefers `applePayMerchantIdentifier` and otherwise falls back to the app's Apple Pay entitlements; on Android production, Google Pay writes `googlePayMerchantId` into the request merchant info.
 5. TypeScript consumer receives `PaymentResult` and handles backend processing.
 
 Primary source areas:
@@ -79,6 +79,12 @@ Primary high-level API:
 - `ApplePayButton` and `GooglePayButton` host components
 - Utility functions from `src/utils/paymentHelpers.ts`
 
+Runtime payment request contract highlights:
+
+- Apple Pay runtime no longer requires a JS `merchantIdentifier` field for the default path.
+- `applePayMerchantIdentifier?` is an explicit iOS override, primarily for apps with multiple configured merchant IDs.
+- `googlePayMerchantId?` is the Android runtime field used for production Google Pay merchant identity.
+
 ## UI/UX
 
 UI primitives are native button host components:
@@ -93,6 +99,11 @@ The library does not enforce checkout screen layout. Consumers own surrounding U
 Configuration surfaces:
 
 - Runtime payment config via `PaymentRequest` or hook config
+  - `applePayMerchantIdentifier?`
+  - `googlePayMerchantId?`
+  - `googlePayEnvironment?`
+  - `googlePayGateway?`
+  - `googlePayGatewayMerchantId?`
 - Build-time config via Expo plugin props:
   - `merchantIdentifier`
   - `enableGooglePay`
@@ -136,6 +147,11 @@ Future migration policy:
 - Should this architecture spec be split into runtime architecture and build architecture as complexity grows?
 
 ## Changelog
+
+### 2026-03-16
+
+- Clarified that Apple Pay runtime merchant resolution now defaults to iOS entitlements and only uses `applePayMerchantIdentifier` as an override.
+- Recorded `googlePayMerchantId` as the explicit Android production merchant identity field in the runtime request contract.
 
 ### 2026-02-10
 

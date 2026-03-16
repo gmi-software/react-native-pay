@@ -72,7 +72,9 @@ export interface PaymentToken {
   paymentData: string // Base64 encoded Data from PKPaymentToken
 }
 export interface PaymentRequest {
-  merchantIdentifier: string
+  // Optional Apple Pay override for apps with multiple configured merchant IDs.
+  // When omitted, iOS resolves the first configured entitlement automatically.
+  applePayMerchantIdentifier?: string
   merchantName?: string
   countryCode: string
   currencyCode: string
@@ -84,6 +86,7 @@ export interface PaymentRequest {
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
   // Google Pay specific configuration (Android only)
+  googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string

@@ -1,13 +1,23 @@
-import { withApplePay, setApplePayEntitlement } from '../withApplePay'
+import {
+  withApplePay,
+  setApplePayEntitlement,
+  setApplePayMerchantIdentifiersInInfoPlist,
+} from '../withApplePay'
 
 const mockWithEntitlementsPlist = jest.fn(
   (config: Record<string, unknown>, action: (input: any) => any) =>
-    action({ modResults: config })
+    action('modResults' in config ? config : { modResults: config })
+)
+const mockWithInfoPlist = jest.fn(
+  (config: Record<string, unknown>, action: (input: any) => any) =>
+    action('modResults' in config ? config : { modResults: config })
 )
 
 jest.mock('expo/config-plugins', () => ({
   withEntitlementsPlist: (config: any, action: (input: any) => any) =>
     mockWithEntitlementsPlist(config, action),
+  withInfoPlist: (config: any, action: (input: any) => any) =>
+    mockWithInfoPlist(config, action),
 }))
 
 describe('withApplePay', () => {
@@ -33,11 +43,26 @@ describe('withApplePay', () => {
     })
   })
 
+  it('writes merchant identifiers into Info.plist', () => {
+    const result = setApplePayMerchantIdentifiersInInfoPlist(
+      ['merchant.com.a', 'merchant.com.b', 'merchant.com.a', ''],
+      {}
+    )
+
+    expect(result).toEqual({
+      ReactNativePayApplePayMerchantIdentifiers: [
+        'merchant.com.a',
+        'merchant.com.b',
+      ],
+    })
+  })
+
   it('does not modify config when merchantIdentifier is missing', () => {
     const config = { name: 'app' }
     const result = withApplePay(config as any, {})
     expect(result).toBe(config)
     expect(mockWithEntitlementsPlist).not.toHaveBeenCalled()
+    expect(mockWithInfoPlist).not.toHaveBeenCalled()
   })
 
   it('applies entitlements when merchantIdentifier is provided', () => {
@@ -47,9 +72,11 @@ describe('withApplePay', () => {
     })
 
     expect(mockWithEntitlementsPlist).toHaveBeenCalledTimes(1)
+    expect(mockWithInfoPlist).toHaveBeenCalledTimes(1)
     expect(result).toEqual({
       modResults: {
         'com.apple.developer.in-app-payments': ['merchant.com.test'],
+        ReactNativePayApplePayMerchantIdentifiers: ['merchant.com.test'],
       },
     })
   })

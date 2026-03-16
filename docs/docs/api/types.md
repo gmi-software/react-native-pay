@@ -27,7 +27,7 @@ Full request passed to the native layer (or to `HybridPaymentHandler.startPaymen
 
 ```ts
 interface PaymentRequest {
-  merchantIdentifier: string
+  applePayMerchantIdentifier?: string
   merchantName?: string
   countryCode: string
   currencyCode: string
@@ -39,11 +39,14 @@ interface PaymentRequest {
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
   // Google Pay (Android)
+  googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
 }
 ```
+
+On iOS, `applePayMerchantIdentifier` is optional and only needed when you want to override the Merchant ID configured in the native app entitlements.
 
 ---
 

@@ -11,7 +11,6 @@
  * import { createPaymentRequest, calculateTotal } from 'react-native-pay'
  *
  * const request = createPaymentRequest({
- *   merchantIdentifier: 'merchant.com.example',
  *   amount: 29.99,
  *   label: 'Coffee Subscription'
  * })
@@ -80,13 +79,12 @@ export function calculateTotal(items: PaymentItem[]): number {
  * - supportedNetworks: ['visa', 'mastercard', 'amex', 'discover']
  * - merchantCapabilities: ['3DS']
  *
- * @param options - Payment request options (merchantIdentifier, amount, label required)
+ * @param options - Payment request options (amount and label required)
  * @returns Complete PaymentRequest object
  *
  * @example
  * ```typescript
  * const request = createPaymentRequest({
- *   merchantIdentifier: 'merchant.com.example',
  *   amount: 29.99,
  *   label: 'Coffee Subscription',
  *   countryCode: 'CA', // override default
@@ -96,13 +94,11 @@ export function calculateTotal(items: PaymentItem[]): number {
  */
 export function createPaymentRequest(
   options: Partial<PaymentRequest> & {
-    merchantIdentifier: string
     amount: number
     label: string
   }
 ): PaymentRequest {
   const {
-    merchantIdentifier,
     amount,
     label,
     countryCode = 'US',
@@ -118,7 +114,6 @@ export function createPaymentRequest(
   } = options
 
   return {
-    merchantIdentifier,
     countryCode,
     currencyCode,
     paymentItems: [createPaymentItem(label, amount, 'final')],

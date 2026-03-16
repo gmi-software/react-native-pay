@@ -56,7 +56,7 @@ object GooglePayRequestBuilder {
             put("merchantName", request.merchantName ?: PaymentConstants.DEFAULT_MERCHANT_NAME)
             // Add merchant ID only for PRODUCTION environment
             if (environment == WalletConstants.ENVIRONMENT_PRODUCTION) {
-                put("merchantId", request.merchantIdentifier)
+                put("merchantId", request.googlePayMerchantId)
             }
         }
     }
@@ -119,8 +119,8 @@ object GooglePayRequestBuilder {
     private fun validatePaymentRequest(request: PaymentRequest, environment: Int) {
         if (environment != WalletConstants.ENVIRONMENT_PRODUCTION) return
 
-        require(request.merchantIdentifier.isNotBlank()) {
-            "merchantIdentifier is required in PRODUCTION"
+        require(!request.googlePayMerchantId.isNullOrBlank()) {
+            "googlePayMerchantId is required in PRODUCTION"
         }
         require(!request.googlePayGateway.isNullOrBlank()) {
             "googlePayGateway is required in PRODUCTION"

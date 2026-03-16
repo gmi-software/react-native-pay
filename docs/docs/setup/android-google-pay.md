@@ -27,13 +27,13 @@ For production you will also need to register your app and comply with Google’
 
 ## 3. Gateway configuration (in app code)
 
-Google Pay needs a **payment gateway** (Stripe, Braintree, etc.) and a **gateway merchant ID**. Configure them in `usePaymentCheckout` (or in your `PaymentRequest`):
+Google Pay needs a **Google Pay merchant ID** for production, plus your **payment gateway** details (Stripe, Braintree, etc.) and **gateway merchant ID**. Configure them in `usePaymentCheckout` (or in your `PaymentRequest`):
 
 ```ts
 usePaymentCheckout({
-  merchantIdentifier: 'merchant.com.yourcompany.app',
   currencyCode: 'USD',
   countryCode: 'US',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'TEST',   // or 'PRODUCTION'
   googlePayGateway: 'stripe',    // or braintree, square, adyen, etc.
   googlePayGatewayMerchantId: 'your_stripe_merchant_id',

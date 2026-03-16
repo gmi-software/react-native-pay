@@ -34,7 +34,6 @@ export default function TabOneScreen() {
     error,
     reset,
   } = usePaymentCheckout({
-    merchantIdentifier: "merchant.com.margelo",
     countryCode: "US",
     currencyCode: "USD",
   });

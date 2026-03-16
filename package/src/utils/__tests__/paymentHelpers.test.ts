@@ -35,13 +35,11 @@ describe('paymentHelpers', () => {
 
   it('creates payment requests with sane defaults', () => {
     const request = createPaymentRequest({
-      merchantIdentifier: 'merchant.com.example',
       amount: 19.99,
       label: 'Pro Plan',
     })
 
     expect(request).toEqual({
-      merchantIdentifier: 'merchant.com.example',
       countryCode: 'US',
       currencyCode: 'USD',
       paymentItems: [{ label: 'Pro Plan', amount: 19.99, type: 'final' }],
@@ -57,7 +55,6 @@ describe('paymentHelpers', () => {
 
   it('allows overriding defaults in payment requests', () => {
     const request = createPaymentRequest({
-      merchantIdentifier: 'merchant.com.example',
       amount: 39.99,
       label: 'Deluxe',
       countryCode: 'PL',
@@ -65,6 +62,8 @@ describe('paymentHelpers', () => {
       supportedNetworks: ['visa'],
       merchantCapabilities: ['EMV'],
       merchantName: 'My Store',
+      applePayMerchantIdentifier: 'merchant.com.apple.override',
+      googlePayMerchantId: 'google-pay-merchant-id',
     })
 
     expect(request.countryCode).toBe('PL')
@@ -72,6 +71,8 @@ describe('paymentHelpers', () => {
     expect(request.supportedNetworks).toEqual(['visa'])
     expect(request.merchantCapabilities).toEqual(['EMV'])
     expect(request.merchantName).toBe('My Store')
+    expect(request.applePayMerchantIdentifier).toBe('merchant.com.apple.override')
+    expect(request.googlePayMerchantId).toBe('google-pay-merchant-id')
   })
 
   it('formats and parses amount values', () => {

@@ -1,5 +1,11 @@
-const mockWithGooglePay = jest.fn((config) => ({ ...config, googlePay: true }))
-const mockWithApplePay = jest.fn((config) => ({ ...config, applePay: true }))
+const mockWithGooglePay = jest.fn((config, _props) => ({
+  ...config,
+  googlePay: true,
+}))
+const mockWithApplePay = jest.fn((config, _props) => ({
+  ...config,
+  applePay: true,
+}))
 
 jest.mock('../withGooglePay', () => ({
   withGooglePay: (config: any, props: any) => mockWithGooglePay(config, props),

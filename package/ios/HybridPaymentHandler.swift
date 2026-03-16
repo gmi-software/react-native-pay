@@ -6,18 +6,28 @@ import NitroModules
 
 private enum ErrorMessage {
     static let paymentCancelled = "Payment cancelled by user"
+    static let paymentDismissed = "Payment sheet was dismissed before authorization"
+    static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
     static let unableToPresent = "Unable to present payment authorization"
     static let unableToCreate = "Unable to create payment authorization"
+}
+
+private enum BundleKey {
+    static let applePayMerchantIdentifiers = "ReactNativePayApplePayMerchantIdentifiers"
 }
 
 // MARK: - Payment Request Builder
 
 private struct PaymentRequestBuilder {
     
-    static func build(from request: PaymentRequest) -> PKPaymentRequest {
+    static func build(from request: PaymentRequest) -> PKPaymentRequest? {
+        guard let merchantIdentifier = resolveMerchantIdentifier(from: request) else {
+            return nil
+        }
+
         let paymentRequest = PKPaymentRequest()
         
-        paymentRequest.merchantIdentifier = request.merchantIdentifier
+        paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
         paymentRequest.paymentSummaryItems = buildPaymentItems(request.paymentItems)
@@ -31,6 +41,30 @@ private struct PaymentRequestBuilder {
         configureContactRequirements(paymentRequest, request: request)
         
         return paymentRequest
+    }
+
+    private static func resolveMerchantIdentifier(from request: PaymentRequest) -> String? {
+        if let overrideIdentifier = request.applePayMerchantIdentifier?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+           !overrideIdentifier.isEmpty {
+            return overrideIdentifier
+        }
+
+        if let merchantIdentifiers = Bundle.main.object(
+            forInfoDictionaryKey: BundleKey.applePayMerchantIdentifiers
+        ) as? [String] {
+            return merchantIdentifiers.first {
+                !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty
+            }
+        }
+
+        if let merchantIdentifier = Bundle.main.object(
+            forInfoDictionaryKey: BundleKey.applePayMerchantIdentifiers
+        ) as? String {
+            let trimmedIdentifier = merchantIdentifier.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            return trimmedIdentifier.isEmpty ? nil : trimmedIdentifier
+        }
+
+        return nil
     }
     
     private static func buildPaymentItems(_ items: [PaymentItem]) -> [PKPaymentSummaryItem] {
@@ -129,9 +163,15 @@ private struct PaymentTokenConverter {
 private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
     private var paymentAuthorized: Bool = false
+    private var presentationDate: Date?
+    private let userDismissThreshold: TimeInterval = 0.75
     
     init(paymentHandler: HybridPaymentHandler) {
         self.paymentHandler = paymentHandler
+    }
+
+    func markPresented() {
+        presentationDate = Date()
     }
     
     func paymentAuthorizationViewController(
@@ -163,11 +203,19 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
     func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
         controller.dismiss(animated: true) {
             if !self.paymentAuthorized {
+                let errorMessage: String
+                if let presentationDate = self.presentationDate,
+                   Date().timeIntervalSince(presentationDate) >= self.userDismissThreshold {
+                    errorMessage = ErrorMessage.paymentCancelled
+                } else {
+                    errorMessage = ErrorMessage.paymentDismissed
+                }
+
                 let result = PaymentResult.init(
                     success: false,
                     transactionId: nil,
                     token: nil,
-                    error: ErrorMessage.paymentCancelled
+                    error: errorMessage
                 )
                 self.paymentHandler?.handlePaymentResult(result)
             }
@@ -216,7 +264,10 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // MARK: - Private Methods
     
     private func performPayment(request: PaymentRequest, completion: @escaping (PaymentResult) -> Void) {
-        let paymentRequest = PaymentRequestBuilder.build(from: request)
+        guard let paymentRequest = PaymentRequestBuilder.build(from: request) else {
+            completion(createErrorResult(ErrorMessage.missingMerchantIdentifier))
+            return
+        }
         
         paymentCompletion = completion
         currentPaymentRequest = paymentRequest
@@ -229,12 +280,14 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         
         paymentAuthVC.delegate = delegate
         
-        guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
+        guard let rootViewController = getRootViewController() else {
             completion(createErrorResult(ErrorMessage.unableToPresent))
             return
         }
         
-        rootViewController.present(paymentAuthVC, animated: true)
+        rootViewController.present(paymentAuthVC, animated: true) {
+            self.delegate?.markPresented()
+        }
     }
     
     private func createErrorResult(_ error: String) -> PaymentResult {
@@ -244,5 +297,36 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
             token: nil,
             error: error
         )
+    }
+
+    private func getRootViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive }
+
+        let rootViewController = scenes
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController
+
+        return topViewController(from: rootViewController)
+    }
+
+    private func topViewController(from viewController: UIViewController?) -> UIViewController? {
+        guard let viewController else { return nil }
+
+        if let navigationController = viewController as? UINavigationController {
+            return topViewController(from: navigationController.visibleViewController)
+        }
+
+        if let tabBarController = viewController as? UITabBarController {
+            return topViewController(from: tabBarController.selectedViewController)
+        }
+
+        if let presentedViewController = viewController.presentedViewController {
+            return topViewController(from: presentedViewController)
+        }
+
+        return viewController
     }
 }

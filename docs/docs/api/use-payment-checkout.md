@@ -10,17 +10,18 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 
 ## Configuration
 
-Pass a single config object. Required: `merchantIdentifier`. Others have defaults.
+Pass a single config object. iOS reads the Apple Pay merchant ID from the native app configuration. Use `applePayMerchantIdentifier` only if you need to override it at runtime.
 
 ```ts
 interface UsePaymentCheckoutConfig {
-  merchantIdentifier: string
   merchantName?: string
   countryCode?: string           // default: 'US'
   currencyCode?: string         // default: 'USD'
   supportedNetworks?: string[]  // default: ['visa', 'mastercard', 'amex', 'discover']
   merchantCapabilities?: string[] // default: ['3DS']
+  applePayMerchantIdentifier?: string // optional iOS override
   // Google Pay (Android)
+  googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
@@ -82,9 +83,9 @@ const {
   error,
   reset,
 } = usePaymentCheckout({
-  merchantIdentifier: 'merchant.com.example',
   currencyCode: 'USD',
   countryCode: 'US',
+  googlePayMerchantId: 'your_google_pay_merchant_id',
   googlePayEnvironment: 'TEST',
   googlePayGateway: 'stripe',
   googlePayGatewayMerchantId: 'your_stripe_merchant_id',

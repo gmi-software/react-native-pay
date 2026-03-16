@@ -6,7 +6,7 @@ Helpers for building payment requests, items, and formatting. All are exported f
 
 Builds a full `PaymentRequest` with one line item and sensible defaults.
 
-**Required:** `merchantIdentifier`, `amount`, `label`.
+**Required:** `amount`, `label`.
 
 **Defaults:** `countryCode: 'US'`, `currencyCode: 'USD'`, `supportedNetworks: [CommonNetworks]`, `merchantCapabilities: ['3DS']`.
 
@@ -14,12 +14,12 @@ Builds a full `PaymentRequest` with one line item and sensible defaults.
 import { createPaymentRequest } from '@gmisoftware/react-native-pay'
 
 const request = createPaymentRequest({
-  merchantIdentifier: 'merchant.com.example',
   amount: 29.99,
   label: 'Coffee Subscription',
   countryCode: 'US',
   currencyCode: 'USD',
-  // Optional: googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, etc.
+  // Optional: applePayMerchantIdentifier, googlePayMerchantId,
+  // googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, etc.
 })
 // request.paymentItems is a single item: [{ label: 'Coffee Subscription', amount: 29.99, type: 'final' }]
 ```
