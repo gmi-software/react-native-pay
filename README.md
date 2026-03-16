@@ -13,7 +13,7 @@ Built with [Nitro Modules](https://nitro.margelo.com/) for high-performance nati
 
 [Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [API Reference](#api-reference)
 
-**Full documentation** (installation, setup, API reference, guides) lives in the **[`docs/`](docs/)** folder (Docusaurus). Run `bun run docs:start` to view it locally, or `bun run docs:build` to build static files.
+**Full documentation** is available at [gmi-software.github.io/react-native-pay](https://gmi-software.github.io/react-native-pay/). The Docusaurus source lives in **[`docs/`](docs/)**; run `bun run docs:start` to view it locally, or `bun run docs:build` to build static files.
 
 This package presents native payment sheets and returns tokens. Your backend and gateway integration still perform the actual charge.
 
@@ -320,14 +320,14 @@ For Google Pay, you need to configure your payment gateway:
 
 ```typescript
 const checkout = usePaymentCheckout({
-  currencyCode: 'USD',
-  countryCode: 'US',
+  currencyCode: "USD",
+  countryCode: "US",
   // Google Pay specific
-  googlePayMerchantId: 'your_google_pay_merchant_id',
-  googlePayEnvironment: 'TEST', // or 'PRODUCTION'
-  googlePayGateway: 'stripe',
-  googlePayGatewayMerchantId: 'your_stripe_merchant_id',
-})
+  googlePayMerchantId: "your_google_pay_merchant_id",
+  googlePayEnvironment: "TEST", // or 'PRODUCTION'
+  googlePayGateway: "stripe",
+  googlePayGatewayMerchantId: "your_stripe_merchant_id",
+});
 ```
 
 #### Supported Payment Gateways
@@ -353,17 +353,17 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 
 ```typescript
 interface UsePaymentCheckoutConfig {
-  merchantName?: string
-  countryCode?: string // Default: 'US'
-  currencyCode?: string // Default: 'USD'
-  supportedNetworks?: string[] // Default: ['visa', 'mastercard', 'amex', 'discover']
-  merchantCapabilities?: string[] // Default: ['3DS']
-  applePayMerchantIdentifier?: string // Optional iOS override
+  merchantName?: string;
+  countryCode?: string; // Default: 'US'
+  currencyCode?: string; // Default: 'USD'
+  supportedNetworks?: string[]; // Default: ['visa', 'mastercard', 'amex', 'discover']
+  merchantCapabilities?: string[]; // Default: ['3DS']
+  applePayMerchantIdentifier?: string; // Optional iOS override
   // Google Pay specific (Android)
-  googlePayMerchantId?: string
-  googlePayEnvironment?: 'TEST' | 'PRODUCTION'
-  googlePayGateway?: string
-  googlePayGatewayMerchantId?: string
+  googlePayMerchantId?: string;
+  googlePayEnvironment?: "TEST" | "PRODUCTION";
+  googlePayGateway?: string;
+  googlePayGatewayMerchantId?: string;
 }
 ```
 
@@ -372,28 +372,28 @@ interface UsePaymentCheckoutConfig {
 ```typescript
 interface UsePaymentCheckoutReturn {
   // Payment availability
-  canMakePayments: boolean // Can user make payments?
-  canSetupCards: boolean // Can user add cards?
-  isCheckingStatus: boolean // Loading state for availability check
+  canMakePayments: boolean; // Can user make payments?
+  canSetupCards: boolean; // Can user add cards?
+  isCheckingStatus: boolean; // Loading state for availability check
 
   // Cart management
-  items: PaymentItem[] // Current cart items
-  total: number // Total amount
-  addItem: (label: string, amount: number, type?: 'final' | 'pending') => void
-  addItems: (items: Array<{ label; amount; type? }>) => void
-  removeItem: (index: number) => void
-  updateItem: (index: number, updates: Partial<PaymentItem>) => void
-  clearItems: () => void
+  items: PaymentItem[]; // Current cart items
+  total: number; // Total amount
+  addItem: (label: string, amount: number, type?: "final" | "pending") => void;
+  addItems: (items: Array<{ label; amount; type? }>) => void;
+  removeItem: (index: number) => void;
+  updateItem: (index: number, updates: Partial<PaymentItem>) => void;
+  clearItems: () => void;
 
   // Payment processing
-  startPayment: () => Promise<PaymentResult | null>
-  isProcessing: boolean // Payment in progress?
-  result: PaymentResult | null // Last payment result
-  error: Error | null // Last error
+  startPayment: () => Promise<PaymentResult | null>;
+  isProcessing: boolean; // Payment in progress?
+  result: PaymentResult | null; // Last payment result
+  error: Error | null; // Last error
 
   // Utilities
-  reset: () => void // Reset payment state
-  paymentRequest: PaymentRequest // Full request object
+  reset: () => void; // Reset payment state
+  paymentRequest: PaymentRequest; // Full request object
 }
 ```
 
@@ -401,26 +401,26 @@ interface UsePaymentCheckoutReturn {
 
 ```typescript
 const checkout = usePaymentCheckout({
-  currencyCode: 'USD',
-  countryCode: 'US',
-  googlePayMerchantId: 'your_google_pay_merchant_id',
-  googlePayEnvironment: 'TEST',
-  googlePayGateway: 'stripe',
-  googlePayGatewayMerchantId: 'your_stripe_merchant_id',
-})
+  currencyCode: "USD",
+  countryCode: "US",
+  googlePayMerchantId: "your_google_pay_merchant_id",
+  googlePayEnvironment: "TEST",
+  googlePayGateway: "stripe",
+  googlePayGatewayMerchantId: "your_stripe_merchant_id",
+});
 
 // Add single item
-checkout.addItem('Product', 29.99)
+checkout.addItem("Product", 29.99);
 
 // Add multiple items at once
 checkout.addItems([
-  { label: 'Product', amount: 29.99 },
-  { label: 'Shipping', amount: 5.0 },
-  { label: 'Tax', amount: 2.8, type: 'final' },
-])
+  { label: "Product", amount: 29.99 },
+  { label: "Shipping", amount: 5.0 },
+  { label: "Tax", amount: 2.8, type: "final" },
+]);
 
 // Process payment
-const result = await checkout.startPayment()
+const result = await checkout.startPayment();
 ```
 
 ---
@@ -436,17 +436,17 @@ Low-level payment handler for direct control.
 Check payment service availability.
 
 ```typescript
-const status = HybridPaymentHandler.payServiceStatus()
-console.log('Can make payments:', status.canMakePayments)
-console.log('Can setup cards:', status.canSetupCards)
+const status = HybridPaymentHandler.payServiceStatus();
+console.log("Can make payments:", status.canMakePayments);
+console.log("Can setup cards:", status.canSetupCards);
 ```
 
 **Returns:**
 
 ```typescript
 interface PayServiceStatus {
-  canMakePayments: boolean
-  canSetupCards: boolean
+  canMakePayments: boolean;
+  canSetupCards: boolean;
 }
 ```
 
@@ -456,29 +456,29 @@ Start a payment request.
 
 ```typescript
 const result = await HybridPaymentHandler.startPayment({
-  countryCode: 'US',
-  currencyCode: 'USD',
-  merchantCapabilities: ['3DS'],
-  supportedNetworks: ['visa', 'mastercard', 'amex'],
-  paymentItems: [{ label: 'Total', amount: 29.99, type: 'final' }],
-  googlePayMerchantId: 'your_google_pay_merchant_id',
-})
+  countryCode: "US",
+  currencyCode: "USD",
+  merchantCapabilities: ["3DS"],
+  supportedNetworks: ["visa", "mastercard", "amex"],
+  paymentItems: [{ label: "Total", amount: 29.99, type: "final" }],
+  googlePayMerchantId: "your_google_pay_merchant_id",
+});
 ```
 
 **Returns:**
 
 ```typescript
 interface PaymentResult {
-  success: boolean
-  transactionId?: string
-  token?: PaymentToken
-  error?: string
+  success: boolean;
+  transactionId?: string;
+  token?: PaymentToken;
+  error?: string;
 }
 
 interface PaymentToken {
-  paymentMethod: PaymentMethod
-  transactionIdentifier: string
-  paymentData: string // Base64 encoded
+  paymentMethod: PaymentMethod;
+  transactionIdentifier: string;
+  paymentData: string; // Base64 encoded
 }
 ```
 
@@ -487,7 +487,7 @@ interface PaymentToken {
 Check if specific card networks are supported.
 
 ```typescript
-const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
+const canPay = HybridPaymentHandler.canMakePayments(["visa", "mastercard"]);
 ```
 
 ---
@@ -503,24 +503,24 @@ Native Apple Pay button with full customization.
 ```typescript
 interface ApplePayButtonProps {
   buttonType:
-    | 'buy'
-    | 'setUp'
-    | 'book'
-    | 'donate'
-    | 'continue'
-    | 'reload'
-    | 'addMoney'
-    | 'topUp'
-    | 'order'
-    | 'rent'
-    | 'support'
-    | 'contribute'
-    | 'tip'
+    | "buy"
+    | "setUp"
+    | "book"
+    | "donate"
+    | "continue"
+    | "reload"
+    | "addMoney"
+    | "topUp"
+    | "order"
+    | "rent"
+    | "support"
+    | "contribute"
+    | "tip";
 
-  buttonStyle: 'white' | 'whiteOutline' | 'black'
+  buttonStyle: "white" | "whiteOutline" | "black";
 
-  onPress?: () => void
-  style?: ViewStyle
+  onPress?: () => void;
+  style?: ViewStyle;
 }
 ```
 
@@ -544,21 +544,21 @@ Native Google Pay button with customization.
 ```typescript
 interface GooglePayButtonProps {
   buttonType:
-    | 'buy'
-    | 'book'
-    | 'checkout'
-    | 'donate'
-    | 'order'
-    | 'pay'
-    | 'subscribe'
-    | 'plain'
+    | "buy"
+    | "book"
+    | "checkout"
+    | "donate"
+    | "order"
+    | "pay"
+    | "subscribe"
+    | "plain";
 
-  theme: 'dark' | 'light'
+  theme: "dark" | "light";
 
-  radius?: number // Corner radius in dp
+  radius?: number; // Corner radius in dp
 
-  onPress?: () => void
-  style?: ViewStyle
+  onPress?: () => void;
+  style?: ViewStyle;
 }
 ```
 
@@ -583,18 +583,18 @@ interface GooglePayButtonProps {
 Create a complete payment request from simplified config.
 
 ```typescript
-import { createPaymentRequest } from '@gmisoftware/react-native-pay'
+import { createPaymentRequest } from "@gmisoftware/react-native-pay";
 
 const request = createPaymentRequest({
   amount: 29.99,
-  label: 'Coffee Subscription',
-  countryCode: 'US',
-  currencyCode: 'USD',
-  googlePayMerchantId: 'your_google_pay_merchant_id',
-  googlePayEnvironment: 'TEST',
-  googlePayGateway: 'stripe',
-  googlePayGatewayMerchantId: 'your_merchant_id',
-})
+  label: "Coffee Subscription",
+  countryCode: "US",
+  currencyCode: "USD",
+  googlePayMerchantId: "your_google_pay_merchant_id",
+  googlePayEnvironment: "TEST",
+  googlePayGateway: "stripe",
+  googlePayGatewayMerchantId: "your_merchant_id",
+});
 ```
 
 #### `createPaymentItem(label, amount, type)`
@@ -602,9 +602,9 @@ const request = createPaymentRequest({
 Create a payment item.
 
 ```typescript
-import { createPaymentItem } from '@gmisoftware/react-native-pay'
+import { createPaymentItem } from "@gmisoftware/react-native-pay";
 
-const item = createPaymentItem('Subscription', 29.99, 'final')
+const item = createPaymentItem("Subscription", 29.99, "final");
 // { label: 'Subscription', amount: 29.99, type: 'final' }
 ```
 
@@ -613,14 +613,14 @@ const item = createPaymentItem('Subscription', 29.99, 'final')
 Calculate total from payment items.
 
 ```typescript
-import { calculateTotal } from '@gmisoftware/react-native-pay'
+import { calculateTotal } from "@gmisoftware/react-native-pay";
 
 const items = [
-  { label: 'Product', amount: 29.99, type: 'final' },
-  { label: 'Tax', amount: 2.4, type: 'final' },
-]
+  { label: "Product", amount: 29.99, type: "final" },
+  { label: "Tax", amount: 2.4, type: "final" },
+];
 
-const total = calculateTotal(items) // 32.39
+const total = calculateTotal(items); // 32.39
 ```
 
 #### `formatNetworkName(network)`
@@ -628,11 +628,11 @@ const total = calculateTotal(items) // 32.39
 Format card network name for display.
 
 ```typescript
-import { formatNetworkName } from '@gmisoftware/react-native-pay'
+import { formatNetworkName } from "@gmisoftware/react-native-pay";
 
-formatNetworkName('visa') // "Visa"
-formatNetworkName('mastercard') // "Mastercard"
-formatNetworkName('amex') // "American Express"
+formatNetworkName("visa"); // "Visa"
+formatNetworkName("mastercard"); // "Mastercard"
+formatNetworkName("amex"); // "American Express"
 ```
 
 ---
@@ -644,107 +644,107 @@ formatNetworkName('amex') // "American Express"
 ```typescript
 // Payment Item
 interface PaymentItem {
-  label: string
-  amount: number
-  type: 'final' | 'pending'
+  label: string;
+  amount: number;
+  type: "final" | "pending";
 }
 
 // Payment Request
 interface PaymentRequest {
-  applePayMerchantIdentifier?: string
-  merchantName?: string
-  countryCode: string
-  currencyCode: string
-  paymentItems: PaymentItem[]
-  merchantCapabilities: string[]
-  supportedNetworks: string[]
-  shippingType?: string
-  shippingMethods?: PaymentItem[]
-  billingContactRequired?: boolean
-  shippingContactRequired?: boolean
+  applePayMerchantIdentifier?: string;
+  merchantName?: string;
+  countryCode: string;
+  currencyCode: string;
+  paymentItems: PaymentItem[];
+  merchantCapabilities: string[];
+  supportedNetworks: string[];
+  shippingType?: string;
+  shippingMethods?: PaymentItem[];
+  billingContactRequired?: boolean;
+  shippingContactRequired?: boolean;
   // Google Pay specific
-  googlePayMerchantId?: string
-  googlePayEnvironment?: 'TEST' | 'PRODUCTION'
-  googlePayGateway?: string
-  googlePayGatewayMerchantId?: string
+  googlePayMerchantId?: string;
+  googlePayEnvironment?: "TEST" | "PRODUCTION";
+  googlePayGateway?: string;
+  googlePayGatewayMerchantId?: string;
 }
 
 // Payment Result
 interface PaymentResult {
-  success: boolean
-  transactionId?: string
-  token?: PaymentToken
-  error?: string
+  success: boolean;
+  transactionId?: string;
+  token?: PaymentToken;
+  error?: string;
 }
 
 // Payment Token
 interface PaymentToken {
-  paymentMethod: PaymentMethod
-  transactionIdentifier: string
-  paymentData: string // Base64 encoded
+  paymentMethod: PaymentMethod;
+  transactionIdentifier: string;
+  paymentData: string; // Base64 encoded
 }
 
 // Payment Method
 interface PaymentMethod {
-  displayName?: string
-  network?: PaymentNetwork
-  type: PaymentMethodType
-  secureElementPass?: PKSecureElementPass
-  billingAddress?: CNContact
+  displayName?: string;
+  network?: PaymentNetwork;
+  type: PaymentMethodType;
+  secureElementPass?: PKSecureElementPass;
+  billingAddress?: CNContact;
 }
 
 // Payment Networks
 type PaymentNetwork =
-  | 'visa'
-  | 'mastercard'
-  | 'amex'
-  | 'discover'
-  | 'jcb'
-  | 'maestro'
-  | 'electron'
-  | 'elo'
-  | 'idcredit'
-  | 'interac'
-  | 'privateLabel'
+  | "visa"
+  | "mastercard"
+  | "amex"
+  | "discover"
+  | "jcb"
+  | "maestro"
+  | "electron"
+  | "elo"
+  | "idcredit"
+  | "interac"
+  | "privateLabel";
 
 // Payment Method Type
-type PaymentMethodType = 'unknown' | 'debit' | 'credit' | 'prepaid' | 'store'
+type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";
 ```
 
 ### Contact Types
 
 ```typescript
 interface CNContact {
-  identifier: string
-  contactType: 'person' | 'organization'
-  namePrefix: string
-  givenName: string
-  middleName: string
-  familyName: string
-  previousFamilyName: string
-  nameSuffix: string
-  nickname: string
-  organizationName: string
-  departmentName: string
-  jobTitle: string
-  phoneticGivenName: string
-  phoneticMiddleName: string
-  phoneticFamilyName: string
-  phoneticOrganizationName?: string
-  note: string
-  imageDataAvailable?: boolean
-  phoneNumbers: CNLabeledPhoneNumber[]
-  emailAddresses: CNLabeledEmailAddress[]
-  postalAddresses: CNLabeledPostalAddress[]
+  identifier: string;
+  contactType: "person" | "organization";
+  namePrefix: string;
+  givenName: string;
+  middleName: string;
+  familyName: string;
+  previousFamilyName: string;
+  nameSuffix: string;
+  nickname: string;
+  organizationName: string;
+  departmentName: string;
+  jobTitle: string;
+  phoneticGivenName: string;
+  phoneticMiddleName: string;
+  phoneticFamilyName: string;
+  phoneticOrganizationName?: string;
+  note: string;
+  imageDataAvailable?: boolean;
+  phoneNumbers: CNLabeledPhoneNumber[];
+  emailAddresses: CNLabeledEmailAddress[];
+  postalAddresses: CNLabeledPostalAddress[];
 }
 
 interface CNPostalAddress {
-  street?: string
-  city?: string
-  state?: string
-  postalCode?: string
-  country?: string
-  isoCountryCode?: string
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  isoCountryCode?: string;
 }
 ```
 
@@ -820,32 +820,32 @@ return Platform.OS === 'ios' ? (
 
 ```typescript
 const checkout = usePaymentCheckout({
-  currencyCode: 'USD',
-})
+  currencyCode: "USD",
+});
 
 // Add items dynamically
 const handleAddToCart = (product) => {
-  checkout.addItem(product.name, product.price)
-}
+  checkout.addItem(product.name, product.price);
+};
 
 // Update quantity
 const handleUpdateQuantity = (index, quantity) => {
-  const item = checkout.items[index]
+  const item = checkout.items[index];
   checkout.updateItem(index, {
     amount: item.amount * quantity,
-  })
-}
+  });
+};
 
 // Apply discount
 const handleApplyDiscount = (discountPercent) => {
-  const discountAmount = checkout.total * (discountPercent / 100)
-  checkout.addItem('Discount', -discountAmount, 'final')
-}
+  const discountAmount = checkout.total * (discountPercent / 100);
+  checkout.addItem("Discount", -discountAmount, "final");
+};
 
 // Clear cart
 const handleClearCart = () => {
-  checkout.clearItems()
-}
+  checkout.clearItems();
+};
 ```
 
 ### Custom Payment Buttons
@@ -885,28 +885,28 @@ After receiving the payment token, process it on your server:
 
 ```javascript
 // Backend API endpoint
-app.post('/process-payment', async (req, res) => {
-  const { token } = req.body
+app.post("/process-payment", async (req, res) => {
+  const { token } = req.body;
 
   try {
     // For Apple Pay
     if (token.paymentData) {
       const charge = await stripe.charges.create({
         amount: 2999, // $29.99
-        currency: 'usd',
+        currency: "usd",
         source: token.paymentData, // Apple Pay token
-        description: 'Payment from React Native Pay',
-      })
+        description: "Payment from React Native Pay",
+      });
     }
 
     // For Google Pay
     // The token format depends on your gateway
 
-    res.json({ success: true, chargeId: charge.id })
+    res.json({ success: true, chargeId: charge.id });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 ```
 
 ---
