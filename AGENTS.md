@@ -6,6 +6,7 @@ This guide helps automated agents submit high-quality PRs for this repo.
 
 - `package/` is the published library (TypeScript + native code via Nitro).
 - `example/` is an Expo app used for manual verification.
+- `docs/` is the technical documentation (Docusaurus, English). User-facing docs live under `docs/docs/` (API, setup, guides, troubleshooting, etc.). Run `bun run docs:start` or `bun run docs:build` from root.
 - Root `package.json` defines the workspace.
 
 ## Local setup
@@ -24,6 +25,7 @@ cd example && bun install
 - Test (all): `cd package && bun run test`
 - Test (single file): `cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts`
 - Run example: `cd example && npx expo prebuild && npx expo run:ios` or `npx expo run:android`
+- Docs (dev): `bun run docs:start`. Docs (build): `bun run docs:build`
 
 ## Nitro Modules notes
 
@@ -35,6 +37,7 @@ cd example && bun install
 
 - Keep PRs small and scoped to one objective.
 - If you change public APIs, update `README.md` and any types.
+- **Docs (`docs/`)**: When you add, change, or remove public API, setup steps, or user-facing behavior, create, update, or delete the relevant pages under `docs/docs/` so the Docusaurus docs stay in sync. Examples: new hook option → `docs/docs/api/use-payment-checkout.md`; plugin config change → `docs/docs/setup/expo-plugin.md`; new guide → add under `docs/docs/guides/` and reference in `docs/sidebars.ts`. All docs content is in English.
 - If you touch native code, validate both iOS and Android paths.
 - Avoid drive-by refactors and formatting-only changes.
 
@@ -59,6 +62,7 @@ Example template:
 - [ ] `cd package && bun run test:ci` (not run)
 - [ ] `cd example && bunx expo run:ios` (not run)
 - [ ] `cd example && bunx expo run:android` (not run)
+- [ ] `bun run docs:build` (if you changed `docs/` or public API/setup; not run)
 
 ## Risk
 - ...

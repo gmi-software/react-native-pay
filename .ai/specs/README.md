@@ -1,6 +1,6 @@
 # Specifications & Architecture Decision Records
 
-This folder contains specifications and Architecture Decision Records (ADRs) that serve as the source of truth for design decisions and module behavior in Open Mercato.
+This folder contains specifications and Architecture Decision Records (ADRs) that serve as the source of truth for design decisions and module behavior in the package.
 
 ## Purpose
 
@@ -117,6 +117,15 @@ AI agents working on this codebase should:
 6. **Update this README.md** when adding new specifications to the directory table
 
 This ensures the `.ai/specs/` folder remains a reliable reference for understanding module behavior and evolution over time.
+
+## Documentation (docs/)
+
+The **technical documentation** for the package lives in the **`docs/`** folder at the repo root. It is a Docusaurus site (English, dark theme) and is the main reference for users: installation, setup, API reference, guides, troubleshooting, compatibility.
+
+- **Location**: `docs/` (root). Content pages live under `docs/docs/` (e.g. `docs/docs/api/use-payment-checkout.md`, `docs/docs/setup/ios-apple-pay.md`).
+- **Structure**: Intro, Quick Start, Payment flow, Installation & Setup, API Reference (hook, components, handler, utils, types), Guides, Troubleshooting, Examples, Compatibility.
+- **Build**: From repo root, `bun run docs:start` (dev server) or `bun run docs:build` (static build). The docs workflow runs on tag push only (see `.github/workflows/docs.yml`).
+- **Syncing with specs**: When a spec or the implementation changes public API, setup steps, or behavior, the corresponding docs pages under `docs/docs/` should be created, updated, or removed so the docs stay accurate. Prefer updating docs in the same change (or follow-up) that touches the code or spec.
 
 ## Related Resources
 

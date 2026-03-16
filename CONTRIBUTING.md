@@ -136,6 +136,7 @@ Before submitting a PR, ensure:
 - Update `README.md` for API changes
 - Add code examples for new features
 - Update type definitions if needed
+- **Docs site (`docs/`)**: The technical documentation is in the `docs/` folder (Docusaurus, English). When you change public API, setup, or behavior, update the relevant page under `docs/docs/` (e.g. `api/use-payment-checkout.md`, `setup/ios-apple-pay.md`). Run `bun run docs:build` locally to verify the site builds. The docs workflow runs only when a new tag is pushed (see `.github/workflows/docs.yml`), not on every PR.
 
 ## AI Spec-Driven Development
 

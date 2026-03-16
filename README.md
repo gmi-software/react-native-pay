@@ -13,21 +13,25 @@ Built with [Nitro Modules](https://nitro.margelo.com/) for high-performance nati
 
 [Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [API Reference](#api-reference)
 
+**Full documentation** (installation, setup, API reference, guides) lives in the **[`docs/`](docs/)** folder (Docusaurus). Run `bun run docs:start` to view it locally, or `bun run docs:build` to build static files.
+
+This package presents native payment sheets and returns tokens. Your backend and gateway integration still perform the actual charge.
+
 </div>
 
 ---
 
 ## Features
 
-- ✅ **Unified API** - Single interface for both Apple Pay and Google Pay
-- ✅ **One Hook Does Everything** - Complete payment flow with `usePaymentCheckout()` hook
+- ✅ **Unified API** - Shared payment request/result model across Apple Pay and Google Pay
+- ✅ **One Hook for Checkout State** - `usePaymentCheckout()` handles availability checks, cart state, and payment-sheet start
 - ✅ **Native UI Components** - Platform-specific payment buttons with full customization
 - ✅ **Type-Safe** - Comprehensive TypeScript definitions with full IntelliSense support
 - ✅ **Configurable** - Dynamic environment and gateway configuration for both platforms
 - ✅ **Built-in Cart** - Shopping cart functionality with batch operations
 - ✅ **Modern Architecture** - Built with Nitro Modules for optimal performance
 - ✅ **Expo Compatible** - Config plugins for seamless Expo integration
-- ✅ **Production Ready** - Used in production apps with millions of transactions
+- ✅ **Production Focused** - Built for real-world apps with backend gateway processing
 
 ---
 
@@ -298,6 +302,8 @@ export default CheckoutScreen
 
 ## Documentation
 
+The **[`docs/`](docs/)** directory contains the full technical documentation (Docusaurus, English): introduction, quick start, installation & setup, API reference, guides, troubleshooting, and compatibility. Run `bun run docs:start` to serve it locally.
+
 ### Payment Flow Overview
 
 ```
@@ -496,15 +502,12 @@ Native Apple Pay button with full customization.
 
 ```typescript
 interface ApplePayButtonProps {
-  buttonType?:
-    | 'plain'
+  buttonType:
     | 'buy'
     | 'setUp'
-    | 'inStore'
-    | 'donate'
-    | 'checkout'
     | 'book'
-    | 'subscribe'
+    | 'donate'
+    | 'continue'
     | 'reload'
     | 'addMoney'
     | 'topUp'
@@ -514,9 +517,9 @@ interface ApplePayButtonProps {
     | 'contribute'
     | 'tip'
 
-  buttonStyle?: 'white' | 'whiteOutline' | 'black' | 'automatic'
+  buttonStyle: 'white' | 'whiteOutline' | 'black'
 
-  onPress: () => void
+  onPress?: () => void
   style?: ViewStyle
 }
 ```
@@ -540,7 +543,7 @@ Native Google Pay button with customization.
 
 ```typescript
 interface GooglePayButtonProps {
-  buttonType?:
+  buttonType:
     | 'buy'
     | 'book'
     | 'checkout'
@@ -550,11 +553,11 @@ interface GooglePayButtonProps {
     | 'subscribe'
     | 'plain'
 
-  theme?: 'dark' | 'light'
+  theme: 'dark' | 'light'
 
   radius?: number // Corner radius in dp
 
-  onPress: () => void
+  onPress?: () => void
   style?: ViewStyle
 }
 ```
@@ -799,7 +802,7 @@ const handlePayment = async () => {
 // 4. Render button
 return Platform.OS === 'ios' ? (
   <ApplePayButton
-    buttonType="subscribe"
+    buttonType="buy"
     buttonStyle="black"
     onPress={handlePayment}
   />
@@ -967,7 +970,7 @@ app.post('/process-payment', async (req, res) => {
 2. **Type Safety** - Full TypeScript coverage with runtime validation
 3. **Performance** - Built with Nitro Modules for native speed
 4. **Developer Experience** - Simple hooks API with sensible defaults
-5. **Production Ready** - Battle-tested in real-world applications
+5. **Production Focused** - Designed around backend-controlled payment flows
 
 ---
 
