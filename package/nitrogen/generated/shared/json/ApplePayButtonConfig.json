@@ -1,0 +1,12 @@
+{
+  "uiViewClassName": "ApplePayButton",
+  "supportsRawText": false,
+  "bubblingEventTypes": {},
+  "directEventTypes": {},
+  "validAttributes": {
+    "buttonType": true,
+    "buttonStyle": true,
+    "onPress": true,
+    "hybridRef": true
+  }
+}

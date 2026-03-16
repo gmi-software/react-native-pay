@@ -1,0 +1,25 @@
+{
+  "name": "monorepo",
+  "private": true,
+  "workspaces": [
+    "package",
+    "example",
+    "docs"
+  ],
+  "trustedDependencies": [
+    "react-native-pay"
+  ],
+  "version": "1.0.0",
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "docs:start": "cd docs && bun run start",
+    "docs:build": "cd docs && bun run build"
+  },
+  "dependencies": {
+    "expo": "~54.0.17",
+    "react": "19.1.0",
+    "react-native": "0.81.4"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
