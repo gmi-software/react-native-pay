@@ -23,10 +23,7 @@ describe('usePaymentCheckout integration', () => {
     mockStartPayment.mockReset()
   })
 
-  const renderCheckout = () =>
-    renderHook(() =>
-      usePaymentCheckout({})
-    )
+  const renderCheckout = () => renderHook(() => usePaymentCheckout({}))
 
   it('loads payment service status on mount', async () => {
     const { result } = renderCheckout()

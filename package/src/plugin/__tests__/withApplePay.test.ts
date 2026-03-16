@@ -76,7 +76,7 @@ describe('withApplePay', () => {
     expect(result).toEqual({
       modResults: {
         'com.apple.developer.in-app-payments': ['merchant.com.test'],
-        ReactNativePayApplePayMerchantIdentifiers: ['merchant.com.test'],
+        'ReactNativePayApplePayMerchantIdentifiers': ['merchant.com.test'],
       },
     })
   })

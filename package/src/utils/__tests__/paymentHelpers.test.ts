@@ -71,7 +71,9 @@ describe('paymentHelpers', () => {
     expect(request.supportedNetworks).toEqual(['visa'])
     expect(request.merchantCapabilities).toEqual(['EMV'])
     expect(request.merchantName).toBe('My Store')
-    expect(request.applePayMerchantIdentifier).toBe('merchant.com.apple.override')
+    expect(request.applePayMerchantIdentifier).toBe(
+      'merchant.com.apple.override'
+    )
     expect(request.googlePayMerchantId).toBe('google-pay-merchant-id')
   })
 

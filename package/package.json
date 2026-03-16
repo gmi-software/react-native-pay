@@ -43,6 +43,16 @@
     "plugins": [
       "prettier"
     ],
+    "overrides": [
+      {
+        "files": [
+          "jest.setup.js"
+        ],
+        "env": {
+          "jest": true
+        }
+      }
+    ],
     "rules": {
       "prettier/prettier": [
         "warn",
