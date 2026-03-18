@@ -41,6 +41,7 @@ See [Expo plugin](/docs/setup/expo-plugin) for the exact config, then:
 
 - [iOS (Apple Pay)](/docs/setup/ios-apple-pay) for Apple Developer setup.
 - [Android (Google Pay)](/docs/setup/android-google-pay) for Google Pay and gateway setup.
+- [Bare React Native setup](/docs/setup/bare-react-native) for manual Xcode/AndroidManifest configuration.
 
 ## Step 4: Prebuild (Expo)
 
@@ -57,3 +58,4 @@ Then run your app as usual (`npx expo run:ios` or `npx expo run:android`).
 - [Expo plugin](/docs/setup/expo-plugin) — Plugin options and examples
 - [iOS (Apple Pay)](/docs/setup/ios-apple-pay) — Merchant ID and certificates
 - [Android (Google Pay)](/docs/setup/android-google-pay) — Google Pay API and gateway
+- [Bare React Native setup](/docs/setup/bare-react-native) — Manual native configuration

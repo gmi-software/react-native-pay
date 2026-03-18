@@ -64,18 +64,23 @@ function HomepageHeader() {
               <br />
               <br />
               <span className={styles.terminalKeyword}>const</span> {"{"}{" "}
-              startPayment {"}"} ={" "}
+              addItem, startPayment {"}"} ={" "}
               <span className={styles.terminalFunction}>
                 usePaymentCheckout
               </span>
               ({"{"}
               <br />
-              &nbsp;&nbsp;total:{" "}
-              <span className={styles.terminalString}>'19.99'</span>,<br />
-              &nbsp;&nbsp;currency:{" "}
+              &nbsp;&nbsp;currencyCode:{" "}
               <span className={styles.terminalString}>'USD'</span>
+              ,<br />
+              &nbsp;&nbsp;countryCode:{" "}
+              <span className={styles.terminalString}>'US'</span>
               <br />
               {"}"});
+              <br />
+              <span className={styles.terminalFunction}>addItem</span>(
+              <span className={styles.terminalString}>'Coffee'</span>,{" "}
+              <span className={styles.terminalString}>4.99</span>);
             </code>
           </div>
         </div>

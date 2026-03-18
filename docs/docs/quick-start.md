@@ -35,6 +35,7 @@ Apply platform setup before testing checkout:
 - [Expo plugin](/docs/setup/expo-plugin) for Expo projects.
 - [iOS Apple Pay setup](/docs/setup/ios-apple-pay) for Merchant ID and certificates.
 - [Android Google Pay setup](/docs/setup/android-google-pay) for Google Pay API and gateway configuration.
+- [Bare React Native setup](/docs/setup/bare-react-native) for manual native configuration.
 
 If you are using Expo, run `npx expo prebuild --clean` after plugin changes and rebuild.
 
@@ -120,18 +121,7 @@ If you are integrating with Przelewy24, follow the provider cookbook: [Przelewy2
 
 ## 5. Nitro and button `onPress` (if needed)
 
-If your button `onPress` does not fire (e.g. with Nitro host components), wrap the handler with `callback` from `react-native-nitro-modules`:
-
-```tsx
-import { callback } from 'react-native-nitro-modules'
-
-<ApplePayButton
-  buttonType="buy"
-  buttonStyle="black"
-  onPress={callback(handlePay)}
-  style={{ width: '100%', height: 48 }}
-/>
-```
+If your button `onPress` does not fire, use Nitro's `callback(...)` wrapper as documented in [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ## 6. Run and test
 
@@ -139,18 +129,14 @@ import { callback } from 'react-native-nitro-modules'
 - **Android:** Real device or emulator with Google Play Services; add a card in Google Pay.
 - For **Google Pay**, configure `googlePayMerchantId`, `googlePayEnvironment`, `googlePayGateway`, and `googlePayGatewayMerchantId` when you move to a real gateway (see [Android setup](/docs/setup/android-google-pay) and [API: usePaymentCheckout](/docs/api/use-payment-checkout)).
 
-## 7. Production checklist (required)
+## 7. Before you ship
 
+- [ ] `react-native-nitro-modules` and `@gmisoftware/react-native-pay` installed.
+- [ ] Native config done (Expo plugin + prebuild, or bare iOS entitlements + Android manifest).
+- [ ] Checkout screen uses `usePaymentCheckout` and the platform-specific button.
 - [ ] Apple and/or Google account/platform configuration is complete.
 - [ ] Backend endpoint validates order amount/currency and processes the token with your gateway.
 - [ ] Idempotency and retry handling are implemented server-side.
 - [ ] Real-device tests passed on iOS and Android.
-
-## Checklist
-
-- [ ] `react-native-nitro-modules` and `@gmisoftware/react-native-pay` installed
-- [ ] Native config done: Expo plugin + prebuild, or bare iOS entitlements + Android manifest
-- [ ] Checkout screen uses `usePaymentCheckout` and platform-specific button
-- [ ] Backend endpoint ready to accept and process the payment token
 
 Next: [Payment flow](/docs/payment-flow) or [Installation & Setup](/docs/setup/installation).

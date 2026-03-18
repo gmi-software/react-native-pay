@@ -12,6 +12,8 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 
 Pass a single config object. iOS reads the Apple Pay merchant ID from the native app configuration. Use `applePayMerchantIdentifier` only if you need to override it at runtime.
 
+Source of truth for these types: [`package/src/hooks/usePaymentCheckout.ts`](https://github.com/gmi-software/react-native-pay/blob/main/package/src/hooks/usePaymentCheckout.ts).
+
 ```ts
 interface UsePaymentCheckoutConfig {
   merchantName?: string
@@ -115,7 +117,7 @@ If you call `startPayment()` when `items.length === 0`, the hook sets `error` to
 
 Use `usePaymentCheckout` when you want cart state + defaults managed in React state.
 
-Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example custom shipping/contact requirements or prebuilt request payloads from your backend).
+Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example custom shipping/contact requirements or prebuilt request payloads from your backend). Utility helpers for this path are documented in [Utility functions](/docs/api/utils).
 
 ## Next
 

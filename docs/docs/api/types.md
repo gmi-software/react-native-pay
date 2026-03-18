@@ -147,6 +147,8 @@ Use `'TEST'` for development/sandbox; `'PRODUCTION'` for live charges.
 
 ## Pass types (iOS)
 
+These iOS-only types appear in payment-related metadata returned by Apple Pay APIs (for example pass details tied to the selected card) and are mostly useful in advanced/native-integrated flows.
+
 ```ts
 type PassActivationState =
   | 'activated'
@@ -177,6 +179,8 @@ interface PKSecureElementPass extends PKPass {
 ## Contact types
 
 Used on iOS when `billingContactRequired` / `shippingContactRequired` is requested in `PaymentRequest`.
+
+These fields are populated from the contact information the user approves in the Apple Pay sheet.
 
 ```ts
 type CNContactType = 'person' | 'organization'

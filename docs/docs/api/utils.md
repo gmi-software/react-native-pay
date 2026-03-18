@@ -2,6 +2,12 @@
 
 Helpers for building payment requests, items, and formatting. All are exported from `@gmisoftware/react-native-pay`.
 
+## When to use these helpers
+
+Use these functions when you are building a manual or low-level flow (usually with `HybridPaymentHandler`) and need to assemble `PaymentRequest` data yourself.
+
+If you use `usePaymentCheckout`, cart state and request building are handled for you internally, so these helpers are optional.
+
 ## createPaymentRequest(options)
 
 Builds a full `PaymentRequest` with one line item and sensible defaults.

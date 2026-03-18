@@ -36,18 +36,7 @@ import { ApplePayButton } from '@gmisoftware/react-native-pay'
 
 ### Nitro and onPress
 
-If `onPress` does not fire (e.g. with Nitro host components), wrap the handler with `callback` from `react-native-nitro-modules`:
-
-```tsx
-import { callback } from 'react-native-nitro-modules'
-
-<ApplePayButton
-  buttonType="buy"
-  buttonStyle="black"
-  onPress={callback(handlePayment)}
-  style={{ width: '100%', height: 48 }}
-/>
-```
+If `onPress` does not fire, use Nitro's `callback(...)` wrapper. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ---
 
@@ -84,7 +73,7 @@ import { GooglePayButton } from '@gmisoftware/react-native-pay'
 
 ### Nitro and onPress
 
-Same as Apple: if needed, use `callback(handlePayment)` for `onPress`.
+Same as Apple: if needed, use `callback(handlePayment)` for `onPress`. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ---
 

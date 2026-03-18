@@ -43,12 +43,23 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    [
+      "@easyops-cn/docusaurus-search-local",
+      {
+        hashed: true,
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+      },
+    ],
+  ],
+
   themeConfig: {
-    image: "img/docusaurus-social-card.jpg",
     colorMode: {
       defaultMode: "dark",
-      disableSwitch: true,
-      respectPrefersColorScheme: false,
+      disableSwitch: false,
+      respectPrefersColorScheme: true,
     },
     navbar: {
       title: "React Native Pay",
@@ -58,15 +69,30 @@ const config: Config = {
       },
       items: [
         {
-          type: "docSidebar",
-          sidebarId: "docsSidebar",
+          type: "dropdown",
           position: "left",
           label: "Docs",
+          items: [
+            { to: "/docs/intro", label: "Introduction" },
+            { to: "/docs/quick-start", label: "Quick Start" },
+            { to: "/docs/setup/installation", label: "Platform Setup" },
+            { to: "/docs/payment-flow", label: "Backend Processing" },
+            { to: "/docs/integrations/przelewy24", label: "Integrations" },
+            { to: "/docs/api/use-payment-checkout", label: "API Reference" },
+            { to: "/docs/guides/manual-flow", label: "Recipes & Guides" },
+            { to: "/docs/troubleshooting", label: "Troubleshooting" },
+            { to: "/docs/examples", label: "Examples" },
+            { to: "/docs/compatibility", label: "Compatibility" },
+          ],
         },
         {
           to: "/docs/quick-start",
           label: "Quick Start",
           position: "left",
+        },
+        {
+          type: "search",
+          position: "right",
         },
         {
           href: "https://github.com/gmi-software/react-native-pay",

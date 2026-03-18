@@ -55,4 +55,4 @@ npx expo run:ios
 ## Troubleshooting
 
 - **Button not showing / “Cannot make payments”:** Ensure Merchant ID matches exactly, entitlements are present after prebuild, and the device has Wallet & Apple Pay set up with a valid card.
-- See [Troubleshooting](/docs/troubleshooting#ios) for more.
+- See [Troubleshooting](/docs/troubleshooting#ios-apple-pay) for more.

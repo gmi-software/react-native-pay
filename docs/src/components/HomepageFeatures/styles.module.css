@@ -10,8 +10,8 @@
 }
 
 .featureCard {
-  background: rgba(24, 24, 27, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--rn-feature-card-bg);
+  border: 1px solid var(--rn-feature-card-border);
   border-radius: 16px;
   padding: 2rem;
   height: 100%;
@@ -21,7 +21,7 @@
 }
 
 .featureCard:hover {
-  background: rgba(24, 24, 27, 0.8);
+  background: var(--rn-feature-card-bg-hover);
   border-color: rgba(99, 102, 241, 0.2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
@@ -48,7 +48,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #f8fafc;
+  color: var(--rn-feature-title);
 }
 
 .featureDescription {
@@ -59,9 +59,9 @@
 }
 
 .featureDescription code {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--rn-inline-code-bg);
+  border: 1px solid var(--rn-inline-code-border);
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
-  color: #e4e4e7;
+  color: var(--rn-inline-code-color);
 }

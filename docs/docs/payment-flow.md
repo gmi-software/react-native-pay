@@ -1,28 +1,68 @@
 # Payment flow (end-to-end)
 
-This page describes the full payment flow so you can integrate correctly with your backend.
+This page focuses on runtime behavior and integration boundaries so you can make your checkout resilient.
 
 ## Overview
 
-The library does **not** charge the user. It:
+The library does **not** charge the user directly. It opens the native wallet sheet, returns a tokenized payment payload, and lets your backend complete the charge with your gateway.
 
-1. Checks if Apple Pay / Google Pay is available.
-2. Lets you build a cart (list of line items).
-3. Shows the native payment sheet and returns a **payment token** (plus payment metadata like transaction ids/network details).
-4. Your **server** uses that token with your payment gateway (Stripe, Braintree, etc.) to create the charge.
+At a minimum:
 
-## Step-by-step
+1. App checks wallet availability (`canMakePayments` / `payServiceStatus()`).
+2. App builds a `PaymentRequest` from cart items.
+3. User confirms payment in the native sheet.
+4. App receives `PaymentResult` (`success`, `token`, optional `transactionId`).
+5. Backend validates order context and charges through your provider.
 
-| Step | What happens | Where |
-|------|----------------|-------|
-| 1. Check availability | `canMakePayments` / `payServiceStatus()` | App start or before showing checkout |
-| 2. Build cart | `addItem()` / `addItems()` or build `PaymentRequest` | Your checkout UI |
-| 3. Show payment button | `ApplePayButton` (iOS) or `GooglePayButton` (Android) | Checkout screen |
-| 4. User taps button | You call `startPayment()` | `onPress` handler |
-| 5. Native sheet | User selects card, confirms | System UI |
-| 6. Token returned | `PaymentResult` with `token` (and `transactionId`) | Your app |
-| 7. Send to server | POST token + transactionId (and amount, etc.) to your API | Your code |
-| 8. Server charges | Gateway API (Stripe, etc.) using token | Your backend |
+## Runtime sequence
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant App
+  participant NativeSheet
+  participant Backend
+  participant Gateway
+
+  App->>App: Build paymentRequest from cart
+  App->>NativeSheet: startPayment(paymentRequest)
+  User->>NativeSheet: Confirm or cancel
+  NativeSheet-->>App: PaymentResult(success, token, transactionId)
+  alt success with token
+    App->>Backend: POST token + amount + currency + orderId
+    Backend->>Backend: Validate order state and idempotency
+    Backend->>Gateway: Create charge/intent using token
+    Gateway-->>Backend: Authorized or failed
+    Backend-->>App: Final checkout status
+  else cancelled or failed
+    App->>App: Show retry/cancel state
+  end
+```
+
+## PaymentResult outcomes
+
+### 1) Success
+
+- `result.success === true`
+- `result.token` is present and should be forwarded to your backend.
+- Your client should still wait for backend confirmation before marking the order paid.
+
+### 2) Native flow completed but failed
+
+- `result.success === false` with `result.error`.
+- Treat this as a completed wallet flow with a failed outcome (not a thrown exception).
+- Show a recoverable UI (retry, choose another method).
+
+### 3) Start/processing exception
+
+- `startPayment()` may return `null` when an exception occurs.
+- The hook also sets `error` in state.
+- Handle this as an app/runtime failure path (show generic error + retry).
+
+### 4) Empty cart
+
+- Calling `startPayment()` with no cart items returns `null` and sets a "Cart is empty" error.
+- Gate the pay button on `items.length > 0`.
 
 ## Token format
 
@@ -31,7 +71,17 @@ The library does **not** charge the user. It:
 - **Apple Pay (iOS):** Base64-encoded data from the Apple Pay token payload.
 - **Google Pay (Android):** Tokenization payload from Google Pay (`tokenizationData.token`), whose schema depends on your configured gateway.
 
-Always send the **entire token object** (or exactly the fields your gateway asks for) to your backend. Do not parse/transform the payload in the client beyond forwarding it.
+Always send the **entire token object** (or exactly the fields your gateway asks for) to your backend. Avoid parsing or transforming token payloads in the client.
+
+## Server responsibilities (required)
+
+Your backend should:
+
+- Validate order ownership, amount, and currency from server-side order data.
+- Use an idempotency key (for example `transactionId` + `orderId`) to prevent duplicate charges.
+- Call gateway APIs with the provider-specific token mapping.
+- Persist both wallet result and gateway result for audit/debug.
+- Return a final, app-friendly checkout status.
 
 ## Before production
 

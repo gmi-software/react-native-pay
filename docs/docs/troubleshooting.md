@@ -2,60 +2,79 @@
 
 Common issues and fixes for React Native Pay.
 
-## iOS
+## Before you debug
+
+- Ensure your cart is not empty. `startPayment()` returns `null` with a "Cart is empty" error when `items.length === 0`.
+- Test on a real device whenever possible (simulator/emulator payment support is limited).
+- Re-run native generation after plugin changes:
+
+```bash
+npx expo prebuild --clean
+```
+
+## iOS (Apple Pay)
 
 ### Apple Pay button not showing
 
-- **Merchant ID:** Must match exactly in Apple Developer and the Expo plugin `merchantIdentifier`. The runtime iOS API reads that entitlement automatically unless you override it with `applePayMerchantIdentifier`.
-- **Entitlements:** Run `npx expo prebuild --clean` so the plugin can write the Apple Pay entitlement. In Xcode, confirm the app has the “Apple Pay Payment Processing” capability and the correct Merchant ID.
-- **Device:** Prefer a **real device** with a card in Wallet. Simulator has limited Apple Pay support.
+- **Merchant ID mismatch:** The Expo plugin `merchantIdentifier` must exactly match your Apple Developer Merchant ID.
+- **Missing entitlement/capability:** Confirm "Apple Pay Payment Processing" is enabled in Xcode and linked to the same Merchant ID.
+- **Wrong device context:** Prefer a real iPhone with Wallet configured.
 
-### “Cannot make payments” / payment sheet fails
+### "Cannot make payments" or payment sheet fails
 
-- Add a **valid card** in Settings → Wallet & Apple Pay on the device.
-- Confirm the **Merchant ID** is correct and the **App ID** has Apple Pay enabled and is linked to that Merchant ID.
-- For production, ensure the **Payment Processing Certificate** for the Merchant ID is created and installed in your payment gateway (e.g. Stripe).
+- Add a valid card in **Settings -> Wallet & Apple Pay**.
+- Confirm the App ID has Apple Pay enabled and linked to your Merchant ID.
+- For production, ensure your Payment Processing Certificate is created and installed in your gateway.
 
-### Build errors after adding the plugin
+### Invalid Apple button type/style errors
 
-- Run `npx expo prebuild --clean` and rebuild.
-- If using CocoaPods: `cd ios && pod install` and try again.
-- See [Common mistakes](/docs/guides/common-mistakes) for plugin and Merchant ID checks.
+Use only supported Apple button values:
 
----
+- `buttonType`: `'buy' | 'setUp' | 'book' | 'donate' | 'continue' | 'reload' | 'addMoney' | 'topUp' | 'order' | 'rent' | 'support' | 'contribute' | 'tip'`
+- `buttonStyle`: `'white' | 'whiteOutline' | 'black'`
 
-## Android
+## Android (Google Pay)
 
 ### Google Pay button not showing
 
-- Set **`enableGooglePay: true`** in the Expo plugin config and run **`npx expo prebuild --clean`**.
-- Ensure **Google Play Services** is available (real device or emulator with Google Play).
-- Confirm the payment button is only rendered on Android (e.g. `Platform.OS === 'android'` for `GooglePayButton`).
+- Set `enableGooglePay: true` in your Expo plugin config.
+- Ensure Google Play Services is available (real device or Play-enabled emulator).
+- Render only the Android button on Android (`Platform.OS === 'android'`).
 
-### “Google Pay unavailable”
+### "Google Pay unavailable"
 
-- User must have **at least one card** in Google Pay on the device.
-- For testing, use **`googlePayEnvironment: 'TEST'`** and the test gateway/merchant ID from your payment provider.
-- Check **googlePayMerchantId**, **googlePayGateway**, **googlePayGatewayMerchantId**, and **googlePayEnvironment** in your checkout config (see [Android setup](/docs/setup/android-google-pay)).
+- Add at least one card in Google Pay on the device.
+- Use `googlePayEnvironment: 'TEST'` for test flows.
+- Verify `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
 
-### Manifest or build errors
+### Manifest/build issues
 
 - Run `npx expo prebuild --clean` and rebuild.
-- Ensure no other plugin removes or overrides the Google Pay metadata added by this plugin.
+- Ensure no other plugin overrides Google Pay metadata in `AndroidManifest.xml`.
 
----
+## Nitro callback for onPress
 
-## Build / Nitro
+Native payment buttons are Nitro host components. Their `onPress` should be wrapped with `callback()` from `react-native-nitro-modules` to ensure the handler is invoked correctly from native code.
+
+```tsx
+import { callback } from 'react-native-nitro-modules'
+
+<ApplePayButton onPress={callback(handlePay)} />
+<GooglePayButton onPress={callback(handlePay)} />
+```
+
+Use this pattern anywhere you pass handlers to `ApplePayButton` or `GooglePayButton`.
+
+## Build / native module issues
 
 ### Nitro or native module not found
 
-- Install **react-native-nitro-modules** (required):  
-  `bun add react-native-nitro-modules` (or npm/yarn).
-- Run **prebuild** and rebuild the app after adding or updating the payment library.
+- Install `react-native-nitro-modules` (required): `bun add react-native-nitro-modules`.
+- Rebuild after adding/upgrading the package.
 
 ### Clean rebuild
 
-If native or Nitro issues persist:
+If native build artifacts are stale:
 
 ```bash
 rm -rf node_modules ios/Pods ios/build android/build android/app/build
@@ -63,17 +82,9 @@ bun install
 cd ios && pod install
 ```
 
-Then run the app again.
-
-### Type or spec errors in the package
-
-If you are integrating from npm, reinstall dependencies and rebuild the app after upgrading the package.
-If you are contributing to the repository itself, use the contributor tooling documented in the project root files.
-
----
+Then rebuild the app.
 
 ## Still stuck?
 
-- Double-check [Common mistakes](/docs/guides/common-mistakes).
+- Ensure you are on supported versions in [Compatibility](/docs/compatibility).
 - Open an issue: [GitHub Issues](https://github.com/gmi-software/react-native-pay/issues).
-- Ensure you’re on a supported React Native / Nitro / Expo version (see [Compatibility](/docs/compatibility)).

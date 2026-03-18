@@ -1,20 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
 /**
- * React Native Pay docs — Modern Dark Theme
+ * React Native Pay docs theme tokens
  */
-:root,
-[data-theme='dark'] {
+:root {
   --ifm-font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --ifm-font-family-monospace: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-  /* Deep dark background */
-  --ifm-background-color: #09090b;
-  --ifm-background-surface-color: #18181b;
-  --ifm-color-content: #e4e4e7;
-  --ifm-color-content-secondary: #a1a1aa;
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f8fafc;
+  --ifm-color-content: #0f172a;
+  --ifm-color-content-secondary: #475569;
+  --ifm-heading-color: #0f172a;
 
-  /* Primary color - Indigo/Blue gradient feel, but solid for Docusaurus vars */
   --ifm-color-primary: #6366f1;
   --ifm-color-primary-dark: #4f46e5;
   --ifm-color-primary-darker: #4338ca;
@@ -24,24 +22,100 @@
   --ifm-color-primary-lightest: #c7d2fe;
 
   --ifm-code-font-size: 90%;
-  --ifm-code-background: #18181b;
+  --ifm-code-background: #f1f5f9;
   --ifm-code-border-radius: 8px;
-  
+
+  --docusaurus-highlighted-code-line-bg: rgba(99, 102, 241, 0.12);
+
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.86);
+  --ifm-navbar-backdrop-filter: blur(12px);
+  --ifm-navbar-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
+
+  --ifm-footer-background-color: #f8fafc;
+  --ifm-footer-color: #64748b;
+  --ifm-footer-link-color: #475569;
+  --ifm-footer-link-hover-color: #0f172a;
+
+  --ifm-toc-border-color: #e2e8f0;
+
+  --rn-navbar-border: rgba(15, 23, 42, 0.08);
+  --rn-code-block-border: rgba(15, 23, 42, 0.12);
+  --rn-code-block-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  --rn-menu-active-text: #4338ca;
+  --rn-outline-border: rgba(99, 102, 241, 0.25);
+  --rn-outline-bg: rgba(99, 102, 241, 0.04);
+  --rn-outline-bg-hover: rgba(99, 102, 241, 0.1);
+  --rn-outline-text: #312e81;
+  --rn-sidebar-bg: #ffffff;
+  --rn-sidebar-backdrop: rgba(15, 23, 42, 0.35);
+
+  --rn-main-surface: #f8fafc;
+  --rn-feature-card-bg: #ffffff;
+  --rn-feature-card-bg-hover: #f8fafc;
+  --rn-feature-card-border: rgba(15, 23, 42, 0.1);
+  --rn-feature-title: #0f172a;
+  --rn-inline-code-bg: rgba(15, 23, 42, 0.04);
+  --rn-inline-code-border: rgba(15, 23, 42, 0.1);
+  --rn-inline-code-color: #1f2937;
+
+  --rn-terminal-bg: #f8fafc;
+  --rn-terminal-header-bg: rgba(15, 23, 42, 0.04);
+  --rn-terminal-border: rgba(15, 23, 42, 0.12);
+  --rn-terminal-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  --rn-terminal-header-border: rgba(15, 23, 42, 0.08);
+  --rn-terminal-text: #1f2937;
+  --rn-terminal-keyword: #7c3aed;
+  --rn-terminal-string: #047857;
+  --rn-terminal-function: #2563eb;
+}
+
+[data-theme='dark'] {
+  --ifm-background-color: #09090b;
+  --ifm-background-surface-color: #18181b;
+  --ifm-color-content: #e4e4e7;
+  --ifm-color-content-secondary: #a1a1aa;
+  --ifm-heading-color: #ffffff;
+  --ifm-code-background: #18181b;
   --docusaurus-highlighted-code-line-bg: rgba(99, 102, 241, 0.15);
 
-  /* Navbar */
   --ifm-navbar-background-color: rgba(9, 9, 11, 0.8);
-  --ifm-navbar-backdrop-filter: blur(12px);
   --ifm-navbar-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  /* Footer */
   --ifm-footer-background-color: #09090b;
   --ifm-footer-color: #a1a1aa;
   --ifm-footer-link-color: #a1a1aa;
   --ifm-footer-link-hover-color: #e4e4e7;
-  
-  /* Borders */
   --ifm-toc-border-color: #27272a;
+
+  --rn-navbar-border: rgba(255, 255, 255, 0.05);
+  --rn-code-block-border: rgba(255, 255, 255, 0.1);
+  --rn-code-block-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --rn-menu-active-text: #818cf8;
+  --rn-outline-border: rgba(255, 255, 255, 0.2);
+  --rn-outline-bg: rgba(255, 255, 255, 0.02);
+  --rn-outline-bg-hover: rgba(255, 255, 255, 0.05);
+  --rn-outline-text: #e4e4e7;
+  --rn-sidebar-bg: #09090b;
+  --rn-sidebar-backdrop: rgba(0, 0, 0, 0.6);
+
+  --rn-main-surface: #09090b;
+  --rn-feature-card-bg: rgba(24, 24, 27, 0.5);
+  --rn-feature-card-bg-hover: rgba(24, 24, 27, 0.8);
+  --rn-feature-card-border: rgba(255, 255, 255, 0.05);
+  --rn-feature-title: #f8fafc;
+  --rn-inline-code-bg: rgba(255, 255, 255, 0.05);
+  --rn-inline-code-border: rgba(255, 255, 255, 0.1);
+  --rn-inline-code-color: #e4e4e7;
+
+  --rn-terminal-bg: #121214;
+  --rn-terminal-header-bg: rgba(255, 255, 255, 0.02);
+  --rn-terminal-border: rgba(255, 255, 255, 0.1);
+  --rn-terminal-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  --rn-terminal-header-border: rgba(255, 255, 255, 0.05);
+  --rn-terminal-text: #e4e4e7;
+  --rn-terminal-keyword: #c678dd;
+  --rn-terminal-string: #98c379;
+  --rn-terminal-function: #61afef;
 }
 
 /* Global Adjustments */
@@ -54,7 +128,7 @@ body {
 .navbar {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--rn-navbar-border);
 }
 
 .navbar__brand {
@@ -69,8 +143,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Code Blocks */
 .theme-code-block {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--rn-code-block-border);
+  box-shadow: var(--rn-code-block-shadow);
   border-radius: 12px !important;
   overflow: hidden;
 }
@@ -83,7 +157,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .menu__link--active {
   background-color: rgba(99, 102, 241, 0.1) !important;
-  color: #818cf8 !important;
+  color: var(--rn-menu-active-text) !important;
 }
 
 /* Custom Buttons */
@@ -107,13 +181,41 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .button--outline {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e4e4e7;
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--rn-outline-border);
+  color: var(--rn-outline-text);
+  background: var(--rn-outline-bg);
 }
 
 .button--outline:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--rn-outline-bg-hover);
+  color: var(--ifm-color-content);
+}
+
+/* Mobile navbar sidebar fixes */
+@media (max-width: 996px) {
+  .navbar {
+    overflow: visible;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .navbar-sidebar {
+    background: var(--rn-sidebar-bg);
+    z-index: 1000;
+  }
+
+  .navbar-sidebar__backdrop {
+    z-index: 999;
+    background: var(--rn-sidebar-backdrop);
+  }
+
+  .navbar-sidebar .menu__link {
+    color: var(--ifm-color-content);
+  }
+}
+
+/* Safari/iOS: avoid fixed drawer clipping when navbar has backdrop-filter */
+.navbar-sidebar--show .navbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

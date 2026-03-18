@@ -9,10 +9,10 @@ const sidebars: SidebarsConfig = {
       label: 'Platform Setup',
       link: {type: 'doc', id: 'setup/installation'},
       items: [
-        'setup/installation',
         'setup/expo-plugin',
         'setup/ios-apple-pay',
         'setup/android-google-pay',
+        'setup/bare-react-native',
       ],
     },
     {
@@ -21,21 +21,12 @@ const sidebars: SidebarsConfig = {
       link: {type: 'doc', id: 'payment-flow'},
       items: ['payment-flow', 'guides/server-processing'],
     },
-    {
-      type: 'category',
-      label: 'Integrations',
-      link: {type: 'doc', id: 'integrations/overview'},
-      items: [
-        'integrations/overview',
-        'integrations/przelewy24',
-      ],
-    },
+    'integrations/przelewy24',
     {
       type: 'category',
       label: 'API Reference',
       link: {type: 'doc', id: 'api/use-payment-checkout'},
       items: [
-        'api/use-payment-checkout',
         'api/components',
         'api/hybrid-payment-handler',
         'api/utils',
@@ -47,9 +38,7 @@ const sidebars: SidebarsConfig = {
       label: 'Recipes & Guides',
       link: {type: 'doc', id: 'guides/manual-flow'},
       items: [
-        'guides/manual-flow',
         'guides/dynamic-cart',
-        'guides/common-mistakes',
       ],
     },
     'troubleshooting',

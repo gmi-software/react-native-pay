@@ -61,7 +61,7 @@
   border-radius: 9999px;
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+  color: var(--ifm-color-primary);
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 2rem;
@@ -73,7 +73,7 @@
   line-height: 1.1;
   letter-spacing: -0.04em;
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: var(--ifm-heading-color);
 }
 
 .heroTitleHighlight {
@@ -102,11 +102,11 @@
   margin-top: 4rem;
   width: 100%;
   max-width: 640px;
-  background: #121214;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--rn-terminal-bg);
+  border: 1px solid var(--rn-terminal-border);
   border-radius: 12px;
   text-align: left;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--rn-terminal-shadow);
   overflow: hidden;
 }
 
@@ -115,8 +115,8 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--rn-terminal-header-bg);
+  border-bottom: 1px solid var(--rn-terminal-header-border);
 }
 
 .terminalDot {
@@ -130,24 +130,24 @@
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #e4e4e7;
+  color: var(--rn-terminal-text);
   overflow-x: auto;
 }
 
 .terminalKeyword {
-  color: #c678dd;
+  color: var(--rn-terminal-keyword);
 }
 
 .terminalString {
-  color: #98c379;
+  color: var(--rn-terminal-string);
 }
 
 .terminalFunction {
-  color: #61afef;
+  color: var(--rn-terminal-function);
 }
 
 .mainContent {
-  background: #09090b;
+  background: var(--rn-main-surface);
 }
 
 @media screen and (max-width: 768px) {

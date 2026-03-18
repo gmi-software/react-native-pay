@@ -2,6 +2,8 @@
 
 This cookbook shows how to use `@gmisoftware/react-native-pay` for wallet payments and process them with Przelewy24 on your backend.
 
+The library is not a gateway SDK. It only presents the native payment sheet and returns the payment token that your backend maps to Przelewy24 APIs.
+
 It follows the same contract used across this library:
 
 - the app collects `PaymentResult` and `PaymentToken`
