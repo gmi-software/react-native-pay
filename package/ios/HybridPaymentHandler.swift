@@ -30,7 +30,7 @@ private struct PaymentRequestBuilder {
         paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
-        paymentRequest.paymentSummaryItems = buildPaymentItems(request.paymentItems)
+        paymentRequest.paymentSummaryItems = buildPaymentItems(for: request)
         paymentRequest.merchantCapabilities = buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
         
@@ -67,8 +67,8 @@ private struct PaymentRequestBuilder {
         return nil
     }
     
-    private static func buildPaymentItems(_ items: [PaymentItem]) -> [PKPaymentSummaryItem] {
-        return items.map { item in
+    private static func buildPaymentItems(for request: PaymentRequest) -> [PKPaymentSummaryItem] {
+        let lineItems = request.paymentItems.map { item in
             let pkItem = PKPaymentSummaryItem(
                 label: item.label,
                 amount: NSDecimalNumber(decimal: Decimal(item.amount))
@@ -76,6 +76,29 @@ private struct PaymentRequestBuilder {
             pkItem.type = item.type == .final ? .final : .pending
             return pkItem
         }
+
+        guard request.paymentItems.count > 1 else {
+            return lineItems
+        }
+
+        let totalAmount = request.paymentItems.reduce(Decimal.zero) { partialResult, item in
+            partialResult + Decimal(item.amount)
+        }
+        let totalLabel: String
+        if let merchantName = request.merchantName?
+            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+           !merchantName.isEmpty {
+            totalLabel = merchantName
+        } else {
+            totalLabel = "Total"
+        }
+        let totalItem = PKPaymentSummaryItem(
+            label: totalLabel,
+            amount: NSDecimalNumber(decimal: totalAmount)
+        )
+        totalItem.type = .final
+
+        return lineItems + [totalItem]
     }
     
     private static func buildMerchantCapabilities(_ capabilities: [String]) -> PKMerchantCapability {

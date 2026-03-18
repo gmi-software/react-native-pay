@@ -3,11 +3,13 @@ package com.margelo.nitro.pay
 import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 
 /**
  * Builder for Google Pay API request objects
  */
 object GooglePayRequestBuilder {
+    private val googlePayPriceLocale = Locale.US
     
     /**
      * Creates an IsReadyToPay request
@@ -138,7 +140,7 @@ object GooglePayRequestBuilder {
         
         return JSONObject().apply {
             put("totalPriceStatus", PaymentConstants.TOTAL_PRICE_STATUS_FINAL)
-            put("totalPrice", String.format("%.2f", totalAmount))
+            put("totalPrice", formatPrice(totalAmount))
             put("totalPriceLabel", PaymentConstants.TOTAL_PRICE_LABEL_DEFAULT)
             put("currencyCode", request.currencyCode)
             put("countryCode", request.countryCode)
@@ -165,10 +167,14 @@ object GooglePayRequestBuilder {
                         else 
                             PaymentConstants.PENDING_TYPE
                     )
-                    put("price", String.format("%.2f", item.amount))
+                    put("price", formatPrice(item.amount))
                 })
             }
         }
+    }
+
+    private fun formatPrice(amount: Double): String {
+        return String.format(googlePayPriceLocale, "%.2f", amount)
     }
     
     /**

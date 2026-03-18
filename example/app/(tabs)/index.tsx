@@ -43,17 +43,17 @@ export default function TabOneScreen() {
     if (canMakePayments) {
       Alert.alert(
         `${paymentServiceName} Available`,
-        `${paymentServiceName} is ready to use!`
+        `${paymentServiceName} is ready to use!`,
       );
     } else if (canSetupCards) {
       Alert.alert(
         "Setup Required",
-        `Please set up ${paymentServiceName} in Settings`
+        `Please set up ${paymentServiceName} in Settings`,
       );
     } else {
       Alert.alert(
         "Not Available",
-        `${paymentServiceName} is not available on this device`
+        `${paymentServiceName} is not available on this device`,
       );
     }
   };
@@ -98,7 +98,7 @@ export default function TabOneScreen() {
               clearItems();
             },
           },
-        ]
+        ],
       );
     } else if (paymentResult?.error) {
       Alert.alert("Payment Failed", paymentResult.error, [{ text: "OK" }]);

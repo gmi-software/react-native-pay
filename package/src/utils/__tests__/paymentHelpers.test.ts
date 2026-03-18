@@ -7,6 +7,7 @@ import {
   formatNetworkName,
   isNetworkSupported,
   parseAmount,
+  sanitizePaymentRequest,
 } from '../paymentHelpers'
 
 describe('paymentHelpers', () => {
@@ -75,6 +76,37 @@ describe('paymentHelpers', () => {
       'merchant.com.apple.override'
     )
     expect(request.googlePayMerchantId).toBe('google-pay-merchant-id')
+  })
+
+  it('omits undefined optional fields from created payment requests', () => {
+    const request = createPaymentRequest({
+      amount: 10,
+      label: 'Order',
+      merchantName: undefined,
+      googlePayMerchantId: undefined,
+      googlePayGateway: 'stripe',
+    })
+
+    expect(request).not.toHaveProperty('merchantName')
+    expect(request).not.toHaveProperty('googlePayMerchantId')
+    expect(request.googlePayGateway).toBe('stripe')
+  })
+
+  it('sanitizes payment requests before native bridging', () => {
+    const request = sanitizePaymentRequest({
+      countryCode: 'PL',
+      currencyCode: 'PLN',
+      paymentItems: [{ label: 'Order', amount: 10, type: 'final' }],
+      supportedNetworks: ['visa'],
+      merchantCapabilities: ['3DS'],
+      merchantName: undefined,
+      googlePayGateway: 'przelewy24',
+      googlePayGatewayMerchantId: undefined,
+    } as any)
+
+    expect(request).not.toHaveProperty('merchantName')
+    expect(request).not.toHaveProperty('googlePayGatewayMerchantId')
+    expect(request.googlePayGateway).toBe('przelewy24')
   })
 
   it('formats and parses amount values', () => {

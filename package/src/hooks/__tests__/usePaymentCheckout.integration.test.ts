@@ -105,6 +105,13 @@ describe('usePaymentCheckout integration', () => {
     ])
     expect(result.current.paymentRequest.countryCode).toBe('US')
     expect(result.current.paymentRequest.currencyCode).toBe('USD')
+    expect(result.current.paymentRequest).not.toHaveProperty(
+      'applePayMerchantIdentifier'
+    )
+    expect(result.current.paymentRequest).not.toHaveProperty('merchantName')
+    expect(result.current.paymentRequest).not.toHaveProperty(
+      'googlePayMerchantId'
+    )
   })
 
   it('rejects startPayment when cart is empty', async () => {

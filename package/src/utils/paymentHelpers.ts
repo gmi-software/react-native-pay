@@ -29,6 +29,31 @@ export const CommonNetworks = {
   DISCOVER: 'discover',
 } as const
 
+const DEFAULT_SUPPORTED_NETWORKS: PaymentRequest['supportedNetworks'] = [
+  CommonNetworks.VISA,
+  CommonNetworks.MASTERCARD,
+  CommonNetworks.AMEX,
+  CommonNetworks.DISCOVER,
+]
+
+const DEFAULT_MERCHANT_CAPABILITIES: PaymentRequest['merchantCapabilities'] = [
+  '3DS',
+]
+
+function omitUndefinedProperties<T extends object>(value: T): T {
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).filter(
+      ([, entryValue]) => entryValue !== undefined
+    )
+  ) as T
+}
+
+export function sanitizePaymentRequest(
+  request: PaymentRequest
+): PaymentRequest {
+  return omitUndefinedProperties(request)
+}
+
 /**
  * Creates a payment item with the specified label, amount, and type.
  *
@@ -103,24 +128,19 @@ export function createPaymentRequest(
     label,
     countryCode = 'US',
     currencyCode = 'USD',
-    supportedNetworks = [
-      CommonNetworks.VISA,
-      CommonNetworks.MASTERCARD,
-      CommonNetworks.AMEX,
-      CommonNetworks.DISCOVER,
-    ],
-    merchantCapabilities = ['3DS'],
+    supportedNetworks = DEFAULT_SUPPORTED_NETWORKS,
+    merchantCapabilities = DEFAULT_MERCHANT_CAPABILITIES,
     ...rest
   } = options
 
-  return {
+  return sanitizePaymentRequest({
     countryCode,
     currencyCode,
     paymentItems: [createPaymentItem(label, amount, 'final')],
     supportedNetworks,
     merchantCapabilities,
     ...rest,
-  }
+  } as PaymentRequest)
 }
 
 /**

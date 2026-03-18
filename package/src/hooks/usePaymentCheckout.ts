@@ -11,7 +11,11 @@ import type {
   PayServiceStatus,
   GooglePayEnvironment,
 } from '../types'
-import { createPaymentItem, calculateTotal } from '../utils'
+import {
+  createPaymentItem,
+  calculateTotal,
+  sanitizePaymentRequest,
+} from '../utils'
 
 /**
  * Configuration for `usePaymentCheckout`.
@@ -207,20 +211,20 @@ export function usePaymentCheckout(
       googlePayGatewayMerchantId,
     } = config
 
-    return {
-      applePayMerchantIdentifier,
+    return sanitizePaymentRequest({
       countryCode,
-      merchantName,
       currencyCode,
       supportedNetworks,
       merchantCapabilities,
       paymentItems:
         items.length > 0 ? items : [createPaymentItem('Total', 0, 'final')],
+      applePayMerchantIdentifier,
+      merchantName,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
-    }
+    })
   }, [config, items])
 
   // Cart operations
