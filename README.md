@@ -1120,7 +1120,7 @@ MIT © [GMI Software](https://gmi.software)
 
 ## Support
 
-- 📧 Email: [support@gmi.software](mailto:support@gmi.software)
+- 📧 Email: [info@gmi.software](mailto:info@gmi.software)
 - 🐛 Issues: [GitHub Issues](https://github.com/gmi-software/react-native-pay/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/gmi-software/react-native-pay/discussions)
 
@@ -1128,6 +1128,6 @@ MIT © [GMI Software](https://gmi.software)
 
 <div align="center">
 
-Made with ❤️ by [GMI Software](https://gmi.software)
+Made with ❤️ by [gmi.software](https://gmi.software)
 
 </div>
