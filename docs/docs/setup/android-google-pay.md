@@ -60,3 +60,5 @@ npx expo run:android
 - **Button not showing:** Ensure `enableGooglePay: true` is set, prebuild was run, and Google Play Services is available.
 - **Google Pay unavailable:** Add a card in Google Pay on the device; for testing use `googlePayEnvironment: 'TEST'` and correct gateway config.
 - See [Troubleshooting](/docs/troubleshooting#android) for more.
+
+If you are integrating with Przelewy24, see [Przelewy24](/docs/integrations/przelewy24) for an end-to-end app + backend flow.

@@ -38,6 +38,8 @@ The runtime API reads this Merchant ID from the native app entitlements automati
 2. Follow Apple’s steps (CSR, etc.) and download the certificate.
 3. Install it in your **payment processor** (e.g. Stripe, Braintree) as per their docs. The library does not process payments; your gateway uses this certificate to validate tokens.
 
+If you are integrating with Przelewy24, see [Przelewy24](/docs/integrations/przelewy24) for an end-to-end app + backend flow.
+
 ## 3. Prebuild and run
 
 ```bash

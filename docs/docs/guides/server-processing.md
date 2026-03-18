@@ -69,6 +69,7 @@ app.post('/process-payment', async (req, res) => {
 - Creating a payment method/source/intent from Apple Pay or Google Pay token payloads.
 - Idempotency (e.g. using `transactionId` to avoid duplicate charges).
 - Handling failures and refunds.
+- Provider-specific walkthroughs in [Integrations](/docs/integrations/overview) (for example: [Przelewy24 Apple Pay + Google Pay cookbook](/docs/integrations/przelewy24)).
 
 ## Security
 

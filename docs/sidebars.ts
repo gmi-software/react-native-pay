@@ -23,6 +23,15 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Integrations',
+      link: {type: 'doc', id: 'integrations/overview'},
+      items: [
+        'integrations/overview',
+        'integrations/przelewy24',
+      ],
+    },
+    {
+      type: 'category',
       label: 'API Reference',
       link: {type: 'doc', id: 'api/use-payment-checkout'},
       items: [

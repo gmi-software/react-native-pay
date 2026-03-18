@@ -116,6 +116,8 @@ function CheckoutScreen() {
 }
 ```
 
+If you are integrating with Przelewy24, follow the provider cookbook: [Przelewy24](/docs/integrations/przelewy24).
+
 ## 5. Nitro and button `onPress` (if needed)
 
 If your button `onPress` does not fire (e.g. with Nitro host components), wrap the handler with `callback` from `react-native-nitro-modules`:
