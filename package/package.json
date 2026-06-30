@@ -1,6 +1,6 @@
 {
   "name": "@gmisoftware/react-native-pay",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "author": "gmi.software",
   "repository": {
     "type": "git",
@@ -18,8 +18,9 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "jest": "^30.2.0",
-    "nitrogen": "*",
+    "nitrogen": "^0.35.9",
     "prettier": "^3.3.3",
+    "react-native-nitro-modules": "^0.35.10",
     "react-test-renderer": "19.1.0",
     "release-it": "^19.0.0",
     "typescript": "^5.8.3"
@@ -27,7 +28,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-nitro-modules": ">=0.31.4",
+    "react-native-nitro-modules": ">=0.35.0",
     "expo": ">=53.0.0"
   },
   "bugs": {
@@ -126,7 +127,7 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "lint-ci": "eslint \"**/*.{js,ts,tsx}\" -f @jamesacarr/github-actions",
     "typescript": "tsc",
-    "specs": "typescript && nitrogen --logLevel=\"debug\"",
+    "specs": "tsc && nitrogen --logLevel=\"debug\"",
     "release": "release-it"
   },
   "source": "src/index",
