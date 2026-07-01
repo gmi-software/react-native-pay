@@ -62,7 +62,8 @@ bun add @gmisoftware/react-native-pay
 ### Prerequisites
 
 - React Native 0.70+
-- React Native Nitro Modules 0.31.4+ (required)
+- React Native Nitro Modules 0.35.0+ (required)
+- Android `minSdkVersion` 26+ (required for Nitro Modules prefab)
 - Expo 53+ (if using Expo)
 
 ---
@@ -113,6 +114,8 @@ npx expo prebuild --clean
 ```
 
 ### Android Setup (Google Pay)
+
+**Minimum SDK:** set `minSdkVersion` to **26** or higher (e.g. via `expo-build-properties`). Nitro Modules 0.35 prefab requires API 26+.
 
 #### 1. Configure Expo Config Plugin
 
