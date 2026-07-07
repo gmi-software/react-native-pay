@@ -13,9 +13,9 @@ This guide does **not** replace platform onboarding (Apple/Google) or gateway-sp
 ## 1. Prerequisites
 
 - React Native **0.70+**
-- **react-native-nitro-modules** **0.35.0+** (required)
+- **react-native-nitro-modules** **0.36.0+** (required)
 - **Android minSdkVersion** **26+** (required)
-- **Expo 53+** if you use Expo
+- **Expo 53–57** if you use Expo (SDK 57 requires Node.js 22.13+)
 
 ## 2. Install dependencies
 

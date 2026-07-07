@@ -6,16 +6,16 @@ Supported versions and upgrade notes.
 
 - **react** — `*` (compatible with current React 18/19)
 - **react-native** — `*` (0.70+ recommended)
-- **react-native-nitro-modules** — **>= 0.35.0** (required)
-- **expo** — **>= 53.0.0** (if using Expo)
+- **react-native-nitro-modules** — **>= 0.36.0** (required)
+- **expo** — **>= 53.0.0** (if using Expo; tested with SDK 57 / React Native 0.86)
 - **Android minSdkVersion** — **26+** (required for Nitro Modules prefab)
 
 Install the correct Nitro version first; the payment library depends on it.
 
 ## Recommended versions
 
-- **React Native** 0.70 or newer
-- **Expo** 53+ when using Expo
+- **React Native** 0.70 or newer (0.86 with Expo SDK 57)
+- **Expo** 53–57 when using Expo
 
 ## Expo plugin behavior
 
@@ -32,6 +32,12 @@ Install the correct Nitro version first; the payment library depends on it.
 Use `Platform.OS` (or equivalent) to render the correct button and to pass platform-specific config (e.g. Google Pay options only on Android).
 
 ## Breaking changes and migrations
+
+### 0.0.16
+
+- Regenerated Nitrogen bindings for **react-native-nitro-modules 0.36+** (Expo SDK 57 / React Native 0.86).
+- **Peer dependency** `react-native-nitro-modules` is now **>= 0.36.0** (was >= 0.35.0).
+- Example app upgraded to **Expo SDK 57** (React Native 0.86, React 19.2.3).
 
 ### 0.0.15
 
