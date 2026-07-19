@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.0.16 — 2026-07-07
+
+### Breaking changes
+
+- Regenerated Nitrogen bindings for **react-native-nitro-modules 0.36+** (Expo SDK 57 / React Native 0.86).
+- Peer dependency `react-native-nitro-modules` is now **>= 0.36.0** (was >= 0.35.0).
+
+### Changed
+
+- Example app upgraded to **Expo SDK 57** (React Native 0.86, React 19.2.3).
+- `nitrogen` devDependency bumped to ^0.36.1; `react-native-nitro-modules` devDependency ^0.36.1.
+
+### Migration
+
+1. Upgrade `react-native-nitro-modules` to **0.36.1** (or newer 0.36.x).
+2. If using Expo, upgrade to **SDK 57** (`npx expo install expo@^57.0.0 --fix`).
+3. Run `npx expo prebuild --clean` and rebuild.
+
 ## 0.0.15 — 2026-06-30
 
 ### Breaking changes
