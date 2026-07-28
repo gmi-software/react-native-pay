@@ -92,7 +92,7 @@
     "*.podspec",
     "README.md"
   ],
-  "homepage": "https://github.com/gmi-software/react-native-pay#readme",
+  "homepage": "https://gmi.software/open-source",
   "keywords": [
     "react-native",
     "react-native-pay",
