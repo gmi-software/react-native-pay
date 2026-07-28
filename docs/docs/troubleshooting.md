@@ -14,6 +14,19 @@ npx expo prebuild --clean
 
 ## iOS (Apple Pay)
 
+### App crashes at launch with `folly dynamic.cpp:378 Check failed: 0`
+
+On React Native 0.80+ (e.g. Expo SDK 57), the app can abort at startup with a stack
+ending in `folly::dynamic::get<bool>()` / `BaseViewProps`. Linking the library is
+enough; no pay button needs to be on screen.
+
+Cause: `NitroPay.podspec` defined `FOLLY_NO_CONFIG`, mismatching React Native core's
+folly config. **Fixed after 0.0.16** — upgrade, then rebuild:
+
+```bash
+npx expo prebuild --clean
+```
+
 ### Apple Pay button not showing
 
 - **Merchant ID mismatch:** The Expo plugin `merchantIdentifier` must exactly match your Apple Developer Merchant ID.

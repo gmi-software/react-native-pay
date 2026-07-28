@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- **iOS startup crash on React Native 0.80+ (`folly dynamic.cpp:378 Check failed: 0`).**
+  `NitroPay.podspec` no longer defines `FOLLY_NO_CONFIG` on React Native ≥ 0.80
+  (mismatched folly config vs React Native core). Flags remain for React Native < 0.80.
+
 ## 0.0.16 — 2026-07-07
 
 ### Breaking changes

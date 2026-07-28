@@ -22,10 +22,21 @@ Pod::Spec.new do |s|
     "cpp/**/*.{hpp,cpp}",
   ]
 
-  s.pod_target_xcconfig = {
-    # C++ compiler flags, mainly for folly.
-    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES"
-  }
+  # FOLLY_NO_CONFIG conflicts with RN >= 0.80's generated folly-config.h.
+  react_native_below_80 = begin
+    pod_root = Pod::Config.instance.installation_root.to_s
+    rn_package_path = `cd "#{pod_root}" && node --print "require.resolve('react-native/package.json')"`.strip
+    File.exist?(rn_package_path) && JSON.parse(File.read(rn_package_path))["version"].split(".")[1].to_i < 80
+  rescue StandardError
+    false
+  end
+
+  if react_native_below_80
+    s.pod_target_xcconfig = {
+      # C++ compiler flags, mainly for folly.
+      "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES"
+    }
+  end
 
   load 'nitrogen/generated/ios/NitroPay+autolinking.rb'
   add_nitrogen_files(s)
