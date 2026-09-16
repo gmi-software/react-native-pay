@@ -7,6 +7,7 @@ import NitroModules
 private enum ErrorMessage {
     static let paymentCancelled = "Payment cancelled by user"
     static let paymentDismissed = "Payment sheet was dismissed before authorization"
+    static let paymentInProgress = "A payment is already in progress"
     static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
     static let unableToPresent = "Unable to present payment authorization"
     static let unableToCreate = "Unable to create payment authorization"
@@ -292,6 +293,13 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // MARK: - Private Methods
     
     private func performPayment(request: PaymentRequest, completion: @escaping (PaymentResult) -> Void) {
+        // Reject overlaps before touching shared state so the in-flight
+        // payment keeps its completion/delegate and settles correctly.
+        guard paymentCompletion == nil else {
+            completion(createErrorResult(ErrorMessage.paymentInProgress))
+            return
+        }
+
         guard let paymentRequest = PaymentRequestBuilder.build(from: request) else {
             completion(createErrorResult(ErrorMessage.missingMerchantIdentifier))
             return
