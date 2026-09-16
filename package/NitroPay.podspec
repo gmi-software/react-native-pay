@@ -1,4 +1,5 @@
 require "json"
+require "open3"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
@@ -26,8 +27,14 @@ Pod::Spec.new do |s|
   # Fail hard if React Native cannot be resolved — a silent fallback would apply
   # the wrong Folly flags and either crash modern RN or break older installs.
   pod_root = Pod::Config.instance.installation_root.to_s
-  rn_package_path = `cd "#{pod_root}" && node --print "require.resolve('react-native/package.json')"`.strip
-  unless $?.success? && !rn_package_path.empty? && File.exist?(rn_package_path)
+  rn_package_path, _stderr, status = Open3.capture3(
+    "node",
+    "--print",
+    "require.resolve('react-native/package.json')",
+    chdir: pod_root
+  )
+  rn_package_path = rn_package_path.strip
+  unless status.success? && !rn_package_path.empty? && File.exist?(rn_package_path)
     raise "NitroPay: unable to resolve react-native/package.json from #{pod_root}. " \
           "Install React Native before running `pod install`."
   end
