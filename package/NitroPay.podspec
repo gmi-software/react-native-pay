@@ -23,12 +23,24 @@ Pod::Spec.new do |s|
   ]
 
   # FOLLY_NO_CONFIG conflicts with RN >= 0.80's generated folly-config.h.
-  react_native_below_80 = begin
-    pod_root = Pod::Config.instance.installation_root.to_s
-    rn_package_path = `cd "#{pod_root}" && node --print "require.resolve('react-native/package.json')"`.strip
-    File.exist?(rn_package_path) && JSON.parse(File.read(rn_package_path))["version"].split(".")[1].to_i < 80
-  rescue StandardError
-    false
+  # Fail hard if React Native cannot be resolved — a silent fallback would apply
+  # the wrong Folly flags and either crash modern RN or break older installs.
+  pod_root = Pod::Config.instance.installation_root.to_s
+  rn_package_path = `cd "#{pod_root}" && node --print "require.resolve('react-native/package.json')"`.strip
+  unless $?.success? && !rn_package_path.empty? && File.exist?(rn_package_path)
+    raise "NitroPay: unable to resolve react-native/package.json from #{pod_root}. " \
+          "Install React Native before running `pod install`."
+  end
+
+  rn_version = JSON.parse(File.read(rn_package_path))["version"]
+  if rn_version.nil? || rn_version.to_s.strip.empty?
+    raise "NitroPay: react-native package.json is missing a version field (#{rn_package_path})."
+  end
+
+  begin
+    react_native_below_80 = Gem::Version.new(rn_version) < Gem::Version.new("0.80.0")
+  rescue ArgumentError
+    raise "NitroPay: unable to parse React Native version #{rn_version.inspect} from #{rn_package_path}."
   end
 
   if react_native_below_80
