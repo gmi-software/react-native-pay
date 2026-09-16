@@ -7,6 +7,7 @@ import NitroModules
 private enum ErrorMessage {
     static let paymentCancelled = "Payment cancelled by user"
     static let paymentDismissed = "Payment sheet was dismissed before authorization"
+    static let paymentInProgress = "A payment is already in progress"
     static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
     static let unableToPresent = "Unable to present payment authorization"
     static let unableToCreate = "Unable to create payment authorization"
@@ -186,6 +187,7 @@ private struct PaymentTokenConverter {
 private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
     private var paymentAuthorized: Bool = false
+    private var authorizedResult: PaymentResult?
     private var presentationDate: Date?
     private let userDismissThreshold: TimeInterval = 0.75
     
@@ -203,45 +205,44 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
     ) {
         paymentAuthorized = true
-        
-        // Simulate payment processing
-        let workItem = DispatchWorkItem {
+
+        let paymentToken = PaymentTokenConverter.convert(payment.token)
+        authorizedResult = PaymentResult.init(
+            success: true,
+            transactionId: UUID().uuidString,
+            token: paymentToken,
+            error: nil
+        )
+
+        // Keep a short processing delay so PassKit can show its success UI,
+        // but settle the Nitro promise only once from didFinish.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
-            
-            let paymentToken = PaymentTokenConverter.convert(payment.token)
-            let transactionId = UUID().uuidString
-            let result = PaymentResult.init(
-                success: true,
-                transactionId: transactionId,
-                token: paymentToken,
-                error: nil
-            )
-            
-            self.paymentHandler?.handlePaymentResult(result)
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
     }
     
     func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
         controller.dismiss(animated: true) {
-            if !self.paymentAuthorized {
-                let errorMessage: String
-                if let presentationDate = self.presentationDate,
-                   Date().timeIntervalSince(presentationDate) >= self.userDismissThreshold {
-                    errorMessage = ErrorMessage.paymentCancelled
-                } else {
-                    errorMessage = ErrorMessage.paymentDismissed
-                }
-
-                let result = PaymentResult.init(
-                    success: false,
-                    transactionId: nil,
-                    token: nil,
-                    error: errorMessage
-                )
-                self.paymentHandler?.handlePaymentResult(result)
+            if self.paymentAuthorized, let authorizedResult = self.authorizedResult {
+                self.paymentHandler?.handlePaymentResult(authorizedResult)
+                return
             }
+
+            let errorMessage: String
+            if let presentationDate = self.presentationDate,
+               Date().timeIntervalSince(presentationDate) >= self.userDismissThreshold {
+                errorMessage = ErrorMessage.paymentCancelled
+            } else {
+                errorMessage = ErrorMessage.paymentDismissed
+            }
+
+            let result = PaymentResult.init(
+                success: false,
+                transactionId: nil,
+                token: nil,
+                error: errorMessage
+            )
+            self.paymentHandler?.handlePaymentResult(result)
         }
     }
 }
@@ -281,12 +282,24 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // MARK: - Internal Methods
     
     func handlePaymentResult(_ result: PaymentResult) {
-        paymentCompletion?(result)
+        // One-shot settle: Nitro Promise crashes on a second resolve/reject.
+        guard let completion = paymentCompletion else { return }
+        paymentCompletion = nil
+        delegate = nil
+        currentPaymentRequest = nil
+        completion(result)
     }
     
     // MARK: - Private Methods
     
     private func performPayment(request: PaymentRequest, completion: @escaping (PaymentResult) -> Void) {
+        // Reject overlaps before touching shared state so the in-flight
+        // payment keeps its completion/delegate and settles correctly.
+        guard paymentCompletion == nil else {
+            completion(createErrorResult(ErrorMessage.paymentInProgress))
+            return
+        }
+
         guard let paymentRequest = PaymentRequestBuilder.build(from: request) else {
             completion(createErrorResult(ErrorMessage.missingMerchantIdentifier))
             return
@@ -297,14 +310,14 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         delegate = PaymentDelegate(paymentHandler: self)
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
-            completion(createErrorResult(ErrorMessage.unableToCreate))
+            handlePaymentResult(createErrorResult(ErrorMessage.unableToCreate))
             return
         }
         
         paymentAuthVC.delegate = delegate
         
         guard let rootViewController = getRootViewController() else {
-            completion(createErrorResult(ErrorMessage.unableToPresent))
+            handlePaymentResult(createErrorResult(ErrorMessage.unableToPresent))
             return
         }
         
