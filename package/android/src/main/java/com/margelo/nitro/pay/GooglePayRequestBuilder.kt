@@ -29,17 +29,21 @@ object GooglePayRequestBuilder {
     
     /**
      * Creates a complete payment data request
+     *
+     * @param fallbackMerchantName shown when the request has no merchantName,
+     *   typically the app label. When both are blank, merchantName is omitted.
      */
     fun createPaymentDataRequest(
         request: PaymentRequest,
-        environment: Int
+        environment: Int,
+        fallbackMerchantName: String? = null
     ): JSONObject {
         validatePaymentRequest(request, environment)
 
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
-            put("merchantInfo", createMerchantInfo(request, environment))
+            put("merchantInfo", createMerchantInfo(request, environment, fallbackMerchantName))
             put("allowedPaymentMethods", JSONArray().apply {
                 put(createCardPaymentMethod(request, environment))
             })
@@ -52,10 +56,14 @@ object GooglePayRequestBuilder {
      */
     private fun createMerchantInfo(
         request: PaymentRequest,
-        environment: Int
+        environment: Int,
+        fallbackMerchantName: String?
     ): JSONObject {
+        val merchantName = request.merchantName?.trim().takeUnless { it.isNullOrEmpty() }
+            ?: fallbackMerchantName?.trim().takeUnless { it.isNullOrEmpty() }
+
         return JSONObject().apply {
-            put("merchantName", request.merchantName ?: PaymentConstants.DEFAULT_MERCHANT_NAME)
+            merchantName?.let { put("merchantName", it) }
             // Add merchant ID only for PRODUCTION environment
             if (environment == WalletConstants.ENVIRONMENT_PRODUCTION) {
                 put("merchantId", request.googlePayMerchantId)
@@ -137,9 +145,16 @@ object GooglePayRequestBuilder {
      */
     private fun createTransactionInfo(request: PaymentRequest): JSONObject {
         val totalAmount = request.paymentItems.sumOf { it.amount }
+        val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
         
         return JSONObject().apply {
-            put("totalPriceStatus", PaymentConstants.TOTAL_PRICE_STATUS_FINAL)
+            put(
+                "totalPriceStatus",
+                if (hasPendingItems)
+                    PaymentConstants.TOTAL_PRICE_STATUS_ESTIMATED
+                else
+                    PaymentConstants.TOTAL_PRICE_STATUS_FINAL
+            )
             put("totalPrice", formatPrice(totalAmount))
             put("totalPriceLabel", PaymentConstants.TOTAL_PRICE_LABEL_DEFAULT)
             put("currencyCode", request.currencyCode)
@@ -160,14 +175,15 @@ object GooglePayRequestBuilder {
             items.forEach { item ->
                 put(JSONObject().apply {
                     put("label", item.label)
-                    put(
-                        "type",
-                        if (item.type == PaymentItemType.FINAL) 
-                            PaymentConstants.LINE_ITEM_TYPE 
-                        else 
-                            PaymentConstants.PENDING_TYPE
-                    )
+                    put("type", PaymentConstants.LINE_ITEM_TYPE)
                     put("price", formatPrice(item.amount))
+                    put(
+                        "status",
+                        if (item.type == PaymentItemType.PENDING)
+                            PaymentConstants.DISPLAY_ITEM_STATUS_PENDING
+                        else
+                            PaymentConstants.DISPLAY_ITEM_STATUS_FINAL
+                    )
                 })
             }
         }

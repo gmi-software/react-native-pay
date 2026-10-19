@@ -63,3 +63,4 @@ const handleClearCart = () => {
 - **At least one item** is required before `startPayment()`. Otherwise the hook sets an error and returns `null`.
 - **total** is derived from `items`; you don’t set it manually.
 - Use **type: 'final'** for confirmed amounts (e.g. tax, total); use **'pending'** for estimates (e.g. shipping) if your flow supports it.
+- **One pending item makes the total an estimate.** Google Pay shows the total as estimated (`totalPriceStatus: 'ESTIMATED'`) and Apple Pay marks the total as pending. Charge the final amount on your server once it is known.

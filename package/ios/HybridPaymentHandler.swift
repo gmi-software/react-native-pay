@@ -97,7 +97,8 @@ private struct PaymentRequestBuilder {
             label: totalLabel,
             amount: NSDecimalNumber(decimal: totalAmount)
         )
-        totalItem.type = .final
+        // The total is only as final as its least final item.
+        totalItem.type = request.paymentItems.contains { $0.type == .pending } ? .pending : .final
 
         return lineItems + [totalItem]
     }
