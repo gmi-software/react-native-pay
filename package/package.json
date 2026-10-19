@@ -119,7 +119,6 @@
   "scripts": {
     "prepack": "rm -rf lib tsconfig.tsbuildinfo && tsc && cp ../README.md ./README.md",
     "postpack": "rm ./README.md",
-    "postinstall": "tsc || exit 0;",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",

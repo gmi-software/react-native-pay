@@ -6,11 +6,9 @@
     "example",
     "docs"
   ],
-  "trustedDependencies": [
-    "react-native-pay"
-  ],
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "cd package && tsc || exit 0",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "docs:start": "cd docs && bun run start",
