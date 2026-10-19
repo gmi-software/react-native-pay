@@ -14,6 +14,19 @@ jest.mock('react-native-nitro-modules', () => ({
 
 import { usePaymentCheckout } from '../usePaymentCheckout'
 
+const IN_PROGRESS_RESULT = {
+  success: false,
+  error: 'A payment is already in progress',
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('usePaymentCheckout integration', () => {
   beforeEach(() => {
     mockPayServiceStatus.mockReturnValue({
@@ -244,5 +257,96 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.error).toBeNull()
     expect(result.current.result).toBeNull()
     expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('starts one native payment when startPayment is called twice synchronously', async () => {
+    const native = createDeferred<any>()
+    mockStartPayment.mockReturnValueOnce(native.promise)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+
+    let first!: Promise<any>
+    let second: any
+    await act(async () => {
+      first = result.current.startPayment()
+      second = await result.current.startPayment()
+    })
+
+    expect(mockStartPayment).toHaveBeenCalledTimes(1)
+    expect(second).toEqual(IN_PROGRESS_RESULT)
+    expect(result.current.isProcessing).toBe(true)
+    expect(result.current.error).toBeNull()
+    expect(result.current.result).toBeNull()
+
+    const nativeSuccess = { success: true, transactionId: 'tx_1' }
+    await act(async () => {
+      native.resolve(nativeSuccess)
+      await first
+    })
+
+    await expect(first).resolves.toEqual(nativeSuccess)
+    expect(result.current.result).toEqual(nativeSuccess)
+    expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('keeps the in-flight guard when reset() runs during a payment', async () => {
+    const native = createDeferred<any>()
+    mockStartPayment.mockReturnValueOnce(native.promise)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+
+    let first!: Promise<any>
+    act(() => {
+      first = result.current.startPayment()
+    })
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.isProcessing).toBe(true)
+
+    let second: any
+    await act(async () => {
+      second = await result.current.startPayment()
+    })
+
+    expect(second).toEqual(IN_PROGRESS_RESULT)
+    expect(mockStartPayment).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      native.resolve({ success: true })
+      await first
+    })
+
+    expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('accepts a new payment once the previous one settles', async () => {
+    mockStartPayment
+      .mockRejectedValueOnce(new Error('Native failure'))
+      .mockResolvedValueOnce({ success: true })
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    let paymentResult: any = null
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(mockStartPayment).toHaveBeenCalledTimes(2)
+    expect(paymentResult).toEqual({ success: true })
   })
 })

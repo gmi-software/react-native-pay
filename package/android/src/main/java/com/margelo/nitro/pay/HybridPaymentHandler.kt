@@ -27,7 +27,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
             ?: throw IllegalStateException("Application context is not ReactApplicationContext")
     }
     
-    private var paymentPromise: Promise<PaymentResult>? = null
+    private val pendingPayment = PendingPayment<PaymentResult>()
     private var currentEnvironment: Int = WalletConstants.ENVIRONMENT_TEST
     
     init {
@@ -71,7 +71,14 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
     
     override fun startPayment(request: PaymentRequest): Promise<PaymentResult> {
         val promise = Promise<PaymentResult>()
-        paymentPromise = promise
+        
+        // Reject overlaps without touching the in-flight payment, so its
+        // promise still settles and no second Google Pay sheet is requested.
+        if (!pendingPayment.tryBegin { result -> promise.resolve(result) }) {
+            Log.w(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_IN_PROGRESS)
+            promise.resolve(PaymentMapper.createErrorResult(PaymentConstants.ERROR_PAYMENT_IN_PROGRESS))
+            return promise
+        }
         
         try {
             val environment = determineEnvironment(request.googlePayEnvironment)
@@ -183,14 +190,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
     private fun handlePaymentSuccess(paymentData: PaymentData) {
         Log.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment successful")
         val result = PaymentMapper.mapPaymentDataToResult(paymentData)
-        paymentPromise?.resolve(result)
-        paymentPromise = null
+        pendingPayment.settle(result)
     }
     
     private fun handlePaymentError(errorMessage: String) {
         val result = PaymentMapper.createErrorResult(errorMessage)
-        paymentPromise?.resolve(result)
-        paymentPromise = null
+        pendingPayment.settle(result)
     }
     
     private fun logPaymentRequest(request: org.json.JSONObject, environment: Int) {

@@ -68,7 +68,8 @@ interface UsePaymentCheckoutReturn {
   - Returns `null` and sets `error` when the cart is empty.
   - Returns `PaymentResult` (including `{ success: false, error }`) when the native flow completes with a failure result.
   - Returns `null` if an exception is thrown while starting/processing the payment.
-- **reset()** — Clears `isProcessing`, `result`, and `error` (does not clear cart).
+  - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, including one started through `HybridPaymentHandler`. The in-flight payment and the hook state are not affected.
+- **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
 
 ## Example
 

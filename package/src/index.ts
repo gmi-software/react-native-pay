@@ -1,4 +1,4 @@
-import { NitroModules, getHostComponent } from 'react-native-nitro-modules'
+import { getHostComponent } from 'react-native-nitro-modules'
 import type {
   ApplePayButtonProps,
   ApplePayButtonMethods,
@@ -7,10 +7,9 @@ import type {
   GooglePayButtonProps,
   GooglePayButtonMethods,
 } from './specs/GooglePayButton.nitro'
-import type { PaymentHandler } from './specs/PaymentHandler.nitro'
+import { getPaymentHandler } from './paymentHandler'
 
-export const HybridPaymentHandler =
-  NitroModules.createHybridObject<PaymentHandler>('PaymentHandler')
+export const HybridPaymentHandler = getPaymentHandler()
 
 export type { PaymentHandler } from './specs/PaymentHandler.nitro'
 
