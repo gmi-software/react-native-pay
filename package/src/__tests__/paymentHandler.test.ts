@@ -90,7 +90,7 @@ describe('shared PaymentHandler instance', () => {
     await expect(hookPayment).resolves.toEqual({ success: true })
   })
 
-  it('rejects a hook call while a direct payment is in flight', async () => {
+  it('records the native in-progress result when a direct payment is in flight', async () => {
     const { result } = renderCheckoutWithItem()
 
     const directPayment = HybridPaymentHandler.startPayment(directRequest)
@@ -101,6 +101,7 @@ describe('shared PaymentHandler instance', () => {
 
     expect(mockPresentations).toHaveLength(1)
     expect(hookResult).toEqual(IN_PROGRESS_RESULT)
+    expect(result.current.result).toEqual(IN_PROGRESS_RESULT)
     expect(result.current.error?.message).toBe(IN_PROGRESS_RESULT.error)
 
     settlePresentations()
