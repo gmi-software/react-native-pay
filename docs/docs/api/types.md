@@ -19,6 +19,8 @@ interface PaymentItem {
 - **final** — Confirmed amount (e.g. product price, tax).
 - **pending** — Estimate (e.g. shipping that may change).
 
+If any item is `pending`, the total is an estimate too: Google Pay receives `totalPriceStatus: 'ESTIMATED'` and Apple Pay marks the total summary item as `.pending`. Every item is sent to Google Pay as a `LINE_ITEM` display item, with `status` set to `FINAL` or `PENDING`.
+
 ---
 
 ## PaymentRequest
@@ -47,6 +49,8 @@ interface PaymentRequest {
 ```
 
 On iOS, `applePayMerchantIdentifier` is optional and only needed when you want to override the Merchant ID configured in the native app entitlements.
+
+`merchantName` is the name shown on the Google Pay sheet and the label of the Apple Pay total (when the cart has more than one item). If it is missing or blank, Android uses the app's label from the manifest; iOS labels the total "Total".
 
 ---
 

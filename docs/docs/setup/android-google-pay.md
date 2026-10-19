@@ -31,6 +31,7 @@ Google Pay needs a **Google Pay merchant ID** for production, plus your **paymen
 
 ```ts
 usePaymentCheckout({
+  merchantName: 'Your Store',      // shown on the Google Pay sheet
   currencyCode: 'USD',
   countryCode: 'US',
   googlePayMerchantId: 'your_google_pay_merchant_id',
@@ -39,6 +40,8 @@ usePaymentCheckout({
   googlePayGatewayMerchantId: 'your_stripe_merchant_id',
 })
 ```
+
+If you omit `merchantName`, the Google Pay sheet shows your app's label (`android:label` in the manifest).
 
 Supported gateways include: `stripe`, `braintree`, `square`, `adyen`, `authorizenet`, `checkoutltd`. See [Google Pay Gateway Tokens](https://developers.google.com/pay/api/android/reference/request-objects#gateway) for the full list and exact identifiers.
 

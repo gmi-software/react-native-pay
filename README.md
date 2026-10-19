@@ -323,6 +323,7 @@ For Google Pay, you need to configure your payment gateway:
 
 ```typescript
 const checkout = usePaymentCheckout({
+  merchantName: "Your Store", // shown on the Google Pay sheet
   currencyCode: "USD",
   countryCode: "US",
   // Google Pay specific
@@ -332,6 +333,8 @@ const checkout = usePaymentCheckout({
   googlePayGatewayMerchantId: "your_stripe_merchant_id",
 });
 ```
+
+Without `merchantName`, the Google Pay sheet shows your app's label. If any cart item is `pending`, the total is sent as an estimate (`ESTIMATED` on Google Pay, `.pending` on Apple Pay).
 
 #### Supported Payment Gateways
 
