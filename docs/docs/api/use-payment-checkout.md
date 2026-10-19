@@ -27,8 +27,12 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  // Charge the token before the sheet closes
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
 ```
+
+- **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
 
 ## Return value
 
@@ -68,6 +72,7 @@ interface UsePaymentCheckoutReturn {
   - Returns `null` and sets `error` when the cart is empty.
   - Returns `PaymentResult` (including `{ success: false, error }`) when the native flow completes with a failure result.
   - Returns `null` if an exception is thrown while starting/processing the payment.
+  - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ success: false, error }` and sets `error`.
 - **reset()** — Clears `isProcessing`, `result`, and `error` (does not clear cart).
 
 ## Example

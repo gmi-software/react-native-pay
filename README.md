@@ -370,6 +370,8 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  // Charge the token while the sheet waits (see "Charging before the sheet closes")
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>;
 }
 ```
 
@@ -456,7 +458,7 @@ interface PayServiceStatus {
 }
 ```
 
-##### `startPayment(request: PaymentRequest): Promise<PaymentResult>`
+##### `startPayment(request: PaymentRequest, options?: StartPaymentOptions): Promise<PaymentResult>`
 
 Start a payment request.
 
@@ -469,6 +471,20 @@ const result = await HybridPaymentHandler.startPayment({
   paymentItems: [{ label: "Total", amount: 29.99, type: "final" }],
   googlePayMerchantId: "your_google_pay_merchant_id",
 });
+```
+
+**Options:**
+
+```typescript
+interface StartPaymentOptions {
+  // Charge the token while the sheet waits (see "Charging before the sheet closes")
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>;
+}
+
+interface PaymentAuthorizationResult {
+  status: "success" | "failure";
+  error?: string; // Becomes PaymentResult.error on failure
+}
 ```
 
 **Returns:**
@@ -882,6 +898,33 @@ function CustomPayButton({ onPress }) {
 // Use it
 <CustomPayButton onPress={handlePayment} />
 ```
+
+### Charging Before the Sheet Closes
+
+Pass `onAuthorize` to charge the token while the Apple Pay sheet is still up. The sheet then shows your real outcome instead of an unconditional success:
+
+```typescript
+const checkout = usePaymentCheckout({
+  currencyCode: "USD",
+  onAuthorize: async (token) => {
+    const response = await fetch("https://api.yourserver.com/process-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, orderId }),
+    });
+    return response.ok
+      ? { status: "success" }
+      : { status: "failure", error: "Payment failed" };
+  },
+});
+
+const result = await checkout.startPayment();
+// result.success reflects your server's answer
+```
+
+- `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored, so make your server charge idempotent.
+- A rejected promise counts as a failure.
+- **Android:** Google Pay closes its sheet before returning the token, so `onAuthorize` runs afterwards and only decides the `PaymentResult`.
 
 ### Server-Side Processing
 

@@ -74,6 +74,21 @@ object PaymentMapper {
     }
     
     /**
+     * Applies the merchant's `onAuthorize` outcome to an authorized PaymentResult
+     */
+    fun applyAuthorization(
+        authorization: PaymentAuthorizationResult,
+        authorizedResult: PaymentResult
+    ): PaymentResult {
+        return when (authorization.status) {
+            PaymentAuthorizationStatus.SUCCESS -> authorizedResult
+            PaymentAuthorizationStatus.FAILURE -> createErrorResult(
+                authorization.error ?: PaymentConstants.ERROR_AUTHORIZATION_FAILED
+            )
+        }
+    }
+    
+    /**
      * Creates an error PaymentResult
      */
     fun createErrorResult(errorMessage: String): PaymentResult {

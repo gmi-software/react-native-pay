@@ -24,7 +24,7 @@ const status = HybridPaymentHandler.payServiceStatus()
 
 ---
 
-### startPayment(request)
+### startPayment(request, options?)
 
 Starts the native payment flow with the given request. Returns a promise that resolves with the payment result.
 
@@ -50,6 +50,21 @@ interface PaymentResult {
   error?: string
 }
 ```
+
+**options.onAuthorize** charges the token before the Apple Pay sheet closes. The result follows your callback:
+
+```ts
+const result = await HybridPaymentHandler.startPayment(request, {
+  onAuthorize: async (token) => {
+    const charged = await chargeOnServer(token)
+    return charged
+      ? { status: 'success' }
+      : { status: 'failure', error: 'Payment failed' }
+  },
+})
+```
+
+See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes) for the timeout and Android behavior.
 
 On iOS, the merchant ID is resolved from the app entitlements by default. Use `applePayMerchantIdentifier` only when you need to override the configured value at runtime.
 

@@ -50,6 +50,12 @@ namespace margelo::nitro::pay { struct PaymentItem; }
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
+// Forward declaration of `StartPaymentOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct StartPaymentOptions; }
+// Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
+// Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 
 #include "PayServiceStatus.hpp"
 #include "PaymentResult.hpp"
@@ -74,6 +80,10 @@ namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "GooglePayEnvironment.hpp"
+#include "StartPaymentOptions.hpp"
+#include "PaymentAuthorizationResult.hpp"
+#include <functional>
+#include "PaymentAuthorizationStatus.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -133,8 +143,8 @@ namespace margelo::nitro::pay {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request) override {
-      auto __result = _swiftPart.startPayment(std::forward<decltype(request)>(request));
+    inline std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) override {
+      auto __result = _swiftPart.startPayment(std::forward<decltype(request)>(request), options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

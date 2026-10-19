@@ -99,6 +99,30 @@ export interface PaymentResult {
   error?: string
 }
 
+export type PaymentAuthorizationStatus = 'success' | 'failure'
+
+/**
+ * What your server decided about an authorized payment. Returned from
+ * `StartPaymentOptions.onAuthorize`.
+ */
+export interface PaymentAuthorizationResult {
+  status: PaymentAuthorizationStatus
+  // Reported as `PaymentResult.error` when `status` is `'failure'`.
+  error?: string
+}
+
+export interface StartPaymentOptions {
+  /**
+   * Called with the token after the user authorizes the payment. Charge it on
+   * your server and resolve with the outcome. On iOS the Apple Pay sheet stays
+   * up until this settles and then shows success or failure. On Android it
+   * runs after the Google Pay sheet has closed.
+   * It must settle within 25 seconds, or the payment fails with a timeout and
+   * its later result is ignored. A rejection counts as `'failure'`.
+   */
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
+}
+
 export interface PayServiceStatus {
   canMakePayments: boolean
   canSetupCards: boolean

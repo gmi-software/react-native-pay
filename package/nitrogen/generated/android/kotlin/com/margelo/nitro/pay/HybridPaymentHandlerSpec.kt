@@ -35,7 +35,7 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun startPayment(request: PaymentRequest): Promise<PaymentResult>
+  abstract fun startPayment(request: PaymentRequest, options: StartPaymentOptions?): Promise<PaymentResult>
   
   @DoNotStrip
   @Keep

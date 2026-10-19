@@ -11,7 +11,15 @@ private enum ErrorMessage {
     static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
     static let unableToPresent = "Unable to present payment authorization"
     static let unableToCreate = "Unable to create payment authorization"
+    static let authorizationFailed = "Payment authorization failed"
+    static let authorizationTimedOut = "Payment authorization timed out"
 }
+
+// PassKit fails the sheet on its own when the authorization completion is not
+// called within about 30 seconds, so settle first with a definite result.
+private let authorizationTimeout: TimeInterval = 25
+
+private typealias AuthorizeCallback = (PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>
 
 private enum BundleKey {
     static let applePayMerchantIdentifiers = "ReactNativePayApplePayMerchantIdentifiers"
@@ -183,17 +191,58 @@ private struct PaymentTokenConverter {
     }
 }
 
+// MARK: - Payment Results
+
+private enum PaymentResultFactory {
+
+    static func success(token: PaymentToken) -> PaymentResult {
+        return PaymentResult.init(
+            success: true,
+            transactionId: UUID().uuidString,
+            token: token,
+            error: nil
+        )
+    }
+
+    static func failure(_ error: String) -> PaymentResult {
+        return PaymentResult.init(
+            success: false,
+            transactionId: nil,
+            token: nil,
+            error: error
+        )
+    }
+
+    static func failure(_ error: Error) -> PaymentResult {
+        // Nitro reports JS rejections as `RuntimeError`, whose description is the message.
+        return failure(String(describing: error))
+    }
+
+    static func from(_ authorization: PaymentAuthorizationResult, token: PaymentToken) -> PaymentResult {
+        switch authorization.status {
+        case .success:
+            return success(token: token)
+        case .failure:
+            return failure(authorization.error ?? ErrorMessage.authorizationFailed)
+        }
+    }
+}
+
 // MARK: - Payment Delegate
 
 private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
+    private let onAuthorize: AuthorizeCallback?
     private var paymentAuthorized: Bool = false
     private var authorizedResult: PaymentResult?
+    private var isAuthorizing: Bool = false
+    private var finishedWhileAuthorizing: Bool = false
     private var presentationDate: Date?
     private let userDismissThreshold: TimeInterval = 0.75
     
-    init(paymentHandler: HybridPaymentHandler) {
+    init(paymentHandler: HybridPaymentHandler, onAuthorize: AuthorizeCallback?) {
         self.paymentHandler = paymentHandler
+        self.onAuthorize = onAuthorize
     }
 
     func markPresented() {
@@ -206,45 +255,74 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
     ) {
         paymentAuthorized = true
-
         let paymentToken = PaymentTokenConverter.convert(payment.token)
-        authorizedResult = PaymentResult.init(
-            success: true,
-            transactionId: UUID().uuidString,
-            token: paymentToken,
-            error: nil
-        )
 
-        // Keep a short processing delay so PassKit can show its success UI,
-        // but settle the Nitro promise only once from didFinish.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        guard let onAuthorize else {
+            authorizedResult = PaymentResultFactory.success(token: paymentToken)
             completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
+            return
         }
+
+        // PassKit calls this again when the user retries after a failure, so
+        // each attempt completes its own handler exactly once. Runs on main.
+        var isSettled = false
+        isAuthorizing = true
+        let settle = { (result: PaymentResult) in
+            guard !isSettled else { return }
+            isSettled = true
+            self.isAuthorizing = false
+            self.authorizedResult = result
+            completion(PKPaymentAuthorizationResult(
+                status: result.success ? .success : .failure,
+                errors: nil
+            ))
+            if self.finishedWhileAuthorizing {
+                self.reportResult()
+            }
+        }
+        // Nitro settles JS promises on the JS thread.
+        let settleOnMain = { (result: PaymentResult) in
+            DispatchQueue.main.async { settle(result) }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + authorizationTimeout) {
+            settle(PaymentResultFactory.failure(ErrorMessage.authorizationTimedOut))
+        }
+
+        onAuthorize(paymentToken)
+            .then { authorization in
+                authorization
+                    .then { settleOnMain(PaymentResultFactory.from($0, token: paymentToken)) }
+                    .catch { settleOnMain(PaymentResultFactory.failure($0)) }
+            }
+            .catch { settleOnMain(PaymentResultFactory.failure($0)) }
     }
     
     func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
         controller.dismiss(animated: true) {
-            if self.paymentAuthorized, let authorizedResult = self.authorizedResult {
-                self.paymentHandler?.handlePaymentResult(authorizedResult)
+            // Report the merchant's outcome, not a cancellation, once it arrives.
+            if self.isAuthorizing {
+                self.finishedWhileAuthorizing = true
                 return
             }
-
-            let errorMessage: String
-            if let presentationDate = self.presentationDate,
-               Date().timeIntervalSince(presentationDate) >= self.userDismissThreshold {
-                errorMessage = ErrorMessage.paymentCancelled
-            } else {
-                errorMessage = ErrorMessage.paymentDismissed
-            }
-
-            let result = PaymentResult.init(
-                success: false,
-                transactionId: nil,
-                token: nil,
-                error: errorMessage
-            )
-            self.paymentHandler?.handlePaymentResult(result)
+            self.reportResult()
         }
+    }
+
+    private func reportResult() {
+        if paymentAuthorized, let authorizedResult {
+            paymentHandler?.handlePaymentResult(authorizedResult)
+            return
+        }
+
+        let errorMessage: String
+        if let presentationDate,
+           Date().timeIntervalSince(presentationDate) >= userDismissThreshold {
+            errorMessage = ErrorMessage.paymentCancelled
+        } else {
+            errorMessage = ErrorMessage.paymentDismissed
+        }
+        paymentHandler?.handlePaymentResult(PaymentResultFactory.failure(errorMessage))
     }
 }
 
@@ -268,11 +346,12 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         return PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: networks)
     }
     
-    func startPayment(request: PaymentRequest) throws -> Promise<PaymentResult> {
+    func startPayment(request: PaymentRequest, options: StartPaymentOptions?) throws -> Promise<PaymentResult> {
         let promise = Promise<PaymentResult>()
+        let onAuthorize = options?.onAuthorize
         
         DispatchQueue.main.async {
-            self.performPayment(request: request) { result in
+            self.performPayment(request: request, onAuthorize: onAuthorize) { result in
                 promise.resolve(withResult: result)
             }
         }
@@ -293,32 +372,36 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     // MARK: - Private Methods
     
-    private func performPayment(request: PaymentRequest, completion: @escaping (PaymentResult) -> Void) {
+    private func performPayment(
+        request: PaymentRequest,
+        onAuthorize: AuthorizeCallback?,
+        completion: @escaping (PaymentResult) -> Void
+    ) {
         // Reject overlaps before touching shared state so the in-flight
         // payment keeps its completion/delegate and settles correctly.
         guard paymentCompletion == nil else {
-            completion(createErrorResult(ErrorMessage.paymentInProgress))
+            completion(PaymentResultFactory.failure(ErrorMessage.paymentInProgress))
             return
         }
 
         guard let paymentRequest = PaymentRequestBuilder.build(from: request) else {
-            completion(createErrorResult(ErrorMessage.missingMerchantIdentifier))
+            completion(PaymentResultFactory.failure(ErrorMessage.missingMerchantIdentifier))
             return
         }
         
         paymentCompletion = completion
         currentPaymentRequest = paymentRequest
-        delegate = PaymentDelegate(paymentHandler: self)
+        delegate = PaymentDelegate(paymentHandler: self, onAuthorize: onAuthorize)
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
-            handlePaymentResult(createErrorResult(ErrorMessage.unableToCreate))
+            handlePaymentResult(PaymentResultFactory.failure(ErrorMessage.unableToCreate))
             return
         }
         
         paymentAuthVC.delegate = delegate
         
         guard let rootViewController = getRootViewController() else {
-            handlePaymentResult(createErrorResult(ErrorMessage.unableToPresent))
+            handlePaymentResult(PaymentResultFactory.failure(ErrorMessage.unableToPresent))
             return
         }
         
@@ -327,15 +410,6 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         }
     }
     
-    private func createErrorResult(_ error: String) -> PaymentResult {
-        return PaymentResult.init(
-            success: false,
-            transactionId: nil,
-            token: nil,
-            error: error
-        )
-    }
-
     private func getRootViewController() -> UIViewController? {
         let scenes = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }

@@ -37,6 +37,11 @@ object PaymentConstants {
     const val DISPLAY_ITEM_STATUS_FINAL = "FINAL"
     const val DISPLAY_ITEM_STATUS_PENDING = "PENDING"
     
+    // Merchant authorization (`StartPaymentOptions.onAuthorize`), same limit as iOS
+    const val AUTHORIZATION_TIMEOUT_MS = 25_000L
+    const val ERROR_AUTHORIZATION_FAILED = "Payment authorization failed"
+    const val ERROR_AUTHORIZATION_TIMED_OUT = "Payment authorization timed out"
+    
     // Supported networks (lowercase for comparison)
     val SUPPORTED_NETWORKS = listOf("visa", "mastercard", "amex", "discover")
     

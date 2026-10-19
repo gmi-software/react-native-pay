@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   StyleSheet,
   Alert,
@@ -15,8 +16,13 @@ import {
 } from "@gmisoftware/react-native-pay";
 import { callback } from "react-native-nitro-modules";
 
+const SIMULATED_SERVER_MODES = ["off", "approve", "decline"] as const;
+type SimulatedServerMode = (typeof SIMULATED_SERVER_MODES)[number];
+
 export default function TabOneScreen() {
   const paymentServiceName = Platform.OS === "ios" ? "Apple Pay" : "Google Pay";
+  const [simulatedServer, setSimulatedServer] =
+    useState<SimulatedServerMode>("off");
 
   // Initialize checkout hook
   const {
@@ -36,7 +42,24 @@ export default function TabOneScreen() {
   } = usePaymentCheckout({
     countryCode: "US",
     currencyCode: "USD",
+    // Stands in for your backend charging the token while the sheet waits.
+    onAuthorize:
+      simulatedServer === "off"
+        ? undefined
+        : async () => {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            return simulatedServer === "approve"
+              ? { status: "success" }
+              : { status: "failure", error: "Declined by the test server" };
+          },
   });
+
+  const handleCycleSimulatedServer = () => {
+    const next =
+      (SIMULATED_SERVER_MODES.indexOf(simulatedServer) + 1) %
+      SIMULATED_SERVER_MODES.length;
+    setSimulatedServer(SIMULATED_SERVER_MODES[next]);
+  };
 
   // Show status info
   const handleCheckStatus = () => {
@@ -151,6 +174,17 @@ export default function TabOneScreen() {
             </Text>
           </View>
         </View>
+      </View>
+
+      {/* Simulated Server Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Simulated Server (onAuthorize)</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleCycleSimulatedServer}
+        >
+          <Text style={styles.buttonText}>Mode: {simulatedServer}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Quick Add Section */}

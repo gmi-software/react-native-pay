@@ -137,9 +137,9 @@ open class HybridPaymentHandlerSpec_cxx {
   }
   
   @inline(__always)
-  public final func startPayment(request: PaymentRequest) -> bridge.Result_std__shared_ptr_Promise_PaymentResult___ {
+  public final func startPayment(request: PaymentRequest, options: bridge.std__optional_StartPaymentOptions_) -> bridge.Result_std__shared_ptr_Promise_PaymentResult___ {
     do {
-      let __result = try self.__implementation.startPayment(request: request)
+      let __result = try self.__implementation.startPayment(request: request, options: options.value)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_PaymentResult__ in
         let __promise = bridge.create_std__shared_ptr_Promise_PaymentResult__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_PaymentResult__(__promise)

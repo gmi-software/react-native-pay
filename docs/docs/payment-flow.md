@@ -41,6 +41,8 @@ sequenceDiagram
 
 ## PaymentResult outcomes
 
+With [`onAuthorize`](/docs/guides/server-processing#charge-before-the-sheet-closes), your backend charges the token before the wallet sheet closes, and the result below already reflects the charge.
+
 ### 1) Success
 
 - `result.success === true`
