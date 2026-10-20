@@ -38,6 +38,10 @@ namespace margelo::nitro::pay { struct PKSecureElementPass; }
 namespace margelo::nitro::pay { enum class PassActivationState; }
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
+// Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
+// Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -54,6 +58,8 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `StartPaymentOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct StartPaymentOptions; }
 
 // Include C++ defined types
 #include "ApplePayButtonStyle.hpp"
@@ -71,6 +77,8 @@ namespace margelo::nitro::pay { struct PaymentToken; }
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PayServiceStatus.hpp"
+#include "PaymentAuthorizationResult.hpp"
+#include "PaymentAuthorizationStatus.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
@@ -79,6 +87,7 @@ namespace margelo::nitro::pay { struct PaymentToken; }
 #include "PaymentRequest.hpp"
 #include "PaymentResult.hpp"
 #include "PaymentToken.hpp"
+#include "StartPaymentOptions.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>

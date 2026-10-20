@@ -52,6 +52,8 @@ const handlePayment = async () => {
 }
 ```
 
+To charge the token before the Apple Pay sheet closes, pass `startPayment(paymentRequest, { onAuthorize })` and charge inside the callback instead of calling `sendTokenToServer` afterwards, so the token isn't charged twice. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+
 ## 4. Render the button
 
 Use the platform-specific button and, if needed, `callback()` for Nitro:

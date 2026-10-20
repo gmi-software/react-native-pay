@@ -45,6 +45,12 @@ namespace margelo::nitro::pay { struct PaymentItem; }
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
+// Forward declaration of `StartPaymentOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct StartPaymentOptions; }
+// Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
+// Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 
 #include "PayServiceStatus.hpp"
 #include "JPayServiceStatus.hpp"
@@ -89,6 +95,15 @@ namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 #include "JPaymentItemType.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "JGooglePayEnvironment.hpp"
+#include "StartPaymentOptions.hpp"
+#include "JStartPaymentOptions.hpp"
+#include "PaymentAuthorizationResult.hpp"
+#include <functional>
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken.hpp"
+#include <NitroModules/JNICallable.hpp>
+#include "JPaymentAuthorizationResult.hpp"
+#include "PaymentAuthorizationStatus.hpp"
+#include "JPaymentAuthorizationStatus.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -128,9 +143,9 @@ namespace margelo::nitro::pay {
     auto __result = method(_javaPart);
     return __result->toCpp();
   }
-  std::shared_ptr<Promise<PaymentResult>> JHybridPaymentHandlerSpec::startPayment(const PaymentRequest& request) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JPaymentRequest> /* request */)>("startPayment");
-    auto __result = method(_javaPart, JPaymentRequest::fromCpp(request));
+  std::shared_ptr<Promise<PaymentResult>> JHybridPaymentHandlerSpec::startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JPaymentRequest> /* request */, jni::alias_ref<JStartPaymentOptions> /* options */)>("startPayment");
+    auto __result = method(_javaPart, JPaymentRequest::fromCpp(request), options.has_value() ? JStartPaymentOptions::fromCpp(options.value()) : nullptr);
     return [&]() {
       auto __promise = Promise<PaymentResult>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {

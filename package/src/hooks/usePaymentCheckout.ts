@@ -6,6 +6,8 @@ import type {
   PaymentItem,
   PayServiceStatus,
   GooglePayEnvironment,
+  PaymentToken,
+  PaymentAuthorizationResult,
 } from '../types'
 import {
   createPaymentItem,
@@ -75,6 +77,19 @@ export interface UsePaymentCheckoutConfig {
    * Merchant ID provided by your payment gateway for Google Pay tokenization.
    */
   googlePayGatewayMerchantId?: string
+
+  /**
+   * Called with the token after the user authorizes the payment. Charge it on
+   * your server and resolve with the outcome; `startPayment` then resolves
+   * with `success: false` and your `error` on `'failure'`.
+   * On iOS the Apple Pay sheet waits for it and shows the outcome. On Android
+   * it runs after the Google Pay sheet has closed.
+   * It must settle within 25 seconds, or the payment fails with a timeout.
+   * On iOS, after a `'failure'` or a timeout the user can retry from the same
+   * sheet, which calls this again with a new token. Make the charge idempotent
+   * per order ID, not per token.
+   */
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
 
 export interface UsePaymentCheckoutReturn {
@@ -284,9 +299,15 @@ export function usePaymentCheckout(
     setResult(null)
     setError(null)
 
+    const { onAuthorize } = config
+
     try {
-      const paymentResult =
-        await getPaymentHandler().startPayment(paymentRequest)
+      const paymentResult = onAuthorize
+        ? await getPaymentHandler().startPayment(paymentRequest, {
+            // `async` turns a synchronous return or throw into the Promise native expects.
+            onAuthorize: async (token) => onAuthorize(token),
+          })
+        : await getPaymentHandler().startPayment(paymentRequest)
 
       setResult(paymentResult)
 
@@ -304,7 +325,7 @@ export function usePaymentCheckout(
       isPaymentInFlight.current = false
       setIsProcessing(false)
     }
-  }, [items, paymentRequest])
+  }, [config, items, paymentRequest])
 
   const reset = useCallback(() => {
     setResult(null)

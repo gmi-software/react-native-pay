@@ -220,6 +220,100 @@ describe('usePaymentCheckout integration', () => {
     )
   })
 
+  describe('onAuthorize', () => {
+    const token = {
+      paymentMethod: { type: 'credit' },
+      transactionIdentifier: 'apple-tx',
+      paymentData: 'base64-token',
+    }
+
+    // Mirrors the native handlers: the merchant's outcome decides the result.
+    const nativeWithAuthorization = async (_request: any, options?: any) => {
+      try {
+        const authorization = await options.onAuthorize(token)
+        return authorization.status === 'success'
+          ? { success: true, token }
+          : {
+              success: false,
+              error: authorization.error ?? 'Payment authorization failed',
+            }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    }
+
+    const renderWithAuthorize = (onAuthorize: jest.Mock) => {
+      const rendered = renderHook(() => usePaymentCheckout({ onAuthorize }))
+      act(() => {
+        rendered.result.current.addItem('Order', 12)
+      })
+      return rendered
+    }
+
+    it('does not pass options when onAuthorize is not configured', async () => {
+      mockStartPayment.mockResolvedValueOnce({ success: true })
+      const { result } = renderCheckout()
+
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      expect(mockStartPayment.mock.calls[0]).toHaveLength(1)
+    })
+
+    it('passes the token to onAuthorize and returns the token on success', async () => {
+      mockStartPayment.mockImplementationOnce(nativeWithAuthorization)
+      const onAuthorize = jest.fn().mockResolvedValue({ status: 'success' })
+      const { result } = renderWithAuthorize(onAuthorize)
+
+      let paymentResult: any = null
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(onAuthorize).toHaveBeenCalledWith(token)
+      expect(paymentResult).toEqual({ success: true, token })
+      expect(result.current.error).toBeNull()
+    })
+
+    it('reports a failure from onAuthorize as an error', async () => {
+      mockStartPayment.mockImplementationOnce(nativeWithAuthorization)
+      const onAuthorize = jest
+        .fn()
+        .mockResolvedValue({ status: 'failure', error: 'Card declined' })
+      const { result } = renderWithAuthorize(onAuthorize)
+
+      let paymentResult: any = null
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(paymentResult).toEqual({ success: false, error: 'Card declined' })
+      expect(result.current.error?.message).toBe('Card declined')
+    })
+
+    it('hands native a Promise even when onAuthorize throws synchronously', async () => {
+      mockStartPayment.mockImplementationOnce(nativeWithAuthorization)
+      const onAuthorize = jest.fn(() => {
+        throw new Error('Server unreachable')
+      })
+      const { result } = renderWithAuthorize(onAuthorize)
+
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      const options = mockStartPayment.mock.calls[0]?.[1]
+      const returned = options.onAuthorize(token)
+      expect(returned).toBeInstanceOf(Promise)
+      await expect(returned).rejects.toThrow('Server unreachable')
+      expect(result.current.error?.message).toBe('Server unreachable')
+    })
+  })
+
   it('uses generic error for non-Error thrown values', async () => {
     mockStartPayment.mockRejectedValueOnce('native crash')
     const { result } = renderCheckout()

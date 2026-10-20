@@ -55,6 +55,31 @@ namespace margelo::nitro::pay::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const PaymentAuthorizationResult& /* result */)>
+  Func_void_PaymentAuthorizationResult create_Func_void_PaymentAuthorizationResult(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_PaymentAuthorizationResult::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentAuthorizationResult& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentToken& token) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>> {
+      auto __result = swiftClosure.call(token);
+      return __result;
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::shared_ptr<Promise<PaymentAuthorizationResult>>& /* result */)>
+  Func_void_std__shared_ptr_Promise_PaymentAuthorizationResult__ create_Func_void_std__shared_ptr_Promise_PaymentAuthorizationResult__(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_std__shared_ptr_Promise_PaymentAuthorizationResult__::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::shared_ptr<Promise<PaymentAuthorizationResult>>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridPaymentHandlerSpec>
   std::shared_ptr<HybridPaymentHandlerSpec> create_std__shared_ptr_HybridPaymentHandlerSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     NitroPay::HybridPaymentHandlerSpec_cxx swiftPart = NitroPay::HybridPaymentHandlerSpec_cxx::fromUnsafe(swiftUnsafePointer);

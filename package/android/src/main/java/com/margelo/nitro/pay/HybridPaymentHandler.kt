@@ -2,6 +2,8 @@ package com.margelo.nitro.pay
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.ReactApplicationContext
@@ -17,6 +19,8 @@ import com.margelo.nitro.core.Promise
 import com.margelo.nitro.NitroModules
 import java.util.concurrent.TimeUnit
 
+private typealias AuthorizeCallback = (PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>
+
 /**
  * Hybrid implementation of PaymentHandler for Google Pay on Android
  */
@@ -28,6 +32,9 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
     }
     
     private val pendingPayment = PendingPayment<PaymentResult>()
+    // Written on the JS thread, read on the main thread
+    @Volatile private var onAuthorize: AuthorizeCallback? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var currentEnvironment: Int = WalletConstants.ENVIRONMENT_TEST
     
     init {
@@ -69,7 +76,10 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
         }
     }
     
-    override fun startPayment(request: PaymentRequest): Promise<PaymentResult> {
+    override fun startPayment(
+        request: PaymentRequest,
+        options: StartPaymentOptions?
+    ): Promise<PaymentResult> {
         val promise = Promise<PaymentResult>()
         
         // Reject overlaps without touching the in-flight payment, so its
@@ -79,6 +89,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
             promise.resolve(PaymentMapper.createErrorResult(PaymentConstants.ERROR_PAYMENT_IN_PROGRESS))
             return promise
         }
+        onAuthorize = options?.onAuthorize
         
         try {
             val environment = determineEnvironment(request.googlePayEnvironment)
@@ -200,12 +211,76 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
     private fun handlePaymentSuccess(paymentData: PaymentData) {
         Log.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment successful")
         val result = PaymentMapper.mapPaymentDataToResult(paymentData)
-        pendingPayment.settle(result)
+        val authorize = onAuthorize
+        val token = result.token
+        if (authorize == null || token == null) {
+            settlePayment(result)
+            return
+        }
+        onAuthorize = null
+        authorizePayment(authorize, token, result)
     }
     
     private fun handlePaymentError(errorMessage: String) {
         val result = PaymentMapper.createErrorResult(errorMessage)
+        settlePayment(result)
+    }
+    
+    private fun settlePayment(result: PaymentResult) {
+        // Clear before settling: once the slot is free, a new startPayment may set its own.
+        onAuthorize = null
         pendingPayment.settle(result)
+    }
+    
+    /**
+     * Lets the merchant decide the result. Google Pay has already closed its
+     * sheet, so unlike iOS there is no UI to update. Runs on the main thread.
+     * The payment keeps its slot until the outcome settles, so overlapping
+     * calls are rejected meanwhile.
+     */
+    private fun authorizePayment(
+        authorize: AuthorizeCallback,
+        token: PaymentToken,
+        authorizedResult: PaymentResult
+    ) {
+        // Settles this attempt once. Without it, a late outcome after the timeout
+        // would settle the next payment that claimed the slot.
+        var isSettled = false
+        val settle = { result: PaymentResult ->
+            if (!isSettled) {
+                isSettled = true
+                pendingPayment.settle(result)
+            }
+        }
+        // Nitro settles JS promises on the JS thread.
+        val settleOnMain = { result: PaymentResult ->
+            mainHandler.post { settle(result) }
+        }
+        val settleWithError = { error: Throwable ->
+            settleOnMain(
+                PaymentMapper.createErrorResult(
+                    error.message ?: PaymentConstants.ERROR_AUTHORIZATION_FAILED
+                )
+            )
+        }
+        
+        mainHandler.postDelayed({
+            settle(PaymentMapper.createErrorResult(PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT))
+        }, PaymentConstants.AUTHORIZATION_TIMEOUT_MS)
+        
+        try {
+            authorize(token)
+                .then { authorization ->
+                    authorization
+                        .then { settleOnMain(PaymentMapper.applyAuthorization(it, authorizedResult)) }
+                        .catch { settleWithError(it) }
+                }
+                .catch { settleWithError(it) }
+        } catch (e: Throwable) {
+            // Thrown when the JS runtime is gone.
+            Log.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to call onAuthorize", e)
+            settleWithError(e)
+        }
     }
     
     private fun logPaymentRequest(request: org.json.JSONObject, environment: Int) {

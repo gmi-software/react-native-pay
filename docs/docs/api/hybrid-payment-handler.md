@@ -24,7 +24,7 @@ const status = HybridPaymentHandler.payServiceStatus()
 
 ---
 
-### startPayment(request)
+### startPayment(request, options?)
 
 Starts the native payment flow with the given request. Returns a promise that resolves with the payment result.
 
@@ -51,11 +51,26 @@ interface PaymentResult {
 }
 ```
 
+**options.onAuthorize** charges the token before the Apple Pay sheet closes. The result follows your callback:
+
+```ts
+const result = await HybridPaymentHandler.startPayment(request, {
+  onAuthorize: async (token) => {
+    const charged = await chargeOnServer(token)
+    return charged
+      ? { status: 'success' }
+      : { status: 'failure', error: 'Payment failed' }
+  },
+})
+```
+
+See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes) for the timeout and Android behavior.
+
 On iOS, the merchant ID is resolved from the app entitlements by default. Use `applePayMerchantIdentifier` only when you need to override the configured value at runtime.
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 
-Only one payment can be in flight at a time. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. This applies on iOS and Android.
+Only one payment can be in flight at a time. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. This applies on iOS and Android. With `onAuthorize`, the payment stays in flight until your callback settles.
 
 ---
 

@@ -71,6 +71,25 @@ Send `token` (and optionally `transactionId`) to your backend to complete the ch
 
 ---
 
+## StartPaymentOptions
+
+Optional second argument of `HybridPaymentHandler.startPayment()`. The hook takes `onAuthorize` in its config instead.
+
+```ts
+interface StartPaymentOptions {
+  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
+}
+
+interface PaymentAuthorizationResult {
+  status: 'success' | 'failure'
+  error?: string // becomes PaymentResult.error on failure
+}
+```
+
+See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+
+---
+
 ## PaymentToken
 
 The token you send to your server. **Do not log or expose; treat as sensitive.**

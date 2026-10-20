@@ -41,6 +41,8 @@ sequenceDiagram
 
 ## PaymentResult outcomes
 
+With [`onAuthorize`](/docs/guides/server-processing#charge-before-the-sheet-closes), your backend charges the token before `startPayment` resolves: on iOS while the Apple Pay sheet is still up, on Android after the Google Pay sheet has closed. The result below already reflects the charge, so don't send `result.token` to your backend again.
+
 ### 1) Success
 
 - `result.success === true`
