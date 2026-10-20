@@ -31,12 +31,11 @@ object PaymentConstants {
     
     // Transaction
     const val TOTAL_PRICE_STATUS_FINAL = "FINAL"
+    const val TOTAL_PRICE_STATUS_ESTIMATED = "ESTIMATED"
     const val TOTAL_PRICE_LABEL_DEFAULT = "Total"
     const val LINE_ITEM_TYPE = "LINE_ITEM"
-    const val PENDING_TYPE = "PENDING"
-    
-    // Merchant
-    const val DEFAULT_MERCHANT_NAME = "Example Merchant"
+    const val DISPLAY_ITEM_STATUS_FINAL = "FINAL"
+    const val DISPLAY_ITEM_STATUS_PENDING = "PENDING"
     
     // Supported networks (lowercase for comparison)
     val SUPPORTED_NETWORKS = listOf("visa", "mastercard", "amex", "discover")

@@ -82,6 +82,7 @@
     "android/fix-prefab.gradle",
     "android/CMakeLists.txt",
     "android/src",
+    "!android/src/test",
     "ios/**/*.h",
     "ios/**/*.m",
     "ios/**/*.mm",
@@ -119,7 +120,6 @@
   "scripts": {
     "prepack": "rm -rf lib tsconfig.tsbuildinfo && tsc && cp ../README.md ./README.md",
     "postpack": "rm ./README.md",
-    "postinstall": "tsc || exit 0;",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",

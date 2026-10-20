@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- **Installing the package no longer runs `tsc` in your project.** 0.0.17 and earlier shipped a
+  `postinstall` script (`tsc || exit 0`). The package does not include its own `tsconfig.json`, so
+  `tsc` picked up the app's `tsconfig.json` and type-checked the whole app on every install; with a
+  config that emits, it also wrote `.js` files next to the app's sources. The published package now
+  has no install scripts. The contributor build of `lib/` moved to the private monorepo root, so
+  `bun install` in this repository still builds it.
+
 ## 0.0.17 — 2026-09-16
 
 ### Fixed

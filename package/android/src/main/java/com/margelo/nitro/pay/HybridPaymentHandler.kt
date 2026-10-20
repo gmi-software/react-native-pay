@@ -86,7 +86,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
             
             val paymentDataRequest = GooglePayRequestBuilder.createPaymentDataRequest(
                 request,
-                environment
+                environment,
+                fallbackMerchantName = appLabel()
             )
             
             logPaymentRequest(paymentDataRequest, environment)
@@ -154,6 +155,15 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
         return Wallet.getPaymentsClient(reactContext, walletOptions)
     }
     
+    private fun appLabel(): String? {
+        return try {
+            reactContext.applicationInfo.loadLabel(reactContext.packageManager).toString()
+        } catch (e: Exception) {
+            Log.w(PaymentConstants.TAG_PAYMENT_HANDLER, "Unable to read app label", e)
+            null
+        }
+    }
+
     private fun determineEnvironment(envConfig: GooglePayEnvironment?): Int {
         return when (envConfig) {
             GooglePayEnvironment.PRODUCTION -> WalletConstants.ENVIRONMENT_PRODUCTION

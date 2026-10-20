@@ -149,5 +149,7 @@ dependencies {
   implementation 'com.google.android.gms:play-services-wallet:19.3.0'
 
   testImplementation 'junit:junit:4.13.2'
+  // android.jar only ships org.json stubs; JVM tests need the real implementation.
+  testImplementation 'org.json:json:20250517'
 }
 
