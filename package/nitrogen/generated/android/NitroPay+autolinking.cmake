@@ -42,6 +42,7 @@ target_sources(
   ../nitrogen/generated/android/c++/JHybridGooglePayButtonSpec.cpp
   ../nitrogen/generated/android/c++/views/JHybridGooglePayButtonStateUpdater.cpp
   ../nitrogen/generated/android/c++/JHybridPaymentHandlerSpec.cpp
+  ../nitrogen/generated/android/c++/JPaymentAmount.cpp
 )
 
 # From node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake

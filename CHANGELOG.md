@@ -4,8 +4,28 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- **Amounts can be decimal strings, and `PaymentItem.amount` is now `number | string`**
+  (`PaymentAmount`). Code that reads `item.amount` as a number no longer type-checks; display
+  amounts with `formatAmount(item.amount, currencyCode)`, which now accepts strings and an optional
+  currency code. Requests from `createPaymentRequest` hold their amount as a decimal string.
+- **Payments with invalid amounts no longer start.** `usePaymentCheckout().startPayment()` sets
+  `error` and returns `null`, and `createPaymentRequest` throws, when an amount is `NaN` or
+  infinite, has more decimal places than the currency allows (ISO 4217: `1.005` USD, `1200.5`
+  JPY, including float results such as `0.1 + 0.2`), or the total is negative. Negative line items
+  (discounts) are still allowed. For requests built by hand, call the new
+  `normalizePaymentRequest` before `HybridPaymentHandler.startPayment`.
+
 ### Fixed
 
+- **Amounts reach Apple Pay and Google Pay exactly.** iOS converted amounts with `Decimal(Double)`,
+  so `19.99` reached PassKit as `19.98999999999999488`. Amounts now cross into native code as
+  decimal strings, iOS parses them with `NSDecimalNumber` and Android with `BigDecimal`, and both
+  sum them exactly. `calculateTotal` and the hook's `total` use the same exact arithmetic. Google
+  Pay prices for zero-decimal currencies validated by `normalizePaymentRequest` are sent without
+  decimals (`"1500"` instead of `"1500.00"`), and Android rejects a negative total or a third
+  decimal place instead of rounding.
 - **Installing the package no longer runs `tsc` in your project.** 0.0.17 and earlier shipped a
   `postinstall` script (`tsc || exit 0`). The package does not include its own `tsconfig.json`, so
   `tsc` picked up the app's `tsconfig.json` and type-checked the whole app on every install; with a

@@ -52,9 +52,18 @@ export interface PKSecureElementPass extends PKPass {
   pairedTerminalIdentifier?: string
 }
 
+/**
+ * A monetary amount in the currency's major unit: `'19.99'` or `19.99`.
+ *
+ * Decimal strings are exact. Numbers are read as the shortest decimal that
+ * round-trips (`19.99`, never `19.98999…`), so float arithmetic results such
+ * as `0.1 + 0.2` fail validation instead of being rounded silently.
+ */
+export type PaymentAmount = number | string
+
 export interface PaymentItem {
   label: string
-  amount: number
+  amount: PaymentAmount
   type: PaymentItemType
 }
 

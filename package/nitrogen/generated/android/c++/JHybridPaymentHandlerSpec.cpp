@@ -91,6 +91,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JPaymentRequest.hpp"
 #include "PaymentItem.hpp"
 #include "JPaymentItem.hpp"
+#include <variant>
+#include "JPaymentAmount.hpp"
 #include "PaymentItemType.hpp"
 #include "JPaymentItemType.hpp"
 #include "GooglePayEnvironment.hpp"

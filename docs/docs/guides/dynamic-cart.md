@@ -39,17 +39,19 @@ clearItems()       // empty the cart
 ## Example: quantity and discount
 
 ```ts
+import { formatAmount } from '@gmisoftware/react-native-pay'
+
 const { items, addItem, updateItem, removeItem, total } = usePaymentCheckout({ ... })
 
 // Add product with quantity
 const handleAddProduct = (name: string, unitPrice: number, quantity: number) => {
-  addItem(`${name} (×${quantity})`, unitPrice * quantity)
+  // 1.1 * 3 is 3.3000000000000003; round it to the currency's decimals
+  addItem(`${name} (×${quantity})`, formatAmount(unitPrice * quantity))
 }
 
-// Apply percentage discount
+// Apply percentage discount (a negative line item)
 const handleApplyDiscount = (percent: number) => {
-  const discount = -total * (percent / 100)
-  addItem('Discount', discount, 'final')
+  addItem('Discount', formatAmount(-total * (percent / 100)), 'final')
 }
 
 // Clear cart
@@ -61,6 +63,8 @@ const handleClearCart = () => {
 ## Rules
 
 - **At least one item** is required before `startPayment()`. Otherwise the hook sets an error and returns `null`.
-- **total** is derived from `items`; you don’t set it manually.
+- **total** is derived from `items`; you don’t set it manually. It is an exact decimal sum.
+- **Round computed amounts** with `formatAmount(value, currencyCode)`. `startPayment()` rejects amounts with more decimal places than the currency allows, which includes unrounded float results such as `1.1 * 3`. See [`PaymentAmount`](/docs/api/types#paymentamount).
+- **Discounts** can be negative line items, as long as the total is not negative.
 - Use **type: 'final'** for confirmed amounts (e.g. tax, total); use **'pending'** for estimates (e.g. shipping) if your flow supports it.
 - **One pending item makes the total an estimate.** Google Pay shows the total as estimated (`totalPriceStatus: 'ESTIMATED'`) and Apple Pay marks the total as pending. An estimate does not let you charge a different amount: Google Pay requires the amount you authorize and charge to match the `totalPrice` shown on the sheet, and a mismatch can be declined. If the final amount differs from the estimate, start a new payment with the final amount, unless your gateway explicitly supports adjusting it (for example, incremental authorization).

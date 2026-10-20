@@ -11,10 +11,14 @@ import org.junit.Test
 class GooglePayRequestBuilderTest {
 
     private fun item(label: String, amount: Double, type: PaymentItemType) =
-        PaymentItem(label = label, amount = amount, type = type)
+        PaymentItem(label = label, amount = PaymentAmount.create(amount), type = type)
+
+    private fun item(label: String, amount: String, type: PaymentItemType = PaymentItemType.FINAL) =
+        PaymentItem(label = label, amount = PaymentAmount.create(amount), type = type)
 
     private fun paymentRequest(
         items: Array<PaymentItem>,
+        currencyCode: String = "USD",
         merchantName: String? = null,
         environment: GooglePayEnvironment? = null,
         googlePayMerchantId: String? = null,
@@ -24,7 +28,7 @@ class GooglePayRequestBuilderTest {
         applePayMerchantIdentifier = null,
         merchantName = merchantName,
         countryCode = "US",
-        currencyCode = "USD",
+        currencyCode = currencyCode,
         paymentItems = items,
         merchantCapabilities = arrayOf("3DS"),
         supportedNetworks = arrayOf("visa"),
@@ -55,6 +59,9 @@ class GooglePayRequestBuilderTest {
 
     private fun JSONObject.totalPriceStatus(): String =
         getJSONObject("transactionInfo").getString("totalPriceStatus")
+
+    private fun JSONObject.totalPrice(): String =
+        getJSONObject("transactionInfo").getString("totalPrice")
 
     // Display items and total status
 
@@ -119,6 +126,67 @@ class GooglePayRequestBuilderTest {
         )
 
         assertFalse(json.toString().contains("\"type\":\"PENDING\""))
+    }
+
+    // Amounts
+
+    @Test
+    fun totalPrice_isTheExactSumOfTheItems() {
+        val json = build(
+            paymentRequest(
+                arrayOf(
+                    item("Book", "19.99"),
+                    item("Book", 19.99, PaymentItemType.FINAL),
+                    item("Fee", "0.01")
+                )
+            )
+        )
+
+        assertEquals("39.99", json.totalPrice())
+        assertEquals(listOf("19.99", "19.99", "0.01"), json.displayItems().map { it.getString("price") })
+    }
+
+    @Test
+    fun prices_haveTwoDecimalsOrNone() {
+        assertEquals("10.00", build(paymentRequest(arrayOf(item("Item", "10.0")))).totalPrice())
+        assertEquals(
+            "1500",
+            build(paymentRequest(arrayOf(item("Item", "1500")), currencyCode = "JPY")).totalPrice()
+        )
+        assertEquals(
+            "10000000",
+            build(paymentRequest(arrayOf(item("Item", 1.0E7, PaymentItemType.FINAL)))).totalPrice()
+        )
+    }
+
+    @Test
+    fun negativeLineItems_areSentWhenTheTotalIsNotNegative() {
+        val json = build(paymentRequest(arrayOf(item("Item", "20.00"), item("Discount", "-5.00"))))
+
+        assertEquals("15.00", json.totalPrice())
+        assertEquals(listOf("20.00", "-5.00"), json.displayItems().map { it.getString("price") })
+    }
+
+    @Test
+    fun negativeTotal_isRejected() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(arrayOf(item("Item", "5.00"), item("Discount", "-5.01"))))
+        }
+
+        assertTrue(error.message!!.contains("must not be negative, got -0.01"))
+    }
+
+    @Test
+    fun thirdDecimalPlace_isRejectedInsteadOfRounded() {
+        assertEquals(
+            "1.23",
+            build(paymentRequest(arrayOf(item("Item", "1.230")), currencyCode = "KWD")).totalPrice()
+        )
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(arrayOf(item("Item", "1.234")), currencyCode = "KWD"))
+        }
+        assertTrue(error.message!!.contains("at most two decimal places, got 1.234"))
     }
 
     // Merchant name

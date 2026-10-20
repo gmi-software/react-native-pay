@@ -78,6 +78,7 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "CNPostalAddress.hpp"
 #include "PaymentRequest.hpp"
 #include "PaymentItem.hpp"
+#include <variant>
 #include "PaymentItemType.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "StartPaymentOptions.hpp"

@@ -12,12 +12,14 @@
 
 #include "GooglePayEnvironment.hpp"
 #include "JGooglePayEnvironment.hpp"
+#include "JPaymentAmount.hpp"
 #include "JPaymentItem.hpp"
 #include "JPaymentItemType.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace margelo::nitro::pay {

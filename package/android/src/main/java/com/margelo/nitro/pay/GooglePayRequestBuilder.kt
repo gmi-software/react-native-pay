@@ -3,13 +3,13 @@ package com.margelo.nitro.pay
 import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Locale
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Builder for Google Pay API request objects
  */
 object GooglePayRequestBuilder {
-    private val googlePayPriceLocale = Locale.US
     
     /**
      * Creates an IsReadyToPay request
@@ -144,7 +144,10 @@ object GooglePayRequestBuilder {
      * Creates transaction info
      */
     private fun createTransactionInfo(request: PaymentRequest): JSONObject {
-        val totalAmount = request.paymentItems.sumOf { it.amount }
+        val totalAmount = PaymentAmounts.total(request.paymentItems)
+        require(totalAmount.signum() >= 0) {
+            "Payment total must not be negative, got ${totalAmount.toPlainString()}"
+        }
         val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
         
         return JSONObject().apply {
@@ -176,7 +179,7 @@ object GooglePayRequestBuilder {
                 put(JSONObject().apply {
                     put("label", item.label)
                     put("type", PaymentConstants.LINE_ITEM_TYPE)
-                    put("price", formatPrice(item.amount))
+                    put("price", formatPrice(PaymentAmounts.parse(item)))
                     put(
                         "status",
                         if (item.type == PaymentItemType.PENDING)
@@ -189,8 +192,20 @@ object GooglePayRequestBuilder {
         }
     }
 
-    private fun formatPrice(amount: Double): String {
-        return String.format(googlePayPriceLocale, "%.2f", amount)
+    /**
+     * Google Pay accepts whole amounts or exactly two decimal places
+     * (`^[0-9]+(\.[0-9][0-9])?$` for the total).
+     */
+    private fun formatPrice(amount: BigDecimal): String {
+        val scale = if (amount.scale() <= 0) 0 else 2
+        return try {
+            amount.setScale(scale, RoundingMode.UNNECESSARY).toPlainString()
+        } catch (e: ArithmeticException) {
+            throw IllegalArgumentException(
+                "Google Pay accepts at most two decimal places, got ${amount.toPlainString()}",
+                e
+            )
+        }
     }
     
     /**

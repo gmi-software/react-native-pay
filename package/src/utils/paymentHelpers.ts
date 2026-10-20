@@ -17,7 +17,13 @@
  * ```
  */
 
-import type { PaymentItem, PaymentRequest, PaymentNetwork } from '../types'
+import type {
+  PaymentAmount,
+  PaymentItem,
+  PaymentRequest,
+  PaymentNetwork,
+} from '../types'
+import { normalizePaymentRequest, roundAmount, sumAmounts } from './amounts'
 
 /**
  * Payment networks supported by both Apple Pay and Google Pay
@@ -58,19 +64,20 @@ export function sanitizePaymentRequest(
  * Creates a payment item with the specified label, amount, and type.
  *
  * @param label - Display label for the payment item
- * @param amount - Amount in the payment currency
+ * @param amount - Amount in the payment currency, as a number or a decimal
+ *   string. Validated when the payment starts.
  * @param type - Item type: 'final' for confirmed amounts, 'pending' for estimates
  * @returns A PaymentItem object
  *
  * @example
  * ```typescript
- * const item = createPaymentItem('Subscription', 29.99, 'final')
+ * const item = createPaymentItem('Subscription', '29.99', 'final')
  * const shipping = createPaymentItem('Shipping', 5.00, 'pending')
  * ```
  */
 export function createPaymentItem(
   label: string,
-  amount: number,
+  amount: PaymentAmount,
   type: 'final' | 'pending' = 'final'
 ): PaymentItem {
   return { label, amount, type }
@@ -79,6 +86,9 @@ export function createPaymentItem(
 /**
  * Calculates the total amount from an array of payment items.
  *
+ * The sum is exact decimal arithmetic, the same as native code uses, so
+ * `0.1 + 0.2` items total `0.3`. Returns `NaN` if any amount is invalid.
+ *
  * @param items - Array of payment items to sum
  * @returns Total amount
  *
@@ -86,13 +96,13 @@ export function createPaymentItem(
  * ```typescript
  * const items = [
  *   createPaymentItem('Product', 29.99),
- *   createPaymentItem('Tax', 2.40)
+ *   createPaymentItem('Tax', '2.40')
  * ]
  * const total = calculateTotal(items) // 32.39
  * ```
  */
 export function calculateTotal(items: PaymentItem[]): number {
-  return items.reduce((sum, item) => sum + item.amount, 0)
+  return sumAmounts(items.map((item) => item.amount))
 }
 
 /**
@@ -104,8 +114,12 @@ export function calculateTotal(items: PaymentItem[]): number {
  * - supportedNetworks: ['visa', 'mastercard', 'amex', 'discover']
  * - merchantCapabilities: ['3DS']
  *
+ * Amounts in the returned request are exact decimal strings
+ * (see `normalizePaymentRequest`).
+ *
  * @param options - Payment request options (amount and label required)
  * @returns Complete PaymentRequest object
+ * @throws Error if an amount is invalid for the currency
  *
  * @example
  * ```typescript
@@ -119,7 +133,7 @@ export function calculateTotal(items: PaymentItem[]): number {
  */
 export function createPaymentRequest(
   options: Partial<PaymentRequest> & {
-    amount: number
+    amount: PaymentAmount
     label: string
   }
 ): PaymentRequest {
@@ -133,30 +147,39 @@ export function createPaymentRequest(
     ...rest
   } = options
 
-  return sanitizePaymentRequest({
-    countryCode,
-    currencyCode,
-    paymentItems: [createPaymentItem(label, amount, 'final')],
-    supportedNetworks,
-    merchantCapabilities,
-    ...rest,
-  } as PaymentRequest)
+  return normalizePaymentRequest(
+    sanitizePaymentRequest({
+      countryCode,
+      currencyCode,
+      paymentItems: [createPaymentItem(label, amount, 'final')],
+      supportedNetworks,
+      merchantCapabilities,
+      ...rest,
+    } as PaymentRequest)
+  )
 }
 
 /**
- * Formats an amount to 2 decimal places.
+ * Formats an amount with the currency's number of decimal places (2 when no
+ * currency is given), rounding half away from zero.
  *
- * @param amount - Numeric amount to format
- * @returns Formatted amount string
+ * @param amount - Amount to format, as a number or a decimal string
+ * @param currencyCode - ISO 4217 currency code
+ * @returns Formatted amount string, or `'NaN'` if the amount is invalid
  *
  * @example
  * ```typescript
  * formatAmount(29.9) // "29.90"
- * formatAmount(100) // "100.00"
+ * formatAmount('100') // "100.00"
+ * formatAmount(1.005) // "1.01"
+ * formatAmount(1500, 'JPY') // "1500"
  * ```
  */
-export function formatAmount(amount: number): string {
-  return amount.toFixed(2)
+export function formatAmount(
+  amount: PaymentAmount,
+  currencyCode?: string
+): string {
+  return roundAmount(amount, currencyCode)
 }
 
 /**

@@ -46,8 +46,8 @@ interface UsePaymentCheckoutReturn {
   // Cart
   items: PaymentItem[]
   total: number
-  addItem: (label: string, amount: number, type?: 'final' | 'pending') => void
-  addItems: (items: Array<{ label: string; amount: number; type?: 'final' | 'pending' }>) => void
+  addItem: (label: string, amount: PaymentAmount, type?: 'final' | 'pending') => void
+  addItems: (items: Array<{ label: string; amount: PaymentAmount; type?: 'final' | 'pending' }>) => void
   removeItem: (index: number) => void
   updateItem: (index: number, updates: Partial<PaymentItem>) => void
   clearItems: () => void
@@ -67,9 +67,10 @@ interface UsePaymentCheckoutReturn {
 - **canMakePayments** — Whether the user can pay with Apple Pay / Google Pay on this device.
 - **canSetupCards** — Whether the user can add or manage cards (e.g. in Wallet).
 - **isCheckingStatus** — `true` while availability is being checked on mount.
-- **items** / **total** — Current cart and computed total.
+- **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.
 - **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult | null>`.
   - Returns `null` and sets `error` when the cart is empty.
+  - Returns `null` and sets `error`, without opening the sheet, when an amount is invalid or the total is negative (see [`PaymentAmount`](/docs/api/types#paymentamount)).
   - Returns `PaymentResult` (including `{ success: false, error }`) when the native flow completes with a failure result.
   - Returns `null` if an exception is thrown while starting/processing the payment.
   - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ success: false, error }` and sets `error`.
@@ -104,10 +105,10 @@ const {
 // Single item
 addItem('Product', 29.99)
 
-// Multiple items
+// Multiple items; amounts can be numbers or decimal strings
 addItems([
   { label: 'Product', amount: 29.99 },
-  { label: 'Shipping', amount: 5 },
+  { label: 'Shipping', amount: '5.00' },
   { label: 'Tax', amount: 2.8, type: 'final' },
 ])
 

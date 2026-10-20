@@ -157,13 +157,119 @@ describe('usePaymentCheckout integration', () => {
     expect(mockStartPayment).toHaveBeenCalledTimes(1)
     expect(mockStartPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        paymentItems: [{ label: 'Coffee', amount: 4.99, type: 'final' }],
+        paymentItems: [{ label: 'Coffee', amount: '4.99', type: 'final' }],
       })
     )
     expect(paymentResult).toEqual(nativeSuccess)
     expect(result.current.result).toEqual(nativeSuccess)
     expect(result.current.error).toBeNull()
     expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('sends exact decimal strings for number and string amounts', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+    const { result } = renderHook(() =>
+      usePaymentCheckout({ currencyCode: 'USD' })
+    )
+
+    act(() => {
+      result.current.addItems([
+        { label: 'Book', amount: 19.99 },
+        { label: 'Gift wrap', amount: '19.99' },
+        { label: 'Discount', amount: '-5' },
+      ])
+    })
+
+    expect(result.current.total).toBe(34.98)
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(mockStartPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentItems: [
+          { label: 'Book', amount: '19.99', type: 'final' },
+          { label: 'Gift wrap', amount: '19.99', type: 'final' },
+          { label: 'Discount', amount: '-5.00', type: 'final' },
+        ],
+      })
+    )
+  })
+
+  it.each([
+    ['NaN', NaN, 'finite number or a decimal string'],
+    ['a negative total', -1, 'must not be negative'],
+    ['too many decimals for USD', 1.005, 'more than 2 decimal places'],
+    ['float arithmetic noise', 0.1 + 0.2, 'more than 2 decimal places'],
+  ])(
+    'rejects %s before calling native code',
+    async (_name, amount, message) => {
+      const { result } = renderCheckout()
+
+      act(() => {
+        result.current.addItem('Order', amount)
+      })
+
+      let paymentResult: any = 'not-called'
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(paymentResult).toBeNull()
+      expect(result.current.error?.message).toContain(message)
+      expect(result.current.isProcessing).toBe(false)
+      expect(mockStartPayment).not.toHaveBeenCalled()
+    }
+  )
+
+  it('rejects decimals in zero-decimal currencies', async () => {
+    const { result } = renderHook(() =>
+      usePaymentCheckout({ currencyCode: 'JPY' })
+    )
+
+    act(() => {
+      result.current.addItem('Ramen', '1200.5')
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(result.current.error?.message).toContain(
+      'more than 0 decimal places'
+    )
+    expect(mockStartPayment).not.toHaveBeenCalled()
+  })
+
+  it('starts the next payment after an amount is rejected', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 1.005)
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+    expect(mockStartPayment).not.toHaveBeenCalled()
+
+    act(() => {
+      result.current.updateItem(0, { amount: '1.01' })
+    })
+    let paymentResult: any = null
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toEqual({ success: true })
+    expect(result.current.error).toBeNull()
+    expect(mockStartPayment).toHaveBeenCalledTimes(1)
+    expect(mockStartPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentItems: [{ label: 'Order', amount: '1.01', type: 'final' }],
+      })
+    )
   })
 
   it('sets an error when native payment response has success=false', async () => {
@@ -277,6 +383,9 @@ describe('usePaymentCheckout integration', () => {
       expect(onAuthorize).toHaveBeenCalledWith(token)
       expect(paymentResult).toEqual({ success: true, token })
       expect(result.current.error).toBeNull()
+      expect(mockStartPayment.mock.calls[0]?.[0].paymentItems).toEqual([
+        { label: 'Order', amount: '12.00', type: 'final' },
+      ])
     })
 
     it('reports a failure from onAuthorize as an error', async () => {

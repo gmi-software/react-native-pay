@@ -18,8 +18,15 @@ public extension PaymentItem {
   /**
    * Create a new instance of `PaymentItem`.
    */
-  init(label: String, amount: Double, type: PaymentItemType) {
-    self.init(std.string(label), amount, type)
+  init(label: String, amount: PaymentAmount, type: PaymentItemType) {
+    self.init(std.string(label), { () -> bridge.std__variant_double__std__string_ in
+      switch amount {
+        case .first(let __value):
+          return bridge.create_std__variant_double__std__string_(__value)
+        case .second(let __value):
+          return bridge.create_std__variant_double__std__string_(std.string(__value))
+      }
+    }().variant, type)
   }
 
   @inline(__always)
@@ -28,8 +35,20 @@ public extension PaymentItem {
   }
   
   @inline(__always)
-  var amount: Double {
-    return self.__amount
+  var amount: PaymentAmount {
+    return { () -> PaymentAmount in
+      let __variant = bridge.std__variant_double__std__string_(self.__amount)
+      switch __variant.index() {
+        case 0:
+          let __actual = __variant.get_0()
+          return .first(__actual)
+        case 1:
+          let __actual = __variant.get_1()
+          return .second(String(__actual))
+        default:
+          fatalError("Variant can never have index \(__variant.index())!")
+      }
+    }()
   }
   
   @inline(__always)
