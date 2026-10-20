@@ -70,7 +70,8 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "lib/"
+    "lib/",
+    "android/build/"
   ],
   "files": [
     "src",
