@@ -39,6 +39,20 @@
           "merchantIdentifier": "merchant.pl.sfd.sklep",
           "enableGooglePay": true
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPods": [
+              {
+                "name": "NitroPay",
+                "path": "../../package",
+                "testspecs": ["Tests"]
+              }
+            ]
+          }
+        }
       ]
     ],
     "experiments": {

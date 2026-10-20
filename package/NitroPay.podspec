@@ -22,6 +22,12 @@ Pod::Spec.new do |s|
     # Implementation (C++ objects)
     "cpp/**/*.{hpp,cpp}",
   ]
+  s.exclude_files = "ios/Tests/**"
+
+  # Unit tests. Add `:testspecs => ["Tests"]` to the NitroPay pod to build them.
+  s.test_spec "Tests" do |test_spec|
+    test_spec.source_files = "ios/Tests/**/*.swift"
+  end
 
   # FOLLY_NO_CONFIG conflicts with RN >= 0.80's generated folly-config.h.
   # Fail hard if React Native cannot be resolved — a silent fallback would apply
