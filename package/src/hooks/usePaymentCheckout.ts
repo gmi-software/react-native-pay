@@ -1,9 +1,5 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { NitroModules } from 'react-native-nitro-modules'
-import type { PaymentHandler } from '../specs/PaymentHandler.nitro'
-
-const HybridPaymentHandler =
-  NitroModules.createHybridObject<PaymentHandler>('PaymentHandler')
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { getPaymentHandler, PAYMENT_IN_PROGRESS_ERROR } from '../paymentHandler'
 import type {
   PaymentRequest,
   PaymentResult,
@@ -195,9 +191,12 @@ export function usePaymentCheckout(
   const [result, setResult] = useState<PaymentResult | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
+  // Set synchronously, so two calls in the same frame still see each other.
+  const isPaymentInFlight = useRef(false)
+
   useEffect(() => {
     try {
-      const paymentStatus = HybridPaymentHandler.payServiceStatus()
+      const paymentStatus = getPaymentHandler().payServiceStatus()
       setStatus(paymentStatus)
     } catch (err) {
       console.error('Failed to check payment status:', err)
@@ -282,12 +281,17 @@ export function usePaymentCheckout(
   }, [])
 
   const startPayment = useCallback(async (): Promise<PaymentResult | null> => {
+    if (isPaymentInFlight.current) {
+      return { success: false, error: PAYMENT_IN_PROGRESS_ERROR }
+    }
+
     if (items.length === 0) {
       const emptyCartError = new Error('Cart is empty')
       setError(emptyCartError)
       return null
     }
 
+    isPaymentInFlight.current = true
     setIsProcessing(true)
     setResult(null)
     setError(null)
@@ -296,11 +300,11 @@ export function usePaymentCheckout(
 
     try {
       const paymentResult = onAuthorize
-        ? await HybridPaymentHandler.startPayment(paymentRequest, {
+        ? await getPaymentHandler().startPayment(paymentRequest, {
             // `async` turns a synchronous return or throw into the Promise native expects.
             onAuthorize: async (token) => onAuthorize(token),
           })
-        : await HybridPaymentHandler.startPayment(paymentRequest)
+        : await getPaymentHandler().startPayment(paymentRequest)
 
       setResult(paymentResult)
 
@@ -315,12 +319,12 @@ export function usePaymentCheckout(
       setError(paymentError)
       return null
     } finally {
+      isPaymentInFlight.current = false
       setIsProcessing(false)
     }
   }, [config, items, paymentRequest])
 
   const reset = useCallback(() => {
-    setIsProcessing(false)
     setResult(null)
     setError(null)
   }, [])

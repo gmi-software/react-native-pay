@@ -45,6 +45,9 @@ object PaymentConstants {
     // Supported networks (lowercase for comparison)
     val SUPPORTED_NETWORKS = listOf("visa", "mastercard", "amex", "discover")
     
+    // Errors (keep in sync with iOS `ErrorMessage`)
+    const val ERROR_PAYMENT_IN_PROGRESS = "A payment is already in progress"
+    
     // Logging tags
     const val TAG_PAYMENT_HANDLER = "HybridPaymentHandler"
     const val TAG_GOOGLE_PAY_BUTTON = "HybridGooglePayButton"

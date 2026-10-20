@@ -31,8 +31,9 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
             ?: throw IllegalStateException("Application context is not ReactApplicationContext")
     }
     
-    private var paymentPromise: Promise<PaymentResult>? = null
-    private var onAuthorize: AuthorizeCallback? = null
+    private val pendingPayment = PendingPayment<PaymentResult>()
+    // Written on the JS thread, read on the main thread
+    @Volatile private var onAuthorize: AuthorizeCallback? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private var currentEnvironment: Int = WalletConstants.ENVIRONMENT_TEST
     
@@ -80,7 +81,14 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
         options: StartPaymentOptions?
     ): Promise<PaymentResult> {
         val promise = Promise<PaymentResult>()
-        paymentPromise = promise
+        
+        // Reject overlaps without touching the in-flight payment, so its
+        // promise still settles and no second Google Pay sheet is requested.
+        if (!pendingPayment.tryBegin { result -> promise.resolve(result) }) {
+            Log.w(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_IN_PROGRESS)
+            promise.resolve(PaymentMapper.createErrorResult(PaymentConstants.ERROR_PAYMENT_IN_PROGRESS))
+            return promise
+        }
         onAuthorize = options?.onAuthorize
         
         try {
@@ -206,42 +214,42 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
         val authorize = onAuthorize
         val token = result.token
         if (authorize == null || token == null) {
-            resolvePayment(result)
+            settlePayment(result)
             return
         }
+        onAuthorize = null
         authorizePayment(authorize, token, result)
     }
     
     private fun handlePaymentError(errorMessage: String) {
         val result = PaymentMapper.createErrorResult(errorMessage)
-        resolvePayment(result)
+        settlePayment(result)
     }
     
-    private fun resolvePayment(result: PaymentResult) {
-        paymentPromise?.resolve(result)
-        paymentPromise = null
+    private fun settlePayment(result: PaymentResult) {
+        // Clear before settling: once the slot is free, a new startPayment may set its own.
         onAuthorize = null
+        pendingPayment.settle(result)
     }
     
     /**
      * Lets the merchant decide the result. Google Pay has already closed its
      * sheet, so unlike iOS there is no UI to update. Runs on the main thread.
+     * The payment keeps its slot until the outcome settles, so overlapping
+     * calls are rejected meanwhile.
      */
     private fun authorizePayment(
         authorize: AuthorizeCallback,
         token: PaymentToken,
         authorizedResult: PaymentResult
     ) {
-        // Take this payment's promise, so a later startPayment can't receive its result.
-        val promise = paymentPromise ?: return
-        paymentPromise = null
-        onAuthorize = null
-        
+        // Settles this attempt once. Without it, a late outcome after the timeout
+        // would settle the next payment that claimed the slot.
         var isSettled = false
         val settle = { result: PaymentResult ->
             if (!isSettled) {
                 isSettled = true
-                promise.resolve(result)
+                pendingPayment.settle(result)
             }
         }
         // Nitro settles JS promises on the JS thread.

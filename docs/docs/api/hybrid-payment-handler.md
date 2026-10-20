@@ -70,6 +70,8 @@ On iOS, the merchant ID is resolved from the app entitlements by default. Use `a
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 
+Only one payment can be in flight at a time. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. This applies on iOS and Android. With `onAuthorize`, the payment stays in flight until your callback settles.
+
 ---
 
 ### canMakePayments(usingNetworks)
