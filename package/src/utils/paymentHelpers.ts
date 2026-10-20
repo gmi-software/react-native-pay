@@ -12,7 +12,8 @@
  *
  * const request = createPaymentRequest({
  *   amount: 29.99,
- *   label: 'Coffee Subscription'
+ *   label: 'Coffee Subscription',
+ *   merchantName: 'Your Store'
  * })
  * ```
  */
@@ -126,6 +127,7 @@ export function calculateTotal(items: PaymentItem[]): number {
  * const request = createPaymentRequest({
  *   amount: 29.99,
  *   label: 'Coffee Subscription',
+ *   merchantName: 'Your Store',
  *   countryCode: 'CA', // override default
  *   currencyCode: 'CAD' // override default
  * })

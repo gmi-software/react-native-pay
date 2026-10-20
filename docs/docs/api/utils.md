@@ -24,6 +24,7 @@ import { createPaymentRequest } from '@gmisoftware/react-native-pay'
 const request = createPaymentRequest({
   amount: 29.99, // or '29.99'
   label: 'Coffee Subscription',
+  merchantName: 'Your Store',
   countryCode: 'US',
   currencyCode: 'USD',
   // Optional: applePayMerchantIdentifier, googlePayMerchantId,

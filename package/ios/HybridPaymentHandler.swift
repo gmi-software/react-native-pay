@@ -34,6 +34,8 @@ private typealias AuthorizeCallback = (PaymentToken) -> Promise<Promise<PaymentA
 
 private enum BundleKey {
     static let applePayMerchantIdentifiers = "ReactNativePayApplePayMerchantIdentifiers"
+    static let displayName = "CFBundleDisplayName"
+    static let bundleName = "CFBundleName"
 }
 
 // MARK: - Payment Request Builder
@@ -107,26 +109,31 @@ private struct PaymentRequestBuilder {
             return pkItem
         }
 
-        guard request.paymentItems.count > 1 else {
-            return lineItems
-        }
-
-        let totalLabel: String
-        if let merchantName = request.merchantName?
-            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
-           !merchantName.isEmpty {
-            totalLabel = merchantName
-        } else {
-            totalLabel = "Total"
-        }
+        // PassKit shows the last item as the grand total ("Pay <label>"), so
+        // always append one labelled with the merchant, even for a single item.
         let totalItem = PKPaymentSummaryItem(
-            label: totalLabel,
+            label: resolveMerchantName(from: request),
             amount: NSDecimalNumber(decimal: totalAmount)
         )
         // The total is only as final as its least final item.
         totalItem.type = request.paymentItems.contains { $0.type == .pending } ? .pending : .final
 
         return lineItems + [totalItem]
+    }
+
+    private static func resolveMerchantName(from request: PaymentRequest) -> String {
+        let candidates = [
+            request.merchantName,
+            Bundle.main.object(forInfoDictionaryKey: BundleKey.displayName) as? String,
+            Bundle.main.object(forInfoDictionaryKey: BundleKey.bundleName) as? String,
+        ]
+        for candidate in candidates {
+            if let name = candidate?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+               !name.isEmpty {
+                return name
+            }
+        }
+        return ProcessInfo.processInfo.processName
     }
     
     private static func buildMerchantCapabilities(_ capabilities: [String]) -> PKMerchantCapability {

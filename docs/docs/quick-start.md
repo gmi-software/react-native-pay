@@ -67,6 +67,7 @@ function CheckoutScreen() {
     isProcessing,
     error,
   } = usePaymentCheckout({
+    merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
   })

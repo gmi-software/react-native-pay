@@ -68,6 +68,7 @@ import {
 
 export function CheckoutWithPrzelewy24() {
   const {startPayment, canMakePayments, isProcessing} = usePaymentCheckout({
+    merchantName: 'Your Store',
     countryCode: 'PL',
     currencyCode: 'PLN',
     googlePayMerchantId: 'your_google_pay_merchant_id',

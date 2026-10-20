@@ -71,7 +71,7 @@ interface PaymentRequest {
 
 On iOS, `applePayMerchantIdentifier` is optional and only needed when you want to override the Merchant ID configured in the native app entitlements.
 
-`merchantName` is the name shown on the Google Pay sheet and the label of the Apple Pay total (when the cart has more than one item). If it is missing or blank, Android uses the app's label from the manifest; iOS labels the total "Total".
+`merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
 
 ---
 

@@ -40,7 +40,21 @@ The runtime API reads this Merchant ID from the native app entitlements automati
 
 If you are integrating with Przelewy24, see [Przelewy24](/docs/integrations/przelewy24) for an end-to-end app + backend flow.
 
-## 3. Prebuild and run
+## 3. Name your business on the sheet
+
+Apple Pay shows the total as "Pay *merchant*". Pass your business name as `merchantName`:
+
+```ts
+usePaymentCheckout({
+  merchantName: 'Your Store',
+  currencyCode: 'USD',
+  countryCode: 'US',
+})
+```
+
+The sheet lists your cart items and then the total line "Pay Your Store", which the library adds for you. If you omit `merchantName`, the total uses your app's display name (`CFBundleDisplayName`).
+
+## 4. Prebuild and run
 
 ```bash
 npx expo prebuild --clean

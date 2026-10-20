@@ -66,5 +66,5 @@ const handleClearCart = () => {
 - **total** is derived from `items`; you don’t set it manually. It is an exact decimal sum.
 - **Round computed amounts** with `formatAmount(value, currencyCode)`. `startPayment()` rejects amounts with more decimal places than the currency allows, which includes unrounded float results such as `1.1 * 3`. See [`PaymentAmount`](/docs/api/types#paymentamount).
 - **Discounts** can be negative line items, as long as the total is not negative.
-- Use **type: 'final'** for confirmed amounts (e.g. tax, total); use **'pending'** for estimates (e.g. shipping) if your flow supports it.
+- Use **type: 'final'** for confirmed amounts (e.g. product price, tax); use **'pending'** for estimates (e.g. shipping) if your flow supports it.
 - **One pending item makes the total an estimate.** Google Pay shows the total as estimated (`totalPriceStatus: 'ESTIMATED'`) and Apple Pay marks the total as pending. An estimate does not let you charge a different amount: Google Pay requires the amount you authorize and charge to match the `totalPrice` shown on the sheet, and a mismatch can be declined. If the final amount differs from the estimate, start a new payment with the final amount, unless your gateway explicitly supports adjusting it (for example, incremental authorization).

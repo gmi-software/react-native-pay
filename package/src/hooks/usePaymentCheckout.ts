@@ -22,8 +22,11 @@ import {
  */
 export interface UsePaymentCheckoutConfig {
   /**
-   * Merchant name shown by payment providers that support displaying it.
-   * Used primarily by Google Pay.
+   * Business name shown to the payer on both platforms.
+   * On iOS it labels the Apple Pay total, so the sheet reads "Pay <merchantName>".
+   * On Android it is sent to Google Pay as `merchantInfo.merchantName`.
+   * When omitted, iOS uses the app's display name (`CFBundleDisplayName`) and
+   * Android uses the app's label.
    */
   merchantName?: string
 
@@ -158,6 +161,7 @@ export interface UsePaymentCheckoutReturn {
  *     isProcessing,
  *     error,
  *   } = usePaymentCheckout({
+ *     merchantName: 'Your Store',
  *     currencyCode: 'USD',
  *     countryCode: 'US',
  *     googlePayMerchantId: 'your_google_pay_merchant_id',

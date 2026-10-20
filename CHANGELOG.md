@@ -26,6 +26,13 @@ All notable changes to this project are documented in this file.
   Pay prices for zero-decimal currencies validated by `normalizePaymentRequest` are sent without
   decimals (`"1500"` instead of `"1500.00"`), and Android rejects a negative total or a third
   decimal place instead of rounding.
+- **iOS: the Apple Pay sheet now names the merchant in the total.** PassKit shows the last summary
+  item as the total ("Pay *label*"). A one-item cart sent that item as the total, so the sheet read
+  "Pay Coffee"; a cart with several items and no `merchantName` read "Pay Total". The library now
+  always appends a total labelled with `merchantName`, and falls back to the app's display name
+  (`CFBundleDisplayName`, then `CFBundleName`). A one-item cart now shows the item line and then
+  "Pay *merchant*". If you passed your own "Total" item, remove it: it now appears as a line item
+  above the total.
 - **Installing the package no longer runs `tsc` in your project.** 0.0.17 and earlier shipped a
   `postinstall` script (`tsc || exit 0`). The package does not include its own `tsconfig.json`, so
   `tsc` picked up the app's `tsconfig.json` and type-checked the whole app on every install; with a
