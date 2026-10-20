@@ -32,6 +32,8 @@ All notable changes to this project are documented in this file.
   config that emits, it also wrote `.js` files next to the app's sources. The published package now
   has no install scripts. The contributor build of `lib/` moved to the private monorepo root, so
   `bun install` in this repository still builds it.
+- **The published package no longer includes the library's tests.** 0.0.17 shipped
+  `src/**/__tests__` and their compiled copies under `lib/**/__tests__` (21 files).
 
 ## 0.0.17 — 2026-09-16
 

@@ -21,9 +21,12 @@ cd example && bun install
 
 - Generate Nitro bindings: `cd package && bun run specs`
 - Typecheck: `cd package && bun run typecheck`
-- Lint: `cd package && bun run lint`
+- Lint: `cd package && bun run lint` (fails on warnings). Fix: `cd package && bun run lint:fix`
 - Test (all): `cd package && bun run test`
 - Test (single file): `cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts`
+- Package contents: `cd package && bun run check:pack` (builds `lib/`, then checks what `npm pack` would publish)
+- Android unit tests (JDK 17): `cd example && npx expo prebuild --platform android`, then `cd android && ./gradlew :gmisoftware_react-native-pay:testDebugUnitTest`
+- iOS unit tests: `cd example && npx expo prebuild --platform ios`, then `cd ios && xcodebuild test -workspace example.xcworkspace -scheme NitroPay-Unit-Tests -destination 'platform=iOS Simulator,name=<iPhone>'`, with a name from `xcrun simctl list devices available`. Tests live in `package/ios/Tests`; the example links them through `expo-build-properties` in `app.json`.
 - Run example: `cd example && npx expo prebuild && npx expo run:ios` or `npx expo run:android`
 - Docs (dev): `bun run docs:start`. Docs (build): `bun run docs:build`
 
@@ -60,6 +63,8 @@ Example template:
 - [ ] `cd package && bun run typecheck` (not run)
 - [ ] `cd package && bun run lint` (not run)
 - [ ] `cd package && bun run test:ci` (not run)
+- [ ] `./gradlew :gmisoftware_react-native-pay:testDebugUnitTest` in `example/android` (if you changed Kotlin; not run)
+- [ ] `xcodebuild test ... -scheme NitroPay-Unit-Tests` in `example/ios` (if you changed Swift; not run)
 - [ ] `cd example && bunx expo run:ios` (not run)
 - [ ] `cd example && bunx expo run:android` (not run)
 - [ ] `bun run docs:build` (if you changed `docs/` or public API/setup; not run)
