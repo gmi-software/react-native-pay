@@ -93,6 +93,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 /**
@@ -327,6 +328,35 @@ namespace margelo::nitro::pay::bridge::swift {
   Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::variant<double, std::string>
+  /**
+   * Wrapper struct for `std::variant<double, std::string>`.
+   * std::variant cannot be used in Swift because of a Swift bug.
+   * Not even specializing it works. So we create a wrapper struct.
+   */
+  struct std__variant_double__std__string_ final {
+    std::variant<double, std::string> variant;
+    std__variant_double__std__string_(std::variant<double, std::string> variant): variant(variant) { }
+    operator std::variant<double, std::string>() const noexcept {
+      return variant;
+    }
+    inline size_t index() const noexcept {
+      return variant.index();
+    }
+    inline double get_0() const noexcept {
+      return std::get<0>(variant);
+    }
+    inline std::string get_1() const noexcept {
+      return std::get<1>(variant);
+    }
+  };
+  inline std__variant_double__std__string_ create_std__variant_double__std__string_(double value) noexcept {
+    return std__variant_double__std__string_(value);
+  }
+  inline std__variant_double__std__string_ create_std__variant_double__std__string_(const std::string& value) noexcept {
+    return std__variant_double__std__string_(value);
   }
   
   // pragma MARK: std::vector<PaymentItem>

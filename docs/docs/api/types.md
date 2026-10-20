@@ -2,6 +2,27 @@
 
 TypeScript types exported from `@gmisoftware/react-native-pay`. Use them for request/result handling and server integration.
 
+## PaymentAmount
+
+A monetary amount in the currency's major unit (dollars, not cents).
+
+```ts
+type PaymentAmount = number | string
+```
+
+- **Decimal string** (`'19.99'`): exact. Must match `^-?\d+(\.\d+)?$`; no exponents, spaces, or thousands separators.
+- **Number** (`19.99`): read as the shortest decimal that round-trips, so `19.99` stays exactly `19.99`. Results of float arithmetic such as `0.1 + 0.2` (`0.30000000000000004`) fail validation instead of being rounded.
+
+Before a payment starts, every amount is validated and sent to native code as a decimal string with the currency's number of decimal places (ISO 4217: 2 for USD, 0 for JPY, 3 for KWD). Native code converts it with `NSDecimalNumber` (iOS) and `BigDecimal` (Android), never through `Double`. A payment does not start when:
+
+- an amount is not a finite number or a plain decimal string (`NaN`, `Infinity`, `'abc'`);
+- an amount has more decimal places than the currency allows (`1.005` in USD, `'1200.5'` in JPY);
+- the total of `paymentItems` is negative. Negative line items (discounts) are allowed.
+
+Google Pay accepts at most two decimal places, so on Android a three-decimal amount such as `'1.234'` KWD fails with an error.
+
+---
+
 ## PaymentItem
 
 A single line item (label, amount, type).
@@ -9,7 +30,7 @@ A single line item (label, amount, type).
 ```ts
 interface PaymentItem {
   label: string
-  amount: number
+  amount: PaymentAmount // number | string
   type: 'final' | 'pending'
 }
 ```

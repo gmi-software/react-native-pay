@@ -50,6 +50,7 @@ import {
   usePaymentCheckout,
   ApplePayButton,
   GooglePayButton,
+  formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
 
@@ -98,7 +99,7 @@ function CheckoutScreen() {
       <Button title="Add Coffee ($4.99)" onPress={() => addItem('Coffee', 4.99)} />
       {items.map((item, i) => (
         <View key={i} style={{ flexDirection: 'row', padding: 10 }}>
-          <Text>{item.label}: ${item.amount.toFixed(2)}</Text>
+          <Text>{item.label}: ${formatAmount(item.amount)}</Text>
           <Button title="Remove" onPress={() => removeItem(i)} />
         </View>
       ))}

@@ -16,21 +16,52 @@ Builds a full `PaymentRequest` with one line item and sensible defaults.
 
 **Defaults:** `countryCode: 'US'`, `currencyCode: 'USD'`, `supportedNetworks: [CommonNetworks]`, `merchantCapabilities: ['3DS']`.
 
+The amount is validated with [`normalizePaymentRequest`](#normalizepaymentrequestrequest), so `createPaymentRequest` throws for an invalid amount, and the returned request holds it as a decimal string.
+
 ```ts
 import { createPaymentRequest } from '@gmisoftware/react-native-pay'
 
 const request = createPaymentRequest({
-  amount: 29.99,
+  amount: 29.99, // or '29.99'
   label: 'Coffee Subscription',
   countryCode: 'US',
   currencyCode: 'USD',
   // Optional: applePayMerchantIdentifier, googlePayMerchantId,
   // googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, etc.
 })
-// request.paymentItems is a single item: [{ label: 'Coffee Subscription', amount: 29.99, type: 'final' }]
+// request.paymentItems is a single item: [{ label: 'Coffee Subscription', amount: '29.99', type: 'final' }]
 ```
 
 Use with `HybridPaymentHandler.startPayment(request)` for a manual flow.
+
+---
+
+## normalizePaymentRequest(request)
+
+Validates every amount in `paymentItems` and `shippingMethods` and returns a copy in which each amount is a decimal string with the currency's number of decimal places. See [`PaymentAmount`](./types.md#paymentamount) for the rules.
+
+Call it before passing a request you built yourself to `HybridPaymentHandler.startPayment`. `createPaymentRequest` and `usePaymentCheckout` already call it.
+
+```ts
+import { HybridPaymentHandler, normalizePaymentRequest } from '@gmisoftware/react-native-pay'
+
+const request = normalizePaymentRequest({
+  countryCode: 'US',
+  currencyCode: 'USD',
+  paymentItems: [
+    { label: 'Book', amount: 19.9, type: 'final' },
+    { label: 'Discount', amount: '-5', type: 'final' },
+  ],
+  supportedNetworks: ['visa', 'mastercard'],
+  merchantCapabilities: ['3DS'],
+})
+// request.paymentItems amounts: '19.90', '-5.00'
+
+await HybridPaymentHandler.startPayment(request)
+
+normalizePaymentRequest({ ...request, paymentItems: [{ label: 'Fee', amount: 1.005, type: 'final' }] })
+// throws: Amount for "Fee" has more than 2 decimal places, which USD allows, got 1.005
+```
 
 ---
 
@@ -42,37 +73,43 @@ Creates a single `PaymentItem`.
 import { createPaymentItem } from '@gmisoftware/react-native-pay'
 
 createPaymentItem('Subscription', 29.99, 'final')
-createPaymentItem('Shipping', 5, 'pending')
+createPaymentItem('Shipping', '5.00', 'pending')
 // type defaults to 'final'
 ```
+
+The amount is stored as given and validated when the payment starts.
 
 ---
 
 ## calculateTotal(items)
 
-Sums the `amount` of all items.
+Sums the `amount` of all items with exact decimal arithmetic, the same as native code, and returns the sum as a number. Returns `NaN` if an amount is invalid.
 
 ```ts
 import { calculateTotal, createPaymentItem } from '@gmisoftware/react-native-pay'
 
 const items = [
   createPaymentItem('Product', 29.99),
-  createPaymentItem('Tax', 2.4),
+  createPaymentItem('Tax', '2.40'),
 ]
 calculateTotal(items) // 32.39
+
+calculateTotal([createPaymentItem('A', 0.1), createPaymentItem('B', 0.2)]) // 0.3, not 0.30000000000000004
 ```
 
 ---
 
-## formatAmount(amount)
+## formatAmount(amount, currencyCode?)
 
-Formats a number to two decimal places.
+Formats a number or decimal string with the currency's number of decimal places (two when `currencyCode` is omitted), rounding half away from zero. Returns `'NaN'` for an invalid amount.
 
 ```ts
 import { formatAmount } from '@gmisoftware/react-native-pay'
 
-formatAmount(29.9)  // "29.90"
-formatAmount(100)   // "100.00"
+formatAmount(29.9)          // "29.90"
+formatAmount('100')         // "100.00"
+formatAmount(1.005)         // "1.01"
+formatAmount(1500, 'JPY')   // "1500"
 ```
 
 ---

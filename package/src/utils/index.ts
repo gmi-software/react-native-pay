@@ -3,3 +3,4 @@
  */
 
 export * from './paymentHelpers'
+export { normalizePaymentRequest } from './amounts'

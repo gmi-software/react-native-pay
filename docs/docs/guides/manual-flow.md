@@ -33,7 +33,7 @@ const paymentRequest = createPaymentRequest({
 })
 ```
 
-For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest`. On iOS, the Merchant ID is read from the app entitlements unless you explicitly pass `applePayMerchantIdentifier`.
+`createPaymentRequest` throws if the amount is invalid (see [`PaymentAmount`](/docs/api/types#paymentamount)). For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest` through `normalizePaymentRequest`, which applies the same checks. On iOS, the Merchant ID is read from the app entitlements unless you explicitly pass `applePayMerchantIdentifier`.
 
 ## 3. Handle the button press
 

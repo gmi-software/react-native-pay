@@ -23,7 +23,7 @@ data class PaymentItem(
   val label: String,
   @DoNotStrip
   @Keep
-  val amount: Double,
+  val amount: PaymentAmount,
   @DoNotStrip
   @Keep
   val type: PaymentItemType
@@ -54,7 +54,7 @@ data class PaymentItem(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(label: String, amount: Double, type: PaymentItemType): PaymentItem {
+    private fun fromCpp(label: String, amount: PaymentAmount, type: PaymentItemType): PaymentItem {
       return PaymentItem(label, amount, type)
     }
   }

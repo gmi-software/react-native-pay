@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { getPaymentHandler, PAYMENT_IN_PROGRESS_ERROR } from '../paymentHandler'
 import type {
+  PaymentAmount,
   PaymentRequest,
   PaymentResult,
   PaymentItem,
@@ -12,6 +13,7 @@ import type {
 import {
   createPaymentItem,
   calculateTotal,
+  normalizePaymentRequest,
   sanitizePaymentRequest,
 } from '../utils'
 
@@ -100,10 +102,19 @@ export interface UsePaymentCheckoutReturn {
 
   // Cart management
   items: PaymentItem[]
+  /** Exact decimal sum of `items`; `NaN` if an amount is invalid. */
   total: number
-  addItem: (label: string, amount: number, type?: 'final' | 'pending') => void
+  addItem: (
+    label: string,
+    amount: PaymentAmount,
+    type?: 'final' | 'pending'
+  ) => void
   addItems: (
-    items: Array<{ label: string; amount: number; type?: 'final' | 'pending' }>
+    items: Array<{
+      label: string
+      amount: PaymentAmount
+      type?: 'final' | 'pending'
+    }>
   ) => void
   removeItem: (index: number) => void
   updateItem: (index: number, updates: Partial<PaymentItem>) => void
@@ -243,7 +254,11 @@ export function usePaymentCheckout(
 
   // Cart operations
   const addItem = useCallback(
-    (label: string, amount: number, type: 'final' | 'pending' = 'final') => {
+    (
+      label: string,
+      amount: PaymentAmount,
+      type: 'final' | 'pending' = 'final'
+    ) => {
       const item = createPaymentItem(label, amount, type)
       setItems((prev) => [...prev, item])
     },
@@ -254,7 +269,7 @@ export function usePaymentCheckout(
     (
       itemsToAdd: Array<{
         label: string
-        amount: number
+        amount: PaymentAmount
         type?: 'final' | 'pending'
       }>
     ) => {
@@ -294,6 +309,14 @@ export function usePaymentCheckout(
       return null
     }
 
+    let validatedRequest: PaymentRequest
+    try {
+      validatedRequest = normalizePaymentRequest(paymentRequest)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)))
+      return null
+    }
+
     isPaymentInFlight.current = true
     setIsProcessing(true)
     setResult(null)
@@ -303,11 +326,11 @@ export function usePaymentCheckout(
 
     try {
       const paymentResult = onAuthorize
-        ? await getPaymentHandler().startPayment(paymentRequest, {
+        ? await getPaymentHandler().startPayment(validatedRequest, {
             // `async` turns a synchronous return or throw into the Promise native expects.
             onAuthorize: async (token) => onAuthorize(token),
           })
-        : await getPaymentHandler().startPayment(paymentRequest)
+        : await getPaymentHandler().startPayment(validatedRequest)
 
       setResult(paymentResult)
 

@@ -95,6 +95,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 // C++ helpers for Swift

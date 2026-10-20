@@ -10,9 +10,11 @@
 #include <fbjni/fbjni.h>
 #include "PaymentItem.hpp"
 
+#include "JPaymentAmount.hpp"
 #include "JPaymentItemType.hpp"
 #include "PaymentItemType.hpp"
 #include <string>
+#include <variant>
 
 namespace margelo::nitro::pay {
 
@@ -35,13 +37,13 @@ namespace margelo::nitro::pay {
       static const auto clazz = javaClassStatic();
       static const auto fieldLabel = clazz->getField<jni::JString>("label");
       jni::local_ref<jni::JString> label = this->getFieldValue(fieldLabel);
-      static const auto fieldAmount = clazz->getField<double>("amount");
-      double amount = this->getFieldValue(fieldAmount);
+      static const auto fieldAmount = clazz->getField<JPaymentAmount>("amount");
+      jni::local_ref<JPaymentAmount> amount = this->getFieldValue(fieldAmount);
       static const auto fieldType = clazz->getField<JPaymentItemType>("type");
       jni::local_ref<JPaymentItemType> type = this->getFieldValue(fieldType);
       return PaymentItem(
         label->toStdString(),
-        amount,
+        amount->toCpp(),
         type->toCpp()
       );
     }
@@ -52,13 +54,13 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentItem::javaobject> fromCpp(const PaymentItem& value) {
-      using JSignature = JPaymentItem(jni::alias_ref<jni::JString>, double, jni::alias_ref<JPaymentItemType>);
+      using JSignature = JPaymentItem(jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentAmount>, jni::alias_ref<JPaymentItemType>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.label),
-        value.amount,
+        JPaymentAmount::fromCpp(value.amount),
         JPaymentItemType::fromCpp(value.type)
       );
     }

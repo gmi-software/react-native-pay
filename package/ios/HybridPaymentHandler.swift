@@ -13,6 +13,17 @@ private enum ErrorMessage {
     static let unableToCreate = "Unable to create payment authorization"
     static let authorizationFailed = "Payment authorization failed"
     static let authorizationTimedOut = "Payment authorization timed out"
+    static let negativeTotal = "Payment total must not be negative"
+
+    static func invalidAmount(_ label: String) -> String {
+        return "Amount for \"\(label)\" must be a finite number or a decimal string like \"19.99\""
+    }
+}
+
+private struct PaymentRequestError: LocalizedError {
+    let message: String
+
+    var errorDescription: String? { message }
 }
 
 // PassKit fails the sheet on its own when the authorization completion is not
@@ -29,9 +40,9 @@ private enum BundleKey {
 
 private struct PaymentRequestBuilder {
     
-    static func build(from request: PaymentRequest) -> PKPaymentRequest? {
+    static func build(from request: PaymentRequest) throws -> PKPaymentRequest {
         guard let merchantIdentifier = resolveMerchantIdentifier(from: request) else {
-            return nil
+            throw PaymentRequestError(message: ErrorMessage.missingMerchantIdentifier)
         }
 
         let paymentRequest = PKPaymentRequest()
@@ -39,7 +50,7 @@ private struct PaymentRequestBuilder {
         paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
-        paymentRequest.paymentSummaryItems = buildPaymentItems(for: request)
+        paymentRequest.paymentSummaryItems = try buildPaymentItems(for: request)
         paymentRequest.merchantCapabilities = buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
         
@@ -76,12 +87,22 @@ private struct PaymentRequestBuilder {
         return nil
     }
     
-    private static func buildPaymentItems(for request: PaymentRequest) -> [PKPaymentSummaryItem] {
-        let lineItems = request.paymentItems.map { item in
-            let pkItem = PKPaymentSummaryItem(
-                label: item.label,
-                amount: NSDecimalNumber(decimal: Decimal(item.amount))
-            )
+    private static func buildPaymentItems(for request: PaymentRequest) throws -> [PKPaymentSummaryItem] {
+        let amounts = try request.paymentItems.map { item -> NSDecimalNumber in
+            guard let amount = item.amount.decimalNumber else {
+                throw PaymentRequestError(message: ErrorMessage.invalidAmount(item.label))
+            }
+            return amount
+        }
+        let totalAmount = amounts.reduce(Decimal.zero) { partialResult, amount in
+            partialResult + amount.decimalValue
+        }
+        guard totalAmount >= Decimal.zero else {
+            throw PaymentRequestError(message: ErrorMessage.negativeTotal)
+        }
+
+        let lineItems = zip(request.paymentItems, amounts).map { item, amount in
+            let pkItem = PKPaymentSummaryItem(label: item.label, amount: amount)
             pkItem.type = item.type == .final ? .final : .pending
             return pkItem
         }
@@ -90,9 +111,6 @@ private struct PaymentRequestBuilder {
             return lineItems
         }
 
-        let totalAmount = request.paymentItems.reduce(Decimal.zero) { partialResult, item in
-            partialResult + Decimal(item.amount)
-        }
         let totalLabel: String
         if let merchantName = request.merchantName?
             .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
@@ -384,8 +402,11 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
             return
         }
 
-        guard let paymentRequest = PaymentRequestBuilder.build(from: request) else {
-            completion(PaymentResultFactory.failure(ErrorMessage.missingMerchantIdentifier))
+        let paymentRequest: PKPaymentRequest
+        do {
+            paymentRequest = try PaymentRequestBuilder.build(from: request)
+        } catch {
+            completion(PaymentResultFactory.failure(error.localizedDescription))
             return
         }
         

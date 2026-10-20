@@ -28,15 +28,21 @@ const status = HybridPaymentHandler.payServiceStatus()
 
 Starts the native payment flow with the given request. Returns a promise that resolves with the payment result.
 
+Pass the request through `normalizePaymentRequest` (or build it with `createPaymentRequest`) so amounts are validated before the sheet opens. See [`PaymentAmount`](/docs/api/types#paymentamount).
+
 ```ts
-const result = await HybridPaymentHandler.startPayment({
-  countryCode: 'US',
-  currencyCode: 'USD',
-  merchantCapabilities: ['3DS'],
-  supportedNetworks: ['visa', 'mastercard', 'amex'],
-  paymentItems: [{ label: 'Total', amount: 29.99, type: 'final' }],
-  googlePayMerchantId: 'your_google_pay_merchant_id',
-})
+import { HybridPaymentHandler, normalizePaymentRequest } from '@gmisoftware/react-native-pay'
+
+const result = await HybridPaymentHandler.startPayment(
+  normalizePaymentRequest({
+    countryCode: 'US',
+    currencyCode: 'USD',
+    merchantCapabilities: ['3DS'],
+    supportedNetworks: ['visa', 'mastercard', 'amex'],
+    paymentItems: [{ label: 'Total', amount: '29.99', type: 'final' }],
+    googlePayMerchantId: 'your_google_pay_merchant_id',
+  })
+)
 // result: PaymentResult
 ```
 

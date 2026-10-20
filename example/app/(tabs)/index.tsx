@@ -11,6 +11,7 @@ import {
 import { Text, View } from "@/components/Themed";
 import {
   ApplePayButton,
+  formatAmount,
   GooglePayButton,
   usePaymentCheckout,
 } from "@gmisoftware/react-native-pay";
@@ -235,7 +236,7 @@ export default function TabOneScreen() {
             {items.map((item, index) => (
               <View key={index} style={styles.cartItem}>
                 <Text style={styles.itemLabel}>{item.label}</Text>
-                <Text style={styles.itemAmount}>${item.amount.toFixed(2)}</Text>
+                <Text style={styles.itemAmount}>${formatAmount(item.amount)}</Text>
               </View>
             ))}
 

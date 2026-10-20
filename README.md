@@ -187,6 +187,7 @@ import {
   usePaymentCheckout,
   ApplePayButton,
   GooglePayButton,
+  formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
 
@@ -258,7 +259,7 @@ function CheckoutScreen() {
 
       {items.map((item, index) => (
         <View key={index} style={{ flexDirection: 'row', padding: 10 }}>
-          <Text>{item.label}: ${item.amount.toFixed(2)}</Text>
+          <Text>{item.label}: ${formatAmount(item.amount)}</Text>
           <Button title="Remove" onPress={() => removeItem(index)} />
         </View>
       ))}
@@ -386,8 +387,8 @@ interface UsePaymentCheckoutReturn {
 
   // Cart management
   items: PaymentItem[]; // Current cart items
-  total: number; // Total amount
-  addItem: (label: string, amount: number, type?: "final" | "pending") => void;
+  total: number; // Exact decimal total (NaN if an amount is invalid)
+  addItem: (label: string, amount: number | string, type?: "final" | "pending") => void;
   addItems: (items: Array<{ label; amount; type? }>) => void;
   removeItem: (index: number) => void;
   updateItem: (index: number, updates: Partial<PaymentItem>) => void;
@@ -463,14 +464,17 @@ interface PayServiceStatus {
 Start a payment request.
 
 ```typescript
-const result = await HybridPaymentHandler.startPayment({
-  countryCode: "US",
-  currencyCode: "USD",
-  merchantCapabilities: ["3DS"],
-  supportedNetworks: ["visa", "mastercard", "amex"],
-  paymentItems: [{ label: "Total", amount: 29.99, type: "final" }],
-  googlePayMerchantId: "your_google_pay_merchant_id",
-});
+const result = await HybridPaymentHandler.startPayment(
+  // Validates amounts before the sheet opens; see normalizePaymentRequest
+  normalizePaymentRequest({
+    countryCode: "US",
+    currencyCode: "USD",
+    merchantCapabilities: ["3DS"],
+    supportedNetworks: ["visa", "mastercard", "amex"],
+    paymentItems: [{ label: "Total", amount: "29.99", type: "final" }],
+    googlePayMerchantId: "your_google_pay_merchant_id",
+  })
+);
 ```
 
 **Options:**
@@ -617,6 +621,20 @@ const request = createPaymentRequest({
   googlePayGateway: "stripe",
   googlePayGatewayMerchantId: "your_merchant_id",
 });
+// request.paymentItems[0].amount === "29.99"
+```
+
+Throws if the amount is invalid for the currency (see [Amounts](#amounts)).
+
+#### `normalizePaymentRequest(request)`
+
+Validate every amount in a request you built yourself and convert it to an exact decimal string. `createPaymentRequest` and `usePaymentCheckout` call it for you.
+
+```typescript
+import { normalizePaymentRequest } from "@gmisoftware/react-native-pay";
+
+normalizePaymentRequest({ ...request, paymentItems: [{ label: "Book", amount: 19.9, type: "final" }] });
+// paymentItems: [{ label: 'Book', amount: '19.90', type: 'final' }]
 ```
 
 #### `createPaymentItem(label, amount, type)`
@@ -626,13 +644,13 @@ Create a payment item.
 ```typescript
 import { createPaymentItem } from "@gmisoftware/react-native-pay";
 
-const item = createPaymentItem("Subscription", 29.99, "final");
-// { label: 'Subscription', amount: 29.99, type: 'final' }
+const item = createPaymentItem("Subscription", "29.99", "final");
+// { label: 'Subscription', amount: '29.99', type: 'final' }
 ```
 
 #### `calculateTotal(items)`
 
-Calculate total from payment items.
+Calculate the exact decimal total of payment items.
 
 ```typescript
 import { calculateTotal } from "@gmisoftware/react-native-pay";
@@ -664,10 +682,13 @@ formatNetworkName("amex"); // "American Express"
 ### Core Types
 
 ```typescript
+// Amount in the currency's major unit: "19.99" or 19.99 (see Amounts below)
+type PaymentAmount = number | string;
+
 // Payment Item
 interface PaymentItem {
   label: string;
-  amount: number;
+  amount: PaymentAmount;
   type: "final" | "pending";
 }
 
@@ -732,6 +753,16 @@ type PaymentNetwork =
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";
 ```
+
+### Amounts
+
+Amounts are numbers (`19.99`) or decimal strings (`"19.99"`) in the currency's major unit. Before a payment starts, the library validates them and sends them to native code as exact decimal strings (`NSDecimalNumber` on iOS, `BigDecimal` on Android), never through `Double`. The payment does not start when:
+
+- an amount is not a finite number or a plain decimal string (`NaN`, `"abc"`, `"1e3"`);
+- an amount has more decimal places than the currency allows (ISO 4217: `1.005` in USD, `"1200.5"` in JPY). This includes unrounded float results such as `0.1 + 0.2`; round them with `formatAmount(value, currencyCode)`;
+- the total is negative. Negative line items (discounts) are allowed.
+
+Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234"` KWD) fail on Android.
 
 ### Contact Types
 
@@ -854,14 +885,14 @@ const handleAddToCart = (product) => {
 const handleUpdateQuantity = (index, quantity) => {
   const item = checkout.items[index];
   checkout.updateItem(index, {
-    amount: item.amount * quantity,
+    amount: formatAmount(Number(item.amount) * quantity),
   });
 };
 
 // Apply discount
 const handleApplyDiscount = (discountPercent) => {
   const discountAmount = checkout.total * (discountPercent / 100);
-  checkout.addItem("Discount", -discountAmount, "final");
+  checkout.addItem("Discount", formatAmount(-discountAmount), "final");
 };
 
 // Clear cart
