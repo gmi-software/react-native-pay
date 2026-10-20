@@ -54,7 +54,8 @@ const { startPayment } = usePaymentCheckout({
 })
 
 const result = await startPayment()
-// result.success is true only when onAuthorize returned 'success'
+// result.success is true only when onAuthorize returned 'success'.
+// The token is already charged, so don't send it to your server again.
 ```
 
 With `HybridPaymentHandler`, pass the same callback as `startPayment(request, { onAuthorize })`.
@@ -62,7 +63,7 @@ With `HybridPaymentHandler`, pass the same callback as `startPayment(request, { 
 How it behaves:
 
 - **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `success: false` and your `error`. A rejected promise is treated the same way.
-- **Retries on iOS:** if the user retries from the sheet after a failure, `onAuthorize` runs again with the new token. The result reflects the last attempt.
+- **Retries on iOS:** if the user retries from the sheet after a failure or a timeout, `onAuthorize` runs again with the new token. The result reflects the last attempt. A retry can start while a timed-out charge is still running, so key idempotency on your order ID, not on the token.
 - **Timeout:** `onAuthorize` must settle within 25 seconds (Apple Pay itself gives up after about 30). Otherwise the payment fails with "Payment authorization timed out" and the late result is ignored. Your server may still have charged the card, so make the charge idempotent and reconcile by order ID.
 - **Android:** Google Pay closes its sheet before it returns the token, and its basic flow has no step that waits for the merchant. `onAuthorize` still runs, with the same timeout, after the sheet closes, and its outcome decides the `PaymentResult`. The same callback works on both platforms.
 

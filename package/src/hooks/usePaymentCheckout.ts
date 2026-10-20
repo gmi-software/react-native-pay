@@ -85,6 +85,9 @@ export interface UsePaymentCheckoutConfig {
    * On iOS the Apple Pay sheet waits for it and shows the outcome. On Android
    * it runs after the Google Pay sheet has closed.
    * It must settle within 25 seconds, or the payment fails with a timeout.
+   * On iOS, after a `'failure'` or a timeout the user can retry from the same
+   * sheet, which calls this again with a new token. Make the charge idempotent
+   * per order ID, not per token.
    */
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }

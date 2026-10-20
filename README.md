@@ -922,7 +922,8 @@ const result = await checkout.startPayment();
 // result.success reflects your server's answer
 ```
 
-- `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored, so make your server charge idempotent.
+- `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored. Your server may still have charged the card.
+- **Retries on iOS:** after a failure or a timeout the user can retry from the same sheet, and `onAuthorize` runs again with a new token. Make your server charge idempotent per order ID, not per token.
 - A rejected promise counts as a failure.
 - **Android:** Google Pay closes its sheet before returning the token, so `onAuthorize` runs afterwards and only decides the `PaymentResult`.
 

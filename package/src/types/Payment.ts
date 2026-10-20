@@ -119,6 +119,9 @@ export interface StartPaymentOptions {
    * runs after the Google Pay sheet has closed.
    * It must settle within 25 seconds, or the payment fails with a timeout and
    * its later result is ignored. A rejection counts as `'failure'`.
+   * On iOS, after a `'failure'` or a timeout the user can retry from the same
+   * sheet, which calls this again with a new token. Make the charge idempotent
+   * per order ID, not per token.
    */
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
