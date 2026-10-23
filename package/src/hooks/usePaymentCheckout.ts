@@ -1,4 +1,11 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react'
 import { getPaymentHandler, PAYMENT_IN_PROGRESS_ERROR } from '../paymentHandler'
 import type {
   PaymentAmount,
@@ -17,6 +24,16 @@ import {
   normalizePaymentRequest,
   sanitizePaymentRequest,
 } from '../utils'
+
+// Values that survive a JSON round trip unchanged: functions are dropped, and
+// NaN and Infinity become null.
+type JsonValue =
+  | string
+  | boolean
+  | null
+  | undefined
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue }
 
 /**
  * Configuration for `usePaymentCheckout`.
@@ -94,6 +111,8 @@ export interface UsePaymentCheckoutConfig {
    * On iOS, after a `'failure'` or a timeout the user can retry from the same
    * sheet, which calls this again with a new token. Make the charge idempotent
    * per order ID, not per token.
+   * An inline function is fine: `startPayment` keeps its identity and uses the
+   * function from the latest render.
    */
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
@@ -206,6 +225,23 @@ export interface UsePaymentCheckoutReturn {
 export function usePaymentCheckout(
   config: UsePaymentCheckoutConfig
 ): UsePaymentCheckoutReturn {
+  const { onAuthorize, ...requestConfig } = config
+
+  // Apps usually pass an inline config, which is new on every render, so
+  // compare the rest of it by value. A callback added to the config fails
+  // `satisfies` here: pull it out above, like `onAuthorize`.
+  const requestConfigKey = JSON.stringify(requestConfig satisfies JsonValue)
+  const stableRequestConfig = useMemo<typeof requestConfig>(
+    () => JSON.parse(requestConfigKey),
+    [requestConfigKey]
+  )
+
+  // The latest callback, so `startPayment` can stay stable when it changes.
+  const onAuthorizeRef = useRef(onAuthorize)
+  useLayoutEffect(() => {
+    onAuthorizeRef.current = onAuthorize
+  })
+
   const [status, setStatus] = useState<PayServiceStatus | null>(null)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
 
@@ -244,7 +280,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
-    } = config
+    } = stableRequestConfig
 
     return sanitizePaymentRequest({
       countryCode,
@@ -260,7 +296,7 @@ export function usePaymentCheckout(
       googlePayGateway,
       googlePayGatewayMerchantId,
     })
-  }, [config, items])
+  }, [stableRequestConfig, items])
 
   // Cart operations
   const addItem = useCallback(
@@ -332,13 +368,13 @@ export function usePaymentCheckout(
     setResult(null)
     setError(null)
 
-    const { onAuthorize } = config
+    const authorize = onAuthorizeRef.current
 
     try {
-      const paymentResult = onAuthorize
+      const paymentResult = authorize
         ? await getPaymentHandler().startPayment(validatedRequest, {
             // `async` turns a synchronous return or throw into the Promise native expects.
-            onAuthorize: async (token) => onAuthorize(token),
+            onAuthorize: async (token) => authorize(token),
           })
         : await getPaymentHandler().startPayment(validatedRequest)
 
@@ -358,7 +394,7 @@ export function usePaymentCheckout(
       isPaymentInFlight.current = false
       setIsProcessing(false)
     }
-  }, [config, items, paymentRequest])
+  }, [items, paymentRequest])
 
   const reset = useCallback(() => {
     setResult(null)
