@@ -62,14 +62,14 @@ npx expo run:android
 
 ## If Android kills the app during payment
 
-While the Google Pay sheet is open, your app is in the background, and Android can kill its process to free memory. When the user then finishes or closes the sheet, the app restarts with a new JS runtime. The `startPayment()` call that opened the sheet no longer exists, so its result is dropped:
+If the user switches to another app while the Google Pay sheet is open, Android can kill your app's process to free memory. When the user comes back and finishes or closes the sheet, your app restarts with a new JS runtime. The `startPayment()` call that opened the sheet no longer exists, so its result is dropped:
 
 - No token reaches your app, so your backend charges nothing.
 - The cart and checkout screen are gone unless your app restores them. The user has to start the payment again.
 
 The payment survives a recreated Activity, for example after a configuration change your Activity doesn't handle: the result still reaches `startPayment()`.
 
-To reproduce a process death, open the sheet, run `adb shell am kill <your.package.name>`, and then close the sheet.
+To reproduce a process death, open the sheet, press Home, run `adb shell am kill <your.package.name>`, reopen the app from Recents, and close the sheet.
 
 ## Troubleshooting
 
