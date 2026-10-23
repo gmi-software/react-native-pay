@@ -7,6 +7,7 @@ import type {
   PaymentItem,
   PayServiceStatus,
   GooglePayEnvironment,
+  MerchantCapability,
   PaymentToken,
   PaymentAuthorizationResult,
 } from '../types'
@@ -52,7 +53,7 @@ export interface UsePaymentCheckoutConfig {
    * Merchant capabilities passed to Apple Pay.
    * Defaults to `['3DS']`.
    */
-  merchantCapabilities?: string[]
+  merchantCapabilities?: MerchantCapability[]
 
   /**
    * Optional Apple Pay Merchant ID override.

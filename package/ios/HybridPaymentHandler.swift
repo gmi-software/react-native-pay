@@ -18,6 +18,10 @@ private enum ErrorMessage {
     static func invalidAmount(_ label: String) -> String {
         return "Amount for \"\(label)\" must be a finite number or a decimal string like \"19.99\""
     }
+
+    static func unknownMerchantCapability(_ capability: String) -> String {
+        return "Unknown merchant capability \"\(capability)\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
+    }
 }
 
 private struct PaymentRequestError: LocalizedError {
@@ -54,7 +58,7 @@ struct PaymentRequestBuilder {
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
         paymentRequest.paymentSummaryItems = try buildPaymentItems(for: request)
-        paymentRequest.merchantCapabilities = buildMerchantCapabilities(request.merchantCapabilities)
+        paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
         
         if let shippingType = request.shippingType {
@@ -137,16 +141,22 @@ struct PaymentRequestBuilder {
         return ProcessInfo.processInfo.processName
     }
     
-    private static func buildMerchantCapabilities(_ capabilities: [String]) -> PKMerchantCapability {
+    private static func buildMerchantCapabilities(_ capabilities: [String]) throws -> PKMerchantCapability {
         var merchantCapabilities: PKMerchantCapability = []
         for capability in capabilities {
-            switch capability {
+            switch capability.uppercased() {
             case "3DS": merchantCapabilities.insert(.capability3DS)
             case "EMV": merchantCapabilities.insert(.capabilityEMV)
-            case "Credit": merchantCapabilities.insert(.capabilityCredit)
-            case "Debit": merchantCapabilities.insert(.capabilityDebit)
-            default: break
+            case "CREDIT": merchantCapabilities.insert(.capabilityCredit)
+            case "DEBIT": merchantCapabilities.insert(.capabilityDebit)
+            default:
+                throw PaymentRequestError(message: ErrorMessage.unknownMerchantCapability(capability))
             }
+        }
+        // PassKit requires 3DS or EMV. EMV only covers China UnionPay, so
+        // every other card needs 3DS; Credit and Debit just filter card types.
+        if merchantCapabilities.isDisjoint(with: [.capability3DS, .capabilityEMV]) {
+            merchantCapabilities.insert(.capability3DS)
         }
         return merchantCapabilities
     }

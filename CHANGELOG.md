@@ -16,9 +16,17 @@ All notable changes to this project are documented in this file.
   JPY, including float results such as `0.1 + 0.2`), or the total is negative. Negative line items
   (discounts) are still allowed. For requests built by hand, call the new
   `normalizePaymentRequest` before `HybridPaymentHandler.startPayment`.
+- **`merchantCapabilities` is typed as `MerchantCapability[]`** (`'3DS' | 'EMV' | 'Credit' |
+  'Debit'`) in the `usePaymentCheckout` config and in `createPaymentRequest`. Passing a `string[]`
+  no longer type-checks. `PaymentRequest.merchantCapabilities` stays `string[]`.
 
 ### Fixed
 
+- **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
+  matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
+  so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched
+  case-insensitively, `3DS` is added when neither protocol is given, and an unknown value fails the
+  payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
 - **Amounts reach Apple Pay and Google Pay exactly.** iOS converted amounts with `Decimal(Double)`,
   so `19.99` reached PassKit as `19.98999999999999488`. Amounts now cross into native code as
   decimal strings, iOS parses them with `NSDecimalNumber` and Android with `BigDecimal`, and both

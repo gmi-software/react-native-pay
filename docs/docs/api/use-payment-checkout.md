@@ -20,7 +20,7 @@ interface UsePaymentCheckoutConfig {
   countryCode?: string           // default: 'US'
   currencyCode?: string         // default: 'USD'
   supportedNetworks?: string[]  // default: ['visa', 'mastercard', 'amex', 'discover']
-  merchantCapabilities?: string[] // default: ['3DS']
+  merchantCapabilities?: MerchantCapability[] // default: ['3DS']
   applePayMerchantIdentifier?: string // optional iOS override
   // Google Pay (Android)
   googlePayMerchantId?: string
@@ -33,6 +33,7 @@ interface UsePaymentCheckoutConfig {
 ```
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
+- **merchantCapabilities** — Apple Pay only. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, and fails the payment for an unknown value. See [MerchantCapability](/docs/api/types#merchantcapability).
 - **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
 
 ## Return value

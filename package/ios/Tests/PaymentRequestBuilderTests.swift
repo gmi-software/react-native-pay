@@ -52,7 +52,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
         let request = try PaymentRequestBuilder.build(from: paymentRequest(
             items: [item("Coffee", "4.99")],
             merchantIdentifier: "  merchant.com.example\n",
-            merchantCapabilities: ["3DS", "Debit", "Unknown"],
+            merchantCapabilities: ["3DS", "Debit"],
             supportedNetworks: ["visa", "amex", "unknown"],
             shippingType: "delivery"
         ))
@@ -63,6 +63,48 @@ final class PaymentRequestBuilderTests: XCTestCase {
         XCTAssertEqual(request.merchantCapabilities, [.capability3DS, .capabilityDebit])
         XCTAssertEqual(request.supportedNetworks, [.visa, .amex])
         XCTAssertEqual(request.shippingType, .delivery)
+    }
+
+    func testMatchesMerchantCapabilitiesCaseInsensitively() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            merchantCapabilities: ["3ds", "CREDIT", "debit"]
+        ))
+
+        XCTAssertEqual(request.merchantCapabilities, [.capability3DS, .capabilityCredit, .capabilityDebit])
+    }
+
+    func testAddsThreeDSWhenNeither3DSNorEMVIsGiven() throws {
+        let cases: [([String], PKMerchantCapability)] = [
+            ([], [.capability3DS]),
+            (["Credit"], [.capability3DS, .capabilityCredit]),
+            (["Credit", "Debit"], [.capability3DS, .capabilityCredit, .capabilityDebit]),
+        ]
+
+        for (capabilities, expected) in cases {
+            let request = try PaymentRequestBuilder.build(from: paymentRequest(
+                items: [item("Coffee", "4.99")],
+                merchantCapabilities: capabilities
+            ))
+            XCTAssertEqual(request.merchantCapabilities, expected, "\(capabilities)")
+        }
+    }
+
+    func testKeepsEMVWithout3DS() throws {
+        // EMV alone is valid for China UnionPay merchants.
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            merchantCapabilities: ["EMV"]
+        ))
+
+        XCTAssertEqual(request.merchantCapabilities, [.capabilityEMV])
+    }
+
+    func testRejectsUnknownMerchantCapability() {
+        assertBuildFails(
+            paymentRequest(items: [item("Coffee", "4.99")], merchantCapabilities: ["3DS", "Unknown"]),
+            with: "Unknown merchant capability \"Unknown\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
+        )
     }
 
     func testRequestsContactFieldsOnlyWhenRequired() throws {

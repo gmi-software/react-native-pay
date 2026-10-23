@@ -103,6 +103,18 @@ describe('paymentHelpers', () => {
     expect(request.googlePayMerchantId).toBe('google-pay-merchant-id')
   })
 
+  it('types merchant capabilities as the values iOS accepts', () => {
+    // iOS fails the payment for an unknown value; JS passes it through.
+    const request = createPaymentRequest({
+      amount: 1,
+      label: 'Order',
+      // @ts-expect-error 'Unknown' is not a MerchantCapability
+      merchantCapabilities: ['Unknown'],
+    })
+
+    expect(request.merchantCapabilities).toEqual(['Unknown'])
+  })
+
   it('rejects invalid amounts in created payment requests', () => {
     expect(() => createPaymentRequest({ amount: NaN, label: 'Order' })).toThrow(
       'finite number or a decimal string'

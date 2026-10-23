@@ -368,7 +368,7 @@ interface UsePaymentCheckoutConfig {
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
   supportedNetworks?: string[]; // Default: ['visa', 'mastercard', 'amex', 'discover']
-  merchantCapabilities?: string[]; // Default: ['3DS']
+  merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']
   applePayMerchantIdentifier?: string; // Optional iOS override
   // Google Pay specific (Android)
   googlePayMerchantId?: string;
@@ -732,7 +732,7 @@ interface PaymentRequest {
   countryCode: string;
   currencyCode: string;
   paymentItems: PaymentItem[];
-  merchantCapabilities: string[];
+  merchantCapabilities: string[]; // MerchantCapability values
   supportedNetworks: string[];
   shippingType?: string;
   shippingMethods?: PaymentItem[];
@@ -785,6 +785,9 @@ type PaymentNetwork =
 
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";
+
+// Apple Pay merchant capabilities
+type MerchantCapability = "3DS" | "EMV" | "Credit" | "Debit";
 ```
 
 ### Amounts
@@ -796,6 +799,10 @@ Amounts are numbers (`19.99`) or decimal strings (`"19.99"`) in the currency's m
 - the total is negative. Negative line items (discounts) are allowed.
 
 Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234"` KWD) fail on Android.
+
+### Merchant capabilities
+
+`merchantCapabilities` is used by Apple Pay only. `"3DS"` and `"EMV"` are payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. `"Credit"` and `"Debit"` limit the accepted card types. iOS matches the values case-insensitively and adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
 
 ### Contact Types
 

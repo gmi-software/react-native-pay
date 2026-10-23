@@ -19,6 +19,7 @@
  */
 
 import type {
+  MerchantCapability,
   PaymentAmount,
   PaymentItem,
   PaymentRequest,
@@ -43,9 +44,7 @@ const DEFAULT_SUPPORTED_NETWORKS: PaymentRequest['supportedNetworks'] = [
   CommonNetworks.DISCOVER,
 ]
 
-const DEFAULT_MERCHANT_CAPABILITIES: PaymentRequest['merchantCapabilities'] = [
-  '3DS',
-]
+const DEFAULT_MERCHANT_CAPABILITIES: MerchantCapability[] = ['3DS']
 
 function omitUndefinedProperties<T extends object>(value: T): T {
   return Object.fromEntries(
@@ -134,9 +133,10 @@ export function calculateTotal(items: PaymentItem[]): number {
  * ```
  */
 export function createPaymentRequest(
-  options: Partial<PaymentRequest> & {
+  options: Partial<Omit<PaymentRequest, 'merchantCapabilities'>> & {
     amount: PaymentAmount
     label: string
+    merchantCapabilities?: MerchantCapability[]
   }
 ): PaymentRequest {
   const {
