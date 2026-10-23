@@ -26,14 +26,9 @@ import {
 } from '../utils'
 
 // Values that survive a JSON round trip unchanged: functions are dropped, and
-// NaN and Infinity become null.
-type JsonValue =
-  | string
-  | boolean
-  | null
-  | undefined
-  | readonly JsonValue[]
-  | { readonly [key: string]: JsonValue }
+// NaN and Infinity become null. No objects: a `JSON.stringify` key list would
+// filter their keys too.
+type JsonValue = string | boolean | null | undefined | readonly JsonValue[]
 
 /**
  * Configuration for `usePaymentCheckout`.
@@ -112,7 +107,8 @@ export interface UsePaymentCheckoutConfig {
    * sheet, which calls this again with a new token. Make the charge idempotent
    * per order ID, not per token.
    * An inline function is fine: `startPayment` keeps its identity and uses the
-   * function from the latest render.
+   * function from the latest render. A payment keeps the function it started
+   * with until it settles, even if the config changes meanwhile.
    */
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
@@ -228,9 +224,12 @@ export function usePaymentCheckout(
   const { onAuthorize, ...requestConfig } = config
 
   // Apps usually pass an inline config, which is new on every render, so
-  // compare the rest of it by value. A callback added to the config fails
-  // `satisfies` here: pull it out above, like `onAuthorize`.
-  const requestConfigKey = JSON.stringify(requestConfig satisfies JsonValue)
+  // compare the rest of it by value, with its keys sorted. A callback added to
+  // the config fails `satisfies` here: pull it out above, like `onAuthorize`.
+  const requestConfigKey = JSON.stringify(
+    requestConfig satisfies { readonly [key: string]: JsonValue },
+    Object.keys(requestConfig).sort()
+  )
   const stableRequestConfig = useMemo<typeof requestConfig>(
     () => JSON.parse(requestConfigKey),
     [requestConfigKey]

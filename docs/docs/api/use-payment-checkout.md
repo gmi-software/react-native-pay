@@ -34,7 +34,7 @@ interface UsePaymentCheckoutConfig {
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
 - **merchantCapabilities** — Apple Pay only. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, and fails the payment for an unknown value. See [MerchantCapability](/docs/api/types#merchantcapability).
-- **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: the hook calls the one from the latest render.
+- **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
 
 ## Return value
 

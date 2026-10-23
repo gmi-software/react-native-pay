@@ -32,7 +32,8 @@ All notable changes to this project are documented in this file.
   effects, memoized children and the pay button's `onPress` that used them changed on every render
   too. The hook now compares the config's values, and `supportedNetworks` and
   `merchantCapabilities` by content. An inline `onAuthorize` no longer changes `startPayment`, which
-  calls the `onAuthorize` from the latest render.
+  uses the `onAuthorize` from the latest render; a payment keeps the one it started with until it
+  settles.
 - **Amounts reach Apple Pay and Google Pay exactly.** iOS converted amounts with `Decimal(Double)`,
   so `19.99` reached PassKit as `19.98999999999999488`. Amounts now cross into native code as
   decimal strings, iOS parses them with `NSDecimalNumber` and Android with `BigDecimal`, and both

@@ -366,6 +366,18 @@ describe('usePaymentCheckout integration', () => {
       expect(result.current.startPayment).toBe(startPayment)
     })
 
+    it('keeps paymentRequest when the same config has its keys in another order', () => {
+      const { result, rerender } = renderWithConfig({
+        countryCode: 'PL',
+        currencyCode: 'PLN',
+      })
+      const { paymentRequest } = result.current
+
+      rerender({ currencyCode: 'PLN', countryCode: 'PL' })
+
+      expect(result.current.paymentRequest).toBe(paymentRequest)
+    })
+
     type RequestConfig = Omit<UsePaymentCheckoutConfig, 'onAuthorize'>
 
     // A row for every field: a new config field fails typecheck until it has one.
