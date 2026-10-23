@@ -79,15 +79,17 @@ final class PaymentRequestBuilderTests: XCTestCase {
         XCTAssertEqual(required.requiredShippingContactFields, [.postalAddress, .name])
     }
 
-    func testSingleItemIsTheTotal() throws {
+    func testAppendsAMerchantTotalToASingleItem() throws {
+        // PassKit shows the last item as the total, so one item still gets one.
         let request = try PaymentRequestBuilder.build(from: paymentRequest(
             items: [item("Coffee", "4.99")],
             merchantName: "Coffee Shop"
         ))
 
-        XCTAssertEqual(request.paymentSummaryItems.map(\.label), ["Coffee"])
-        XCTAssertEqual(request.paymentSummaryItems[0].amount, NSDecimalNumber(string: "4.99"))
-        XCTAssertEqual(request.paymentSummaryItems[0].type, .final)
+        let items = request.paymentSummaryItems
+        XCTAssertEqual(items.map(\.label), ["Coffee", "Coffee Shop"])
+        XCTAssertEqual(items[1].amount, NSDecimalNumber(string: "4.99"))
+        XCTAssertEqual(items[1].type, .final)
     }
 
     func testAppendsAnExactTotalLabelledWithTheMerchant() throws {
@@ -106,14 +108,19 @@ final class PaymentRequestBuilderTests: XCTestCase {
         XCTAssertEqual(items[3].type, .final)
     }
 
-    func testTotalIsLabelledTotalWithoutMerchantName() throws {
+    func testTotalFallsBackToTheAppNameWithoutMerchantName() throws {
+        // CFBundleDisplayName, then CFBundleName, then the process name.
+        let appName = ["CFBundleDisplayName", "CFBundleName"]
+            .compactMap { Bundle.main.object(forInfoDictionaryKey: $0) as? String }
+            .first { !$0.isEmpty } ?? ProcessInfo.processInfo.processName
+
         for merchantName in [nil, " "] {
             let request = try PaymentRequestBuilder.build(from: paymentRequest(
                 items: [item("Coffee", "4.99"), item("Tip", "0.50")],
                 merchantName: merchantName
             ))
 
-            XCTAssertEqual(request.paymentSummaryItems.last?.label, "Total")
+            XCTAssertEqual(request.paymentSummaryItems.last?.label, appName)
         }
     }
 
