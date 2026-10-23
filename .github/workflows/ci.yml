@@ -79,12 +79,21 @@ jobs:
           npm install --no-audit --no-fund typescript
           echo '{ "compilerOptions": { "skipLibCheck": true } }' > tsconfig.json
           echo 'export const answer: number = 42' > index.ts
-          list() { find . -mindepth 1 -maxdepth 1 -not -name node_modules | sort; }
-          list > "$RUNNER_TEMP/before.txt"
+          # Every path outside node_modules, with a hash for each file, so new,
+          # changed and deleted files all show. npm itself rewrites
+          # package.json and package-lock.json.
+          snapshot() {
+            find . -mindepth 1 -path ./node_modules -prune -o \
+              ! -path ./package.json ! -path ./package-lock.json -print | sort |
+              while IFS= read -r path; do
+                if [ -f "$path" ]; then sha256sum "$path"; else echo "$path/"; fi
+              done
+          }
+          snapshot > "$RUNNER_TEMP/before.txt"
           npm install --no-audit --no-fund --legacy-peer-deps --foreground-scripts --strict-allow-scripts "$tarball"
-          list > "$RUNNER_TEMP/after.txt"
+          snapshot > "$RUNNER_TEMP/after.txt"
           if ! diff "$RUNNER_TEMP/before.txt" "$RUNNER_TEMP/after.txt"; then
-            echo "::error::Installing the package changed files outside node_modules."
+            echo "::error::Installing the package created, changed or removed files outside node_modules."
             exit 1
           fi
 

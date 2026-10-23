@@ -4,7 +4,8 @@
  *
  * - The entry points must be in the tarball. A stale incremental build once
  *   made `tsc` a no-op and shipped a package without `lib/`.
- * - Tests must not ship.
+ * - Tests must not ship. That includes test files outside `__tests__`, which
+ *   the build and `files` don't exclude and Jest doesn't run.
  * - The package must not run scripts in the consumer's project on install.
  */
 const { execFileSync } = require('child_process')
@@ -21,6 +22,7 @@ const REQUIRED_FILES = [
 ]
 const FORBIDDEN_PATHS = [
   /(^|\/)__tests__\//,
+  /\.(test|spec)\.(d\.)?[jt]sx?$/,
   /^android\/src\/test\//,
   /^ios\/Tests\//,
 ]
@@ -54,6 +56,13 @@ if (problems.length > 0) {
   console.error(`npm pack: ${problems.length} problem(s)`)
   for (const problem of problems) {
     console.error(`  ${problem}`)
+  }
+  const colocated = (problem) =>
+    /\.(test|spec)\./.test(problem) && !problem.includes('__tests__/')
+  if (problems.some(colocated)) {
+    console.error(
+      'Move JS tests into a __tests__ directory: Jest only runs src/**/__tests__/**/*.test.ts.'
+    )
   }
   process.exit(1)
 }

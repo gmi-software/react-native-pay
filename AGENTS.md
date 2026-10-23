@@ -24,6 +24,7 @@ cd example && bun install
 - Lint: `cd package && bun run lint` (fails on warnings). Fix: `cd package && bun run lint:fix`
 - Test (all): `cd package && bun run test`
 - Test (single file): `cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts`
+- Test location: put JS tests in a `__tests__` directory as `*.test.ts`. Jest runs only those, and `check:pack` rejects test files anywhere else.
 - Package contents: `cd package && bun run check:pack` (builds `lib/`, then checks what `npm pack` would publish)
 - Android unit tests (JDK 17): `cd example && npx expo prebuild --platform android`, then `cd android && ./gradlew :gmisoftware_react-native-pay:testDebugUnitTest`
 - iOS unit tests: `cd example && npx expo prebuild --platform ios`, then `cd ios && xcodebuild test -workspace example.xcworkspace -scheme NitroPay-Unit-Tests -destination 'platform=iOS Simulator,name=<iPhone>'`, with a name from `xcrun simctl list devices available`. Tests live in `package/ios/Tests`; the example links them through `expo-build-properties` in `app.json`.
