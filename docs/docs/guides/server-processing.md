@@ -14,6 +14,11 @@ From the client, send at least:
 Example:
 
 ```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+const { startPayment, total } = usePaymentCheckout({ currencyCode: 'USD' })
+const currentOrderId = 'order_123' // your order ID
+
 const result = await startPayment()
 if (result?.success && result.token) {
   await fetch('https://api.yourserver.com/process-payment', {
@@ -37,13 +42,17 @@ Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user
 Pass `onAuthorize` to charge the token while the sheet waits. Resolve with the outcome, and the sheet shows success or failure:
 
 ```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+const order = { id: 'order_123', total: '49.99' } // your order
+
 const { startPayment } = usePaymentCheckout({
   currencyCode: 'USD',
   onAuthorize: async (token) => {
     const response = await fetch('https://api.yourserver.com/process-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, amount: total, currency: 'USD', orderId }),
+      body: JSON.stringify({ token, amount: order.total, currency: 'USD', orderId: order.id }),
     })
     if (!response.ok) {
       const { error } = await response.json()

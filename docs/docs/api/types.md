@@ -27,7 +27,7 @@ Google Pay accepts at most two decimal places, so on Android a three-decimal amo
 
 A single line item (label, amount, type).
 
-```ts
+```ts no-check
 interface PaymentItem {
   label: string
   amount: PaymentAmount // number | string
@@ -48,7 +48,7 @@ If any item is `pending`, the total is an estimate too: Google Pay receives `tot
 
 Full request passed to the native layer (or to `HybridPaymentHandler.startPayment`).
 
-```ts
+```ts no-check
 interface PaymentRequest {
   applePayMerchantIdentifier?: string
   merchantName?: string
@@ -79,7 +79,7 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 
 Returned from `startPayment()` (hook or handler).
 
-```ts
+```ts no-check
 interface PaymentResult {
   success: boolean
   transactionId?: string
@@ -96,7 +96,7 @@ Send `token` (and optionally `transactionId`) to your backend to complete the ch
 
 Optional second argument of `HybridPaymentHandler.startPayment()`. The hook takes `onAuthorize` in its config instead.
 
-```ts
+```ts no-check
 interface StartPaymentOptions {
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
 }
@@ -115,7 +115,7 @@ See [Charge before the sheet closes](/docs/guides/server-processing#charge-befor
 
 The token you send to your server. **Do not log or expose; treat as sensitive.**
 
-```ts
+```ts no-check
 interface PaymentToken {
   paymentMethod: PaymentMethod
   transactionIdentifier: string
@@ -135,7 +135,7 @@ interface PaymentToken {
 
 Describes the selected payment instrument.
 
-```ts
+```ts no-check
 interface PaymentMethod {
   displayName?: string
   network?: PaymentNetwork
@@ -286,6 +286,6 @@ interface CNContact {
 
 ## Backward compatibility alias
 
-```ts
+```ts no-check
 type ApplePayStatus = PayServiceStatus
 ```

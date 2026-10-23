@@ -59,12 +59,13 @@ Implement a backend endpoint that:
 
 ```tsx
 import React from 'react'
-import {Platform, View} from 'react-native'
+import {ActivityIndicator, Platform, View} from 'react-native'
 import {
   ApplePayButton,
   GooglePayButton,
   usePaymentCheckout,
 } from '@gmisoftware/react-native-pay'
+import {callback} from 'react-native-nitro-modules'
 
 export function CheckoutWithPrzelewy24() {
   const {startPayment, canMakePayments, isProcessing} = usePaymentCheckout({
@@ -96,6 +97,7 @@ export function CheckoutWithPrzelewy24() {
   }
 
   if (!canMakePayments) return null
+  if (isProcessing) return <ActivityIndicator />
 
   return (
     <View>
@@ -103,18 +105,16 @@ export function CheckoutWithPrzelewy24() {
         <ApplePayButton
           buttonType="buy"
           buttonStyle="black"
-          onPress={onPayPress}
+          onPress={callback(onPayPress)}
           style={{width: '100%', height: 48}}
-          disabled={isProcessing}
         />
       ) : (
         <GooglePayButton
           buttonType="buy"
           theme="dark"
           radius={4}
-          onPress={onPayPress}
+          onPress={callback(onPayPress)}
           style={{width: '100%', height: 48}}
-          disabled={isProcessing}
         />
       )}
     </View>
@@ -138,7 +138,7 @@ Do not parse or transform `paymentData` in the client beyond forwarding it.
 
 Provider field mapping must remain server-side. Keep this as an internal adapter and follow Przelewy24 docs for exact request schemas.
 
-```ts
+```ts no-check
 app.post('/payments/przelewy24/wallet', async (req, res) => {
   const {platform, token, amount, currency, orderId, transactionId} = req.body
 

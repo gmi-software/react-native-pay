@@ -45,6 +45,8 @@ If you are integrating with Przelewy24, see [Przelewy24](/docs/integrations/prze
 Apple Pay shows the total as "Pay *merchant*". Pass your business name as `merchantName`:
 
 ```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
 usePaymentCheckout({
   merchantName: 'Your Store',
   currencyCode: 'USD',
