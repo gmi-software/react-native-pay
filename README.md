@@ -980,26 +980,38 @@ const handlePayment = async () => {}
 Pass `onAuthorize` to charge the token while the Apple Pay sheet is still up. The sheet then shows your real outcome instead of an unconditional success:
 
 ```typescript
+import { useEffect } from "react";
 import { usePaymentCheckout } from "@gmisoftware/react-native-pay";
 
-const orderId = "order_123"; // your order ID
+const order = { id: "order_123", label: "Premium plan", total: "49.99" }; // your order
 
-const checkout = usePaymentCheckout({
-  currencyCode: "USD",
-  onAuthorize: async (token) => {
-    const response = await fetch("https://api.yourserver.com/process-payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, orderId }),
-    });
-    return response.ok
-      ? { status: "success" }
-      : { status: "failure", error: "Payment failed" };
-  },
-});
+function useOrderPayment() {
+  const checkout = usePaymentCheckout({
+    currencyCode: "USD",
+    onAuthorize: async (token) => {
+      const response = await fetch("https://api.yourserver.com/process-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, orderId: order.id }),
+      });
+      return response.ok
+        ? { status: "success" }
+        : { status: "failure", error: "Payment failed" };
+    },
+  });
+  const { addItem, clearItems } = checkout;
 
-const result = await checkout.startPayment();
-// result.success reflects your server's answer
+  // startPayment() returns null for an empty cart, so fill it before the tap.
+  useEffect(() => {
+    addItem(order.label, order.total);
+    return clearItems;
+  }, [addItem, clearItems]);
+
+  return async () => {
+    const result = await checkout.startPayment();
+    // result?.success reflects your server's answer
+  };
+}
 ```
 
 - `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored. Your server may still have charged the card.
