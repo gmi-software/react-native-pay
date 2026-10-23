@@ -18,10 +18,10 @@ final class PaymentReadinessTests: XCTestCase {
             networks: ["visa"],
             merchantCapabilities: ["3ds2"]
         )) { error in
-            XCTAssertEqual(
-                error.localizedDescription,
-                "Unknown merchant capability \"3ds2\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
-            )
+            let message = "Unknown merchant capability \"3ds2\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
+            XCTAssertEqual(error.localizedDescription, message)
+            // What a rejected JS promise carries.
+            XCTAssertEqual(String(describing: error), message)
         }
     }
 

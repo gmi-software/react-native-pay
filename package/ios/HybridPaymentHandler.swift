@@ -40,10 +40,13 @@ private enum ErrorMessage {
     }
 }
 
-private struct PaymentRequestError: LocalizedError {
+// `CustomStringConvertible` because Nitro rejects JS promises with the
+// error's description.
+private struct PaymentRequestError: LocalizedError, CustomStringConvertible {
     let message: String
 
     var errorDescription: String? { message }
+    var description: String { message }
 }
 
 // PassKit fails the sheet on its own when the authorization completion is not
