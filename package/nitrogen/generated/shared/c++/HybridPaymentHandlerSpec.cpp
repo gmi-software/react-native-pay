@@ -17,6 +17,7 @@ namespace margelo::nitro::pay {
       prototype.registerHybridMethod("payServiceStatus", &HybridPaymentHandlerSpec::payServiceStatus);
       prototype.registerHybridMethod("startPayment", &HybridPaymentHandlerSpec::startPayment);
       prototype.registerHybridMethod("canMakePayments", &HybridPaymentHandlerSpec::canMakePayments);
+      prototype.registerHybridMethod("isPaymentInProgress", &HybridPaymentHandlerSpec::isPaymentInProgress);
     });
   }
 

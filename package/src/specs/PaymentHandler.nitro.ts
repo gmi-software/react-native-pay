@@ -14,4 +14,5 @@ export interface PaymentHandler
     options?: StartPaymentOptions
   ): Promise<PaymentResult>
   canMakePayments(usingNetworks: string[]): boolean
+  isPaymentInProgress(): boolean
 }

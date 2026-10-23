@@ -365,8 +365,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
 // MARK: - Hybrid Payment Handler
 
 class HybridPaymentHandler: HybridPaymentHandlerSpec {
-    private var currentPaymentRequest: PKPaymentRequest?
-    private var paymentCompletion: ((PaymentResult) -> Void)?
+    private let pendingPayment = PendingPayment<PaymentResult>()
+    // Main thread only
     private var delegate: PaymentDelegate?
     
     // MARK: - Public Methods
@@ -382,13 +382,27 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         return PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: networks)
     }
     
+    func isPaymentInProgress() throws -> Bool {
+        return pendingPayment.isInProgress
+    }
+    
     func startPayment(request: PaymentRequest, options: StartPaymentOptions?) throws -> Promise<PaymentResult> {
         let promise = Promise<PaymentResult>()
+        
+        // Claim on the calling (JS) thread, so isPaymentInProgress() sees the
+        // payment before the sheet is presented. Reject overlaps without
+        // touching the in-flight payment, so its promise still settles.
+        guard pendingPayment.tryBegin({ result in promise.resolve(withResult: result) }) else {
+            promise.resolve(withResult: PaymentResultFactory.failure(ErrorMessage.paymentInProgress))
+            return promise
+        }
         let onAuthorize = options?.onAuthorize
         
         DispatchQueue.main.async {
-            self.performPayment(request: request, onAuthorize: onAuthorize) { result in
-                promise.resolve(withResult: result)
+            do {
+                try self.performPayment(request: request, onAuthorize: onAuthorize)
+            } catch {
+                self.handlePaymentResult(PaymentResultFactory.failure(error.localizedDescription))
             }
         }
         
@@ -398,50 +412,26 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // MARK: - Internal Methods
     
     func handlePaymentResult(_ result: PaymentResult) {
-        // One-shot settle: Nitro Promise crashes on a second resolve/reject.
-        guard let completion = paymentCompletion else { return }
-        paymentCompletion = nil
         delegate = nil
-        currentPaymentRequest = nil
-        completion(result)
+        // One-shot settle: Nitro Promise crashes on a second resolve/reject.
+        pendingPayment.settle(result)
     }
     
     // MARK: - Private Methods
     
-    private func performPayment(
-        request: PaymentRequest,
-        onAuthorize: AuthorizeCallback?,
-        completion: @escaping (PaymentResult) -> Void
-    ) {
-        // Reject overlaps before touching shared state so the in-flight
-        // payment keeps its completion/delegate and settles correctly.
-        guard paymentCompletion == nil else {
-            completion(PaymentResultFactory.failure(ErrorMessage.paymentInProgress))
-            return
-        }
-
-        let paymentRequest: PKPaymentRequest
-        do {
-            paymentRequest = try PaymentRequestBuilder.build(from: request)
-        } catch {
-            completion(PaymentResultFactory.failure(error.localizedDescription))
-            return
-        }
+    private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
+        let paymentRequest = try PaymentRequestBuilder.build(from: request)
         
-        paymentCompletion = completion
-        currentPaymentRequest = paymentRequest
         delegate = PaymentDelegate(paymentHandler: self, onAuthorize: onAuthorize)
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
-            handlePaymentResult(PaymentResultFactory.failure(ErrorMessage.unableToCreate))
-            return
+            throw PaymentRequestError(message: ErrorMessage.unableToCreate)
         }
         
         paymentAuthVC.delegate = delegate
         
         guard let rootViewController = getRootViewController() else {
-            handlePaymentResult(PaymentResultFactory.failure(ErrorMessage.unableToPresent))
-            return
+            throw PaymentRequestError(message: ErrorMessage.unableToPresent)
         }
         
         rootViewController.present(paymentAuthVC, animated: true) {

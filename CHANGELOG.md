@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- **`HybridPaymentHandler.isPaymentInProgress()`** synchronously returns whether a payment started
+  with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet.
+
 ### Changed
 
 - **Amounts can be decimal strings, and `PaymentItem.amount` is now `number | string`**
@@ -19,6 +24,14 @@ All notable changes to this project are documented in this file.
 - **`merchantCapabilities` is typed as `MerchantCapability[]`** (`'3DS' | 'EMV' | 'Credit' |
   'Debit'`) in the `usePaymentCheckout` config and in `createPaymentRequest`. Passing a `string[]`
   no longer type-checks. `PaymentRequest.merchantCapabilities` stays `string[]`.
+- **`usePaymentCheckout().startPayment()` leaves the hook state alone when a payment is already in
+  flight.** If `HybridPaymentHandler.startPayment()` or another `usePaymentCheckout` started that
+  payment, the hook used to set `isProcessing` to `true`, clear `result` and `error`, and then store
+  the "A payment is already in progress" failure in them. It now returns that failure without
+  touching `isProcessing`, `result` or `error`, as it already did for its own payment. On iOS,
+  `startPayment` now marks the payment in progress as soon as it is called, as on Android, instead
+  of when it starts presenting the sheet, so `isPaymentInProgress()` sees a payment started in the
+  same JS tick.
 
 ### Fixed
 

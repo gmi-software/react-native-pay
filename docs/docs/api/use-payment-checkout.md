@@ -76,9 +76,7 @@ interface UsePaymentCheckoutReturn {
   - Returns `PaymentResult` (including `{ success: false, error }`) when the native flow completes with a failure result.
   - Returns `null` if an exception is thrown while starting/processing the payment.
   - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ success: false, error }` and sets `error`.
-  - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight:
-    - If the payment in flight was started by this hook, the hook state is not changed.
-    - If it was started elsewhere (`HybridPaymentHandler` or another `usePaymentCheckout`), the native handler rejects the call and the hook records it like any failed payment, in `result` and `error`.
+  - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
 
 ## Example

@@ -81,7 +81,21 @@ On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled 
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 
-Only one payment can be in flight at a time. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. This applies on iOS and Android. With `onAuthorize`, the payment stays in flight until your callback settles.
+Only one payment can be in flight at a time. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. This applies on iOS and Android. With `onAuthorize`, the payment stays in flight until your callback settles. Use [`isPaymentInProgress()`](#ispaymentinprogress) to check first.
+
+---
+
+### isPaymentInProgress()
+
+Synchronously returns whether a payment started with `startPayment` has not settled yet, including one started by `usePaymentCheckout`. While it returns `true`, `startPayment` resolves immediately with `{ success: false, error: 'A payment is already in progress' }`.
+
+```ts
+import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
+
+const isBusy = HybridPaymentHandler.isPaymentInProgress()
+```
+
+`startPayment` still checks for itself, so you can call it without checking first. The check is useful when you keep your own state around a payment and don't want to update it for a call that never starts one. `usePaymentCheckout` uses it this way.
 
 ---
 

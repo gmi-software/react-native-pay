@@ -65,6 +65,7 @@ namespace margelo::nitro::pay {
       virtual PayServiceStatus payServiceStatus() = 0;
       virtual std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) = 0;
       virtual bool canMakePayments(const std::vector<std::string>& usingNetworks) = 0;
+      virtual bool isPaymentInProgress() = 0;
 
     protected:
       // Hybrid Setup

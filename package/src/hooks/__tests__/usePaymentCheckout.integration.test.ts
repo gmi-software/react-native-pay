@@ -2,12 +2,14 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 
 const mockPayServiceStatus = jest.fn()
 const mockStartPayment = jest.fn()
+const mockIsPaymentInProgress = jest.fn()
 
 jest.mock('react-native-nitro-modules', () => ({
   NitroModules: {
     createHybridObject: jest.fn(() => ({
       payServiceStatus: (...args: any[]) => mockPayServiceStatus(...args),
       startPayment: (...args: any[]) => mockStartPayment(...args),
+      isPaymentInProgress: (...args: any[]) => mockIsPaymentInProgress(...args),
     })),
   },
 }))
@@ -34,6 +36,7 @@ describe('usePaymentCheckout integration', () => {
       canSetupCards: true,
     })
     mockStartPayment.mockReset()
+    mockIsPaymentInProgress.mockReset().mockReturnValue(false)
   })
 
   const renderCheckout = () => renderHook(() => usePaymentCheckout({}))
@@ -528,6 +531,50 @@ describe('usePaymentCheckout integration', () => {
     })
 
     expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('leaves its state alone when native reports a payment in progress', async () => {
+    mockStartPayment.mockResolvedValueOnce({
+      success: false,
+      error: 'Declined',
+    })
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const previousResult = result.current.result
+    const previousError = result.current.error
+    mockIsPaymentInProgress.mockReturnValue(true)
+
+    let paymentResult: any
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toEqual(IN_PROGRESS_RESULT)
+    expect(mockStartPayment).toHaveBeenCalledTimes(1)
+    expect(result.current.result).toBe(previousResult)
+    expect(result.current.error).toBe(previousError)
+    expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('reports a payment in progress before an empty cart', async () => {
+    mockIsPaymentInProgress.mockReturnValue(true)
+    const { result } = renderCheckout()
+
+    let paymentResult: any
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toEqual(IN_PROGRESS_RESULT)
+    expect(result.current.error).toBeNull()
+    expect(mockStartPayment).not.toHaveBeenCalled()
   })
 
   it('accepts a new payment once the previous one settles', async () => {
