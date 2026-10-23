@@ -69,6 +69,16 @@ Use only supported Apple button values:
 - Run `npx expo prebuild --clean` and rebuild.
 - Ensure no other plugin overrides Google Pay metadata in `AndroidManifest.xml`.
 
+### No logs from the library
+
+The library writes to logcat in debug builds only. Release builds log nothing, because the payment request holds your merchant IDs, item labels and amounts. To see the logs, run a debug build and filter by tag:
+
+```bash
+adb logcat -s HybridPaymentHandler HybridGooglePayButton
+```
+
+Payment errors don't depend on logs: they reach your app in `result.error`.
+
 ## Nitro callback for onPress
 
 `ApplePayButton` and `GooglePayButton` are Nitro views. Nitro passes a function prop to native code only when it is wrapped with `callback()` from `react-native-nitro-modules`, so `onPress` must always be wrapped. A bare function does not reach the native button: tapping it does nothing, and TypeScript reports `Type '() => Promise<void>' is not assignable to type 'NitroViewWrappedCallback<...>'`.

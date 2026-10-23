@@ -43,9 +43,9 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
-  namespace "com.margelo.nitro.pay"
+  namespace = "com.margelo.nitro.pay"
 
-  ndkVersion getExtOrDefault("ndkVersion")
+  ndkVersion = getExtOrDefault("ndkVersion")
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
@@ -99,8 +99,8 @@ android {
   }
 
   buildFeatures {
-    buildConfig true
-    prefab true
+    buildConfig = true
+    prefab = true
   }
 
   buildTypes {
@@ -109,13 +109,13 @@ android {
     }
   }
 
-  lintOptions {
+  lint {
     disable "GradleCompatible"
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
 
   sourceSets {
@@ -127,6 +127,13 @@ android {
         ]
       }
     }
+  }
+}
+
+// Match the Java target. React Native apps align both to 17 anyway.
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
   }
 }
 

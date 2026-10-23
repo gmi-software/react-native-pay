@@ -60,6 +60,17 @@ npx expo run:android
 - Add a test card in Google Pay.
 - For testing without a live gateway, use `googlePayEnvironment: 'TEST'` and a test merchant ID if your gateway provides one.
 
+## If Android kills the app during payment
+
+While the Google Pay sheet is open, your app is in the background, and Android can kill its process to free memory. When the user then finishes or closes the sheet, the app restarts with a new JS runtime. The `startPayment()` call that opened the sheet no longer exists, so its result is dropped:
+
+- No token reaches your app, so your backend charges nothing.
+- The cart and checkout screen are gone unless your app restores them. The user has to start the payment again.
+
+The payment survives a recreated Activity, for example after a configuration change your Activity doesn't handle: the result still reaches `startPayment()`.
+
+To reproduce a process death, open the sheet, run `adb shell am kill <your.package.name>`, and then close the sheet.
+
 ## Troubleshooting
 
 - **Button not showing:** Ensure `enableGooglePay: true` is set, prebuild was run, and Google Play Services is available.
