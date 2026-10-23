@@ -80,7 +80,7 @@ interface UsePaymentCheckoutReturn {
 - **isSupported** — The device can pay with Apple Pay / Google Pay, whether or not a card is set up.
 - **hasActiveCard** — The user has a card ready on one of `supportedNetworks`. See [PayServiceStatus](/docs/api/types#payservicestatus) for what each platform checks.
 - **isCheckingStatus** — `true` until the availability check settles. The hook checks on mount and again when `supportedNetworks`, `merchantCapabilities` or `googlePayEnvironment` change. The check never blocks the JS thread.
-- **refreshStatus()** — Checks availability again, for example when the app returns from Wallet after `openPaymentSetup()`. `isCheckingStatus` is `true` until it settles.
+- **refreshStatus()** — Checks availability again, for example when the app returns from Wallet after `openPaymentSetup()`. `isCheckingStatus` is `true` until it settles, and the flags keep their last values meanwhile.
 
 Which button to show for each combination is in [Check availability](/docs/guides/availability).
 - **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.

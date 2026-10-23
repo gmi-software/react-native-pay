@@ -12,7 +12,7 @@ Decide which wallet button to show before the user taps anything. The library re
 | `isSupported` | `PKPaymentAuthorizationViewController.canMakePayments()`: hardware and parental controls allow Apple Pay | `isReadyToPay`: Google Pay is available, and the user has a card or can add one |
 | `hasActiveCard` | `canMakePayments(usingNetworks:capabilities:)` with your `supportedNetworks` and `merchantCapabilities` | `isReadyToPay` with `existingPaymentMethodRequired: true` and your `supportedNetworks` |
 
-Both flags are `false` when the check fails or, on Android, when Google Pay does not answer within 5 seconds. `hasActiveCard` is also `false` when none of the networks is one the platform knows (Google Pay has no `idcredit` or `privateLabel`).
+Both flags are `false` when the check fails or, on Android, when Google Pay does not answer within 5 seconds. One exception: on iOS, an unknown `merchantCapabilities` value rejects the `payServiceStatus` Promise, as it fails `startPayment`. The hook logs the rejection and reports both flags as `false`. `hasActiveCard` is also `false` when none of the networks is one the platform knows (Google Pay has no `idcredit` or `privateLabel`).
 
 ### Ask the environment you pay in
 
@@ -38,21 +38,16 @@ import {
 } from '@gmisoftware/react-native-pay'
 
 export function WalletButton() {
-  const {
-    isSupported,
-    hasActiveCard,
-    isCheckingStatus,
-    refreshStatus,
-    startPayment,
-  } = usePaymentCheckout({
-    merchantName: 'Your Store',
-    supportedNetworks: ['visa', 'mastercard'],
-    // The environment you pay in, so the status is real in production.
-    googlePayEnvironment: 'PRODUCTION',
-    googlePayMerchantId: 'your_google_pay_merchant_id',
-    googlePayGateway: 'stripe',
-    googlePayGatewayMerchantId: 'your_stripe_merchant_id',
-  })
+  const { isSupported, hasActiveCard, refreshStatus, startPayment } =
+    usePaymentCheckout({
+      merchantName: 'Your Store',
+      supportedNetworks: ['visa', 'mastercard'],
+      // The environment you pay in, so the status is real in production.
+      googlePayEnvironment: 'PRODUCTION',
+      googlePayMerchantId: 'your_google_pay_merchant_id',
+      googlePayGateway: 'stripe',
+      googlePayGatewayMerchantId: 'your_stripe_merchant_id',
+    })
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -61,7 +56,9 @@ export function WalletButton() {
     return () => subscription.remove()
   }, [refreshStatus])
 
-  if (isCheckingStatus || !isSupported) return null
+  // `isSupported` is `false` until the first check settles, and a refresh
+  // keeps the last answer, so the button does not flicker on return.
+  if (!isSupported) return null
 
   if (Platform.OS === 'android') {
     return (
@@ -89,7 +86,7 @@ export function WalletButton() {
 }
 ```
 
-The hook checks on mount, and again when `supportedNetworks`, `merchantCapabilities` or `googlePayEnvironment` change. `isCheckingStatus` is `true` until the check settles.
+The hook checks on mount, and again when `supportedNetworks`, `merchantCapabilities` or `googlePayEnvironment` change. `isCheckingStatus` is `true` while a check runs; the flags keep their last values until it settles.
 
 ## Without the hook
 

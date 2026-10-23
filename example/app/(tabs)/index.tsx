@@ -145,7 +145,8 @@ export default function TabOneScreen() {
     }
   };
 
-  if (isCheckingStatus) {
+  // Only before the first answer: a refresh keeps the last one on screen.
+  if (isCheckingStatus && !isSupported) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#007AFF" />
