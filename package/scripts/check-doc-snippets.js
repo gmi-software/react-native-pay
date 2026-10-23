@@ -37,7 +37,9 @@ function extractSnippets(file) {
         meta: fence[3],
         start: index + 1,
       }
-    } else if (fence[1].startsWith(open.fence) && !fence[2]) {
+    } else if (fence[1].startsWith(open.fence) && !fence[2] && !fence[3]) {
+      // A closing fence uses the opener's marker, at least as long, and
+      // nothing after it. "``` // note" is still code inside the fence.
       const extension = LANGUAGES[open.language]
       if (extension) {
         snippets.push({
@@ -125,6 +127,13 @@ try {
   })
 } catch (error) {
   output = `${error.stdout ?? ''}${error.stderr ?? ''}`
+  // tsc can fail before printing anything, e.g. when it cannot start.
+  if (!output.trim()) {
+    console.error(
+      `doc snippets: tsc failed without diagnostics: ${error.message}`
+    )
+    process.exit(1)
+  }
 }
 
 // Point errors at the markdown file and line instead of the generated file.
