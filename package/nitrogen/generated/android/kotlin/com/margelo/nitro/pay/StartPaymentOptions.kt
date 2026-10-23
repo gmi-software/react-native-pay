@@ -20,13 +20,13 @@ import com.margelo.nitro.core.Promise
 data class StartPaymentOptions(
   @DoNotStrip
   @Keep
-  val onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken?
+  val onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?
 ) {
   /**
    * Create a new instance of StartPaymentOptions from Kotlin
    */
-  constructor(onAuthorize: ((token: PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>)?):
-         this(onAuthorize?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_java(it) })
+  constructor(onAuthorize: ((token: PaymentToken, details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?):
+         this(onAuthorize?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_java(it) })
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -48,7 +48,7 @@ data class StartPaymentOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken?): StartPaymentOptions {
+    private fun fromCpp(onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?): StartPaymentOptions {
       return StartPaymentOptions(onAuthorize)
     }
   }

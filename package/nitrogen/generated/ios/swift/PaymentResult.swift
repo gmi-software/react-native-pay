@@ -18,7 +18,7 @@ public extension PaymentResult {
   /**
    * Create a new instance of `PaymentResult`.
    */
-  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?) {
+  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?) {
     self.init(success, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = transactionId {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -33,6 +33,30 @@ public extension PaymentResult {
       }
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = error {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_PaymentContact_ in
+      if let __unwrappedValue = billingContact {
+        return bridge.create_std__optional_PaymentContact_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_PaymentContact_ in
+      if let __unwrappedValue = shippingContact {
+        return bridge.create_std__optional_PaymentContact_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = emailAddress {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = phoneNumber {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
@@ -67,6 +91,40 @@ public extension PaymentResult {
     return { () -> String? in
       if bridge.has_value_std__optional_std__string_(self.__error) {
         let __unwrapped = bridge.get_std__optional_std__string_(self.__error)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var billingContact: PaymentContact? {
+    return self.__billingContact.value
+  }
+  
+  @inline(__always)
+  var shippingContact: PaymentContact? {
+    return self.__shippingContact.value
+  }
+  
+  @inline(__always)
+  var emailAddress: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__emailAddress) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__emailAddress)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var phoneNumber: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__phoneNumber) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__phoneNumber)
         return String(__unwrapped)
       } else {
         return nil

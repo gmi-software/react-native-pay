@@ -139,7 +139,59 @@ enum PassKitTypeMapper {
         )
     }
     
+    // MARK: - Payment Contacts
+
+    /// Reports only what the request asked for. Apple Pay returns email and
+    /// phone with the shipping contact, also when no address was requested.
+    static func convertPaymentDetails(
+        billingContact: PKContact?,
+        shippingContact: PKContact?,
+        requiredBillingFields: Set<PKContactField>,
+        requiredShippingFields: Set<PKContactField>
+    ) -> PaymentDetails {
+        return PaymentDetails.init(
+            billingContact: requiredBillingFields.contains(.postalAddress)
+                ? billingContact.map { convertPaymentContact($0) } : nil,
+            shippingContact: requiredShippingFields.contains(.postalAddress)
+                ? shippingContact.map { convertPaymentContact($0) } : nil,
+            emailAddress: requiredShippingFields.contains(.emailAddress)
+                ? nonEmpty(shippingContact?.emailAddress) : nil,
+            phoneNumber: requiredShippingFields.contains(.phoneNumber)
+                ? nonEmpty(shippingContact?.phoneNumber?.stringValue) : nil
+        )
+    }
+
+    static func convertPaymentContact(_ contact: PKContact) -> PaymentContact {
+        let name = contact.name
+        return PaymentContact.init(
+            name: name.flatMap {
+                nonEmpty(PersonNameComponentsFormatter.localizedString(from: $0, style: .default))
+            },
+            givenName: nonEmpty(name?.givenName),
+            familyName: nonEmpty(name?.familyName),
+            postalAddress: contact.postalAddress.map { convertPostalAddress($0) }
+        )
+    }
+
+    static func convertPostalAddress(_ address: Contacts.CNPostalAddress) -> CNPostalAddress {
+        // Apple Pay reports the country code in lowercase ("us").
+        return CNPostalAddress.init(
+            street: nonEmpty(address.street),
+            city: nonEmpty(address.city),
+            state: nonEmpty(address.state),
+            postalCode: nonEmpty(address.postalCode),
+            country: nonEmpty(address.country),
+            isoCountryCode: nonEmpty(address.isoCountryCode)?.uppercased()
+        )
+    }
+
     // MARK: - Private Helpers
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmed.isEmpty else { return nil }
+        return trimmed
+    }
     
     @available(iOS 13.0, *)
     private static func convertPhoneNumbers(_ phoneNumbers: [Contacts.CNLabeledValue<Contacts.CNPhoneNumber>]) -> [CNLabeledPhoneNumber] {

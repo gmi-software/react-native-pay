@@ -26,12 +26,14 @@
 #include "JCNPostalAddress.hpp"
 #include "JPKSecureElementPass.hpp"
 #include "JPassActivationState.hpp"
+#include "JPaymentContact.hpp"
 #include "JPaymentMethod.hpp"
 #include "JPaymentMethodType.hpp"
 #include "JPaymentNetwork.hpp"
 #include "JPaymentToken.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
+#include "PaymentContact.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
@@ -67,11 +69,23 @@ namespace margelo::nitro::pay {
       jni::local_ref<JPaymentToken> token = this->getFieldValue(fieldToken);
       static const auto fieldError = clazz->getField<jni::JString>("error");
       jni::local_ref<jni::JString> error = this->getFieldValue(fieldError);
+      static const auto fieldBillingContact = clazz->getField<JPaymentContact>("billingContact");
+      jni::local_ref<JPaymentContact> billingContact = this->getFieldValue(fieldBillingContact);
+      static const auto fieldShippingContact = clazz->getField<JPaymentContact>("shippingContact");
+      jni::local_ref<JPaymentContact> shippingContact = this->getFieldValue(fieldShippingContact);
+      static const auto fieldEmailAddress = clazz->getField<jni::JString>("emailAddress");
+      jni::local_ref<jni::JString> emailAddress = this->getFieldValue(fieldEmailAddress);
+      static const auto fieldPhoneNumber = clazz->getField<jni::JString>("phoneNumber");
+      jni::local_ref<jni::JString> phoneNumber = this->getFieldValue(fieldPhoneNumber);
       return PaymentResult(
         static_cast<bool>(success),
         transactionId != nullptr ? std::make_optional(transactionId->toStdString()) : std::nullopt,
         token != nullptr ? std::make_optional(token->toCpp()) : std::nullopt,
-        error != nullptr ? std::make_optional(error->toStdString()) : std::nullopt
+        error != nullptr ? std::make_optional(error->toStdString()) : std::nullopt,
+        billingContact != nullptr ? std::make_optional(billingContact->toCpp()) : std::nullopt,
+        shippingContact != nullptr ? std::make_optional(shippingContact->toCpp()) : std::nullopt,
+        emailAddress != nullptr ? std::make_optional(emailAddress->toStdString()) : std::nullopt,
+        phoneNumber != nullptr ? std::make_optional(phoneNumber->toStdString()) : std::nullopt
       );
     }
 
@@ -81,7 +95,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentResult::javaobject> fromCpp(const PaymentResult& value) {
-      using JSignature = JPaymentResult(jboolean, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentToken>, jni::alias_ref<jni::JString>);
+      using JSignature = JPaymentResult(jboolean, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentToken>, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -89,7 +103,11 @@ namespace margelo::nitro::pay {
         value.success,
         value.transactionId.has_value() ? jni::make_jstring(value.transactionId.value()) : nullptr,
         value.token.has_value() ? JPaymentToken::fromCpp(value.token.value()) : nullptr,
-        value.error.has_value() ? jni::make_jstring(value.error.value()) : nullptr
+        value.error.has_value() ? jni::make_jstring(value.error.value()) : nullptr,
+        value.billingContact.has_value() ? JPaymentContact::fromCpp(value.billingContact.value()) : nullptr,
+        value.shippingContact.has_value() ? JPaymentContact::fromCpp(value.shippingContact.value()) : nullptr,
+        value.emailAddress.has_value() ? jni::make_jstring(value.emailAddress.value()) : nullptr,
+        value.phoneNumber.has_value() ? jni::make_jstring(value.phoneNumber.value()) : nullptr
       );
     }
   };

@@ -18,12 +18,12 @@ public extension StartPaymentOptions {
   /**
    * Create a new instance of `StartPaymentOptions`.
    */
-  init(onAuthorize: ((_ token: PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>)?) {
-    self.init({ () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______ in
+  init(onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?) {
+    self.init({ () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______ in
       if let __unwrappedValue = onAuthorize {
-        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken in
-          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(__unwrappedValue)
-          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(__closureWrapper.toUnsafe())
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails in
+          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(__unwrappedValue)
+          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(__closureWrapper.toUnsafe())
         }())
       } else {
         return .init()
@@ -32,14 +32,14 @@ public extension StartPaymentOptions {
   }
 
   @inline(__always)
-  var onAuthorize: ((_ token: PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>)? {
-    return { () -> ((_ token: PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>)? in
-      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______(self.__onAuthorize) {
-        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______(self.__onAuthorize)
-        return { () -> (PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>> in
-          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(__unwrapped)
-          return { (__token: PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>> in
-            let __result = __wrappedFunction.call(__token)
+  var onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)? {
+    return { () -> ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(self.__onAuthorize) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(self.__onAuthorize)
+        return { () -> (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>> in
+          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(__unwrapped)
+          return { (__token: PaymentToken, __details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>> in
+            let __result = __wrappedFunction.call(__token, __details)
             return { () -> Promise<Promise<PaymentAuthorizationResult>> in
               let __promise = Promise<Promise<PaymentAuthorizationResult>>()
               let __resolver = { (__result: Promise<PaymentAuthorizationResult>) in

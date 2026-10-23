@@ -37,6 +37,8 @@ namespace margelo::nitro::pay { struct CNLabeledEmailAddress; }
 namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `PaymentContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentContact; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -49,6 +51,8 @@ namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
+// Forward declaration of `PaymentDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 
@@ -87,6 +91,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JCNLabeledPostalAddress.hpp"
 #include "CNPostalAddress.hpp"
 #include "JCNPostalAddress.hpp"
+#include "PaymentContact.hpp"
+#include "JPaymentContact.hpp"
 #include "PaymentRequest.hpp"
 #include "JPaymentRequest.hpp"
 #include "PaymentItem.hpp"
@@ -100,12 +106,14 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "StartPaymentOptions.hpp"
 #include "JStartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
+#include "PaymentDetails.hpp"
 #include <functional>
-#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails.hpp"
 #include <NitroModules/JNICallable.hpp>
 #include "JPaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
+#include "JPaymentDetails.hpp"
 
 namespace margelo::nitro::pay {
 

@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -75,6 +75,18 @@ public extension PaymentRequest {
       }
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = shippingContactRequired {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = emailRequired {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = phoneNumberRequired {
         return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
@@ -196,6 +208,30 @@ public extension PaymentRequest {
     return { () -> Bool? in
       if bridge.has_value_std__optional_bool_(self.__shippingContactRequired) {
         let __unwrapped = bridge.get_std__optional_bool_(self.__shippingContactRequired)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var emailRequired: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__emailRequired) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__emailRequired)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var phoneNumberRequired: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__phoneNumberRequired) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__phoneNumberRequired)
         return __unwrapped
       } else {
         return nil

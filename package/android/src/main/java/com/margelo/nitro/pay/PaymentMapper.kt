@@ -11,12 +11,16 @@ import java.util.UUID
 object PaymentMapper {
     
     /**
-     * Maps Google Pay PaymentData to PaymentResult
+     * Maps Google Pay PaymentData to PaymentResult, with the details that
+     * [requested] asked for
      */
-    fun mapPaymentDataToResult(paymentData: PaymentData): PaymentResult {
+    internal fun mapPaymentDataToResult(
+        paymentData: PaymentData,
+        requested: RequestedDetails = RequestedDetails()
+    ): PaymentResult {
         return try {
-            val paymentInfo = paymentData.toJson()
-            val paymentMethodData = JSONObject(paymentInfo).getJSONObject("paymentMethodData")
+            val paymentInfo = JSONObject(paymentData.toJson())
+            val paymentMethodData = paymentInfo.getJSONObject("paymentMethodData")
             
             // Extract token
             val tokenData = paymentMethodData.getJSONObject("tokenizationData")
@@ -43,16 +47,87 @@ object PaymentMapper {
                 paymentData = token
             )
             
+            val details = mapPaymentDetails(paymentInfo, requested)
+            
             // Create successful result
             PaymentResult(
                 success = true,
                 transactionId = UUID.randomUUID().toString(),
                 token = paymentToken,
-                error = null
+                error = null,
+                billingContact = details.billingContact,
+                shippingContact = details.shippingContact,
+                emailAddress = details.emailAddress,
+                phoneNumber = details.phoneNumber
             )
         } catch (e: JSONException) {
             createErrorResult("Failed to parse payment data: ${e.message}")
         }
+    }
+    
+    /**
+     * Reads the requested details from a PaymentData JSON object.
+     * The phone number comes from the address it was requested with.
+     */
+    internal fun mapPaymentDetails(
+        paymentData: JSONObject,
+        requested: RequestedDetails
+    ): PaymentDetails {
+        val billingAddress = paymentData.optJSONObject("paymentMethodData")
+            ?.optJSONObject("info")
+            ?.optJSONObject("billingAddress")
+        val shippingAddress = paymentData.optJSONObject("shippingAddress")
+        val phoneAddress = if (requested.phoneNumberOnShippingAddress) shippingAddress else billingAddress
+        
+        return PaymentDetails(
+            billingContact = billingAddress?.takeIf { requested.billingContact }?.let(::mapContact),
+            shippingContact = shippingAddress?.takeIf { requested.shippingContact }?.let(::mapContact),
+            emailAddress = paymentData.takeIf { requested.email }?.optNonEmpty("email"),
+            phoneNumber = phoneAddress?.takeIf { requested.phoneNumber }?.optNonEmpty("phoneNumber")
+        )
+    }
+    
+    /**
+     * Maps a Google Pay Address object. Google Pay returns the name as one string.
+     */
+    private fun mapContact(address: JSONObject): PaymentContact {
+        val street = listOf("address1", "address2", "address3")
+            .mapNotNull { address.optNonEmpty(it) }
+            .joinToString("\n")
+        
+        return PaymentContact(
+            name = address.optNonEmpty("name"),
+            givenName = null,
+            familyName = null,
+            postalAddress = CNPostalAddress(
+                street = street.ifEmpty { null },
+                city = address.optNonEmpty("locality"),
+                state = address.optNonEmpty("administrativeArea"),
+                postalCode = address.optNonEmpty("postalCode"),
+                country = null,
+                isoCountryCode = address.optNonEmpty("countryCode")?.uppercase()
+            )
+        )
+    }
+    
+    /**
+     * The trimmed string at [key], or null when it is missing, JSON null or blank
+     */
+    private fun JSONObject.optNonEmpty(key: String): String? {
+        if (isNull(key)) return null
+        return optString(key).trim().ifEmpty { null }
+    }
+    
+    /**
+     * The contact details of an authorized result, as passed to `onAuthorize`
+     */
+    fun paymentDetails(result: PaymentResult): PaymentDetails {
+        return PaymentDetails(
+            billingContact = result.billingContact,
+            shippingContact = result.shippingContact,
+            emailAddress = result.emailAddress,
+            phoneNumber = result.phoneNumber
+        )
     }
     
     /**
@@ -96,7 +171,11 @@ object PaymentMapper {
             success = false,
             transactionId = null,
             token = null,
-            error = errorMessage
+            error = errorMessage,
+            billingContact = null,
+            shippingContact = null,
+            emailAddress = null,
+            phoneNumber = null
         )
     }
 }

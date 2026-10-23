@@ -96,6 +96,8 @@ function useOrderPayment() {
 
 With `HybridPaymentHandler`, pass the same callback as `startPayment(request, { onAuthorize })`.
 
+The second argument of `onAuthorize` holds the contact details the request asked for, such as the shipping address. See [Shipping and contact details](/docs/guides/contact-details).
+
 How it behaves:
 
 - **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `success: false` and your `error`. A rejected promise is treated the same way.

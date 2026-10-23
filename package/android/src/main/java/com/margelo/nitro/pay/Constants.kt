@@ -18,6 +18,10 @@ object PaymentConstants {
     const val AUTH_PAN_ONLY = "PAN_ONLY"
     const val AUTH_CRYPTOGRAM_3DS = "CRYPTOGRAM_3DS"
     
+    // Billing address formats
+    const val BILLING_ADDRESS_FORMAT_MIN = "MIN"
+    const val BILLING_ADDRESS_FORMAT_FULL = "FULL"
+    
     // Card networks
     const val NETWORK_VISA = "VISA"
     const val NETWORK_MASTERCARD = "MASTERCARD"

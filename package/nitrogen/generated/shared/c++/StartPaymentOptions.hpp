@@ -32,10 +32,13 @@
 namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `PaymentDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentDetails; }
 
 #include "PaymentAuthorizationResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include "PaymentToken.hpp"
+#include "PaymentDetails.hpp"
 #include <functional>
 #include <optional>
 
@@ -46,11 +49,11 @@ namespace margelo::nitro::pay {
    */
   struct StartPaymentOptions final {
   public:
-    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>> onAuthorize     SWIFT_PRIVATE;
+    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> onAuthorize     SWIFT_PRIVATE;
 
   public:
     StartPaymentOptions() = default;
-    explicit StartPaymentOptions(std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>> onAuthorize): onAuthorize(onAuthorize) {}
+    explicit StartPaymentOptions(std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> onAuthorize): onAuthorize(onAuthorize) {}
 
   public:
     // StartPaymentOptions is not equatable because these properties are not equatable: onAuthorize
@@ -66,12 +69,12 @@ namespace margelo::nitro {
     static inline margelo::nitro::pay::StartPaymentOptions fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::pay::StartPaymentOptions(
-        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::StartPaymentOptions& arg) {
       jsi::Object obj(runtime);
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&)>>>::toJSI(runtime, arg.onAuthorize));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::toJSI(runtime, arg.onAuthorize));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -82,7 +85,7 @@ namespace margelo::nitro {
       if (!nitro::isPlainObject(runtime, obj)) {
         return false;
       }
-      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))) return false;
+      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))) return false;
       return true;
     }
   };

@@ -186,6 +186,47 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.isProcessing).toBe(false)
   })
 
+  it('sends the requested contact details only when configured', async () => {
+    mockStartPayment.mockResolvedValue({ success: true })
+    const { result, rerender } = renderHook(
+      (config: Parameters<typeof usePaymentCheckout>[0]) =>
+        usePaymentCheckout(config),
+      { initialProps: {} }
+    )
+
+    act(() => {
+      result.current.addItem('Coffee', 4.99)
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const defaultRequest = mockStartPayment.mock.calls[0]?.[0]
+    expect(defaultRequest).not.toHaveProperty('billingContactRequired')
+    expect(defaultRequest).not.toHaveProperty('shippingContactRequired')
+    expect(defaultRequest).not.toHaveProperty('emailRequired')
+    expect(defaultRequest).not.toHaveProperty('phoneNumberRequired')
+
+    rerender({
+      billingContactRequired: true,
+      shippingContactRequired: true,
+      emailRequired: true,
+      phoneNumberRequired: true,
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(mockStartPayment.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        billingContactRequired: true,
+        shippingContactRequired: true,
+        emailRequired: true,
+        phoneNumberRequired: true,
+      })
+    )
+  })
+
   it('sends exact decimal strings for number and string amounts', async () => {
     mockStartPayment.mockResolvedValueOnce({ success: true })
     const { result } = renderHook(() =>
@@ -400,6 +441,10 @@ describe('usePaymentCheckout integration', () => {
       googlePayEnvironment: ['TEST', 'PRODUCTION'],
       googlePayGateway: ['stripe', 'adyen'],
       googlePayGatewayMerchantId: ['gateway-a', 'gateway-b'],
+      billingContactRequired: [false, true],
+      shippingContactRequired: [false, true],
+      emailRequired: [false, true],
+      phoneNumberRequired: [false, true],
     }
 
     it.each(Object.entries(configChanges))(
@@ -451,13 +496,14 @@ describe('usePaymentCheckout integration', () => {
       transactionIdentifier: 'apple-tx',
       paymentData: 'base64-token',
     }
+    const details = { emailAddress: 'jane@example.com' }
 
     // Mirrors the native handlers: the merchant's outcome decides the result.
     const nativeWithAuthorization = async (_request: any, options?: any) => {
       try {
-        const authorization = await options.onAuthorize(token)
+        const authorization = await options.onAuthorize(token, details)
         return authorization.status === 'success'
-          ? { success: true, token }
+          ? { success: true, token, ...details }
           : {
               success: false,
               error: authorization.error ?? 'Payment authorization failed',
@@ -489,7 +535,7 @@ describe('usePaymentCheckout integration', () => {
       expect(mockStartPayment.mock.calls[0]).toHaveLength(1)
     })
 
-    it('passes the token to onAuthorize and returns the token on success', async () => {
+    it('passes the token and contact details to onAuthorize and returns them on success', async () => {
       mockStartPayment.mockImplementationOnce(nativeWithAuthorization)
       const onAuthorize = jest.fn().mockResolvedValue({ status: 'success' })
       const { result } = renderWithAuthorize(onAuthorize)
@@ -499,8 +545,12 @@ describe('usePaymentCheckout integration', () => {
         paymentResult = await result.current.startPayment()
       })
 
-      expect(onAuthorize).toHaveBeenCalledWith(token)
-      expect(paymentResult).toEqual({ success: true, token })
+      expect(onAuthorize).toHaveBeenCalledWith(token, details)
+      expect(paymentResult).toEqual({
+        success: true,
+        token,
+        emailAddress: 'jane@example.com',
+      })
       expect(result.current.error).toBeNull()
       expect(mockStartPayment.mock.calls[0]?.[0].paymentItems).toEqual([
         { label: 'Order', amount: '12.00', type: 'final' },
@@ -558,7 +608,7 @@ describe('usePaymentCheckout integration', () => {
         await result.current.startPayment()
       })
 
-      expect(latest).toHaveBeenCalledWith(token)
+      expect(latest).toHaveBeenCalledWith(token, details)
       expect(first).not.toHaveBeenCalled()
     })
 
@@ -598,9 +648,9 @@ describe('usePaymentCheckout integration', () => {
         payment = result.current.startPayment()
       })
       rerender({})
-      await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token)
+      await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token, details)
 
-      expect(onAuthorize).toHaveBeenCalledWith(token)
+      expect(onAuthorize).toHaveBeenCalledWith(token, details)
 
       await act(async () => {
         native.resolve({ success: true })
