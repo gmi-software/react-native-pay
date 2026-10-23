@@ -875,11 +875,12 @@ const handlePayment = async () => {
 
     if (result.success && result.token) {
       // Send the token to your server
-      await fetch('https://api.yourserver.com/process-payment', {
+      const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: result.token }),
       })
+      if (!response.ok) throw new Error('Payment processing failed')
     } else {
       console.error('Payment failed:', result.error)
     }
