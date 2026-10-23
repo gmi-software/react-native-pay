@@ -65,8 +65,9 @@ npx expo run:ios
 
 ## Testing
 
-- Use a **real device** with a card added in Wallet for full flow.
-- Simulator has limited Apple Pay support; for production-like testing, use a device.
+- The **iOS Simulator** shows the Apple Pay sheet without a card, but its token can't be charged. See [what the Simulator can't verify](/docs/guides/testing#ios-simulator).
+- On an **iPhone**, test with an Apple Pay sandbox tester and Apple's test cards. See [Sandbox on an iPhone](/docs/guides/testing#sandbox-on-an-iphone).
+- Before each release, run the [release checklist](/docs/guides/testing#release-checklist).
 
 ## Troubleshooting
 
