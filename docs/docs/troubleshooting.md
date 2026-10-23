@@ -67,13 +67,22 @@ Use only supported Apple button values:
 
 ## Nitro callback for onPress
 
-Native payment buttons are Nitro host components. Their `onPress` should be wrapped with `callback()` from `react-native-nitro-modules` to ensure the handler is invoked correctly from native code.
+`ApplePayButton` and `GooglePayButton` are Nitro views. Nitro passes a function prop to native code only when it is wrapped with `callback()` from `react-native-nitro-modules`, so `onPress` must always be wrapped. A bare function does not reach the native button: tapping it does nothing, and TypeScript reports `Type '() => Promise<void>' is not assignable to type 'NitroViewWrappedCallback<...>'`.
 
 ```tsx
+import { Platform } from 'react-native'
+import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
 import { callback } from 'react-native-nitro-modules'
 
-<ApplePayButton onPress={callback(handlePay)} />
-<GooglePayButton onPress={callback(handlePay)} />
+const handlePay = async () => {
+  // Call startPayment() from usePaymentCheckout here
+}
+
+{Platform.OS === 'ios' ? (
+  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePay)} />
+) : (
+  <GooglePayButton buttonType="buy" theme="dark" onPress={callback(handlePay)} />
+)}
 ```
 
 Use this pattern anywhere you pass handlers to `ApplePayButton` or `GooglePayButton`.

@@ -53,6 +53,7 @@ import {
   formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
+import { callback } from 'react-native-nitro-modules'
 
 function CheckoutScreen() {
   const {
@@ -110,9 +111,9 @@ function CheckoutScreen() {
         <ActivityIndicator size="large" />
       ) : (
         Platform.OS === 'ios' ? (
-          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} style={{ width: '100%', height: 48 }} />
+          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePay)} style={{ width: '100%', height: 48 }} />
         ) : (
-          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={handlePay} style={{ width: '100%', height: 48 }} />
+          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={callback(handlePay)} style={{ width: '100%', height: 48 }} />
         )
       )}
     </View>
@@ -122,9 +123,9 @@ function CheckoutScreen() {
 
 If you are integrating with Przelewy24, follow the provider cookbook: [Przelewy24](/docs/integrations/przelewy24).
 
-## 5. Nitro and button `onPress` (if needed)
+## 5. Wrap `onPress` with `callback()`
 
-If your button `onPress` does not fire, use Nitro's `callback(...)` wrapper as documented in [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
+`ApplePayButton` and `GooglePayButton` are Nitro views, so their `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, as in the screen above. A bare function does not reach the native button, and tapping it does nothing. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ## 6. Run and test
 

@@ -15,6 +15,8 @@ import { HybridPaymentHandler, createPaymentRequest } from '@gmisoftware/react-n
 Synchronously returns whether the payment service is available on the device.
 
 ```ts
+import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
+
 const status = HybridPaymentHandler.payServiceStatus()
 // status: { canMakePayments: boolean, canSetupCards: boolean }
 ```
@@ -49,7 +51,7 @@ const result = await HybridPaymentHandler.startPayment(
 
 **PaymentResult:**
 
-```ts
+```ts no-check
 interface PaymentResult {
   success: boolean
   transactionId?: string
@@ -60,7 +62,7 @@ interface PaymentResult {
 
 **options.onAuthorize** charges the token before the Apple Pay sheet closes. The result follows your callback:
 
-```ts
+```ts no-check
 const result = await HybridPaymentHandler.startPayment(request, {
   onAuthorize: async (token) => {
     const charged = await chargeOnServer(token)
@@ -88,6 +90,8 @@ Only one payment can be in flight at a time. A call made while another payment i
 Returns whether the user can make payments with the given card networks.
 
 ```ts
+import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
+
 const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
 ```
 

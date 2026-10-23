@@ -6,14 +6,14 @@ Use the cart API from `usePaymentCheckout` to add, update, and remove items befo
 
 **Single item:**
 
-```ts
+```ts no-check
 addItem('Product name', 29.99)
 addItem('Discount', -5, 'final')  // negative for discounts
 ```
 
 **Multiple items:**
 
-```ts
+```ts no-check
 addItems([
   { label: 'Product', amount: 29.99 },
   { label: 'Shipping', amount: 5 },
@@ -25,13 +25,13 @@ addItems([
 
 Change label or amount (or type) by index:
 
-```ts
+```ts no-check
 updateItem(0, { label: 'Product (x2)', amount: 59.98 })
 ```
 
 ## Remove and clear
 
-```ts
+```ts no-check
 removeItem(index)  // remove one item
 clearItems()       // empty the cart
 ```
@@ -39,9 +39,13 @@ clearItems()       // empty the cart
 ## Example: quantity and discount
 
 ```ts
-import { formatAmount } from '@gmisoftware/react-native-pay'
+import { formatAmount, usePaymentCheckout } from '@gmisoftware/react-native-pay'
 
-const { items, addItem, updateItem, removeItem, total } = usePaymentCheckout({ ... })
+const { addItem, clearItems, total } = usePaymentCheckout({
+  merchantName: 'Your Store',
+  countryCode: 'US',
+  currencyCode: 'USD',
+})
 
 // Add product with quantity
 const handleAddProduct = (name: string, unitPrice: number, quantity: number) => {

@@ -132,6 +132,7 @@
     "lint:fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "typescript": "tsc -p tsconfig.build.json",
     "check:pack": "node scripts/check-pack.js",
+    "check:docs": "node scripts/check-doc-snippets.js",
     "specs": "tsc -p tsconfig.build.json && nitrogen --logLevel=\"debug\"",
     "release": "release-it"
   },

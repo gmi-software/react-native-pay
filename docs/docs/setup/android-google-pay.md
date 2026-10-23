@@ -30,6 +30,8 @@ For production you will also need to register your app and comply with Google’
 Google Pay needs a **Google Pay merchant ID** for production, plus your **payment gateway** details (Stripe, Braintree, etc.) and **gateway merchant ID**. Configure them in `usePaymentCheckout` (or in your `PaymentRequest`):
 
 ```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
 usePaymentCheckout({
   merchantName: 'Your Store',      // shown on the Google Pay sheet
   currencyCode: 'USD',

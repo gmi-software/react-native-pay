@@ -9,8 +9,7 @@ import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
 const status = HybridPaymentHandler.payServiceStatus()
 if (!status.canMakePayments) {
-  // Show "Apple Pay / Google Pay not available"
-  return
+  // Hide the pay button and show "Apple Pay / Google Pay not available"
 }
 ```
 
@@ -38,7 +37,7 @@ const paymentRequest = createPaymentRequest({
 
 ## 3. Handle the button press
 
-```ts
+```ts no-check
 const handlePayment = async () => {
   try {
     const result = await HybridPaymentHandler.startPayment(paymentRequest)
@@ -57,28 +56,36 @@ To charge the token before the Apple Pay sheet closes, pass `startPayment(paymen
 
 ## 4. Render the button
 
-Use the platform-specific button and, if needed, `callback()` for Nitro:
+Use the platform-specific button, and pass it `status.canMakePayments` from step 1 so it stays hidden when payments are unavailable. Its `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, or the tap does nothing:
 
 ```tsx
 import { Platform } from 'react-native'
 import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
 import { callback } from 'react-native-nitro-modules'
 
-// ...
+function PaymentButton({
+  canMakePayments,
+  handlePayment,
+}: {
+  canMakePayments: boolean
+  handlePayment: () => Promise<void>
+}) {
+  if (!canMakePayments) return null
 
-return Platform.OS === 'ios' ? (
-  <ApplePayButton
-    buttonType="buy"
-    buttonStyle="black"
-    onPress={callback(handlePayment)}
-  />
-) : (
-  <GooglePayButton
-    buttonType="subscribe"
-    theme="dark"
-    onPress={callback(handlePayment)}
-  />
-)
+  return Platform.OS === 'ios' ? (
+    <ApplePayButton
+      buttonType="buy"
+      buttonStyle="black"
+      onPress={callback(handlePayment)}
+    />
+  ) : (
+    <GooglePayButton
+      buttonType="subscribe"
+      theme="dark"
+      onPress={callback(handlePayment)}
+    />
+  )
+}
 ```
 
 ## When to use this

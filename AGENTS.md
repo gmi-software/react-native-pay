@@ -24,6 +24,7 @@ cd example && bun install
 - Lint: `cd package && bun run lint` (fails on warnings). Fix: `cd package && bun run lint:fix`
 - Test (all): `cd package && bun run test`
 - Test (single file): `cd package && bun run test -- src/hooks/__tests__/usePaymentCheckout.integration.test.ts`
+- Docs snippets: `cd package && bun run check:docs` (type-checks the `ts`/`tsx` fences in `README.md` and `docs/docs` against `package/src`)
 - Package contents: `cd package && bun run check:pack` (builds `lib/`, then checks what `npm pack` would publish)
 - Android unit tests (JDK 17): `cd example && npx expo prebuild --platform android`, then `cd android && ./gradlew :gmisoftware_react-native-pay:testDebugUnitTest`
 - iOS unit tests: `cd example && npx expo prebuild --platform ios`, then `cd ios && xcodebuild test -workspace example.xcworkspace -scheme NitroPay-Unit-Tests -destination 'platform=iOS Simulator,name=<iPhone>'`, with a name from `xcrun simctl list devices available`. Tests live in `package/ios/Tests`; the example links them through `expo-build-properties` in `app.json`.
@@ -41,6 +42,7 @@ cd example && bun install
 - Keep PRs small and scoped to one objective.
 - If you change public APIs, update `README.md` and any types.
 - **Docs (`docs/`)**: When you add, change, or remove public API, setup steps, or user-facing behavior, create, update, or delete the relevant pages under `docs/docs/` so the Docusaurus docs stay in sync. Examples: new hook option → `docs/docs/api/use-payment-checkout.md`; plugin config change → `docs/docs/setup/expo-plugin.md`; new guide → add under `docs/docs/guides/` and reference in `docs/sidebars.ts`. All docs content is in English.
+- **Code snippets** in `README.md` and `docs/docs/` must compile (`bun run check:docs`): include their imports, and wrap pay button `onPress` handlers with `callback()`. Mark a snippet that cannot compile on its own (type listings, short fragments, server code) with `no-check` after the language, as in ` ```ts no-check `. Snippets that render `ApplePayButton` or `GooglePayButton` cannot be `no-check`.
 - If you touch native code, validate both iOS and Android paths.
 - Avoid drive-by refactors and formatting-only changes.
 
@@ -67,6 +69,7 @@ Example template:
 - [ ] `xcodebuild test ... -scheme NitroPay-Unit-Tests` in `example/ios` (if you changed Swift; not run)
 - [ ] `cd example && bunx expo run:ios` (not run)
 - [ ] `cd example && bunx expo run:android` (not run)
+- [ ] `cd package && bun run check:docs` (if you changed code snippets in `README.md` or `docs/`; not run)
 - [ ] `bun run docs:build` (if you changed `docs/` or public API/setup; not run)
 
 ## Risk

@@ -35,6 +35,9 @@ jobs:
       - name: Typecheck
         run: cd package && bun run typecheck
 
+      - name: Type-check docs snippets
+        run: cd package && bun run check:docs
+
       - name: Tests
         run: cd package && bun run test:ci
 

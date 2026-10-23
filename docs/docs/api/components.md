@@ -12,7 +12,7 @@ Renders the system Apple Pay button. Only available on iOS.
 |------|------|----------|-------------|
 | `buttonType` | `ApplePayButtonType` | Yes | Button label type. |
 | `buttonStyle` | `ApplePayButtonStyle` | Yes | Visual style. |
-| `onPress` | `() => void` | No | Called when the user taps the button. |
+| `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
 **ApplePayButtonType:**  
@@ -25,18 +25,23 @@ Renders the system Apple Pay button. Only available on iOS.
 
 ```tsx
 import { ApplePayButton } from '@gmisoftware/react-native-pay'
+import { callback } from 'react-native-nitro-modules'
+
+const handlePayment = async () => {
+  // Call startPayment() from usePaymentCheckout here
+}
 
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
-  onPress={handlePayment}
+  onPress={callback(handlePayment)}
   style={{ width: '100%', height: 48 }}
 />
 ```
 
 ### Nitro and onPress
 
-If `onPress` does not fire, use Nitro's `callback(...)` wrapper. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
+`ApplePayButton` is a Nitro view, so `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`. A bare function does not reach the native button, and tapping it does nothing. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ---
 
@@ -51,7 +56,7 @@ Renders the Google Pay button. Only available on Android.
 | `buttonType` | `GooglePayButtonType` | Yes | Button label type. |
 | `theme` | `'dark' \| 'light'` | Yes | Button theme. |
 | `radius` | `number` | No | Corner radius in dp. |
-| `onPress` | `() => void` | No | Called when the user taps the button. |
+| `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
 **GooglePayButtonType:**  
@@ -61,19 +66,24 @@ Renders the Google Pay button. Only available on Android.
 
 ```tsx
 import { GooglePayButton } from '@gmisoftware/react-native-pay'
+import { callback } from 'react-native-nitro-modules'
+
+const handlePayment = async () => {
+  // Call startPayment() from usePaymentCheckout here
+}
 
 <GooglePayButton
   buttonType="buy"
   theme="dark"
   radius={8}
-  onPress={handlePayment}
+  onPress={callback(handlePayment)}
   style={{ width: '100%', height: 48 }}
 />
 ```
 
 ### Nitro and onPress
 
-Same as Apple: if needed, use `callback(handlePayment)` for `onPress`. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
+Same as Apple: `onPress` must be wrapped, as in `onPress={callback(handlePayment)}`. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ---
 
@@ -84,11 +94,18 @@ Render one button per platform:
 ```tsx
 import { Platform } from 'react-native'
 import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
+import { callback } from 'react-native-nitro-modules'
+
+const handlePayment = async () => {
+  // Call startPayment() from usePaymentCheckout here
+}
+
+const style = { width: '100%', height: 48 } as const
 
 {Platform.OS === 'ios' ? (
-  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} style={styles.button} />
+  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePayment)} style={style} />
 ) : (
-  <GooglePayButton buttonType="buy" theme="dark" onPress={handlePay} style={styles.button} />
+  <GooglePayButton buttonType="buy" theme="dark" onPress={callback(handlePayment)} style={style} />
 )}
 ```
 

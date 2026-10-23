@@ -14,7 +14,7 @@ Pass a single config object. iOS reads the Apple Pay merchant ID from the native
 
 Source of truth for these types: [`package/src/hooks/usePaymentCheckout.ts`](https://github.com/gmi-software/react-native-pay/blob/main/package/src/hooks/usePaymentCheckout.ts).
 
-```ts
+```ts no-check
 interface UsePaymentCheckoutConfig {
   merchantName?: string          // business name shown on the sheet
   countryCode?: string           // default: 'US'
@@ -37,7 +37,7 @@ interface UsePaymentCheckoutConfig {
 
 ## Return value
 
-```ts
+```ts no-check
 interface UsePaymentCheckoutReturn {
   // Availability
   canMakePayments: boolean
@@ -83,6 +83,8 @@ interface UsePaymentCheckoutReturn {
 ## Example
 
 ```tsx
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
 const {
   canMakePayments,
   items,

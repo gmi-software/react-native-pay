@@ -181,7 +181,7 @@ For apps supporting both platforms:
 
 The easiest way to integrate payments - one hook handles everything:
 
-```typescript
+```tsx
 import React from 'react'
 import {
   usePaymentCheckout,
@@ -190,6 +190,7 @@ import {
   formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
+import { callback } from 'react-native-nitro-modules'
 
 function CheckoutScreen() {
   const {
@@ -282,7 +283,7 @@ function CheckoutScreen() {
           <ApplePayButton
             buttonType="buy"
             buttonStyle="black"
-            onPress={handlePay}
+            onPress={callback(handlePay)}
             style={{ width: '100%', height: 48 }}
           />
         ) : (
@@ -290,7 +291,7 @@ function CheckoutScreen() {
             buttonType="buy"
             theme="dark"
             radius={4}
-            onPress={handlePay}
+            onPress={callback(handlePay)}
             style={{ width: '100%', height: 48 }}
           />
         )
@@ -324,6 +325,8 @@ The **[`docs/`](docs/)** directory contains the full technical documentation (Do
 For Google Pay, you need to configure your payment gateway:
 
 ```typescript
+import { usePaymentCheckout } from "@gmisoftware/react-native-pay";
+
 const checkout = usePaymentCheckout({
   merchantName: "Your Store", // shown on the Google Pay sheet
   currencyCode: "USD",
@@ -359,7 +362,7 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 
 #### Configuration
 
-```typescript
+```typescript no-check
 interface UsePaymentCheckoutConfig {
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
   countryCode?: string; // Default: 'US'
@@ -379,7 +382,7 @@ interface UsePaymentCheckoutConfig {
 
 #### Returns
 
-```typescript
+```typescript no-check
 interface UsePaymentCheckoutReturn {
   // Payment availability
   canMakePayments: boolean; // Can user make payments?
@@ -410,6 +413,8 @@ interface UsePaymentCheckoutReturn {
 #### Example
 
 ```typescript
+import { usePaymentCheckout } from "@gmisoftware/react-native-pay";
+
 const checkout = usePaymentCheckout({
   merchantName: "Your Store",
   currencyCode: "USD",
@@ -447,6 +452,8 @@ Low-level payment handler for direct control.
 Check payment service availability.
 
 ```typescript
+import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
+
 const status = HybridPaymentHandler.payServiceStatus();
 console.log("Can make payments:", status.canMakePayments);
 console.log("Can setup cards:", status.canSetupCards);
@@ -466,6 +473,8 @@ interface PayServiceStatus {
 Start a payment request.
 
 ```typescript
+import { HybridPaymentHandler, normalizePaymentRequest } from "@gmisoftware/react-native-pay";
+
 const result = await HybridPaymentHandler.startPayment(
   // Validates amounts before the sheet opens; see normalizePaymentRequest
   normalizePaymentRequest({
@@ -484,7 +493,7 @@ On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled 
 
 **Options:**
 
-```typescript
+```typescript no-check
 interface StartPaymentOptions {
   // Charge the token while the sheet waits (see "Charging before the sheet closes")
   onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>;
@@ -498,7 +507,7 @@ interface PaymentAuthorizationResult {
 
 **Returns:**
 
-```typescript
+```typescript no-check
 interface PaymentResult {
   success: boolean;
   transactionId?: string;
@@ -518,6 +527,8 @@ interface PaymentToken {
 Check if specific card networks are supported.
 
 ```typescript
+import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
+
 const canPay = HybridPaymentHandler.canMakePayments(["visa", "mastercard"]);
 ```
 
@@ -525,13 +536,15 @@ const canPay = HybridPaymentHandler.canMakePayments(["visa", "mastercard"]);
 
 ### Button Components
 
+Both buttons are Nitro views, so `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`. A bare function does not reach the native button, and tapping it does nothing.
+
 #### `ApplePayButton` (iOS)
 
 Native Apple Pay button with full customization.
 
 ##### Props
 
-```typescript
+```typescript no-check
 interface ApplePayButtonProps {
   buttonType:
     | "buy"
@@ -550,18 +563,25 @@ interface ApplePayButtonProps {
 
   buttonStyle: "white" | "whiteOutline" | "black";
 
-  onPress?: () => void;
+  onPress?: () => void; // wrap with callback() from react-native-nitro-modules
   style?: ViewStyle;
 }
 ```
 
 ##### Example
 
-```typescript
+```tsx
+import { ApplePayButton } from "@gmisoftware/react-native-pay";
+import { callback } from "react-native-nitro-modules";
+
+const handlePayment = async () => {
+  // Call startPayment() from usePaymentCheckout here
+};
+
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
-  onPress={handlePayment}
+  onPress={callback(handlePayment)}
   style={{ width: '100%', height: 48 }}
 />
 ```
@@ -572,7 +592,7 @@ Native Google Pay button with customization.
 
 ##### Props
 
-```typescript
+```typescript no-check
 interface GooglePayButtonProps {
   buttonType:
     | "buy"
@@ -588,19 +608,26 @@ interface GooglePayButtonProps {
 
   radius?: number; // Corner radius in dp
 
-  onPress?: () => void;
+  onPress?: () => void; // wrap with callback() from react-native-nitro-modules
   style?: ViewStyle;
 }
 ```
 
 ##### Example
 
-```typescript
+```tsx
+import { GooglePayButton } from "@gmisoftware/react-native-pay";
+import { callback } from "react-native-nitro-modules";
+
+const handlePayment = async () => {
+  // Call startPayment() from usePaymentCheckout here
+};
+
 <GooglePayButton
   buttonType="buy"
   theme="dark"
   radius={8}
-  onPress={handlePayment}
+  onPress={callback(handlePayment)}
   style={{ width: '100%', height: 48 }}
 />
 ```
@@ -636,7 +663,7 @@ Throws if the amount is invalid for the currency (see [Amounts](#amounts)).
 
 Validate every amount in a request you built yourself and convert it to an exact decimal string. `createPaymentRequest` and `usePaymentCheckout` call it for you.
 
-```typescript
+```typescript no-check
 import { normalizePaymentRequest } from "@gmisoftware/react-native-pay";
 
 normalizePaymentRequest({ ...request, paymentItems: [{ label: "Book", amount: 19.9, type: "final" }] });
@@ -659,9 +686,9 @@ const item = createPaymentItem("Subscription", "29.99", "final");
 Calculate the exact decimal total of payment items.
 
 ```typescript
-import { calculateTotal } from "@gmisoftware/react-native-pay";
+import { calculateTotal, type PaymentItem } from "@gmisoftware/react-native-pay";
 
-const items = [
+const items: PaymentItem[] = [
   { label: "Product", amount: 29.99, type: "final" },
   { label: "Tax", amount: 2.4, type: "final" },
 ];
@@ -687,7 +714,7 @@ formatNetworkName("amex"); // "American Express"
 
 ### Core Types
 
-```typescript
+```typescript no-check
 // Amount in the currency's major unit: "19.99" or 19.99 (see Amounts below)
 type PaymentAmount = number | string;
 
@@ -772,7 +799,7 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 
 ### Contact Types
 
-```typescript
+```typescript no-check
 interface CNContact {
   identifier: string;
   contactType: "person" | "organization";
@@ -815,7 +842,7 @@ interface CNPostalAddress {
 
 For advanced use cases where you need more control:
 
-```typescript
+```tsx
 import {
   HybridPaymentHandler,
   createPaymentRequest,
@@ -823,13 +850,10 @@ import {
   GooglePayButton,
 } from '@gmisoftware/react-native-pay'
 import { Platform } from 'react-native'
+import { callback } from 'react-native-nitro-modules'
 
 // 1. Check availability
-const status = HybridPaymentHandler.payServiceStatus()
-if (!status.canMakePayments) {
-  console.log('Payment not available')
-  return
-}
+const { canMakePayments } = HybridPaymentHandler.payServiceStatus()
 
 // 2. Create payment request
 const paymentRequest = createPaymentRequest({
@@ -850,8 +874,13 @@ const handlePayment = async () => {
     const result = await HybridPaymentHandler.startPayment(paymentRequest)
 
     if (result.success && result.token) {
-      // Send to your server
-      await processPaymentOnServer(result.token)
+      // Send the token to your server
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: result.token }),
+      })
+      if (!response.ok) throw new Error('Payment processing failed')
     } else {
       console.error('Payment failed:', result.error)
     }
@@ -860,37 +889,43 @@ const handlePayment = async () => {
   }
 }
 
-// 4. Render button
-return Platform.OS === 'ios' ? (
-  <ApplePayButton
-    buttonType="buy"
-    buttonStyle="black"
-    onPress={handlePayment}
-  />
-) : (
-  <GooglePayButton
-    buttonType="subscribe"
-    theme="dark"
-    onPress={handlePayment}
-  />
-)
+// 4. Render the button. onPress must be wrapped with callback().
+function PaymentButton() {
+  if (!canMakePayments) return null
+
+  return Platform.OS === 'ios' ? (
+    <ApplePayButton
+      buttonType="buy"
+      buttonStyle="black"
+      onPress={callback(handlePayment)}
+    />
+  ) : (
+    <GooglePayButton
+      buttonType="subscribe"
+      theme="dark"
+      onPress={callback(handlePayment)}
+    />
+  )
+}
 ```
 
 ### Dynamic Cart Management
 
 ```typescript
+import { formatAmount, usePaymentCheckout } from "@gmisoftware/react-native-pay";
+
 const checkout = usePaymentCheckout({
   merchantName: "Your Store",
   currencyCode: "USD",
 });
 
 // Add items dynamically
-const handleAddToCart = (product) => {
+const handleAddToCart = (product: { name: string; price: number }) => {
   checkout.addItem(product.name, product.price);
 };
 
 // Update quantity
-const handleUpdateQuantity = (index, quantity) => {
+const handleUpdateQuantity = (index: number, quantity: number) => {
   const item = checkout.items[index];
   checkout.updateItem(index, {
     amount: formatAmount(Number(item.amount) * quantity),
@@ -898,7 +933,7 @@ const handleUpdateQuantity = (index, quantity) => {
 };
 
 // Apply discount
-const handleApplyDiscount = (discountPercent) => {
+const handleApplyDiscount = (discountPercent: number) => {
   const discountAmount = checkout.total * (discountPercent / 100);
   checkout.addItem("Discount", formatAmount(-discountAmount), "final");
 };
@@ -913,10 +948,10 @@ const handleClearCart = () => {
 
 Create your own styled buttons:
 
-```typescript
-import { Pressable, Text } from 'react-native'
+```tsx
+import { Platform, Pressable, Text } from 'react-native'
 
-function CustomPayButton({ onPress }) {
+function CustomPayButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
@@ -934,7 +969,9 @@ function CustomPayButton({ onPress }) {
   )
 }
 
-// Use it
+// Use it with your handler, for example one that calls startPayment()
+const handlePayment = async () => {}
+
 <CustomPayButton onPress={handlePayment} />
 ```
 
@@ -943,22 +980,38 @@ function CustomPayButton({ onPress }) {
 Pass `onAuthorize` to charge the token while the Apple Pay sheet is still up. The sheet then shows your real outcome instead of an unconditional success:
 
 ```typescript
-const checkout = usePaymentCheckout({
-  currencyCode: "USD",
-  onAuthorize: async (token) => {
-    const response = await fetch("https://api.yourserver.com/process-payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, orderId }),
-    });
-    return response.ok
-      ? { status: "success" }
-      : { status: "failure", error: "Payment failed" };
-  },
-});
+import { useEffect } from "react";
+import { usePaymentCheckout } from "@gmisoftware/react-native-pay";
 
-const result = await checkout.startPayment();
-// result.success reflects your server's answer
+const order = { id: "order_123", label: "Premium plan", total: "49.99" }; // your order
+
+function useOrderPayment() {
+  const checkout = usePaymentCheckout({
+    currencyCode: "USD",
+    onAuthorize: async (token) => {
+      const response = await fetch("https://api.yourserver.com/process-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, orderId: order.id }),
+      });
+      return response.ok
+        ? { status: "success" }
+        : { status: "failure", error: "Payment failed" };
+    },
+  });
+  const { addItem, clearItems } = checkout;
+
+  // startPayment() returns null for an empty cart, so fill it before the tap.
+  useEffect(() => {
+    addItem(order.label, order.total);
+    return clearItems;
+  }, [addItem, clearItems]);
+
+  return async () => {
+    const result = await checkout.startPayment();
+    // result?.success reflects your server's answer
+  };
+}
 ```
 
 - `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored. Your server may still have charged the card.
