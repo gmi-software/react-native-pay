@@ -10,6 +10,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  BUN_VERSION: 1.3.14
+
 jobs:
   quality:
     name: Lint, Typecheck and Tests
@@ -21,10 +24,10 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Lint
         run: cd package && bun run lint
@@ -34,3 +37,127 @@ jobs:
 
       - name: Tests
         run: cd package && bun run test:ci
+
+      - name: Check generated Nitro code is up to date
+        run: |
+          cd package
+          bun run specs
+          if [ -n "$(git status --porcelain -- nitrogen)" ]; then
+            echo "::error::nitrogen/generated is out of date. Run 'cd package && bun run specs' and commit the result."
+            git status --short -- nitrogen
+            git diff -- nitrogen
+            exit 1
+          fi
+
+  package:
+    name: Package contents
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check npm pack contents
+        run: cd package && bun run check:pack
+
+      # Installing the package must not run anything in the app (#9). npm 11
+      # fails on install scripts with --strict-allow-scripts; older npm runs
+      # them, and a `tsc` install script would then emit index.js here.
+      - name: Install the tarball into an app
+        run: |
+          tarball="$RUNNER_TEMP/$(cd package && npm pack --silent --pack-destination "$RUNNER_TEMP")"
+          app="$RUNNER_TEMP/app"
+          mkdir "$app" && cd "$app"
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund typescript
+          echo '{ "compilerOptions": { "skipLibCheck": true } }' > tsconfig.json
+          echo 'export const answer: number = 42' > index.ts
+          list() { find . -mindepth 1 -maxdepth 1 -not -name node_modules | sort; }
+          list > "$RUNNER_TEMP/before.txt"
+          npm install --no-audit --no-fund --legacy-peer-deps --foreground-scripts --strict-allow-scripts "$tarball"
+          list > "$RUNNER_TEMP/after.txt"
+          if ! diff "$RUNNER_TEMP/before.txt" "$RUNNER_TEMP/after.txt"; then
+            echo "::error::Installing the package changed files outside node_modules."
+            exit 1
+          fi
+
+  android:
+    name: Android build and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate the example Android project
+        run: cd example && bunx expo prebuild --platform android --no-install
+
+      - name: Build and test the library
+        working-directory: example/android
+        run: >-
+          ./gradlew
+          :gmisoftware_react-native-pay:assembleDebug
+          :gmisoftware_react-native-pay:testDebugUnitTest
+          -PreactNativeArchitectures=x86_64
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-reports
+          path: package/android/build/reports/tests
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS build and unit tests
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Also runs `pod install`. The example links the NitroPay test spec
+      # through `expo-build-properties` (see example/app.json).
+      - name: Generate the example iOS project
+        run: cd example && bunx expo prebuild --platform ios
+
+      - name: Build and test the library
+        working-directory: example/ios
+        run: |
+          udid=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+          xcodebuild test \
+            -workspace example.xcworkspace \
+            -scheme NitroPay-Unit-Tests \
+            -destination "id=$udid" \
+            CODE_SIGNING_ALLOWED=NO

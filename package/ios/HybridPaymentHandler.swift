@@ -40,7 +40,8 @@ private enum BundleKey {
 
 // MARK: - Payment Request Builder
 
-private struct PaymentRequestBuilder {
+// Internal, not private, so the NitroPay unit tests can build requests.
+struct PaymentRequestBuilder {
     
     static func build(from request: PaymentRequest) throws -> PKPaymentRequest {
         guard let merchantIdentifier = resolveMerchantIdentifier(from: request) else {
