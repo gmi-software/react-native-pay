@@ -179,12 +179,42 @@ type PaymentNetwork =
 
 ## PayServiceStatus
 
-Returned by `HybridPaymentHandler.payServiceStatus()`.
+Resolved by `HybridPaymentHandler.payServiceStatus()`.
 
 ```ts
 interface PayServiceStatus {
-  canMakePayments: boolean
-  canSetupCards: boolean
+  isSupported: boolean   // the device can pay with Apple Pay / Google Pay
+  hasActiveCard: boolean // a card on the checked networks is ready
+}
+```
+
+| | iOS | Android |
+|---|---|---|
+| `isSupported` | `PKPaymentAuthorizationViewController.canMakePayments()` | `isReadyToPay` |
+| `hasActiveCard` | `canMakePayments(usingNetworks:capabilities:)` | `isReadyToPay` with `existingPaymentMethodRequired: true` |
+
+In the Google Pay `TEST` environment, `hasActiveCard` is `true` whether or not the user has a card. See [Check availability](/docs/guides/availability).
+
+## PayServiceStatusOptions
+
+What `payServiceStatus` checks. Pass the values your payment request uses.
+
+```ts
+interface PayServiceStatusOptions {
+  supportedNetworks?: string[]    // default: ['visa', 'mastercard', 'amex', 'discover']
+  merchantCapabilities?: string[] // iOS only. Default: ['3DS']
+  googlePayEnvironment?: 'TEST' | 'PRODUCTION' // Android only. Default: 'TEST'
+}
+```
+
+## CanMakePaymentsOptions
+
+What `canMakePayments(usingNetworks, options)` checks besides the networks.
+
+```ts
+interface CanMakePaymentsOptions {
+  merchantCapabilities?: string[] // iOS only. Default: ['3DS']
+  googlePayEnvironment?: 'TEST' | 'PRODUCTION' // Android only. Default: 'TEST'
 }
 ```
 

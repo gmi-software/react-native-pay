@@ -59,7 +59,7 @@ Core shared models are defined in `package/src/types/Payment.ts`:
 - `PaymentRequest`: input contract for native payment start
 - `PaymentItem`: line items used for totals and display
 - `PaymentResult`: success/error envelope and token details
-- `PayServiceStatus`: platform availability flags
+- `PayServiceStatus`: availability flags (`isSupported`, `hasActiveCard`)
 
 Cross-layer contract rule:
 
@@ -69,10 +69,11 @@ Cross-layer contract rule:
 
 Primary low-level contract:
 
-- `payServiceStatus(): PayServiceStatus`
+- `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
 - `startPayment(request: PaymentRequest): Promise<PaymentResult>`
-- `canMakePayments(usingNetworks: string[]): boolean`
+- `canMakePayments(usingNetworks: string[], options?: CanMakePaymentsOptions): Promise<boolean>`
 - `isPaymentInProgress(): boolean` — whether a payment started with `startPayment` has not settled yet. Backed by the native single-payment slot (`PendingPayment` on iOS and Android), which `startPayment` claims synchronously on the calling thread and frees when the payment settles.
+- `openPaymentSetup(): void` (iOS only)
 
 Primary high-level API:
 

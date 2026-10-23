@@ -34,9 +34,10 @@ function createDeferred<T>() {
 
 describe('usePaymentCheckout integration', () => {
   beforeEach(() => {
-    mockPayServiceStatus.mockReturnValue({
-      canMakePayments: true,
-      canSetupCards: true,
+    mockPayServiceStatus.mockReset()
+    mockPayServiceStatus.mockResolvedValue({
+      isSupported: true,
+      hasActiveCard: true,
     })
     mockStartPayment.mockReset()
     mockIsPaymentInProgress.mockReset().mockReturnValue(false)
@@ -58,26 +59,177 @@ describe('usePaymentCheckout integration', () => {
       expect(result.current.isCheckingStatus).toBe(false)
     })
 
-    expect(result.current.canMakePayments).toBe(true)
-    expect(result.current.canSetupCards).toBe(true)
+    expect(result.current.isSupported).toBe(true)
+    expect(result.current.hasActiveCard).toBe(true)
   })
 
-  it('falls back to unavailable status when status check fails', async () => {
-    mockPayServiceStatus.mockImplementationOnce(() => {
-      throw new Error('Native status failure')
+  describe('payment service status', () => {
+    const SUPPORTED_WITHOUT_CARD = { isSupported: true, hasActiveCard: false }
+
+    it('reports isCheckingStatus until the status check settles', async () => {
+      const status = createDeferred<typeof SUPPORTED_WITHOUT_CARD>()
+      mockPayServiceStatus.mockReturnValueOnce(status.promise)
+
+      const { result } = renderCheckout()
+
+      expect(result.current.isCheckingStatus).toBe(true)
+      expect(result.current.isSupported).toBe(false)
+      expect(result.current.hasActiveCard).toBe(false)
+
+      await act(async () => {
+        status.resolve(SUPPORTED_WITHOUT_CARD)
+      })
+
+      expect(result.current.isCheckingStatus).toBe(false)
+      expect(result.current.isSupported).toBe(true)
+      expect(result.current.hasActiveCard).toBe(false)
     })
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
-    const { result } = renderCheckout()
+    it.each([
+      ['rejects', () => Promise.reject(new Error('Native status failure'))],
+      [
+        'throws synchronously',
+        () => {
+          throw new Error('Native status failure')
+        },
+      ],
+    ])(
+      'falls back to unavailable status when the check %s',
+      async (_, failingCheck) => {
+        mockPayServiceStatus.mockImplementationOnce(failingCheck)
+        const consoleSpy = jest
+          .spyOn(console, 'error')
+          .mockImplementation(() => {})
 
-    await waitFor(() => {
+        const { result } = renderCheckout()
+
+        await waitFor(() => {
+          expect(result.current.isCheckingStatus).toBe(false)
+        })
+
+        expect(result.current.isSupported).toBe(false)
+        expect(result.current.hasActiveCard).toBe(false)
+        expect(consoleSpy).toHaveBeenCalled()
+        consoleSpy.mockRestore()
+      }
+    )
+
+    it('checks the networks, capabilities and environment from the config', async () => {
+      const { result } = renderHook(() =>
+        usePaymentCheckout({
+          supportedNetworks: ['visa', 'mastercard'],
+          merchantCapabilities: ['3DS', 'Debit'],
+          googlePayEnvironment: 'PRODUCTION',
+        })
+      )
+
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+
+      expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
+      expect(mockPayServiceStatus).toHaveBeenCalledWith({
+        supportedNetworks: ['visa', 'mastercard'],
+        merchantCapabilities: ['3DS', 'Debit'],
+        googlePayEnvironment: 'PRODUCTION',
+      })
+    })
+
+    it('leaves unset options to the native defaults', async () => {
+      const { result } = renderCheckout()
+
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+
+      expect(mockPayServiceStatus).toHaveBeenCalledWith({})
+    })
+
+    it('does not check again when an inline config re-renders unchanged', async () => {
+      const { result, rerender } = renderHook(() =>
+        usePaymentCheckout({
+          supportedNetworks: ['visa'],
+          googlePayEnvironment: 'PRODUCTION',
+        })
+      )
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+
+      rerender(undefined)
+      act(() => {
+        result.current.addItem('Coffee', 4.99)
+      })
+
+      expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
       expect(result.current.isCheckingStatus).toBe(false)
     })
 
-    expect(result.current.canMakePayments).toBe(false)
-    expect(result.current.canSetupCards).toBe(false)
-    expect(consoleSpy).toHaveBeenCalled()
-    consoleSpy.mockRestore()
+    it('checks again when a checked config value changes', async () => {
+      const { result, rerender } = renderHook(
+        (props: { googlePayEnvironment: 'TEST' | 'PRODUCTION' }) =>
+          usePaymentCheckout({ ...props }),
+        { initialProps: { googlePayEnvironment: 'TEST' } }
+      )
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+
+      rerender({ googlePayEnvironment: 'PRODUCTION' })
+
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+      expect(mockPayServiceStatus).toHaveBeenCalledTimes(2)
+      expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
+        googlePayEnvironment: 'PRODUCTION',
+      })
+    })
+
+    it('refreshStatus checks again and reports the new status', async () => {
+      const { result } = renderCheckout()
+      await waitFor(() => {
+        expect(result.current.isCheckingStatus).toBe(false)
+      })
+      const refreshed = createDeferred<typeof SUPPORTED_WITHOUT_CARD>()
+      mockPayServiceStatus.mockReturnValueOnce(refreshed.promise)
+
+      act(() => {
+        result.current.refreshStatus()
+      })
+
+      expect(result.current.isCheckingStatus).toBe(true)
+      expect(mockPayServiceStatus).toHaveBeenCalledTimes(2)
+
+      await act(async () => {
+        refreshed.resolve(SUPPORTED_WITHOUT_CARD)
+      })
+
+      expect(result.current.isCheckingStatus).toBe(false)
+      expect(result.current.hasActiveCard).toBe(false)
+    })
+
+    it('ignores a check that settles after a newer one', async () => {
+      const first = createDeferred<typeof SUPPORTED_WITHOUT_CARD>()
+      const second = createDeferred<typeof SUPPORTED_WITHOUT_CARD>()
+      mockPayServiceStatus
+        .mockReturnValueOnce(first.promise)
+        .mockReturnValueOnce(second.promise)
+      const { result } = renderCheckout()
+
+      act(() => {
+        result.current.refreshStatus()
+      })
+      await act(async () => {
+        second.resolve(SUPPORTED_WITHOUT_CARD)
+      })
+      await act(async () => {
+        first.resolve({ isSupported: true, hasActiveCard: true })
+      })
+
+      expect(result.current.isCheckingStatus).toBe(false)
+      expect(result.current.hasActiveCard).toBe(false)
+    })
   })
 
   it('manages cart operations and total correctly', async () => {
@@ -123,8 +275,11 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.total).toBe(0)
   })
 
-  it('provides default fallback payment item when cart is empty', () => {
+  it('provides default fallback payment item when cart is empty', async () => {
     const { result } = renderCheckout()
+    await waitFor(() => {
+      expect(result.current.isCheckingStatus).toBe(false)
+    })
 
     expect(result.current.paymentRequest.paymentItems).toEqual([
       { label: 'Total', amount: 0, type: 'final' },
@@ -388,6 +543,12 @@ describe('usePaymentCheckout integration', () => {
   })
 
   describe('identity across re-renders', () => {
+    // These tests end synchronously: a status check settling after them would
+    // update the hook outside act.
+    beforeEach(() => {
+      mockPayServiceStatus.mockReturnValue(new Promise(() => {}))
+    })
+
     it('keeps paymentRequest and startPayment with an inline config', () => {
       const { result, rerender } = renderHook(() =>
         usePaymentCheckout({
@@ -648,7 +809,9 @@ describe('usePaymentCheckout integration', () => {
         payment = result.current.startPayment()
       })
       rerender({})
-      await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token, details)
+      await act(async () => {
+        await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token, details)
+      })
 
       expect(onAuthorize).toHaveBeenCalledWith(token, details)
 

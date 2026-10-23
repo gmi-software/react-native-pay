@@ -42,6 +42,7 @@ interface UsePaymentCheckoutConfig {
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
 - **merchantCapabilities** — Apple Pay only. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, and fails the payment for an unknown value. See [MerchantCapability](/docs/api/types#merchantcapability).
+- **supportedNetworks**, **merchantCapabilities**, **googlePayEnvironment** — Also used for the availability check. Set `googlePayEnvironment: 'PRODUCTION'` in a live app: in `TEST`, Google Pay reports a card whether or not there is one.
 - **billingContactRequired**, **shippingContactRequired**, **emailRequired**, **phoneNumberRequired** — Ask the payer for a billing address, a shipping address, an email address or a phone number. They come back as `result.billingContact`, `result.shippingContact`, `result.emailAddress` and `result.phoneNumber`. See [Shipping and contact details](/docs/guides/contact-details).
 - **onAuthorize** — Called with the token and the requested contact details after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
 
@@ -50,9 +51,10 @@ interface UsePaymentCheckoutConfig {
 ```ts no-check
 interface UsePaymentCheckoutReturn {
   // Availability
-  canMakePayments: boolean
-  canSetupCards: boolean
+  isSupported: boolean
+  hasActiveCard: boolean
   isCheckingStatus: boolean
+  refreshStatus: () => void
 
   // Cart
   items: PaymentItem[]
@@ -75,9 +77,12 @@ interface UsePaymentCheckoutReturn {
 }
 ```
 
-- **canMakePayments** — Whether the user can pay with Apple Pay / Google Pay on this device.
-- **canSetupCards** — Whether the user can add or manage cards (e.g. in Wallet).
-- **isCheckingStatus** — `true` while availability is being checked on mount.
+- **isSupported** — The device can pay with Apple Pay / Google Pay, whether or not a card is set up.
+- **hasActiveCard** — The user has a card ready on one of `supportedNetworks`. See [PayServiceStatus](/docs/api/types#payservicestatus) for what each platform checks.
+- **isCheckingStatus** — `true` until the availability check settles. The hook checks on mount and again when `supportedNetworks`, `merchantCapabilities` or `googlePayEnvironment` change. The check never blocks the JS thread.
+- **refreshStatus()** — Checks availability again, for example when the app returns from Wallet after `openPaymentSetup()`. `isCheckingStatus` is `true` until it settles.
+
+Which button to show for each combination is in [Check availability](/docs/guides/availability).
 - **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.
 - **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult | null>`.
   - Returns `null` and sets `error` when the cart is empty.
@@ -95,7 +100,7 @@ interface UsePaymentCheckoutReturn {
 import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 
 const {
-  canMakePayments,
+  isSupported,
   items,
   total,
   addItem,

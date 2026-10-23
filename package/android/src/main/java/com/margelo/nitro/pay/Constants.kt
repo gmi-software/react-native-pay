@@ -46,8 +46,25 @@ object PaymentConstants {
     const val ERROR_AUTHORIZATION_FAILED = "Payment authorization failed"
     const val ERROR_AUTHORIZATION_TIMED_OUT = "Payment authorization timed out"
     
-    // Supported networks (lowercase for comparison)
-    val SUPPORTED_NETWORKS = listOf("visa", "mastercard", "amex", "discover")
+    // Networks checked when the caller names none, as sent in payment requests
+    val DEFAULT_CARD_NETWORKS = listOf(NETWORK_VISA, NETWORK_MASTERCARD, NETWORK_AMEX, NETWORK_DISCOVER)
+    
+    // Lowercase `PaymentNetwork` name to Google Pay `allowedCardNetworks` value.
+    // ELECTRON, MAESTRO and ELO only apply to Brazilian combo cards.
+    val GOOGLE_CARD_NETWORKS = mapOf(
+        "visa" to NETWORK_VISA,
+        "mastercard" to NETWORK_MASTERCARD,
+        "amex" to NETWORK_AMEX,
+        "discover" to NETWORK_DISCOVER,
+        "jcb" to "JCB",
+        "interac" to "INTERAC",
+        "electron" to "ELECTRON",
+        "maestro" to "MAESTRO",
+        "elo" to "ELO"
+    )
+    
+    // Availability checks give up after this, like the blocking calls they replaced
+    const val READY_TO_PAY_TIMEOUT_SECONDS = 5L
     
     // Errors (keep in sync with iOS `ErrorMessage`)
     const val ERROR_PAYMENT_IN_PROGRESS = "A payment is already in progress"

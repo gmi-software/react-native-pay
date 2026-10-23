@@ -64,6 +64,10 @@ Use only supported Apple button values:
 - Use `googlePayEnvironment: 'TEST'` for test flows.
 - Verify `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
 
+### `hasActiveCard` is `true` without a card
+
+The check asked the Google Pay `TEST` environment, which reports a card whether or not there is one. Pass `googlePayEnvironment: 'PRODUCTION'` to `usePaymentCheckout` or `payServiceStatus`. An emulator with no Google account signed in reports `false` even in `TEST`. See [Check availability](/docs/guides/availability).
+
 ### Manifest/build issues
 
 - Run `npx expo prebuild --clean` and rebuild.

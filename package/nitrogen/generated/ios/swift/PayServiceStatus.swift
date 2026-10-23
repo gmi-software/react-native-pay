@@ -18,17 +18,17 @@ public extension PayServiceStatus {
   /**
    * Create a new instance of `PayServiceStatus`.
    */
-  init(canMakePayments: Bool, canSetupCards: Bool) {
-    self.init(canMakePayments, canSetupCards)
+  init(isSupported: Bool, hasActiveCard: Bool) {
+    self.init(isSupported, hasActiveCard)
   }
 
   @inline(__always)
-  var canMakePayments: Bool {
-    return self.__canMakePayments
+  var isSupported: Bool {
+    return self.__isSupported
   }
   
   @inline(__always)
-  var canSetupCards: Bool {
-    return self.__canSetupCards
+  var hasActiveCard: Bool {
+    return self.__hasActiveCard
   }
 }

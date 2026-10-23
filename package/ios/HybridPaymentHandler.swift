@@ -209,7 +209,7 @@ struct PaymentRequestBuilder {
         return ProcessInfo.processInfo.processName
     }
     
-    private static func buildMerchantCapabilities(_ capabilities: [String]) throws -> PKMerchantCapability {
+    static func buildMerchantCapabilities(_ capabilities: [String]) throws -> PKMerchantCapability {
         var merchantCapabilities: PKMerchantCapability = []
         for capability in capabilities {
             switch capability.uppercased() {
@@ -261,6 +261,35 @@ struct PaymentRequestBuilder {
             shippingFields.insert(.phoneNumber)
         }
         paymentRequest.requiredShippingContactFields = shippingFields
+    }
+}
+
+// MARK: - Payment Readiness
+
+// Internal, not private, so the NitroPay unit tests can reach it.
+enum PaymentReadiness {
+    // Checked when the caller names no networks, like the hook's default.
+    static let defaultNetworks = ["visa", "mastercard", "amex", "discover"]
+
+    static func status(supportedNetworks: [String]?, merchantCapabilities: [String]?) throws -> PayServiceStatus {
+        return PayServiceStatus(
+            isSupported: PKPaymentAuthorizationViewController.canMakePayments(),
+            hasActiveCard: try hasActiveCard(
+                networks: supportedNetworks ?? defaultNetworks,
+                merchantCapabilities: merchantCapabilities
+            )
+        )
+    }
+
+    static func hasActiveCard(networks: [String], merchantCapabilities: [String]?) throws -> Bool {
+        let capabilities = try PaymentRequestBuilder.buildMerchantCapabilities(merchantCapabilities ?? [])
+        let paymentNetworks = networks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
+        // PassKit may answer true for an empty list, but no card is on no network.
+        guard !paymentNetworks.isEmpty else { return false }
+        return PKPaymentAuthorizationViewController.canMakePayments(
+            usingNetworks: paymentNetworks,
+            capabilities: capabilities
+        )
     }
 }
 
@@ -506,15 +535,34 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     // MARK: - Public Methods
     
-    func payServiceStatus() throws -> PayServiceStatus {
-        let canMakePayments = PKPaymentAuthorizationViewController.canMakePayments()
-        let canSetupCards = PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: [])
-        return PayServiceStatus.init(canMakePayments, canSetupCards)
+    // PassKit asks the Wallet service, so both checks run off the JS thread.
+    // Its `canMakePayments` class methods may be called from any thread.
+    func payServiceStatus(options: PayServiceStatusOptions?) throws -> Promise<PayServiceStatus> {
+        let supportedNetworks = options?.supportedNetworks
+        let merchantCapabilities = options?.merchantCapabilities
+        return Promise.parallel {
+            try PaymentReadiness.status(
+                supportedNetworks: supportedNetworks,
+                merchantCapabilities: merchantCapabilities
+            )
+        }
     }
     
-    func canMakePayments(usingNetworks: [String]) throws -> Bool {
-        let networks = usingNetworks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
-        return PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: networks)
+    func canMakePayments(usingNetworks: [String], options: CanMakePaymentsOptions?) throws -> Promise<Bool> {
+        let merchantCapabilities = options?.merchantCapabilities
+        return Promise.parallel {
+            try PaymentReadiness.hasActiveCard(
+                networks: usingNetworks,
+                merchantCapabilities: merchantCapabilities
+            )
+        }
+    }
+    
+    func openPaymentSetup() throws {
+        // Hands over to Wallet (Settings on iPad); does nothing without Apple Pay support.
+        DispatchQueue.main.async {
+            PKPassLibrary().openPaymentSetup()
+        }
     }
     
     func isPaymentInProgress() throws -> Bool {

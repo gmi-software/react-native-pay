@@ -41,14 +41,16 @@ namespace margelo::nitro::pay { struct CNPostalAddress; }
 namespace margelo::nitro::pay { struct PaymentContact; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
 namespace margelo::nitro::pay { struct ShippingMethod; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
-// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
-namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -57,12 +59,14 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
+// Forward declaration of `CanMakePaymentsOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 
 #include "PayServiceStatus.hpp"
-#include "JPayServiceStatus.hpp"
-#include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/JPromise.hpp>
+#include "JPayServiceStatus.hpp"
+#include "PaymentResult.hpp"
 #include "JPaymentResult.hpp"
 #include <string>
 #include <optional>
@@ -99,14 +103,16 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JShippingMethod.hpp"
 #include <variant>
 #include "JPaymentAmount.hpp"
+#include "PayServiceStatusOptions.hpp"
+#include "JPayServiceStatusOptions.hpp"
+#include "GooglePayEnvironment.hpp"
+#include "JGooglePayEnvironment.hpp"
 #include "PaymentRequest.hpp"
 #include "JPaymentRequest.hpp"
 #include "PaymentItem.hpp"
 #include "JPaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "JPaymentItemType.hpp"
-#include "GooglePayEnvironment.hpp"
-#include "JGooglePayEnvironment.hpp"
 #include "StartPaymentOptions.hpp"
 #include "JStartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
@@ -118,6 +124,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentAuthorizationStatus.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
 #include "JPaymentDetails.hpp"
+#include "CanMakePaymentsOptions.hpp"
+#include "JCanMakePaymentsOptions.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -152,10 +160,21 @@ namespace margelo::nitro::pay {
   
 
   // Methods
-  PayServiceStatus JHybridPaymentHandlerSpec::payServiceStatus() {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPayServiceStatus>()>("payServiceStatus");
-    auto __result = method(_javaPart);
-    return __result->toCpp();
+  std::shared_ptr<Promise<PayServiceStatus>> JHybridPaymentHandlerSpec::payServiceStatus(const std::optional<PayServiceStatusOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JPayServiceStatusOptions> /* options */)>("payServiceStatus");
+    auto __result = method(_javaPart, options.has_value() ? JPayServiceStatusOptions::fromCpp(options.value()) : nullptr);
+    return [&]() {
+      auto __promise = Promise<PayServiceStatus>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JPayServiceStatus>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
   }
   std::shared_ptr<Promise<PaymentResult>> JHybridPaymentHandlerSpec::startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JPaymentRequest> /* request */, jni::alias_ref<JStartPaymentOptions> /* options */)>("startPayment");
@@ -173,8 +192,8 @@ namespace margelo::nitro::pay {
       return __promise;
     }();
   }
-  bool JHybridPaymentHandlerSpec::canMakePayments(const std::vector<std::string>& usingNetworks) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jboolean(jni::alias_ref<jni::JArrayClass<jni::JString>> /* usingNetworks */)>("canMakePayments");
+  std::shared_ptr<Promise<bool>> JHybridPaymentHandlerSpec::canMakePayments(const std::vector<std::string>& usingNetworks, const std::optional<CanMakePaymentsOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JArrayClass<jni::JString>> /* usingNetworks */, jni::alias_ref<JCanMakePaymentsOptions> /* options */)>("canMakePayments");
     auto __result = method(_javaPart, [&](auto&& __input) {
       size_t __size = __input.size();
       jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
@@ -184,13 +203,28 @@ namespace margelo::nitro::pay {
         __array->setElement(__i, *__elementJni);
       }
       return __array;
-    }(usingNetworks));
-    return static_cast<bool>(__result);
+    }(usingNetworks), options.has_value() ? JCanMakePaymentsOptions::fromCpp(options.value()) : nullptr);
+    return [&]() {
+      auto __promise = Promise<bool>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<jni::JBoolean>(__boxedResult);
+        __promise->resolve(static_cast<bool>(__result->value()));
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
   }
   bool JHybridPaymentHandlerSpec::isPaymentInProgress() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jboolean()>("isPaymentInProgress");
     auto __result = method(_javaPart);
     return static_cast<bool>(__result);
+  }
+  void JHybridPaymentHandlerSpec::openPaymentSetup() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("openPaymentSetup");
+    method(_javaPart);
   }
 
 } // namespace margelo::nitro::pay

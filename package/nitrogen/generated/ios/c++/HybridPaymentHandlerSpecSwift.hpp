@@ -14,6 +14,10 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
@@ -52,8 +56,6 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
-// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
-namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -62,12 +64,17 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
+// Forward declaration of `CanMakePaymentsOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 
 #include "PayServiceStatus.hpp"
-#include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
-#include <string>
+#include "PayServiceStatusOptions.hpp"
 #include <optional>
+#include <string>
+#include <vector>
+#include "GooglePayEnvironment.hpp"
+#include "PaymentResult.hpp"
 #include "PaymentToken.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentNetwork.hpp"
@@ -77,7 +84,6 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledPhoneNumber.hpp"
-#include <vector>
 #include "CNPhoneNumber.hpp"
 #include "CNLabeledEmailAddress.hpp"
 #include "CNLabeledPostalAddress.hpp"
@@ -88,12 +94,12 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentRequest.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
-#include "GooglePayEnvironment.hpp"
 #include "StartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentDetails.hpp"
 #include <functional>
 #include "PaymentAuthorizationStatus.hpp"
+#include "CanMakePaymentsOptions.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -145,8 +151,8 @@ namespace margelo::nitro::pay {
 
   public:
     // Methods
-    inline PayServiceStatus payServiceStatus() override {
-      auto __result = _swiftPart.payServiceStatus();
+    inline std::shared_ptr<Promise<PayServiceStatus>> payServiceStatus(const std::optional<PayServiceStatusOptions>& options) override {
+      auto __result = _swiftPart.payServiceStatus(options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
@@ -161,8 +167,8 @@ namespace margelo::nitro::pay {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline bool canMakePayments(const std::vector<std::string>& usingNetworks) override {
-      auto __result = _swiftPart.canMakePayments(usingNetworks);
+    inline std::shared_ptr<Promise<bool>> canMakePayments(const std::vector<std::string>& usingNetworks, const std::optional<CanMakePaymentsOptions>& options) override {
+      auto __result = _swiftPart.canMakePayments(usingNetworks, options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
@@ -176,6 +182,12 @@ namespace margelo::nitro::pay {
       }
       auto __value = std::move(__result.value());
       return __value;
+    }
+    inline void openPaymentSetup() override {
+      auto __result = _swiftPart.openPaymentSetup();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
     }
 
   private:

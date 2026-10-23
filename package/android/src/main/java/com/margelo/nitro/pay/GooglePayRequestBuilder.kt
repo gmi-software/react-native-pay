@@ -13,18 +13,33 @@ object GooglePayRequestBuilder {
     
     /**
      * Creates an IsReadyToPay request
+     *
+     * @param cardNetworks Google Pay `allowedCardNetworks` values, see [googleCardNetworks].
      */
-    fun createIsReadyToPayRequest(existingPaymentMethodRequired: Boolean? = null): JSONObject {
+    fun createIsReadyToPayRequest(
+        cardNetworks: List<String> = PaymentConstants.DEFAULT_CARD_NETWORKS,
+        existingPaymentMethodRequired: Boolean? = null
+    ): JSONObject {
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
             put("allowedPaymentMethods", JSONArray().apply {
-                put(createBaseCardPaymentMethod())
+                put(createBaseCardPaymentMethod(JSONArray(cardNetworks)))
             })
             existingPaymentMethodRequired?.let {
                 put("existingPaymentMethodRequired", it)
             }
         }
+    }
+
+    /**
+     * Maps `PaymentNetwork` names to Google Pay `allowedCardNetworks` values,
+     * without duplicates. Names Google Pay has no network for are dropped.
+     */
+    fun googleCardNetworks(networks: Array<String>): List<String> {
+        return networks
+            .mapNotNull { PaymentConstants.GOOGLE_CARD_NETWORKS[it.lowercase()] }
+            .distinct()
     }
     
     /**
@@ -85,12 +100,14 @@ object GooglePayRequestBuilder {
     /**
      * Creates base card payment method (no tokenization)
      */
-    private fun createBaseCardPaymentMethod(): JSONObject {
+    private fun createBaseCardPaymentMethod(
+        allowedCardNetworks: JSONArray = createAllowedCardNetworks()
+    ): JSONObject {
         return JSONObject().apply {
             put("type", PaymentConstants.PAYMENT_METHOD_CARD)
             put("parameters", JSONObject().apply {
                 put("allowedAuthMethods", createAllowedAuthMethods())
-                put("allowedCardNetworks", createAllowedCardNetworks())
+                put("allowedCardNetworks", allowedCardNetworks)
             })
         }
     }
@@ -285,12 +302,7 @@ object GooglePayRequestBuilder {
      * Creates allowed card networks
      */
     fun createAllowedCardNetworks(): JSONArray {
-        return JSONArray().apply {
-            put(PaymentConstants.NETWORK_VISA)
-            put(PaymentConstants.NETWORK_MASTERCARD)
-            put(PaymentConstants.NETWORK_AMEX)
-            put(PaymentConstants.NETWORK_DISCOVER)
-        }
+        return JSONArray(PaymentConstants.DEFAULT_CARD_NETWORKS)
     }
 }
 

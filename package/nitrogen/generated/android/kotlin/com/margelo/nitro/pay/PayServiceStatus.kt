@@ -20,24 +20,24 @@ import java.util.Objects
 data class PayServiceStatus(
   @DoNotStrip
   @Keep
-  val canMakePayments: Boolean,
+  val isSupported: Boolean,
   @DoNotStrip
   @Keep
-  val canSetupCards: Boolean
+  val hasActiveCard: Boolean
 ) {
   /* primary constructor */
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is PayServiceStatus) return false
-    return Objects.deepEquals(this.canMakePayments, other.canMakePayments)
-      && Objects.deepEquals(this.canSetupCards, other.canSetupCards)
+    return Objects.deepEquals(this.isSupported, other.isSupported)
+      && Objects.deepEquals(this.hasActiveCard, other.hasActiveCard)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
-      canMakePayments,
-      canSetupCards
+      isSupported,
+      hasActiveCard
     ).contentDeepHashCode()
   }
 
@@ -49,8 +49,8 @@ data class PayServiceStatus(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(canMakePayments: Boolean, canSetupCards: Boolean): PayServiceStatus {
-      return PayServiceStatus(canMakePayments, canSetupCards)
+    private fun fromCpp(isSupported: Boolean, hasActiveCard: Boolean): PayServiceStatus {
+      return PayServiceStatus(isSupported, hasActiveCard)
     }
   }
 }
