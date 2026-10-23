@@ -73,6 +73,8 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 
 `merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
 
+`merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
+
 ---
 
 ## PaymentResult
@@ -186,6 +188,21 @@ type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 ```
 
 Use `'TEST'` for development/sandbox; `'PRODUCTION'` for live charges.
+
+---
+
+## MerchantCapability
+
+Apple Pay merchant capabilities, used in `merchantCapabilities` (iOS only; Android ignores the field).
+
+```ts
+type MerchantCapability = '3DS' | 'EMV' | 'Credit' | 'Debit'
+```
+
+- `'3DS'` and `'EMV'` are payment protocols. PassKit needs at least one of them. EMV only covers China UnionPay, so every other card needs 3DS.
+- `'Credit'` and `'Debit'` limit the accepted card types.
+
+iOS matches the values case-insensitively and adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, so `[]` is sent as 3DS and `['Credit']` as 3DS + Credit. Any other value fails the payment: the result has `success: false` and `error: 'Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"'`.
 
 ---
 

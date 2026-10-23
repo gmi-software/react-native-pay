@@ -36,6 +36,13 @@ export type PassActivationState =
 
 export type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 
+/**
+ * Apple Pay merchant capability. `'3DS'` and `'EMV'` are payment protocols
+ * (EMV only covers China UnionPay); `'Credit'` and `'Debit'` limit the
+ * accepted card types. iOS adds `'3DS'` when neither protocol is given.
+ */
+export type MerchantCapability = '3DS' | 'EMV' | 'Credit' | 'Debit'
+
 export interface PKPass {
   passTypeIdentifier: string
   serialNumber: string
@@ -90,6 +97,8 @@ export interface PaymentRequest {
   countryCode: string
   currencyCode: string
   paymentItems: PaymentItem[]
+  // `MerchantCapability` values. Not typed as such: Nitro would generate a
+  // native enum that rejects `'3ds'` or unknown values without a message.
   merchantCapabilities: string[]
   supportedNetworks: string[]
   shippingType?: string

@@ -39,6 +39,10 @@ npx expo prebuild --clean
 - Confirm the App ID has Apple Pay enabled and linked to your Merchant ID.
 - For production, ensure your Payment Processing Certificate is created and installed in your gateway.
 
+### "Unknown merchant capability"
+
+The payment fails with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).
+
 ### Invalid Apple button type/style errors
 
 Use only supported Apple button values:
