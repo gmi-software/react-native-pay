@@ -41,6 +41,7 @@ export default function TabOneScreen() {
     error,
     reset,
   } = usePaymentCheckout({
+    merchantName: "React Native Pay Demo",
     countryCode: "US",
     currencyCode: "USD",
     // Stands in for your backend charging the token while the sheet waits.

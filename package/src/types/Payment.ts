@@ -84,6 +84,8 @@ export interface PaymentRequest {
   // Optional Apple Pay override for apps with multiple configured merchant IDs.
   // When omitted, iOS resolves the first configured entitlement automatically.
   applePayMerchantIdentifier?: string
+  // Business name shown to the payer. iOS labels the Apple Pay total with it
+  // ("Pay <merchantName>"); both platforms fall back to the app's name.
   merchantName?: string
   countryCode: string
   currencyCode: string

@@ -35,11 +35,12 @@ import { HybridPaymentHandler, normalizePaymentRequest } from '@gmisoftware/reac
 
 const result = await HybridPaymentHandler.startPayment(
   normalizePaymentRequest({
+    merchantName: 'Your Store',
     countryCode: 'US',
     currencyCode: 'USD',
     merchantCapabilities: ['3DS'],
     supportedNetworks: ['visa', 'mastercard', 'amex'],
-    paymentItems: [{ label: 'Total', amount: '29.99', type: 'final' }],
+    paymentItems: [{ label: 'Coffee Subscription', amount: '29.99', type: 'final' }],
     googlePayMerchantId: 'your_google_pay_merchant_id',
   })
 )
@@ -73,6 +74,8 @@ const result = await HybridPaymentHandler.startPayment(request, {
 See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes) for the timeout and Android behavior.
 
 On iOS, the merchant ID is resolved from the app entitlements by default. Use `applePayMerchantIdentifier` only when you need to override the configured value at runtime.
+
+On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled with `merchantName` ("Pay Your Store"). The library adds that total for you, so don't add your own "Total" item. Without `merchantName`, the total uses your app's display name.
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 

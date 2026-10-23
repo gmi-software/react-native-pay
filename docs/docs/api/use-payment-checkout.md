@@ -16,7 +16,7 @@ Source of truth for these types: [`package/src/hooks/usePaymentCheckout.ts`](htt
 
 ```ts
 interface UsePaymentCheckoutConfig {
-  merchantName?: string
+  merchantName?: string          // business name shown on the sheet
   countryCode?: string           // default: 'US'
   currencyCode?: string         // default: 'USD'
   supportedNetworks?: string[]  // default: ['visa', 'mastercard', 'amex', 'discover']
@@ -32,6 +32,7 @@ interface UsePaymentCheckoutConfig {
 }
 ```
 
+- **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
 - **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
 
 ## Return value
@@ -94,6 +95,7 @@ const {
   error,
   reset,
 } = usePaymentCheckout({
+  merchantName: 'Your Store',
   currencyCode: 'USD',
   countryCode: 'US',
   googlePayMerchantId: 'your_google_pay_merchant_id',

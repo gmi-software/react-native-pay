@@ -26,6 +26,7 @@ const {
   isProcessing,
   reset,
 } = usePaymentCheckout({
+  merchantName: 'Your Store',
   countryCode: 'US',
   currencyCode: 'USD',
 })

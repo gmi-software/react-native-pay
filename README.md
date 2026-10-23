@@ -208,6 +208,7 @@ function CheckoutScreen() {
     isProcessing,
     error,
   } = usePaymentCheckout({
+    merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
   })
@@ -360,7 +361,7 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 
 ```typescript
 interface UsePaymentCheckoutConfig {
-  merchantName?: string;
+  merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
   supportedNetworks?: string[]; // Default: ['visa', 'mastercard', 'amex', 'discover']
@@ -410,6 +411,7 @@ interface UsePaymentCheckoutReturn {
 
 ```typescript
 const checkout = usePaymentCheckout({
+  merchantName: "Your Store",
   currencyCode: "USD",
   countryCode: "US",
   googlePayMerchantId: "your_google_pay_merchant_id",
@@ -467,15 +469,18 @@ Start a payment request.
 const result = await HybridPaymentHandler.startPayment(
   // Validates amounts before the sheet opens; see normalizePaymentRequest
   normalizePaymentRequest({
+    merchantName: "Your Store",
     countryCode: "US",
     currencyCode: "USD",
     merchantCapabilities: ["3DS"],
     supportedNetworks: ["visa", "mastercard", "amex"],
-    paymentItems: [{ label: "Total", amount: "29.99", type: "final" }],
+    paymentItems: [{ label: "Coffee Subscription", amount: "29.99", type: "final" }],
     googlePayMerchantId: "your_google_pay_merchant_id",
   })
 );
 ```
+
+On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled with `merchantName` ("Pay Your Store"). The library adds that total for you, so don't add your own "Total" item.
 
 **Options:**
 
@@ -614,6 +619,7 @@ import { createPaymentRequest } from "@gmisoftware/react-native-pay";
 const request = createPaymentRequest({
   amount: 29.99,
   label: "Coffee Subscription",
+  merchantName: "Your Store",
   countryCode: "US",
   currencyCode: "USD",
   googlePayMerchantId: "your_google_pay_merchant_id",
@@ -695,7 +701,7 @@ interface PaymentItem {
 // Payment Request
 interface PaymentRequest {
   applePayMerchantIdentifier?: string;
-  merchantName?: string;
+  merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
   countryCode: string;
   currencyCode: string;
   paymentItems: PaymentItem[];
@@ -829,6 +835,7 @@ if (!status.canMakePayments) {
 const paymentRequest = createPaymentRequest({
   amount: 99.99,
   label: 'Premium Subscription',
+  merchantName: 'Your Store',
   countryCode: 'US',
   currencyCode: 'USD',
   googlePayMerchantId: 'your_google_pay_merchant_id',
@@ -873,6 +880,7 @@ return Platform.OS === 'ios' ? (
 
 ```typescript
 const checkout = usePaymentCheckout({
+  merchantName: "Your Store",
   currencyCode: "USD",
 });
 

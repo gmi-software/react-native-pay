@@ -24,6 +24,7 @@ import { createPaymentRequest, HybridPaymentHandler } from '@gmisoftware/react-n
 const paymentRequest = createPaymentRequest({
   amount: 99.99,
   label: 'Premium Subscription',
+  merchantName: 'Your Store',
   countryCode: 'US',
   currencyCode: 'USD',
   googlePayMerchantId: 'your_google_pay_merchant_id',
