@@ -23,7 +23,7 @@ Use the same plugin with `merchantIdentifier` if you also support iOS.
 1. In [Google Cloud Console](https://console.cloud.google.com/), open your project.
 2. Enable the **Google Pay API** for the project.
 
-For production you will also need to register your app and comply with Google’s requirements (screenshots, business info, etc.).
+For production, Google must also approve your app in the Google Pay & Wallet Console. See [Production access](/docs/guides/testing#production-access).
 
 ## 3. Gateway configuration (in app code)
 
@@ -56,9 +56,10 @@ npx expo run:android
 
 ## Testing
 
-- Use a **real device** or an **emulator with Google Play Services**.
-- Add a test card in Google Pay.
-- For testing without a live gateway, use `googlePayEnvironment: 'TEST'` and a test merchant ID if your gateway provides one.
+- Use a **real device** or an **emulator with a Google Play system image**, signed in to a Google account.
+- In `googlePayEnvironment: 'TEST'`, Google Pay shows its test cards, and no token can be used for a live charge. See [TEST environment](/docs/guides/testing#test-environment) for what it can't verify and how to get a token your gateway accepts.
+- `PRODUCTION` needs Google's approval. See [Production access](/docs/guides/testing#production-access).
+- Before each release, run the [release checklist](/docs/guides/testing#release-checklist).
 
 ## Troubleshooting
 
