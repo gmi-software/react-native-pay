@@ -40,6 +40,13 @@ All notable changes to this project are documented in this file.
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched
   case-insensitively, `3DS` is added when neither protocol is given, and an unknown value fails the
   payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
+- **`usePaymentCheckout` no longer rebuilds `paymentRequest` and `startPayment` on every render.**
+  Both depended on the identity of the config object, and apps usually pass an inline one, so
+  effects, memoized children and the pay button's `onPress` that used them changed on every render
+  too. The hook now compares the config's values, and `supportedNetworks` and
+  `merchantCapabilities` by content. An inline `onAuthorize` no longer changes `startPayment`, which
+  uses the `onAuthorize` from the latest render; a payment keeps the one it started with until it
+  settles.
 - **Amounts reach Apple Pay and Google Pay exactly.** iOS converted amounts with `Decimal(Double)`,
   so `19.99` reached PassKit as `19.98999999999999488`. Amounts now cross into native code as
   decimal strings, iOS parses them with `NSDecimalNumber` and Android with `BigDecimal`, and both
