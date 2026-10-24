@@ -57,7 +57,7 @@ npx expo run:android
 ## Testing
 
 - Use a **real device** or an **emulator with a Google Play system image**, signed in to a Google account.
-- In `googlePayEnvironment: 'TEST'`, Google Pay shows its test cards, and the tokens can't be charged. See [TEST environment](/docs/guides/testing#test-environment) for what it can't verify and how to get a token your gateway accepts.
+- In `googlePayEnvironment: 'TEST'`, Google Pay shows its test cards, and no token can be used for a live charge. See [TEST environment](/docs/guides/testing#test-environment) for what it can't verify and how to get a token your gateway accepts.
 - `PRODUCTION` needs Google's approval. See [Production access](/docs/guides/testing#production-access).
 - Before each release, run the [release checklist](/docs/guides/testing#release-checklist).
 
