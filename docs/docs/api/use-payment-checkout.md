@@ -34,7 +34,7 @@ interface UsePaymentCheckoutConfig {
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
 - **merchantCapabilities** — Apple Pay only. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, and fails the payment for an unknown value. See [MerchantCapability](/docs/api/types#merchantcapability).
-- **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+- **onAuthorize** — Called with the token after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
 
 ## Return value
 
@@ -79,6 +79,7 @@ interface UsePaymentCheckoutReturn {
   - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight:
     - If the payment in flight was started by this hook, the hook state is not changed.
     - If it was started elsewhere (`HybridPaymentHandler` or another `usePaymentCheckout`), the native handler rejects the call and the hook records it like any failed payment, in `result` and `error`.
+- **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (`supportedNetworks` and `merchantCapabilities` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
 
 ## Example
