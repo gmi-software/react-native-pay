@@ -12,7 +12,10 @@ jest.mock('react-native-nitro-modules', () => ({
   },
 }))
 
-import { usePaymentCheckout } from '../usePaymentCheckout'
+import {
+  usePaymentCheckout,
+  type UsePaymentCheckoutConfig,
+} from '../usePaymentCheckout'
 
 const IN_PROGRESS_RESULT = {
   success: false,
@@ -37,6 +40,13 @@ describe('usePaymentCheckout integration', () => {
   })
 
   const renderCheckout = () => renderHook(() => usePaymentCheckout({}))
+
+  // A new config object on every render, as an inline literal would be.
+  const renderWithConfig = (initialProps: UsePaymentCheckoutConfig) =>
+    renderHook(
+      (props: UsePaymentCheckoutConfig) => usePaymentCheckout({ ...props }),
+      { initialProps }
+    )
 
   it('loads payment service status on mount', async () => {
     const { result } = renderCheckout()
@@ -118,6 +128,13 @@ describe('usePaymentCheckout integration', () => {
     ])
     expect(result.current.paymentRequest.countryCode).toBe('US')
     expect(result.current.paymentRequest.currencyCode).toBe('USD')
+    expect(result.current.paymentRequest.supportedNetworks).toEqual([
+      'visa',
+      'mastercard',
+      'amex',
+      'discover',
+    ])
+    expect(result.current.paymentRequest.merchantCapabilities).toEqual(['3DS'])
     expect(result.current.paymentRequest).not.toHaveProperty(
       'applePayMerchantIdentifier'
     )
@@ -326,6 +343,105 @@ describe('usePaymentCheckout integration', () => {
     )
   })
 
+  describe('identity across re-renders', () => {
+    it('keeps paymentRequest and startPayment with an inline config', () => {
+      const { result, rerender } = renderHook(() =>
+        usePaymentCheckout({
+          merchantName: 'Store',
+          countryCode: 'US',
+          currencyCode: 'USD',
+          supportedNetworks: ['visa', 'mastercard'],
+          merchantCapabilities: ['3DS'],
+          onAuthorize: async () => ({ status: 'success' }),
+        })
+      )
+      act(() => {
+        result.current.addItem('Coffee', 4.99)
+      })
+      const { paymentRequest, startPayment } = result.current
+
+      rerender(undefined)
+
+      expect(result.current.paymentRequest).toBe(paymentRequest)
+      expect(result.current.startPayment).toBe(startPayment)
+    })
+
+    it('keeps paymentRequest when the same config has its keys in another order', () => {
+      const { result, rerender } = renderWithConfig({
+        countryCode: 'PL',
+        currencyCode: 'PLN',
+      })
+      const { paymentRequest } = result.current
+
+      rerender({ currencyCode: 'PLN', countryCode: 'PL' })
+
+      expect(result.current.paymentRequest).toBe(paymentRequest)
+    })
+
+    type RequestConfig = Omit<UsePaymentCheckoutConfig, 'onAuthorize'>
+
+    // A row for every field: a new config field fails typecheck until it has one.
+    const configChanges: {
+      [K in keyof RequestConfig]-?: readonly [
+        NonNullable<RequestConfig[K]>,
+        NonNullable<RequestConfig[K]>,
+      ]
+    } = {
+      merchantName: ['Store A', 'Store B'],
+      countryCode: ['US', 'PL'],
+      currencyCode: ['USD', 'EUR'],
+      supportedNetworks: [['visa', 'amex'], ['visa']],
+      merchantCapabilities: [['3DS'], ['3DS', 'EMV']],
+      applePayMerchantIdentifier: ['merchant.a', 'merchant.b'],
+      googlePayMerchantId: ['merchant-a', 'merchant-b'],
+      googlePayEnvironment: ['TEST', 'PRODUCTION'],
+      googlePayGateway: ['stripe', 'adyen'],
+      googlePayGatewayMerchantId: ['gateway-a', 'gateway-b'],
+    }
+
+    it.each(Object.entries(configChanges))(
+      'compares %s by value',
+      (key, [before, after]) => {
+        const { result, rerender } = renderWithConfig({
+          [key]: structuredClone(before),
+        })
+        const initial = result.current
+
+        rerender({ [key]: structuredClone(before) })
+        expect(result.current.paymentRequest).toBe(initial.paymentRequest)
+        expect(result.current.startPayment).toBe(initial.startPayment)
+
+        rerender({ [key]: after })
+        expect(result.current.paymentRequest).not.toBe(initial.paymentRequest)
+        expect(result.current.paymentRequest).toHaveProperty(key, after)
+        expect(result.current.startPayment).not.toBe(initial.startPayment)
+      }
+    )
+
+    it('starts the payment with the config from the latest render', async () => {
+      mockStartPayment.mockResolvedValueOnce({ success: true })
+      const { result, rerender } = renderWithConfig({
+        currencyCode: 'USD',
+        supportedNetworks: ['visa', 'amex'],
+      })
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+
+      rerender({ currencyCode: 'EUR', supportedNetworks: ['visa'] })
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      expect(mockStartPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currencyCode: 'EUR',
+          supportedNetworks: ['visa'],
+        })
+      )
+    })
+  })
+
   describe('onAuthorize', () => {
     const token = {
       paymentMethod: { type: 'credit' },
@@ -420,6 +536,73 @@ describe('usePaymentCheckout integration', () => {
       expect(returned).toBeInstanceOf(Promise)
       await expect(returned).rejects.toThrow('Server unreachable')
       expect(result.current.error?.message).toBe('Server unreachable')
+    })
+
+    it('keeps startPayment and calls the onAuthorize from the latest render', async () => {
+      mockStartPayment.mockImplementationOnce(nativeWithAuthorization)
+      const first = jest.fn().mockResolvedValue({ status: 'success' })
+      const latest = jest.fn().mockResolvedValue({ status: 'success' })
+      const { result, rerender } = renderWithConfig({ onAuthorize: first })
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+      const { startPayment } = result.current
+
+      rerender({ onAuthorize: latest })
+      expect(result.current.startPayment).toBe(startPayment)
+
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      expect(latest).toHaveBeenCalledWith(token)
+      expect(first).not.toHaveBeenCalled()
+    })
+
+    it('passes options only while onAuthorize is configured', async () => {
+      mockStartPayment.mockResolvedValue({ success: true })
+      const { result, rerender } = renderWithConfig({})
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+
+      rerender({ onAuthorize: jest.fn() })
+      await act(async () => {
+        await result.current.startPayment()
+      })
+      rerender({})
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      expect(mockStartPayment.mock.calls[0]?.[1]).toEqual({
+        onAuthorize: expect.any(Function),
+      })
+      expect(mockStartPayment.mock.calls[1]).toHaveLength(1)
+    })
+
+    it('keeps the onAuthorize a payment started with when it is removed mid-payment', async () => {
+      const native = createDeferred<any>()
+      mockStartPayment.mockReturnValueOnce(native.promise)
+      const onAuthorize = jest.fn().mockResolvedValue({ status: 'success' })
+      const { result, rerender } = renderWithConfig({ onAuthorize })
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+
+      let payment!: Promise<any>
+      act(() => {
+        payment = result.current.startPayment()
+      })
+      rerender({})
+      await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token)
+
+      expect(onAuthorize).toHaveBeenCalledWith(token)
+
+      await act(async () => {
+        native.resolve({ success: true })
+        await payment
+      })
     })
   })
 
