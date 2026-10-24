@@ -345,10 +345,17 @@ export function usePaymentCheckout(
 
   const startPayment = useCallback(async (): Promise<PaymentResult | null> => {
     // The native check covers payments started by HybridPaymentHandler or another hook.
-    if (
-      isPaymentInFlight.current ||
-      getPaymentHandler().isPaymentInProgress()
-    ) {
+    let isPaymentInProgress: boolean
+    try {
+      isPaymentInProgress =
+        isPaymentInFlight.current || getPaymentHandler().isPaymentInProgress()
+    } catch (err) {
+      setError(
+        err instanceof Error ? err : new Error('Payment processing failed')
+      )
+      return null
+    }
+    if (isPaymentInProgress) {
       return { success: false, error: PAYMENT_IN_PROGRESS_ERROR }
     }
 

@@ -760,6 +760,27 @@ describe('usePaymentCheckout integration', () => {
     expect(mockStartPayment).not.toHaveBeenCalled()
   })
 
+  it('sets an error when the native progress check throws', async () => {
+    mockIsPaymentInProgress.mockImplementation(() => {
+      throw new Error('Native unavailable')
+    })
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+
+    let paymentResult: any = 'not-called'
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toBeNull()
+    expect(result.current.error?.message).toBe('Native unavailable')
+    expect(result.current.isProcessing).toBe(false)
+    expect(mockStartPayment).not.toHaveBeenCalled()
+  })
+
   it('accepts a new payment once the previous one settles', async () => {
     mockStartPayment
       .mockRejectedValueOnce(new Error('Native failure'))

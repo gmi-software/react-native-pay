@@ -81,7 +81,7 @@ On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled 
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 
-Only one payment can be in flight at a time, on iOS and Android. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. A payment stays in flight until its `startPayment` promise resolves. On iOS, that happens only after the Apple Pay sheet has closed. With `onAuthorize`, it also waits for your callback to settle or time out, so on iOS the payment ends once both have happened. Use [`isPaymentInProgress()`](#ispaymentinprogress) to check first.
+Only one payment can be in flight at a time, on iOS and Android. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. A payment stays in flight until the native side settles it, right before its `startPayment` promise resolves. A new payment can start from that moment, even before your `await` continues. On iOS, the payment settles only after the Apple Pay sheet has closed. With `onAuthorize`, it also waits for your callback to settle or time out, so on iOS the payment ends once both have happened. Use [`isPaymentInProgress()`](#ispaymentinprogress) to check first.
 
 ---
 
