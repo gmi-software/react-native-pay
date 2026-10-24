@@ -4,14 +4,14 @@ Before you release, run a payment end to end on both platforms: in the Apple Pay
 
 ## What each environment can verify
 
-No test environment proves that a real charge goes through. Each one covers part of the flow:
+Only `PRODUCTION` with real cards proves that a charge goes through. Each test environment covers part of the flow:
 
 | Environment | Verifies | Cannot verify |
 |---|---|---|
 | iOS Simulator | The sheet opens and shows your line items and the "Pay *merchantName*" total. Cancel, [`onAuthorize`](/docs/guides/server-processing#charge-before-the-sheet-closes) success and failure, and the double-tap guard. No card or account needed. | A token your gateway can charge. Apple doesn't document what the Simulator's token contains, and developers report that its `paymentData` is empty. Apple also says the Simulator doesn't support every Apple Pay feature, without listing which. |
 | iPhone with a sandbox tester | The full sheet with Apple's test cards, Face ID or passcode, and a token your payment processor can test decrypting. | A completed charge. Apple says sandbox transactions are declined before fulfillment, because the test key doesn't match your production key. |
 | Android, `TEST` environment | The Google Pay sheet with Google's test cards, the result handling, and `onAuthorize`. No Google Pay merchant ID needed. | Availability: `canMakePayments` is always `true` in `TEST`. A live charge: `TEST` tokens never carry real card data, so only your gateway's test environment can process them. Your production request: the merchant ID and the `PRODUCTION` checks only run in `PRODUCTION`. |
-| Android, `PRODUCTION` | Everything, with real cards. | Nothing, but it only works after Google grants your app [production access](#production-access). |
+| Android, `PRODUCTION` | Everything, with real cards. | Nothing. It needs [production access](#production-access) first. |
 
 Availability is hard to test on both platforms. On iOS, `canMakePayments` comes from `PKPaymentAuthorizationViewController.canMakePayments()`, which Apple documents as `true` when the device supports payments, even with no card in Wallet. On Android, the library checks availability against the `TEST` environment until a payment has started, even in a `PRODUCTION` build ([#16](https://github.com/gmi-software/react-native-pay/issues/16)).
 
@@ -65,7 +65,7 @@ npx expo run:android
 
 In `TEST`, Google Pay shows a [suite of test cards](https://developers.google.com/pay/api/android/guides/resources/test-card-suite) by default. You don't need to join anything. To see your account's real cards in `TEST` instead, join the [googlepay-test-mode-real-data](https://groups.google.com/g/googlepay-test-mode-real-data) group. Real cards return placeholder data in `TEST` and are never charged.
 
-The sheet labels you as an unverified merchant in `TEST`. That is expected.
+In `TEST`, the sheet always labels you as an unverified merchant.
 
 **Get a token your gateway accepts.** If you leave `googlePayGateway` and `googlePayGatewayMerchantId` empty in `TEST`, the library sends Google's `example` gateway with `exampleGatewayMerchantId`. Google says the `example` gateway [returns no card data capable of a transaction](https://developers.google.com/pay/api/android/guides/tutorial), so your server can't charge it. To send a token to your gateway's test environment, set its test values:
 

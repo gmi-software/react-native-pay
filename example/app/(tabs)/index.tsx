@@ -17,7 +17,7 @@ import {
 } from "@gmisoftware/react-native-pay";
 import { callback } from "react-native-nitro-modules";
 
-// Cycled by the "Simulated Server" button to rehearse the release checklist:
+// Rehearses the release checklist:
 // https://gmi-software.github.io/react-native-pay/docs/guides/testing#release-checklist
 const SIMULATED_SERVER_MODES = ["off", "approve", "decline"] as const;
 type SimulatedServerMode = (typeof SIMULATED_SERVER_MODES)[number];
