@@ -38,11 +38,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var currentEnvironment: Int = WalletConstants.ENVIRONMENT_TEST
     
-    /**
-     * Receives the Google Pay sheet's result. Registered on the React context
-     * only while the sheet is open, so the context never keeps this handler
-     * alive, and never sees request code 991 from this library, otherwise.
-     */
+    // Registered only while the sheet is open, so the React context doesn't
+    // keep this handler alive.
     private val sheetResultListener = object : ActivityEventListener {
         override fun onActivityResult(
             activity: Activity,
@@ -63,8 +60,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     override val memorySize: Long get() = 0L
     
     override fun dispose() {
-        // JS calls this only explicitly; a reload drops the handler without it.
-        // Must not throw, and `reactContext` throws if it cannot be resolved.
+        // Must not throw. Only an explicit JS call gets here, not a reload.
         runCatching { stopListeningForSheetResult() }
         super.dispose()
     }
@@ -147,19 +143,13 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     // MARK: - Google Pay sheet
     
     /**
-     * Requests the payment data and shows the Google Pay sheet when the
-     * request needs the user, which is the usual case. The sheet's result
-     * arrives in [sheetResultListener].
+     * Shows the Google Pay sheet; its result arrives in [sheetResultListener].
+     * Not an Activity Result launcher: one registered from a library belongs
+     * to a single Activity instance and loses the result if that Activity is
+     * recreated while the sheet is open.
      *
-     * This does what the deprecated `AutoResolveHelper.resolveTask` did. The
-     * result goes through the React context instead of an Activity Result
-     * launcher, because a launcher registered from a library is tied to one
-     * Activity instance and loses the result if the Activity is recreated
-     * while the sheet is open.
-     *
-     * If the app process dies while the sheet is open, the result is dropped:
-     * the new JS runtime has no pending payment, so no token reaches the app
-     * and nothing is charged.
+     * If the process dies while the sheet is open, the result is dropped, so
+     * no token reaches the app and nothing is charged.
      */
     private fun loadPaymentData(paymentDataRequest: org.json.JSONObject, environment: Int) {
         val request = PaymentDataRequest.fromJson(paymentDataRequest.toString())
@@ -191,8 +181,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             sheet.startResolutionForResult(activity, PaymentConstants.LOAD_PAYMENT_DATA_REQUEST_CODE)
             PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment UI launched")
         } catch (e: Exception) {
-            // Runs in a Tasks callback, outside startPayment's try: settle
-            // instead of crashing (SendIntentException, finishing Activity).
+            // Outside startPayment's try, so settle here instead of crashing.
             stopListeningForSheetResult()
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to show payment UI", e)
             handlePaymentError("Failed to show payment UI: ${e.message}")
