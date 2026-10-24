@@ -51,6 +51,10 @@
 #include "JPaymentDetails.hpp"
 #include "PaymentContact.hpp"
 #include "JPaymentContact.hpp"
+#include "ShippingMethod.hpp"
+#include "JShippingMethod.hpp"
+#include <variant>
+#include "JPaymentAmount.hpp"
 
 namespace margelo::nitro::pay {
 

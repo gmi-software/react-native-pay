@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [PaymentItem]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -55,10 +55,10 @@ public extension PaymentRequest {
       } else {
         return .init()
       }
-    }(), { () -> bridge.std__optional_std__vector_PaymentItem__ in
+    }(), { () -> bridge.std__optional_std__vector_ShippingMethod__ in
       if let __unwrappedValue = shippingMethods {
-        return bridge.create_std__optional_std__vector_PaymentItem__({ () -> bridge.std__vector_PaymentItem_ in
-          var __vector = bridge.create_std__vector_PaymentItem_(__unwrappedValue.count)
+        return bridge.create_std__optional_std__vector_ShippingMethod__({ () -> bridge.std__vector_ShippingMethod_ in
+          var __vector = bridge.create_std__vector_ShippingMethod_(__unwrappedValue.count)
           for __item in __unwrappedValue {
             __vector.push_back(__item)
           }
@@ -180,10 +180,10 @@ public extension PaymentRequest {
   }
   
   @inline(__always)
-  var shippingMethods: [PaymentItem]? {
-    return { () -> [PaymentItem]? in
-      if bridge.has_value_std__optional_std__vector_PaymentItem__(self.__shippingMethods) {
-        let __unwrapped = bridge.get_std__optional_std__vector_PaymentItem__(self.__shippingMethods)
+  var shippingMethods: [ShippingMethod]? {
+    return { () -> [ShippingMethod]? in
+      if bridge.has_value_std__optional_std__vector_ShippingMethod__(self.__shippingMethods) {
+        let __unwrapped = bridge.get_std__optional_std__vector_ShippingMethod__(self.__shippingMethods)
         return __unwrapped.map({ __item in __item })
       } else {
         return nil

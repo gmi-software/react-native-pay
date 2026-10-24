@@ -62,6 +62,8 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `ShippingMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct ShippingMethod; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 
@@ -93,6 +95,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PaymentRequest.hpp"
 #include "PaymentResult.hpp"
 #include "PaymentToken.hpp"
+#include "ShippingMethod.hpp"
 #include "StartPaymentOptions.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>

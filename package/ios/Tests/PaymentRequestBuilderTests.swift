@@ -8,6 +8,15 @@ final class PaymentRequestBuilderTests: XCTestCase {
         return PaymentItem(label: label, amount: .second(amount), type: type)
     }
 
+    private func method(
+        _ identifier: String,
+        _ label: String,
+        _ amount: String,
+        detail: String? = nil
+    ) -> ShippingMethod {
+        return ShippingMethod(identifier: identifier, label: label, amount: .second(amount), detail: detail)
+    }
+
     private func paymentRequest(
         items: [PaymentItem],
         merchantIdentifier: String? = "merchant.com.example",
@@ -15,6 +24,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
         merchantCapabilities: [String] = ["3DS"],
         supportedNetworks: [String] = ["visa"],
         shippingType: String? = nil,
+        shippingMethods: [ShippingMethod]? = nil,
         billingContactRequired: Bool? = nil,
         shippingContactRequired: Bool? = nil,
         emailRequired: Bool? = nil,
@@ -29,7 +39,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
             merchantCapabilities: merchantCapabilities,
             supportedNetworks: supportedNetworks,
             shippingType: shippingType,
-            shippingMethods: nil,
+            shippingMethods: shippingMethods,
             billingContactRequired: billingContactRequired,
             shippingContactRequired: shippingContactRequired,
             emailRequired: emailRequired,
@@ -143,6 +153,97 @@ final class PaymentRequestBuilderTests: XCTestCase {
         ))
         XCTAssertEqual(withAddress.requiredBillingContactFields, [])
         XCTAssertEqual(withAddress.requiredShippingContactFields, [.postalAddress, .name, .emailAddress])
+    }
+
+    // MARK: Shipping methods
+
+    private let shippingMethods = [
+        ShippingMethod(identifier: "standard", label: "Standard", amount: .second("0.00"), detail: "3-5 days"),
+        ShippingMethod(identifier: "express", label: "Express", amount: .second("7.50"), detail: nil),
+    ]
+
+    private func summary(_ items: [PKPaymentSummaryItem]) -> [String] {
+        return items.map { "\($0.label) \($0.amount)" }
+    }
+
+    func testBuildsShippingMethodsAndSelectsTheFirst() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "18.00")],
+            merchantName: "Coffee Shop",
+            shippingMethods: shippingMethods
+        ))
+
+        let methods = try XCTUnwrap(request.shippingMethods)
+        XCTAssertEqual(methods.map(\.identifier), ["standard", "express"])
+        XCTAssertEqual(methods.map(\.label), ["Standard", "Express"])
+        XCTAssertEqual(methods.map(\.detail), ["3-5 days", nil])
+        XCTAssertEqual(methods.map(\.amount), [NSDecimalNumber(string: "0.00"), NSDecimalNumber(string: "7.50")])
+        XCTAssertEqual(summary(request.paymentSummaryItems), ["Coffee 18", "Standard 0", "Coffee Shop 18"])
+    }
+
+    func testSummaryIncludesTheSelectedShippingMethod() throws {
+        let items = try PaymentRequestBuilder.buildSummaryItems(
+            for: paymentRequest(
+                items: [item("Coffee", "18.00"), item("Tax", "1.44")],
+                merchantName: "Coffee Shop",
+                shippingMethods: shippingMethods
+            ),
+            selectedShippingMethodIdentifier: "express"
+        )
+
+        XCTAssertEqual(summary(items), ["Coffee 18", "Tax 1.44", "Express 7.5", "Coffee Shop 26.94"])
+        XCTAssertTrue(items[2] is PKShippingMethod)
+        XCTAssertEqual(items.last?.type, .final)
+    }
+
+    func testSummaryHasNoShippingLineWithoutASelectedMethod() throws {
+        let request = paymentRequest(
+            items: [item("Coffee", "18.00")],
+            merchantName: "Coffee Shop",
+            shippingMethods: shippingMethods
+        )
+
+        for identifier in [nil, "unknown"] {
+            let items = try PaymentRequestBuilder.buildSummaryItems(
+                for: request,
+                selectedShippingMethodIdentifier: identifier
+            )
+            XCTAssertEqual(summary(items), ["Coffee 18", "Coffee Shop 18"])
+        }
+    }
+
+    func testIgnoresAnEmptyShippingMethodList() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "18.00")],
+            merchantName: "Coffee Shop",
+            shippingMethods: []
+        ))
+
+        XCTAssertNil(request.shippingMethods)
+        XCTAssertEqual(summary(request.paymentSummaryItems), ["Coffee 18", "Coffee Shop 18"])
+    }
+
+    func testRejectsInvalidShippingMethods() {
+        let coffee = [item("Coffee", "18.00")]
+        assertBuildFails(
+            paymentRequest(items: coffee, shippingMethods: [method(" ", "Standard", "0")]),
+            with: "Shipping method \"Standard\" needs an identifier"
+        )
+        assertBuildFails(
+            paymentRequest(items: coffee, shippingMethods: [
+                method("express", "Express", "7.50"),
+                method("express", "Express (again)", "9.00"),
+            ]),
+            with: "Shipping method identifier \"express\" is used more than once"
+        )
+        assertBuildFails(
+            paymentRequest(items: coffee, shippingMethods: [method("pickup", "Pickup", "-1.00")]),
+            with: "Amount for \"Pickup\" must not be negative"
+        )
+        assertBuildFails(
+            paymentRequest(items: coffee, shippingMethods: [method("express", "Express", "7,50")]),
+            with: "Amount for \"Express\" must be a finite number or a decimal string like \"19.99\""
+        )
     }
 
     func testRejectsUnknownShippingType() {

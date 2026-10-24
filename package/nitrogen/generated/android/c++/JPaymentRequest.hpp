@@ -15,8 +15,10 @@
 #include "JPaymentAmount.hpp"
 #include "JPaymentItem.hpp"
 #include "JPaymentItemType.hpp"
+#include "JShippingMethod.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
+#include "ShippingMethod.hpp"
 #include <optional>
 #include <string>
 #include <variant>
@@ -57,8 +59,8 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JArrayClass<jni::JString>> supportedNetworks = this->getFieldValue(fieldSupportedNetworks);
       static const auto fieldShippingType = clazz->getField<jni::JString>("shippingType");
       jni::local_ref<jni::JString> shippingType = this->getFieldValue(fieldShippingType);
-      static const auto fieldShippingMethods = clazz->getField<jni::JArrayClass<JPaymentItem>>("shippingMethods");
-      jni::local_ref<jni::JArrayClass<JPaymentItem>> shippingMethods = this->getFieldValue(fieldShippingMethods);
+      static const auto fieldShippingMethods = clazz->getField<jni::JArrayClass<JShippingMethod>>("shippingMethods");
+      jni::local_ref<jni::JArrayClass<JShippingMethod>> shippingMethods = this->getFieldValue(fieldShippingMethods);
       static const auto fieldBillingContactRequired = clazz->getField<jni::JBoolean>("billingContactRequired");
       jni::local_ref<jni::JBoolean> billingContactRequired = this->getFieldValue(fieldBillingContactRequired);
       static const auto fieldShippingContactRequired = clazz->getField<jni::JBoolean>("shippingContactRequired");
@@ -113,7 +115,7 @@ namespace margelo::nitro::pay {
         shippingType != nullptr ? std::make_optional(shippingType->toStdString()) : std::nullopt,
         shippingMethods != nullptr ? std::make_optional([&](auto&& __input) {
           size_t __size = __input->size();
-          std::vector<PaymentItem> __vector;
+          std::vector<ShippingMethod> __vector;
           __vector.reserve(__size);
           for (size_t __i = 0; __i < __size; __i++) {
             auto __element = __input->getElement(__i);
@@ -138,7 +140,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentRequest::javaobject> fromCpp(const PaymentRequest& value) {
-      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JShippingMethod>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -180,10 +182,10 @@ namespace margelo::nitro::pay {
         value.shippingType.has_value() ? jni::make_jstring(value.shippingType.value()) : nullptr,
         value.shippingMethods.has_value() ? [&](auto&& __input) {
           size_t __size = __input.size();
-          jni::local_ref<jni::JArrayClass<JPaymentItem>> __array = jni::JArrayClass<JPaymentItem>::newArray(__size);
+          jni::local_ref<jni::JArrayClass<JShippingMethod>> __array = jni::JArrayClass<JShippingMethod>::newArray(__size);
           for (size_t __i = 0; __i < __size; __i++) {
             const auto& __element = __input[__i];
-            auto __elementJni = JPaymentItem::fromCpp(__element);
+            auto __elementJni = JShippingMethod::fromCpp(__element);
             __array->setElement(__i, *__elementJni);
           }
           return __array;

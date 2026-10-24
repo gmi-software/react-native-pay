@@ -22,7 +22,8 @@ class PaymentMapperTest {
         billingContact = null,
         shippingContact = null,
         emailAddress = null,
-        phoneNumber = null
+        phoneNumber = null,
+        shippingMethod = null
     )
 
     private val paymentDataWithContacts = PaymentData.fromJson(
@@ -214,6 +215,43 @@ class PaymentMapperTest {
         assertNull(result.shippingContact)
         assertNull(result.emailAddress)
         assertNull(result.phoneNumber)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsTheChargedShippingMethod() {
+        val express = ShippingMethod(
+            identifier = "express",
+            label = "Express",
+            amount = PaymentAmount.create("9.00"),
+            detail = "Next day"
+        )
+
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentDataWithContacts,
+            RequestedDetails(shippingMethod = express)
+        )
+
+        assertTrue(result.success)
+        assertSame(express, result.shippingMethod)
+        assertSame(express, PaymentMapper.paymentDetails(result).shippingMethod)
+    }
+
+    @Test
+    fun requestedDetails_chargesTheFirstShippingMethod() {
+        fun request(methods: Array<ShippingMethod>?) = PaymentRequest(
+            applePayMerchantIdentifier = null, merchantName = null, countryCode = "US",
+            currencyCode = "USD", paymentItems = emptyArray(), merchantCapabilities = emptyArray(),
+            supportedNetworks = emptyArray(), shippingType = null, shippingMethods = methods,
+            billingContactRequired = null, shippingContactRequired = null, emailRequired = null,
+            phoneNumberRequired = null, googlePayMerchantId = null, googlePayEnvironment = null,
+            googlePayGateway = null, googlePayGatewayMerchantId = null
+        )
+        val standard = ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), null)
+        val express = ShippingMethod("express", "Express", PaymentAmount.create("9.00"), null)
+
+        assertSame(standard, RequestedDetails.from(request(arrayOf(standard, express))).shippingMethod)
+        assertNull(RequestedDetails.from(request(emptyArray())).shippingMethod)
+        assertNull(RequestedDetails.from(request(null)).shippingMethod)
     }
 
     @Test

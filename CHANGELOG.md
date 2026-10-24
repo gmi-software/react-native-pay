@@ -16,8 +16,18 @@ All notable changes to this project are documented in this file.
   check the address before it charges. Google Pay only collects a phone number with an address:
   without `shippingContactRequired`, Android asks for it with at least the billing name, country
   and postal code. New types: `PaymentContact`, `PaymentDetails` and `ShippingType`.
+- **Shipping methods.** `PaymentRequest.shippingMethods` now takes `ShippingMethod` values
+  (`identifier`, `label`, `amount`, `detail`). The selected method is shown as its own line,
+  included in the total, and returned as `PaymentResult.shippingMethod` and in `onAuthorize`. On
+  iOS the payer picks one, and the first is selected by default. Google Pay cannot offer a choice
+  yet, so Android charges the first method. An empty or repeated `identifier`, or a negative
+  `amount`, fails the payment.
 
 ### Changed
+
+- **`PaymentRequest.shippingMethods` is `ShippingMethod[]`, not `PaymentItem[]`.** Neither
+  platform ever read the old field, so only the type changes: give each method an `identifier`
+  and drop `type`.
 
 - **Amounts can be decimal strings, and `PaymentItem.amount` is now `number | string`**
   (`PaymentAmount`). Code that reads `item.amount` as a number no longer type-checks; display
@@ -49,7 +59,6 @@ All notable changes to this project are documented in this file.
 - **iOS: an unknown `shippingType` fails the payment** with `Unknown shipping type "<value>". Use
   "shipping", "delivery", "storePickup" or "servicePickup"` instead of silently becoming
   `"shipping"`. Android ignores `shippingType`.
-- **`shippingMethods` is documented as not implemented.** Neither platform has ever read it.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

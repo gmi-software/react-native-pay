@@ -84,6 +84,24 @@ export interface PaymentItem {
   type: PaymentItemType
 }
 
+/**
+ * A delivery option the payer can choose in the payment sheet.
+ * @see PaymentRequest.shippingMethods
+ */
+export interface ShippingMethod {
+  /**
+   * Identifies the method in `PaymentResult.shippingMethod`. Must be unique
+   * within the request.
+   */
+  identifier: string
+  /** For example `'Express'`. */
+  label: string
+  /** Added to the total while the method is selected. Must not be negative. */
+  amount: PaymentAmount
+  /** Shown with the label, for example `'Arrives in 1–2 days'`. */
+  detail?: string
+}
+
 export interface PaymentMethod {
   displayName?: string
   network?: PaymentNetwork
@@ -118,10 +136,13 @@ export interface PaymentRequest {
    */
   shippingType?: string
   /**
-   * Not implemented: iOS and Android ignore it, and no shipping method is
-   * shown or returned. Add the shipping cost to `paymentItems` instead.
+   * Delivery options for the payer. The selected method is added to the
+   * total as its own line and returned as `PaymentResult.shippingMethod`.
+   * The order matters: the first method is selected by default on iOS, and
+   * is the one charged on Android, where Google Pay cannot offer a choice
+   * yet. Use it with `shippingContactRequired`.
    */
-  shippingMethods?: PaymentItem[]
+  shippingMethods?: ShippingMethod[]
   /**
    * Ask for the billing name and postal address, returned as
    * `PaymentResult.billingContact`.
@@ -164,6 +185,11 @@ export interface PaymentDetails {
   emailAddress?: string
   /** As the payer entered it. Requested with `PaymentRequest.phoneNumberRequired`. */
   phoneNumber?: string
+  /**
+   * The selected entry of `PaymentRequest.shippingMethods`, as you sent it.
+   * On Android, always the first one.
+   */
+  shippingMethod?: ShippingMethod
 }
 
 export interface PaymentResult extends PaymentDetails {
@@ -196,8 +222,8 @@ export interface StartPaymentOptions {
    * On iOS, after a `'failure'` or a timeout the user can retry from the same
    * sheet, which calls this again with a new token. Make the charge idempotent
    * per order ID, not per token.
-   * `details` holds the contact details the request asked for, so you
-   * can check the address before charging.
+   * `details` holds the contact details and shipping method the request
+   * asked for, so you can check them before charging.
    */
   onAuthorize?: (
     token: PaymentToken,

@@ -44,7 +44,7 @@ data class PaymentRequest(
   val shippingType: String?,
   @DoNotStrip
   @Keep
-  val shippingMethods: Array<PaymentItem>?,
+  val shippingMethods: Array<ShippingMethod>?,
   @DoNotStrip
   @Keep
   val billingContactRequired: Boolean?,
@@ -124,7 +124,7 @@ data class PaymentRequest(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<PaymentItem>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?): PaymentRequest {
+    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?): PaymentRequest {
       return PaymentRequest(applePayMerchantIdentifier, merchantName, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId)
     }
   }

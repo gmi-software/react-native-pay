@@ -58,7 +58,7 @@ interface PaymentRequest {
   merchantCapabilities: string[]
   supportedNetworks: string[]
   shippingType?: string            // ShippingType value, iOS only
-  shippingMethods?: PaymentItem[]   // not implemented, ignored
+  shippingMethods?: ShippingMethod[] // → PaymentResult.shippingMethod
   billingContactRequired?: boolean  // → PaymentResult.billingContact
   shippingContactRequired?: boolean // → PaymentResult.shippingContact
   emailRequired?: boolean           // → PaymentResult.emailAddress
@@ -79,7 +79,7 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 
 `billingContactRequired`, `shippingContactRequired`, `emailRequired` and `phoneNumberRequired` ask the payer for contact details, which come back in the result as [`PaymentDetails`](#paymentdetails). On Android, a phone number is collected with an address. See [Shipping and contact details](/docs/guides/contact-details).
 
-`shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` is not implemented: both platforms ignore it, so add the shipping cost to `paymentItems`.
+`shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` takes [`ShippingMethod`](#shippingmethod) values; the selected one is added to the total. The first is selected by default on iOS and is always the one charged on Android.
 
 ---
 
@@ -98,7 +98,7 @@ interface PaymentResult extends PaymentDetails {
 }
 ```
 
-Send `token` (and optionally `transactionId`) to your backend to complete the charge with your gateway. A successful result also holds the contact details the request asked for; see [PaymentDetails](#paymentdetails).
+Send `token` (and optionally `transactionId`) to your backend to complete the charge with your gateway. A successful result also holds the contact details and shipping method the request asked for; see [PaymentDetails](#paymentdetails).
 
 ---
 
@@ -262,7 +262,7 @@ interface PKSecureElementPass extends PKPass {
 
 ## PaymentDetails
 
-The contact details the payer shared in the payment sheet, on both platforms. Each field is set only when the matching `PaymentRequest` flag asked for it. `PaymentResult` includes these fields, and `onAuthorize` receives them as its second argument. See [Shipping and contact details](/docs/guides/contact-details).
+What the payer chose in the payment sheet besides the card, on both platforms. Each field is set only when the `PaymentRequest` asked for it. `PaymentResult` includes these fields, and `onAuthorize` receives them as its second argument. See [Shipping and contact details](/docs/guides/contact-details).
 
 ```ts no-check
 interface PaymentDetails {
@@ -270,8 +270,26 @@ interface PaymentDetails {
   shippingContact?: PaymentContact // shippingContactRequired
   emailAddress?: string            // emailRequired
   phoneNumber?: string             // phoneNumberRequired, as the payer entered it
+  shippingMethod?: ShippingMethod  // the selected entry of shippingMethods
 }
 ```
+
+---
+
+## ShippingMethod
+
+A delivery option in `PaymentRequest.shippingMethods`. See [Shipping methods](/docs/guides/contact-details#shipping-methods).
+
+```ts no-check
+interface ShippingMethod {
+  identifier: string    // unique within the request, returned in PaymentResult.shippingMethod
+  label: string         // e.g. 'Express'
+  amount: PaymentAmount // added to the total while selected; must not be negative
+  detail?: string       // e.g. 'Next business day'
+}
+```
+
+The selected method appears as its own line in the sheet and is included in the total. `PaymentResult.shippingMethod` is the selected entry as you sent it. On Android, Google Pay cannot offer a choice yet, so the first method is charged and returned.
 
 ---
 

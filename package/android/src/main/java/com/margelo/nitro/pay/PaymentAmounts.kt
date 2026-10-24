@@ -14,15 +14,19 @@ object PaymentAmounts {
      * Parses an item amount. Numbers are read through their shortest
      * round-trip form, so 19.99 becomes exactly 19.99.
      */
-    fun parse(item: PaymentItem): BigDecimal {
-        val amount = when (val value = item.amount) {
+    fun parse(item: PaymentItem): BigDecimal = parse(item.label, item.amount)
+
+    fun parse(method: ShippingMethod): BigDecimal = parse(method.label, method.amount)
+
+    private fun parse(label: String, amount: PaymentAmount): BigDecimal {
+        val decimal = when (amount) {
             is PaymentAmount.First ->
-                value.value.takeIf { it.isFinite() }?.let { BigDecimal.valueOf(it) }
+                amount.value.takeIf { it.isFinite() }?.let { BigDecimal.valueOf(it) }
             is PaymentAmount.Second ->
-                value.value.takeIf { decimalPattern.matches(it) }?.let { BigDecimal(it) }
+                amount.value.takeIf { decimalPattern.matches(it) }?.let { BigDecimal(it) }
         }
-        return requireNotNull(amount) {
-            "Amount for \"${item.label}\" must be a finite number or a decimal string like \"19.99\""
+        return requireNotNull(decimal) {
+            "Amount for \"$label\" must be a finite number or a decimal string like \"19.99\""
         }
     }
 

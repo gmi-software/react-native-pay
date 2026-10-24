@@ -139,7 +139,7 @@ If you call `startPayment()` when `items.length === 0`, the hook sets `error` to
 
 Use `usePaymentCheckout` when you want cart state + defaults managed in React state.
 
-Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example `shippingType` or prebuilt request payloads from your backend). Utility helpers for this path are documented in [Utility functions](/docs/api/utils).
+Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example `shippingMethods`, `shippingType` or prebuilt request payloads from your backend). The hook's `total` covers only the cart, so it doesn't take `shippingMethods`. Utility helpers for this path are documented in [Utility functions](/docs/api/utils).
 
 ## Next
 
