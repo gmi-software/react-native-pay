@@ -2,7 +2,6 @@ package com.margelo.nitro.pay
 
 import android.app.Activity
 import android.content.Intent
-import android.content.IntentSender
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.bridge.ActivityEventListener
@@ -65,7 +64,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     override fun dispose() {
         // JS calls this only explicitly; a reload drops the handler without it.
-        stopListeningForSheetResult()
+        // Must not throw, and `reactContext` throws if it cannot be resolved.
+        runCatching { stopListeningForSheetResult() }
         super.dispose()
     }
     
@@ -190,7 +190,9 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         try {
             sheet.startResolutionForResult(activity, PaymentConstants.LOAD_PAYMENT_DATA_REQUEST_CODE)
             PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment UI launched")
-        } catch (e: IntentSender.SendIntentException) {
+        } catch (e: Exception) {
+            // Runs in a Tasks callback, outside startPayment's try: settle
+            // instead of crashing (SendIntentException, finishing Activity).
             stopListeningForSheetResult()
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to show payment UI", e)
             handlePaymentError("Failed to show payment UI: ${e.message}")
