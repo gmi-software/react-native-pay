@@ -175,5 +175,10 @@ namespace margelo::nitro::pay {
     }(usingNetworks));
     return static_cast<bool>(__result);
   }
+  bool JHybridPaymentHandlerSpec::isPaymentInProgress() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jboolean()>("isPaymentInProgress");
+    auto __result = method(_javaPart);
+    return static_cast<bool>(__result);
+  }
 
 } // namespace margelo::nitro::pay

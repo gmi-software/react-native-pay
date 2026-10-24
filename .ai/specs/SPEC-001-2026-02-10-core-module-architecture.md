@@ -72,6 +72,7 @@ Primary low-level contract:
 - `payServiceStatus(): PayServiceStatus`
 - `startPayment(request: PaymentRequest): Promise<PaymentResult>`
 - `canMakePayments(usingNetworks: string[]): boolean`
+- `isPaymentInProgress(): boolean` — whether a payment started with `startPayment` has not settled yet. Backed by the native single-payment slot (`PendingPayment` on iOS and Android), which `startPayment` claims synchronously on the calling thread and frees when the payment settles.
 
 Primary high-level API:
 
@@ -147,6 +148,10 @@ Future migration policy:
 - Should this architecture spec be split into runtime architecture and build architecture as complexity grows?
 
 ## Changelog
+
+### 2026-10-23
+
+- Added `isPaymentInProgress()` to the low-level contract. On iOS, `startPayment` now claims the single-payment slot on the calling thread, as Android already did, instead of on the main thread.
 
 ### 2026-03-16
 

@@ -76,6 +76,10 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec(), ActivityEventListener {
         }
     }
     
+    override fun isPaymentInProgress(): Boolean {
+        return pendingPayment.isInProgress
+    }
+    
     override fun startPayment(
         request: PaymentRequest,
         options: StartPaymentOptions?

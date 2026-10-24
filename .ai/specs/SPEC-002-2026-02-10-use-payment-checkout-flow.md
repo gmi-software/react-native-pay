@@ -88,6 +88,10 @@ Functional contract highlights:
    - In production, native validation requires non-blank `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
    - In non-production environments, the merchant ID may be omitted and gateway values fall back to native defaults.
 8. `reset()` clears transient payment state but does not clear cart items.
+9. When a payment is already in flight, `startPayment()` returns `{ success: false, error: 'A payment is already in progress' }` without calling native and without changing `isProcessing`, `result` or `error`:
+   - A payment started by this hook instance is detected by the hook's own ref.
+   - A payment started by `HybridPaymentHandler.startPayment()` or another hook instance is detected by `PaymentHandler.isPaymentInProgress()`.
+   - This check runs before the empty-cart check. The native guard in `startPayment` stays the source of truth.
 
 ## UI/UX
 
@@ -164,6 +168,10 @@ Future behavior changes must include:
 - Should `reset()` optionally clear cart items via flag (`reset({ clearCart: true })`)?
 
 ## Changelog
+
+### 2026-10-23
+
+- Added contract 9. Previous behavior: when `HybridPaymentHandler` or another hook had a payment in flight, `startPayment()` set `isProcessing`, cleared `result`/`error`, and then stored the native in-progress failure in them. New behavior: it checks `PaymentHandler.isPaymentInProgress()` first and leaves its state unchanged. No app-side updates are required.
 
 ### 2026-03-16
 
