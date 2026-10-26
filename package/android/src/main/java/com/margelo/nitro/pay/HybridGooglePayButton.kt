@@ -1,6 +1,5 @@
 package com.margelo.nitro.pay
 
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -31,7 +30,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
     override val memorySize: Long get() = 0L
     
     init {
-        Log.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Initializing Google Pay button")
+        PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Initializing Google Pay button")
         setupButton()
     }
     
@@ -53,7 +52,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
             recreateButton(context)
             
         } catch (e: Exception) {
-            Log.e(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Error setting up button", e)
+            PayLog.e(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Error setting up button", e)
             restoreExistingButton()
         }
     }
@@ -76,14 +75,14 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         payButton?.setOnClickListener {
             onPress?.invoke()
         }
-        Log.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button reused - props unchanged")
+        PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button reused - props unchanged")
     }
     
     /**
      * Recreates the button with new configuration
      */
     private fun recreateButton(context: android.content.Context) {
-        Log.d(
+        PayLog.d(
             PaymentConstants.TAG_GOOGLE_PAY_BUTTON,
             "Recreating button - type: $buttonType, theme: $theme, radius: $radius"
         )
@@ -114,7 +113,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         container.addView(newButton, layoutParams)
         container.requestLayout()
         
-        Log.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button created successfully")
+        PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button created successfully")
     }
     
     /**
@@ -132,10 +131,10 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     )
-                    Log.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Restored existing button")
+                    PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Restored existing button")
                 }
             } catch (restoreException: Exception) {
-                Log.e(
+                PayLog.e(
                     PaymentConstants.TAG_GOOGLE_PAY_BUTTON,
                     "Failed to restore button",
                     restoreException

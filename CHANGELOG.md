@@ -69,6 +69,24 @@ All notable changes to this project are documented in this file.
   `bun install` in this repository still builds it.
 - **The published package no longer includes the library's tests.** 0.0.17 shipped
   `src/**/__tests__` and their compiled copies under `lib/**/__tests__` (21 files).
+- **Android: release builds no longer write payment requests to logcat.** The payment handler
+  logged the full Google Pay request (merchant ID, gateway merchant ID, item labels and amounts)
+  with `Log.d`, which release builds keep, and the Google Pay button logged on every prop update.
+  `HybridPaymentHandler` and `HybridGooglePayButton` now log in debug builds only. Payment errors
+  still reach your app in `result.error`.
+- **Android: the payment handler no longer stays registered on the React context.** Each handler
+  added an activity result listener when it was created and never removed it, so the context kept
+  every handler alive. The listener is now registered only while the Google Pay sheet is open.
+- **Android: Google Pay no longer uses the deprecated `AutoResolveHelper.resolveTask`.** The sheet
+  is shown with `ResolvableApiException.startResolutionForResult`, and results and error messages
+  are unchanged. If Android kills the app while the sheet is open, the payment is dropped and
+  nothing is charged; see
+  [Android (Google Pay)](https://gmi-software.github.io/react-native-pay/docs/setup/android-google-pay#if-android-kills-the-app-during-payment).
+- **Build files.** The podspec's `source` points to this repository instead of the Nitro template,
+  the unused `GOOGLE_PAY_ENVIRONMENT` Gradle property is gone (the environment comes from
+  `googlePayEnvironment`), and the Android build uses `lint {}` and Gradle's assignment syntax.
+  Java and Kotlin now both target 17. React Native's Gradle plugin already compiled the library
+  for 17, so this changes nothing unless your app sets `react.internal.disableJavaVersionAlignment`.
 
 ## 0.0.17 — 2026-09-16
 

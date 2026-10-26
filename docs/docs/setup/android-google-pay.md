@@ -61,6 +61,17 @@ npx expo run:android
 - `PRODUCTION` needs Google's approval. See [Production access](/docs/guides/testing#production-access).
 - Before each release, run the [release checklist](/docs/guides/testing#release-checklist).
 
+## If Android kills the app during payment
+
+If the user switches to another app while the Google Pay sheet is open, Android can kill your app's process to free memory. When the user comes back and finishes or closes the sheet, your app restarts with a new JS runtime. The `startPayment()` call that opened the sheet no longer exists, so its result is dropped:
+
+- No token reaches your app, so your backend charges nothing.
+- The cart and checkout screen are gone unless your app restores them. The user has to start the payment again.
+
+The payment survives a recreated Activity, for example after a configuration change your Activity doesn't handle: the result still reaches `startPayment()`.
+
+To reproduce a process death, open the sheet, press Home, run `adb shell am kill <your.package.name>`, reopen the app from Recents, and close the sheet.
+
 ## Troubleshooting
 
 - **Button not showing:** Ensure `enableGooglePay: true` is set, prebuild was run, and Google Play Services is available.
