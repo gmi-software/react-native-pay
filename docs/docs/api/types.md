@@ -94,7 +94,7 @@ interface PaymentResult extends PaymentDetails {
   token?: PaymentToken
   error?: string
   // From PaymentDetails, set only when requested:
-  // billingContact, shippingContact, emailAddress, phoneNumber
+  // billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod
 }
 ```
 
