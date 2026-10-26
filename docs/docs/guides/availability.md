@@ -24,30 +24,31 @@ On Android, the check goes to the Google Pay environment you pass as `googlePayE
 - **iOS**: show the Apple Pay buy button when `hasActiveCard` is `true`. When only `isSupported` is `true`, show the **Set up Apple Pay** button (`buttonType="setUp"`) and call `HybridPaymentHandler.openPaymentSetup()` on tap. It opens Wallet (Settings on iPad) to add a card.
 - **Neither platform**: when `isSupported` is `false`, hide the wallet buttons and offer another way to pay.
 
-The user comes back from Wallet with a card the status does not know about yet, so check again when the app returns to the foreground:
+In the example below, the checkout screen owns the hook and the cart, and `WalletButton` picks the button from the status. The user comes back from Wallet with a card the status does not know about yet, so the screen checks again when the app returns to the foreground:
 
 ```tsx
 import { useEffect } from 'react'
-import { AppState, Platform } from 'react-native'
+import { AppState, Button, Platform, View } from 'react-native'
 import { callback } from 'react-native-nitro-modules'
 import {
   ApplePayButton,
   GooglePayButton,
   HybridPaymentHandler,
   usePaymentCheckout,
+  type UsePaymentCheckoutReturn,
 } from '@gmisoftware/react-native-pay'
 
-export function WalletButton() {
-  const { isSupported, hasActiveCard, refreshStatus, startPayment } =
-    usePaymentCheckout({
-      merchantName: 'Your Store',
-      supportedNetworks: ['visa', 'mastercard'],
-      // The environment you pay in, so the status is real in production.
-      googlePayEnvironment: 'PRODUCTION',
-      googlePayMerchantId: 'your_google_pay_merchant_id',
-      googlePayGateway: 'stripe',
-      googlePayGatewayMerchantId: 'your_stripe_merchant_id',
-    })
+export function CheckoutScreen() {
+  const checkout = usePaymentCheckout({
+    merchantName: 'Your Store',
+    supportedNetworks: ['visa', 'mastercard'],
+    // The environment you pay in, so the status is real in production.
+    googlePayEnvironment: 'PRODUCTION',
+    googlePayMerchantId: 'your_google_pay_merchant_id',
+    googlePayGateway: 'stripe',
+    googlePayGatewayMerchantId: 'your_stripe_merchant_id',
+  })
+  const { refreshStatus } = checkout
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -55,6 +56,20 @@ export function WalletButton() {
     })
     return () => subscription.remove()
   }, [refreshStatus])
+
+  return (
+    <View>
+      <Button
+        title="Add Coffee"
+        onPress={() => checkout.addItem('Coffee', '4.99')}
+      />
+      {checkout.items.length > 0 && <WalletButton checkout={checkout} />}
+    </View>
+  )
+}
+
+function WalletButton({ checkout }: { checkout: UsePaymentCheckoutReturn }) {
+  const { isSupported, hasActiveCard, startPayment } = checkout
 
   // `isSupported` is `false` until the first check settles, and a refresh
   // keeps the last answer, so the button does not flicker on return.

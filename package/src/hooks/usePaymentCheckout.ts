@@ -203,6 +203,7 @@ export interface UsePaymentCheckoutReturn {
  * function CheckoutScreen() {
  *   const {
  *     isSupported,
+ *     isCheckingStatus,
  *     items,
  *     total,
  *     addItem,
@@ -227,6 +228,10 @@ export interface UsePaymentCheckoutReturn {
  *     { label: 'Sandwich', amount: 8.99 },
  *     { label: 'Tax', amount: 1.20, type: 'final' }
  *   ])
+ *
+ *   if (isCheckingStatus) {
+ *     return <ActivityIndicator />
+ *   }
  *
  *   if (!isSupported) {
  *     return <Text>Payment not available</Text>

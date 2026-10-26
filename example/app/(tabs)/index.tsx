@@ -145,18 +145,6 @@ export default function TabOneScreen() {
     }
   };
 
-  // Only before the first answer: a refresh keeps the last one on screen.
-  if (isCheckingStatus && !isSupported) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>
-          Checking {paymentServiceName} availability...
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{paymentServiceName} Demo</Text>
@@ -195,6 +183,12 @@ export default function TabOneScreen() {
             </Text>
           </View>
         </View>
+        {/* In place, so a refresh never hides the rest of the screen. */}
+        {isCheckingStatus && (
+          <Text style={styles.loadingText}>
+            Checking {paymentServiceName} availability...
+          </Text>
+        )}
       </View>
 
       {/* Simulated Server Section */}
@@ -331,7 +325,7 @@ export default function TabOneScreen() {
         </View>
       )}
 
-      {!isSupported && (
+      {!isSupported && !isCheckingStatus && (
         <View style={styles.unavailableBox}>
           <Text style={styles.unavailableText}>
             {paymentServiceName} is not available on this device

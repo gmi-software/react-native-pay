@@ -196,6 +196,7 @@ function CheckoutScreen() {
   const {
     // Payment availability
     isSupported,
+    isCheckingStatus,
 
     // Cart management
     items,
@@ -244,6 +245,10 @@ function CheckoutScreen() {
         }),
       })
     }
+  }
+
+  if (isCheckingStatus) {
+    return <View><ActivityIndicator /></View>
   }
 
   if (!isSupported) {
