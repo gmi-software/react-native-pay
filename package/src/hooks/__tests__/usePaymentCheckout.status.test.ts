@@ -114,14 +114,18 @@ describe('usePaymentCheckout availability', () => {
       })
     })
 
-    it('leaves unset options to the native defaults', async () => {
+    it('checks the defaults the payment request uses', async () => {
       const { result } = renderCheckout()
 
       await waitFor(() => {
         expect(result.current.isCheckingStatus).toBe(false)
       })
 
-      expect(mockPayServiceStatus).toHaveBeenCalledWith({})
+      expect(mockPayServiceStatus).toHaveBeenCalledWith({
+        supportedNetworks: result.current.paymentRequest.supportedNetworks,
+        merchantCapabilities:
+          result.current.paymentRequest.merchantCapabilities,
+      })
     })
 
     it('does not check again when an inline config re-renders unchanged', async () => {
@@ -160,9 +164,9 @@ describe('usePaymentCheckout availability', () => {
         expect(result.current.isCheckingStatus).toBe(false)
       })
       expect(mockPayServiceStatus).toHaveBeenCalledTimes(2)
-      expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
-        googlePayEnvironment: 'PRODUCTION',
-      })
+      expect(mockPayServiceStatus).toHaveBeenLastCalledWith(
+        expect.objectContaining({ googlePayEnvironment: 'PRODUCTION' })
+      )
     })
 
     it('refreshStatus checks again and reports the new status', async () => {

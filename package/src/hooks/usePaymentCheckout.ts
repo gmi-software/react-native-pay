@@ -289,44 +289,6 @@ export function usePaymentCheckout(
   // Set synchronously, so two calls in the same frame still see each other.
   const isPaymentInFlight = useRef(false)
 
-  // Check against what the payment will use. Keyed on only these fields, by
-  // value like `requestConfigKey`, so another config change does not re-query.
-  const statusOptionsKey = JSON.stringify({
-    supportedNetworks: config.supportedNetworks,
-    merchantCapabilities: config.merchantCapabilities,
-    googlePayEnvironment: config.googlePayEnvironment,
-  })
-
-  useEffect(() => {
-    // Ignores a check that settles after a newer one started or after unmount.
-    let isCurrent = true
-    const options: PayServiceStatusOptions = JSON.parse(statusOptionsKey)
-
-    const checkStatus = async () => {
-      setIsCheckingStatus(true)
-      let nextStatus: PayServiceStatus
-      try {
-        nextStatus = await getPaymentHandler().payServiceStatus(options)
-      } catch (err) {
-        console.error('Failed to check payment status:', err)
-        nextStatus = { isSupported: false, hasActiveCard: false }
-      }
-      if (isCurrent) {
-        setStatus(nextStatus)
-        setIsCheckingStatus(false)
-      }
-    }
-    checkStatus()
-
-    return () => {
-      isCurrent = false
-    }
-  }, [statusOptionsKey, statusCheck])
-
-  const refreshStatus = useCallback(() => {
-    setStatusCheck((check) => check + 1)
-  }, [])
-
   const total = useMemo(() => calculateTotal(items), [items])
 
   const paymentRequest = useMemo<PaymentRequest>(() => {
@@ -366,6 +328,44 @@ export function usePaymentCheckout(
       phoneNumberRequired,
     })
   }, [stableRequestConfig, items])
+
+  // Check exactly what the payment will use. By value: the request changes
+  // with the cart and the rest of the config, these fields rarely do.
+  const statusOptionsKey = JSON.stringify({
+    supportedNetworks: paymentRequest.supportedNetworks,
+    merchantCapabilities: paymentRequest.merchantCapabilities,
+    googlePayEnvironment: paymentRequest.googlePayEnvironment,
+  })
+
+  useEffect(() => {
+    // Ignores a check that settles after a newer one started or after unmount.
+    let isCurrent = true
+    const options: PayServiceStatusOptions = JSON.parse(statusOptionsKey)
+
+    const checkStatus = async () => {
+      setIsCheckingStatus(true)
+      let nextStatus: PayServiceStatus
+      try {
+        nextStatus = await getPaymentHandler().payServiceStatus(options)
+      } catch (err) {
+        console.error('Failed to check payment status:', err)
+        nextStatus = { isSupported: false, hasActiveCard: false }
+      }
+      if (isCurrent) {
+        setStatus(nextStatus)
+        setIsCheckingStatus(false)
+      }
+    }
+    checkStatus()
+
+    return () => {
+      isCurrent = false
+    }
+  }, [statusOptionsKey, statusCheck])
+
+  const refreshStatus = useCallback(() => {
+    setStatusCheck((check) => check + 1)
+  }, [])
 
   // Cart operations
   const addItem = useCallback(

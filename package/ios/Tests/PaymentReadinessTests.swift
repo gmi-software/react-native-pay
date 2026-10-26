@@ -24,8 +24,4 @@ final class PaymentReadinessTests: XCTestCase {
             XCTAssertEqual(String(describing: error), message)
         }
     }
-
-    func testDefaultNetworksMatchTheHookDefault() {
-        XCTAssertEqual(PaymentReadiness.defaultNetworks, ["visa", "mastercard", "amex", "discover"])
-    }
 }
