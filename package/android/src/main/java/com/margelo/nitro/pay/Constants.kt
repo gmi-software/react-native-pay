@@ -63,7 +63,7 @@ object PaymentConstants {
         "elo" to "ELO"
     )
     
-    // Availability checks give up after this, like the blocking calls they replaced
+    // How long an availability check waits for Google Pay
     const val READY_TO_PAY_TIMEOUT_SECONDS = 5L
     
     // Errors (keep in sync with iOS `ErrorMessage`)

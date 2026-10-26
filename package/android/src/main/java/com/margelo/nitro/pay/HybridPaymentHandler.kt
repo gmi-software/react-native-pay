@@ -281,7 +281,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         )
     }
     
-    /** A failed or timed-out check counts as not ready, as it did before. */
+    /** A failed or timed-out check counts as not ready. */
     private fun Task<Boolean>.resultOrFalse(): Boolean {
         if (isSuccessful) return result == true
         PayLog.w(PaymentConstants.TAG_PAYMENT_HANDLER, "isReadyToPay failed", exception)
