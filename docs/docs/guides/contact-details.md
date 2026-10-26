@@ -20,10 +20,13 @@ A field is set only when you asked for it. Ask only for what you need to fulfil 
 The details are in the result, and `onAuthorize` receives them as its second argument, so your server can check the address before it charges:
 
 ```ts
+import { useEffect } from 'react'
 import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 
+const order = { label: 'Coffee beans', total: '18.00' } // your order
+
 function useShippedOrder() {
-  const { startPayment } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment } = usePaymentCheckout({
     currencyCode: 'USD',
     shippingContactRequired: true,
     emailRequired: true,
@@ -38,6 +41,11 @@ function useShippedOrder() {
         : { status: 'failure', error: 'We cannot ship to this address' }
     },
   })
+
+  useEffect(() => {
+    addItem(order.label, order.total)
+    return clearItems
+  }, [addItem, clearItems])
 
   return async () => {
     const result = await startPayment()

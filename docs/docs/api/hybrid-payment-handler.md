@@ -52,11 +52,13 @@ const result = await HybridPaymentHandler.startPayment(
 **PaymentResult:**
 
 ```ts no-check
-interface PaymentResult {
+interface PaymentResult extends PaymentDetails {
   success: boolean
   transactionId?: string
   token?: PaymentToken
   error?: string
+  // From PaymentDetails, set only when requested:
+  // billingContact, shippingContact, emailAddress, phoneNumber
 }
 ```
 
