@@ -40,6 +40,10 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   @DoNotStrip
   @Keep
   abstract fun canMakePayments(usingNetworks: Array<String>): Boolean
+  
+  @DoNotStrip
+  @Keep
+  abstract fun isPaymentInProgress(): Boolean
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {
