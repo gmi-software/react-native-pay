@@ -27,7 +27,8 @@ class GooglePayRequestBuilderTest {
         billingContactRequired: Boolean? = null,
         shippingContactRequired: Boolean? = null,
         emailRequired: Boolean? = null,
-        phoneNumberRequired: Boolean? = null
+        phoneNumberRequired: Boolean? = null,
+        shippingMethods: Array<ShippingMethod>? = null
     ) = PaymentRequest(
         applePayMerchantIdentifier = null,
         merchantName = merchantName,
@@ -37,7 +38,7 @@ class GooglePayRequestBuilderTest {
         merchantCapabilities = arrayOf("3DS"),
         supportedNetworks = arrayOf("visa"),
         shippingType = null,
-        shippingMethods = null,
+        shippingMethods = shippingMethods,
         billingContactRequired = billingContactRequired,
         shippingContactRequired = shippingContactRequired,
         emailRequired = emailRequired,
@@ -348,6 +349,73 @@ class GooglePayRequestBuilderTest {
         val billingParameters = json.cardParameters().getJSONObject("billingAddressParameters")
         assertEquals("FULL", billingParameters.getString("format"))
         assertTrue(billingParameters.getBoolean("phoneNumberRequired"))
+    }
+
+    // Shipping methods
+
+    private fun method(identifier: String, label: String, amount: String) =
+        ShippingMethod(identifier = identifier, label = label, amount = PaymentAmount.create(amount), detail = null)
+
+    private val shippingMethods = arrayOf(
+        method("standard", "Standard", "4.50"),
+        method("express", "Express", "9.00")
+    )
+
+    @Test
+    fun shippingMethods_chargeTheFirstMethodAsALineItem() {
+        val json = build(paymentRequest(arrayOf(item("Beans", "18.00")), shippingMethods = shippingMethods))
+
+        val items = json.displayItems()
+        assertEquals(listOf("Beans", "Standard"), items.map { it.getString("label") })
+        assertEquals(listOf("18.00", "4.50"), items.map { it.getString("price") })
+        assertEquals(listOf("LINE_ITEM", "LINE_ITEM"), items.map { it.getString("type") })
+        assertEquals("FINAL", items[1].getString("status"))
+        assertEquals("22.50", json.totalPrice())
+        assertEquals("FINAL", json.totalPriceStatus())
+    }
+
+    @Test
+    fun shippingMethods_emptyListChargesNoShipping() {
+        val json = build(paymentRequest(arrayOf(item("Beans", "18.00")), shippingMethods = emptyArray()))
+
+        assertEquals(listOf("Beans"), json.displayItems().map { it.getString("label") })
+        assertEquals("18.00", json.totalPrice())
+    }
+
+    @Test
+    fun shippingMethods_areValidatedLikeOnIos() {
+        val beans = arrayOf(item("Beans", "18.00"))
+        val cases = listOf(
+            arrayOf(method(" ", "Standard", "0")) to
+                "Shipping method \"Standard\" needs an identifier",
+            arrayOf(method("express", "Express", "7.50"), method("express", "Express (again)", "9.00")) to
+                "Shipping method identifier \"express\" is used more than once",
+            arrayOf(method("pickup", "Pickup", "-1.00")) to
+                "Amount for \"Pickup\" must not be negative",
+            arrayOf(method("express", "Express", "7,50")) to
+                "Amount for \"Express\" must be a finite number or a decimal string like \"19.99\""
+        )
+
+        cases.forEach { (methods, message) ->
+            val error = assertThrows(IllegalArgumentException::class.java) {
+                build(paymentRequest(beans, shippingMethods = methods))
+            }
+            assertEquals(message, error.message)
+        }
+    }
+
+    @Test
+    fun shippingMethods_doNotMakeUpForANegativeItemTotal() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(
+                paymentRequest(
+                    arrayOf(item("Coffee", "4.99"), item("Discount", "-10.00")),
+                    shippingMethods = arrayOf(method("express", "Express", "6.00"), method("standard", "Standard", "0"))
+                )
+            )
+        }
+
+        assertEquals("Payment total must not be negative, got -5.01", error.message)
     }
 
     @Test

@@ -129,11 +129,23 @@ describe('normalizePaymentRequest', () => {
   it('normalizes shipping methods', () => {
     const normalized = normalizePaymentRequest({
       ...request([{ label: 'Product', amount: 10, type: 'final' }]),
-      shippingMethods: [{ label: 'Express', amount: 7.5, type: 'final' }],
+      shippingMethods: [
+        {
+          identifier: 'express',
+          label: 'Express',
+          amount: 7.5,
+          detail: '1 day',
+        },
+      ],
     })
 
     expect(normalized.shippingMethods).toEqual([
-      { label: 'Express', amount: '7.50', type: 'final' },
+      {
+        identifier: 'express',
+        label: 'Express',
+        amount: '7.50',
+        detail: '1 day',
+      },
     ])
   })
 

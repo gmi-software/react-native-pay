@@ -23,6 +23,18 @@ private enum ErrorMessage {
         return "Unknown merchant capability \"\(capability)\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
     }
 
+    static func missingShippingMethodIdentifier(_ label: String) -> String {
+        return "Shipping method \"\(label)\" needs an identifier"
+    }
+
+    static func duplicateShippingMethodIdentifier(_ identifier: String) -> String {
+        return "Shipping method identifier \"\(identifier)\" is used more than once"
+    }
+
+    static func negativeShippingMethodAmount(_ label: String) -> String {
+        return "Amount for \"\(label)\" must not be negative"
+    }
+
     static func unknownShippingType(_ shippingType: String) -> String {
         return "Unknown shipping type \"\(shippingType)\". Use \"shipping\", \"delivery\", \"storePickup\" or \"servicePickup\""
     }
@@ -61,7 +73,15 @@ struct PaymentRequestBuilder {
         paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
-        paymentRequest.paymentSummaryItems = try buildPaymentItems(for: request)
+        let shippingMethods = try buildShippingMethods(request.shippingMethods ?? [])
+        if !shippingMethods.isEmpty {
+            paymentRequest.shippingMethods = shippingMethods
+        }
+        // PassKit selects the first method when the sheet opens.
+        paymentRequest.paymentSummaryItems = try buildSummaryItems(
+            for: request,
+            selectedShippingMethodIdentifier: shippingMethods.first?.identifier
+        )
         paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
         
@@ -98,24 +118,68 @@ struct PaymentRequestBuilder {
         return nil
     }
     
-    private static func buildPaymentItems(for request: PaymentRequest) throws -> [PKPaymentSummaryItem] {
+    private static func buildShippingMethods(_ methods: [ShippingMethod]) throws -> [PKShippingMethod] {
+        var identifiers = Set<String>()
+        return try methods.map { method in
+            guard !method.identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw PaymentRequestError(message: ErrorMessage.missingShippingMethodIdentifier(method.label))
+            }
+            guard identifiers.insert(method.identifier).inserted else {
+                throw PaymentRequestError(message: ErrorMessage.duplicateShippingMethodIdentifier(method.identifier))
+            }
+            let amount = try shippingMethodAmount(method)
+            let pkMethod = PKShippingMethod(label: method.label, amount: amount)
+            pkMethod.identifier = method.identifier
+            pkMethod.detail = method.detail
+            return pkMethod
+        }
+    }
+
+    private static func shippingMethodAmount(_ method: ShippingMethod) throws -> NSDecimalNumber {
+        guard let amount = method.amount.decimalNumber else {
+            throw PaymentRequestError(message: ErrorMessage.invalidAmount(method.label))
+        }
+        guard amount.decimalValue >= Decimal.zero else {
+            throw PaymentRequestError(message: ErrorMessage.negativeShippingMethodAmount(method.label))
+        }
+        return amount
+    }
+
+    /// The payment items, then the selected shipping method as its own line,
+    /// then the total. Internal so the delegate and the unit tests can rebuild it.
+    static func buildSummaryItems(
+        for request: PaymentRequest,
+        selectedShippingMethodIdentifier: String?
+    ) throws -> [PKPaymentSummaryItem] {
         let amounts = try request.paymentItems.map { item -> NSDecimalNumber in
             guard let amount = item.amount.decimalNumber else {
                 throw PaymentRequestError(message: ErrorMessage.invalidAmount(item.label))
             }
             return amount
         }
-        let totalAmount = amounts.reduce(Decimal.zero) { partialResult, amount in
+
+        // Checked without shipping: methods are never negative, so then every
+        // method the payer can pick keeps the total valid.
+        var totalAmount = amounts.reduce(Decimal.zero) { partialResult, amount in
             partialResult + amount.decimalValue
         }
         guard totalAmount >= Decimal.zero else {
             throw PaymentRequestError(message: ErrorMessage.negativeTotal)
         }
 
-        let lineItems = zip(request.paymentItems, amounts).map { item, amount in
+        var lineItems = zip(request.paymentItems, amounts).map { item, amount in
             let pkItem = PKPaymentSummaryItem(label: item.label, amount: amount)
             pkItem.type = item.type == .final ? .final : .pending
             return pkItem
+        }
+
+        if let identifier = selectedShippingMethodIdentifier,
+           let method = request.shippingMethods?.first(where: { $0.identifier == identifier }) {
+            let amount = try shippingMethodAmount(method)
+            let shippingItem = PKShippingMethod(label: method.label, amount: amount)
+            shippingItem.identifier = method.identifier
+            lineItems.append(shippingItem)
+            totalAmount += amount.decimalValue
         }
 
         // PassKit shows the last item as the grand total ("Pay <label>"), so
@@ -254,7 +318,8 @@ private enum PaymentResultFactory {
             billingContact: details.billingContact,
             shippingContact: details.shippingContact,
             emailAddress: details.emailAddress,
-            phoneNumber: details.phoneNumber
+            phoneNumber: details.phoneNumber,
+            shippingMethod: details.shippingMethod
         )
     }
 
@@ -267,7 +332,8 @@ private enum PaymentResultFactory {
             billingContact: nil,
             shippingContact: nil,
             emailAddress: nil,
-            phoneNumber: nil
+            phoneNumber: nil,
+            shippingMethod: nil
         )
     }
 
@@ -294,8 +360,11 @@ private enum PaymentResultFactory {
 
 private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
+    private let request: PaymentRequest
     private let paymentRequest: PKPaymentRequest
     private let onAuthorize: AuthorizeCallback?
+    private var selectedShippingMethodIdentifier: String?
+    private var summaryItems: [PKPaymentSummaryItem]
     private var paymentAuthorized: Bool = false
     private var authorizedResult: PaymentResult?
     private var isAuthorizing: Bool = false
@@ -303,16 +372,41 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
     private var presentationDate: Date?
     private let userDismissThreshold: TimeInterval = 0.75
     
-    init(paymentHandler: HybridPaymentHandler, paymentRequest: PKPaymentRequest, onAuthorize: AuthorizeCallback?) {
+    init(
+        paymentHandler: HybridPaymentHandler,
+        request: PaymentRequest,
+        paymentRequest: PKPaymentRequest,
+        onAuthorize: AuthorizeCallback?
+    ) {
         self.paymentHandler = paymentHandler
+        self.request = request
         self.paymentRequest = paymentRequest
         self.onAuthorize = onAuthorize
+        self.selectedShippingMethodIdentifier = paymentRequest.shippingMethods?.first?.identifier
+        self.summaryItems = paymentRequest.paymentSummaryItems
     }
 
     func markPresented() {
         presentationDate = Date()
     }
     
+    func paymentAuthorizationViewController(
+        _ controller: PKPaymentAuthorizationViewController,
+        didSelect shippingMethod: PKShippingMethod,
+        handler completion: @escaping (PKPaymentRequestShippingMethodUpdate) -> Void
+    ) {
+        selectedShippingMethodIdentifier = shippingMethod.identifier
+        // The request was validated when it was built, so this only keeps the
+        // current items if rebuilding fails. PassKit waits for the completion.
+        if let items = try? PaymentRequestBuilder.buildSummaryItems(
+            for: request,
+            selectedShippingMethodIdentifier: shippingMethod.identifier
+        ) {
+            summaryItems = items
+        }
+        completion(PKPaymentRequestShippingMethodUpdate(paymentSummaryItems: summaryItems))
+    }
+
     func paymentAuthorizationViewController(
         _ controller: PKPaymentAuthorizationViewController,
         didAuthorizePayment payment: PKPayment,
@@ -324,7 +418,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
             billingContact: payment.billingContact,
             shippingContact: payment.shippingContact,
             requiredBillingFields: paymentRequest.requiredBillingContactFields,
-            requiredShippingFields: paymentRequest.requiredShippingContactFields
+            requiredShippingFields: paymentRequest.requiredShippingContactFields,
+            shippingMethod: selectedShippingMethod(payment)
         )
 
         guard let onAuthorize else {
@@ -368,6 +463,12 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
             .catch { settleOnMain(PaymentResultFactory.failure($0)) }
     }
     
+    /// The request's entry for the method the payer authorized with.
+    private func selectedShippingMethod(_ payment: PKPayment) -> ShippingMethod? {
+        let identifier = payment.shippingMethod?.identifier ?? selectedShippingMethodIdentifier
+        return request.shippingMethods?.first { $0.identifier == identifier }
+    }
+
     func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
         controller.dismiss(animated: true) {
             // Report the merchant's outcome, not a cancellation, once it arrives.
@@ -456,7 +557,12 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
         let paymentRequest = try PaymentRequestBuilder.build(from: request)
         
-        delegate = PaymentDelegate(paymentHandler: self, paymentRequest: paymentRequest, onAuthorize: onAuthorize)
+        delegate = PaymentDelegate(
+            paymentHandler: self,
+            request: request,
+            paymentRequest: paymentRequest,
+            onAuthorize: onAuthorize
+        )
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
             throw PaymentRequestError(message: ErrorMessage.unableToCreate)

@@ -96,7 +96,7 @@ function useOrderPayment() {
 
 With `HybridPaymentHandler`, pass the same callback as `startPayment(request, { onAuthorize })`.
 
-The second argument of `onAuthorize` holds the contact details the request asked for, such as the shipping address. See [Shipping and contact details](/docs/guides/contact-details).
+The second argument of `onAuthorize` holds the contact details and shipping method the request asked for, such as the shipping address. See [Shipping and contact details](/docs/guides/contact-details).
 
 How it behaves:
 

@@ -58,7 +58,8 @@ object PaymentMapper {
                 billingContact = details.billingContact,
                 shippingContact = details.shippingContact,
                 emailAddress = details.emailAddress,
-                phoneNumber = details.phoneNumber
+                phoneNumber = details.phoneNumber,
+                shippingMethod = details.shippingMethod
             )
         } catch (e: JSONException) {
             createErrorResult("Failed to parse payment data: ${e.message}")
@@ -83,7 +84,8 @@ object PaymentMapper {
             billingContact = billingAddress?.takeIf { requested.billingContact }?.let(::mapContact),
             shippingContact = shippingAddress?.takeIf { requested.shippingContact }?.let(::mapContact),
             emailAddress = paymentData.takeIf { requested.email }?.optNonEmpty("email"),
-            phoneNumber = phoneAddress?.takeIf { requested.phoneNumber }?.optNonEmpty("phoneNumber")
+            phoneNumber = phoneAddress?.takeIf { requested.phoneNumber }?.optNonEmpty("phoneNumber"),
+            shippingMethod = requested.shippingMethod
         )
     }
     
@@ -126,7 +128,8 @@ object PaymentMapper {
             billingContact = result.billingContact,
             shippingContact = result.shippingContact,
             emailAddress = result.emailAddress,
-            phoneNumber = result.phoneNumber
+            phoneNumber = result.phoneNumber,
+            shippingMethod = result.shippingMethod
         )
     }
     
@@ -175,7 +178,8 @@ object PaymentMapper {
             billingContact = null,
             shippingContact = null,
             emailAddress = null,
-            phoneNumber = null
+            phoneNumber = null,
+            shippingMethod = null
         )
     }
 }

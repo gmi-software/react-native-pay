@@ -56,6 +56,8 @@ namespace margelo::nitro::pay { enum class PaymentNetwork; }
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `ShippingMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct ShippingMethod; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 
@@ -90,6 +92,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentNetwork.hpp"
 #include "PaymentResult.hpp"
 #include "PaymentToken.hpp"
+#include "ShippingMethod.hpp"
 #include "StartPaymentOptions.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
@@ -310,6 +313,50 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.value();
   }
   
+  // pragma MARK: std::variant<double, std::string>
+  /**
+   * Wrapper struct for `std::variant<double, std::string>`.
+   * std::variant cannot be used in Swift because of a Swift bug.
+   * Not even specializing it works. So we create a wrapper struct.
+   */
+  struct std__variant_double__std__string_ final {
+    std::variant<double, std::string> variant;
+    std__variant_double__std__string_(std::variant<double, std::string> variant): variant(variant) { }
+    operator std::variant<double, std::string>() const noexcept {
+      return variant;
+    }
+    inline size_t index() const noexcept {
+      return variant.index();
+    }
+    inline double get_0() const noexcept {
+      return std::get<0>(variant);
+    }
+    inline std::string get_1() const noexcept {
+      return std::get<1>(variant);
+    }
+  };
+  inline std__variant_double__std__string_ create_std__variant_double__std__string_(double value) noexcept {
+    return std__variant_double__std__string_(value);
+  }
+  inline std__variant_double__std__string_ create_std__variant_double__std__string_(const std::string& value) noexcept {
+    return std__variant_double__std__string_(value);
+  }
+  
+  // pragma MARK: std::optional<ShippingMethod>
+  /**
+   * Specialized version of `std::optional<ShippingMethod>`.
+   */
+  using std__optional_ShippingMethod_ = std::optional<ShippingMethod>;
+  inline std::optional<ShippingMethod> create_std__optional_ShippingMethod_(const ShippingMethod& value) noexcept {
+    return std::optional<ShippingMethod>(value);
+  }
+  inline bool has_value_std__optional_ShippingMethod_(const std::optional<ShippingMethod>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline ShippingMethod get_std__optional_ShippingMethod_(const std::optional<ShippingMethod>& optional) noexcept {
+    return optional.value();
+  }
+  
   // pragma MARK: std::shared_ptr<Promise<PaymentResult>>
   /**
    * Specialized version of `std::shared_ptr<Promise<PaymentResult>>`.
@@ -366,35 +413,6 @@ namespace margelo::nitro::pay::bridge::swift {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
   }
   
-  // pragma MARK: std::variant<double, std::string>
-  /**
-   * Wrapper struct for `std::variant<double, std::string>`.
-   * std::variant cannot be used in Swift because of a Swift bug.
-   * Not even specializing it works. So we create a wrapper struct.
-   */
-  struct std__variant_double__std__string_ final {
-    std::variant<double, std::string> variant;
-    std__variant_double__std__string_(std::variant<double, std::string> variant): variant(variant) { }
-    operator std::variant<double, std::string>() const noexcept {
-      return variant;
-    }
-    inline size_t index() const noexcept {
-      return variant.index();
-    }
-    inline double get_0() const noexcept {
-      return std::get<0>(variant);
-    }
-    inline std::string get_1() const noexcept {
-      return std::get<1>(variant);
-    }
-  };
-  inline std__variant_double__std__string_ create_std__variant_double__std__string_(double value) noexcept {
-    return std__variant_double__std__string_(value);
-  }
-  inline std__variant_double__std__string_ create_std__variant_double__std__string_(const std::string& value) noexcept {
-    return std__variant_double__std__string_(value);
-  }
-  
   // pragma MARK: std::vector<PaymentItem>
   /**
    * Specialized version of `std::vector<PaymentItem>`.
@@ -417,18 +435,29 @@ namespace margelo::nitro::pay::bridge::swift {
     return vector;
   }
   
-  // pragma MARK: std::optional<std::vector<PaymentItem>>
+  // pragma MARK: std::vector<ShippingMethod>
   /**
-   * Specialized version of `std::optional<std::vector<PaymentItem>>`.
+   * Specialized version of `std::vector<ShippingMethod>`.
    */
-  using std__optional_std__vector_PaymentItem__ = std::optional<std::vector<PaymentItem>>;
-  inline std::optional<std::vector<PaymentItem>> create_std__optional_std__vector_PaymentItem__(const std::vector<PaymentItem>& value) noexcept {
-    return std::optional<std::vector<PaymentItem>>(value);
+  using std__vector_ShippingMethod_ = std::vector<ShippingMethod>;
+  inline std::vector<ShippingMethod> create_std__vector_ShippingMethod_(size_t size) noexcept {
+    std::vector<ShippingMethod> vector;
+    vector.reserve(size);
+    return vector;
   }
-  inline bool has_value_std__optional_std__vector_PaymentItem__(const std::optional<std::vector<PaymentItem>>& optional) noexcept {
+  
+  // pragma MARK: std::optional<std::vector<ShippingMethod>>
+  /**
+   * Specialized version of `std::optional<std::vector<ShippingMethod>>`.
+   */
+  using std__optional_std__vector_ShippingMethod__ = std::optional<std::vector<ShippingMethod>>;
+  inline std::optional<std::vector<ShippingMethod>> create_std__optional_std__vector_ShippingMethod__(const std::vector<ShippingMethod>& value) noexcept {
+    return std::optional<std::vector<ShippingMethod>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_ShippingMethod__(const std::optional<std::vector<ShippingMethod>>& optional) noexcept {
     return optional.has_value();
   }
-  inline std::vector<PaymentItem> get_std__optional_std__vector_PaymentItem__(const std::optional<std::vector<PaymentItem>>& optional) noexcept {
+  inline std::vector<ShippingMethod> get_std__optional_std__vector_ShippingMethod__(const std::optional<std::vector<ShippingMethod>>& optional) noexcept {
     return optional.value();
   }
   

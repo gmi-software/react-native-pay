@@ -756,7 +756,7 @@ interface PaymentRequest {
   merchantCapabilities: string[]; // MerchantCapability values
   supportedNetworks: string[];
   shippingType?: string; // ShippingType value, iOS only
-  shippingMethods?: PaymentItem[]; // Not implemented, ignored
+  shippingMethods?: ShippingMethod[]; // → PaymentResult.shippingMethod
   billingContactRequired?: boolean; // → PaymentResult.billingContact
   shippingContactRequired?: boolean; // → PaymentResult.shippingContact
   emailRequired?: boolean; // → PaymentResult.emailAddress
@@ -829,7 +829,9 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 
 ### Shipping and contact details
 
-Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `phoneNumberRequired` to ask the payer for a billing address, a shipping address, an email address or a phone number. Each one fills `billingContact`, `shippingContact`, `emailAddress` or `phoneNumber` in the result and in the second argument of `onAuthorize`, on both platforms. Google Pay only collects a phone number with an address: without `shippingContactRequired`, Android asks for it with at least the billing name, country and postal code. `shippingMethods` is not implemented yet. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
+Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `phoneNumberRequired` to ask the payer for a billing address, a shipping address, an email address or a phone number. Each one fills `billingContact`, `shippingContact`, `emailAddress` or `phoneNumber` in the result and in the second argument of `onAuthorize`, on both platforms. Google Pay only collects a phone number with an address: without `shippingContactRequired`, Android asks for it with at least the billing name, country and postal code.
+
+`shippingMethods` (with `HybridPaymentHandler`) lets the payer pick a delivery option; the selected method is added to the total and returned as `shippingMethod`. The first one is selected by default on iOS. Google Pay cannot offer a choice yet, so Android charges the first method. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
 
 `shippingType` (`"shipping"`, `"delivery"`, `"storePickup"` or `"servicePickup"`) only changes Apple Pay's labels. An unknown value fails the payment on iOS.
 
@@ -841,6 +843,14 @@ interface PaymentDetails {
   shippingContact?: PaymentContact; // shippingContactRequired
   emailAddress?: string; // emailRequired
   phoneNumber?: string; // phoneNumberRequired
+  shippingMethod?: ShippingMethod; // the selected entry of shippingMethods
+}
+
+interface ShippingMethod {
+  identifier: string; // unique within the request
+  label: string;
+  amount: PaymentAmount; // added to the total while selected
+  detail?: string;
 }
 
 interface PaymentContact {

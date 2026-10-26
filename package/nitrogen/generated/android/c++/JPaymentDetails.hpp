@@ -12,10 +12,14 @@
 
 #include "CNPostalAddress.hpp"
 #include "JCNPostalAddress.hpp"
+#include "JPaymentAmount.hpp"
 #include "JPaymentContact.hpp"
+#include "JShippingMethod.hpp"
 #include "PaymentContact.hpp"
+#include "ShippingMethod.hpp"
 #include <optional>
 #include <string>
+#include <variant>
 
 namespace margelo::nitro::pay {
 
@@ -44,11 +48,14 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> emailAddress = this->getFieldValue(fieldEmailAddress);
       static const auto fieldPhoneNumber = clazz->getField<jni::JString>("phoneNumber");
       jni::local_ref<jni::JString> phoneNumber = this->getFieldValue(fieldPhoneNumber);
+      static const auto fieldShippingMethod = clazz->getField<JShippingMethod>("shippingMethod");
+      jni::local_ref<JShippingMethod> shippingMethod = this->getFieldValue(fieldShippingMethod);
       return PaymentDetails(
         billingContact != nullptr ? std::make_optional(billingContact->toCpp()) : std::nullopt,
         shippingContact != nullptr ? std::make_optional(shippingContact->toCpp()) : std::nullopt,
         emailAddress != nullptr ? std::make_optional(emailAddress->toStdString()) : std::nullopt,
-        phoneNumber != nullptr ? std::make_optional(phoneNumber->toStdString()) : std::nullopt
+        phoneNumber != nullptr ? std::make_optional(phoneNumber->toStdString()) : std::nullopt,
+        shippingMethod != nullptr ? std::make_optional(shippingMethod->toCpp()) : std::nullopt
       );
     }
 
@@ -58,7 +65,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentDetails::javaobject> fromCpp(const PaymentDetails& value) {
-      using JSignature = JPaymentDetails(jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JPaymentDetails(jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JShippingMethod>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -66,7 +73,8 @@ namespace margelo::nitro::pay {
         value.billingContact.has_value() ? JPaymentContact::fromCpp(value.billingContact.value()) : nullptr,
         value.shippingContact.has_value() ? JPaymentContact::fromCpp(value.shippingContact.value()) : nullptr,
         value.emailAddress.has_value() ? jni::make_jstring(value.emailAddress.value()) : nullptr,
-        value.phoneNumber.has_value() ? jni::make_jstring(value.phoneNumber.value()) : nullptr
+        value.phoneNumber.has_value() ? jni::make_jstring(value.phoneNumber.value()) : nullptr,
+        value.shippingMethod.has_value() ? JShippingMethod::fromCpp(value.shippingMethod.value()) : nullptr
       );
     }
   };

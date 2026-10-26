@@ -27,6 +27,7 @@
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails.hpp"
 #include "JPKSecureElementPass.hpp"
 #include "JPassActivationState.hpp"
+#include "JPaymentAmount.hpp"
 #include "JPaymentAuthorizationResult.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
 #include "JPaymentContact.hpp"
@@ -35,6 +36,7 @@
 #include "JPaymentMethodType.hpp"
 #include "JPaymentNetwork.hpp"
 #include "JPaymentToken.hpp"
+#include "JShippingMethod.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PaymentAuthorizationResult.hpp"
@@ -45,12 +47,14 @@
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
 #include "PaymentToken.hpp"
+#include "ShippingMethod.hpp"
 #include <NitroModules/JNICallable.hpp>
 #include <NitroModules/JPromise.hpp>
 #include <NitroModules/Promise.hpp>
 #include <functional>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace margelo::nitro::pay {

@@ -39,6 +39,7 @@ object GooglePayRequestBuilder {
         fallbackMerchantName: String? = null
     ): JSONObject {
         validatePaymentRequest(request, environment)
+        validateShippingMethods(request)
         val requested = RequestedDetails.from(request)
 
         return JSONObject().apply {
@@ -48,7 +49,7 @@ object GooglePayRequestBuilder {
             put("allowedPaymentMethods", JSONArray().apply {
                 put(createCardPaymentMethod(request, environment, requested))
             })
-            put("transactionInfo", createTransactionInfo(request))
+            put("transactionInfo", createTransactionInfo(request, requested.shippingMethod))
             if (requested.email) {
                 put("emailRequired", true)
             }
@@ -168,13 +169,37 @@ object GooglePayRequestBuilder {
     }
     
     /**
-     * Creates transaction info
+     * Same rules and messages as iOS
      */
-    private fun createTransactionInfo(request: PaymentRequest): JSONObject {
-        val totalAmount = PaymentAmounts.total(request.paymentItems)
-        require(totalAmount.signum() >= 0) {
-            "Payment total must not be negative, got ${totalAmount.toPlainString()}"
+    private fun validateShippingMethods(request: PaymentRequest) {
+        val identifiers = mutableSetOf<String>()
+        request.shippingMethods?.forEach { method ->
+            require(method.identifier.isNotBlank()) {
+                "Shipping method \"${method.label}\" needs an identifier"
+            }
+            require(identifiers.add(method.identifier)) {
+                "Shipping method identifier \"${method.identifier}\" is used more than once"
+            }
+            require(PaymentAmounts.parse(method).signum() >= 0) {
+                "Amount for \"${method.label}\" must not be negative"
+            }
         }
+    }
+    
+    /**
+     * Creates transaction info. The shipping method is charged as its own line.
+     */
+    private fun createTransactionInfo(
+        request: PaymentRequest,
+        shippingMethod: ShippingMethod?
+    ): JSONObject {
+        // Checked without shipping, like on iOS, where the payer can pick any method.
+        val itemsTotal = PaymentAmounts.total(request.paymentItems)
+        require(itemsTotal.signum() >= 0) {
+            "Payment total must not be negative, got ${itemsTotal.toPlainString()}"
+        }
+        val shippingAmount = shippingMethod?.let { PaymentAmounts.parse(it) } ?: BigDecimal.ZERO
+        val totalAmount = itemsTotal.add(shippingAmount)
         val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
         
         return JSONObject().apply {
@@ -191,8 +216,8 @@ object GooglePayRequestBuilder {
             put("countryCode", request.countryCode)
             
             // Add display items if present
-            if (request.paymentItems.isNotEmpty()) {
-                put("displayItems", createDisplayItems(request.paymentItems))
+            if (request.paymentItems.isNotEmpty() || shippingMethod != null) {
+                put("displayItems", createDisplayItems(request.paymentItems, shippingMethod))
             }
         }
     }
@@ -200,7 +225,10 @@ object GooglePayRequestBuilder {
     /**
      * Creates display items array
      */
-    private fun createDisplayItems(items: Array<PaymentItem>): JSONArray {
+    private fun createDisplayItems(
+        items: Array<PaymentItem>,
+        shippingMethod: ShippingMethod?
+    ): JSONArray {
         return JSONArray().apply {
             items.forEach { item ->
                 put(JSONObject().apply {
@@ -214,6 +242,14 @@ object GooglePayRequestBuilder {
                         else
                             PaymentConstants.DISPLAY_ITEM_STATUS_FINAL
                     )
+                })
+            }
+            shippingMethod?.let { method ->
+                put(JSONObject().apply {
+                    put("label", method.label)
+                    put("type", PaymentConstants.LINE_ITEM_TYPE)
+                    put("price", formatPrice(PaymentAmounts.parse(method)))
+                    put("status", PaymentConstants.DISPLAY_ITEM_STATUS_FINAL)
                 })
             }
         }

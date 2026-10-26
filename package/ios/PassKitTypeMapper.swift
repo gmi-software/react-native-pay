@@ -147,7 +147,8 @@ enum PassKitTypeMapper {
         billingContact: PKContact?,
         shippingContact: PKContact?,
         requiredBillingFields: Set<PKContactField>,
-        requiredShippingFields: Set<PKContactField>
+        requiredShippingFields: Set<PKContactField>,
+        shippingMethod: ShippingMethod? = nil
     ) -> PaymentDetails {
         return PaymentDetails.init(
             billingContact: requiredBillingFields.contains(.postalAddress)
@@ -157,7 +158,8 @@ enum PassKitTypeMapper {
             emailAddress: requiredShippingFields.contains(.emailAddress)
                 ? nonEmpty(shippingContact?.emailAddress) : nil,
             phoneNumber: requiredShippingFields.contains(.phoneNumber)
-                ? nonEmpty(shippingContact?.phoneNumber?.stringValue) : nil
+                ? nonEmpty(shippingContact?.phoneNumber?.stringValue) : nil,
+            shippingMethod: shippingMethod
         )
     }
 

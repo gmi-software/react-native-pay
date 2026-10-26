@@ -18,7 +18,7 @@ public extension PaymentResult {
   /**
    * Create a new instance of `PaymentResult`.
    */
-  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?) {
+  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
     self.init(success, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = transactionId {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -58,6 +58,12 @@ public extension PaymentResult {
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = phoneNumber {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_ShippingMethod_ in
+      if let __unwrappedValue = shippingMethod {
+        return bridge.create_std__optional_ShippingMethod_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -130,5 +136,10 @@ public extension PaymentResult {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var shippingMethod: ShippingMethod? {
+    return self.__shippingMethod.value
   }
 }

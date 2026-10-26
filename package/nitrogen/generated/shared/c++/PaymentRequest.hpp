@@ -30,6 +30,8 @@
 
 // Forward declaration of `PaymentItem` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentItem; }
+// Forward declaration of `ShippingMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct ShippingMethod; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 
@@ -37,6 +39,7 @@ namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 #include <optional>
 #include "PaymentItem.hpp"
 #include <vector>
+#include "ShippingMethod.hpp"
 #include "GooglePayEnvironment.hpp"
 
 namespace margelo::nitro::pay {
@@ -54,7 +57,7 @@ namespace margelo::nitro::pay {
     std::vector<std::string> merchantCapabilities     SWIFT_PRIVATE;
     std::vector<std::string> supportedNetworks     SWIFT_PRIVATE;
     std::optional<std::string> shippingType     SWIFT_PRIVATE;
-    std::optional<std::vector<PaymentItem>> shippingMethods     SWIFT_PRIVATE;
+    std::optional<std::vector<ShippingMethod>> shippingMethods     SWIFT_PRIVATE;
     std::optional<bool> billingContactRequired     SWIFT_PRIVATE;
     std::optional<bool> shippingContactRequired     SWIFT_PRIVATE;
     std::optional<bool> emailRequired     SWIFT_PRIVATE;
@@ -66,7 +69,7 @@ namespace margelo::nitro::pay {
 
   public:
     PaymentRequest() = default;
-    explicit PaymentRequest(std::optional<std::string> applePayMerchantIdentifier, std::optional<std::string> merchantName, std::string countryCode, std::string currencyCode, std::vector<PaymentItem> paymentItems, std::vector<std::string> merchantCapabilities, std::vector<std::string> supportedNetworks, std::optional<std::string> shippingType, std::optional<std::vector<PaymentItem>> shippingMethods, std::optional<bool> billingContactRequired, std::optional<bool> shippingContactRequired, std::optional<bool> emailRequired, std::optional<bool> phoneNumberRequired, std::optional<std::string> googlePayMerchantId, std::optional<GooglePayEnvironment> googlePayEnvironment, std::optional<std::string> googlePayGateway, std::optional<std::string> googlePayGatewayMerchantId): applePayMerchantIdentifier(applePayMerchantIdentifier), merchantName(merchantName), countryCode(countryCode), currencyCode(currencyCode), paymentItems(paymentItems), merchantCapabilities(merchantCapabilities), supportedNetworks(supportedNetworks), shippingType(shippingType), shippingMethods(shippingMethods), billingContactRequired(billingContactRequired), shippingContactRequired(shippingContactRequired), emailRequired(emailRequired), phoneNumberRequired(phoneNumberRequired), googlePayMerchantId(googlePayMerchantId), googlePayEnvironment(googlePayEnvironment), googlePayGateway(googlePayGateway), googlePayGatewayMerchantId(googlePayGatewayMerchantId) {}
+    explicit PaymentRequest(std::optional<std::string> applePayMerchantIdentifier, std::optional<std::string> merchantName, std::string countryCode, std::string currencyCode, std::vector<PaymentItem> paymentItems, std::vector<std::string> merchantCapabilities, std::vector<std::string> supportedNetworks, std::optional<std::string> shippingType, std::optional<std::vector<ShippingMethod>> shippingMethods, std::optional<bool> billingContactRequired, std::optional<bool> shippingContactRequired, std::optional<bool> emailRequired, std::optional<bool> phoneNumberRequired, std::optional<std::string> googlePayMerchantId, std::optional<GooglePayEnvironment> googlePayEnvironment, std::optional<std::string> googlePayGateway, std::optional<std::string> googlePayGatewayMerchantId): applePayMerchantIdentifier(applePayMerchantIdentifier), merchantName(merchantName), countryCode(countryCode), currencyCode(currencyCode), paymentItems(paymentItems), merchantCapabilities(merchantCapabilities), supportedNetworks(supportedNetworks), shippingType(shippingType), shippingMethods(shippingMethods), billingContactRequired(billingContactRequired), shippingContactRequired(shippingContactRequired), emailRequired(emailRequired), phoneNumberRequired(phoneNumberRequired), googlePayMerchantId(googlePayMerchantId), googlePayEnvironment(googlePayEnvironment), googlePayGateway(googlePayGateway), googlePayGatewayMerchantId(googlePayGatewayMerchantId) {}
 
   public:
     friend bool operator==(const PaymentRequest& lhs, const PaymentRequest& rhs) = default;
@@ -90,7 +93,7 @@ namespace margelo::nitro {
         JSIConverter<std::vector<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"))),
         JSIConverter<std::vector<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingType"))),
-        JSIConverter<std::optional<std::vector<margelo::nitro::pay::PaymentItem>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods"))),
+        JSIConverter<std::optional<std::vector<margelo::nitro::pay::ShippingMethod>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingContactRequired"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingContactRequired"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailRequired"))),
@@ -111,7 +114,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"), JSIConverter<std::vector<std::string>>::toJSI(runtime, arg.merchantCapabilities));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"), JSIConverter<std::vector<std::string>>::toJSI(runtime, arg.supportedNetworks));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingType"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.shippingType));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods"), JSIConverter<std::optional<std::vector<margelo::nitro::pay::PaymentItem>>>::toJSI(runtime, arg.shippingMethods));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods"), JSIConverter<std::optional<std::vector<margelo::nitro::pay::ShippingMethod>>>::toJSI(runtime, arg.shippingMethods));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "billingContactRequired"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.billingContactRequired));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingContactRequired"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.shippingContactRequired));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "emailRequired"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.emailRequired));
@@ -138,7 +141,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::vector<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities")))) return false;
       if (!JSIConverter<std::vector<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingType")))) return false;
-      if (!JSIConverter<std::optional<std::vector<margelo::nitro::pay::PaymentItem>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods")))) return false;
+      if (!JSIConverter<std::optional<std::vector<margelo::nitro::pay::ShippingMethod>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethods")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingContactRequired")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingContactRequired")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailRequired")))) return false;

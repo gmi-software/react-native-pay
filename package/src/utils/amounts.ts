@@ -165,10 +165,10 @@ export function normalizeAmount(
   return formatDecimal(value.units / divisor, minorUnits)
 }
 
-function normalizeItems(
-  items: PaymentItem[],
+function normalizeItems<Item extends Pick<PaymentItem, 'label' | 'amount'>>(
+  items: Item[],
   currencyCode: string
-): PaymentItem[] {
+): Item[] {
   return items.map((item) => ({
     ...item,
     amount: normalizeAmount(item.amount, currencyCode, item.label),

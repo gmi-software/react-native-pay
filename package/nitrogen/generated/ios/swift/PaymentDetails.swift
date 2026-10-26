@@ -18,7 +18,7 @@ public extension PaymentDetails {
   /**
    * Create a new instance of `PaymentDetails`.
    */
-  init(billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?) {
+  init(billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
     self.init({ () -> bridge.std__optional_PaymentContact_ in
       if let __unwrappedValue = billingContact {
         return bridge.create_std__optional_PaymentContact_(__unwrappedValue)
@@ -40,6 +40,12 @@ public extension PaymentDetails {
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = phoneNumber {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_ShippingMethod_ in
+      if let __unwrappedValue = shippingMethod {
+        return bridge.create_std__optional_ShippingMethod_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -78,5 +84,10 @@ public extension PaymentDetails {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var shippingMethod: ShippingMethod? {
+    return self.__shippingMethod.value
   }
 }
