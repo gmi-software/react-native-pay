@@ -39,12 +39,12 @@ namespace margelo::nitro::pay {
    */
   struct PayServiceStatus final {
   public:
-    bool canMakePayments     SWIFT_PRIVATE;
-    bool canSetupCards     SWIFT_PRIVATE;
+    bool isSupported     SWIFT_PRIVATE;
+    bool hasActiveCard     SWIFT_PRIVATE;
 
   public:
     PayServiceStatus() = default;
-    explicit PayServiceStatus(bool canMakePayments, bool canSetupCards): canMakePayments(canMakePayments), canSetupCards(canSetupCards) {}
+    explicit PayServiceStatus(bool isSupported, bool hasActiveCard): isSupported(isSupported), hasActiveCard(hasActiveCard) {}
 
   public:
     friend bool operator==(const PayServiceStatus& lhs, const PayServiceStatus& rhs) = default;
@@ -60,14 +60,14 @@ namespace margelo::nitro {
     static inline margelo::nitro::pay::PayServiceStatus fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::pay::PayServiceStatus(
-        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "canMakePayments"))),
-        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "canSetupCards")))
+        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSupported"))),
+        JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "hasActiveCard")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PayServiceStatus& arg) {
       jsi::Object obj(runtime);
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "canMakePayments"), JSIConverter<bool>::toJSI(runtime, arg.canMakePayments));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "canSetupCards"), JSIConverter<bool>::toJSI(runtime, arg.canSetupCards));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "isSupported"), JSIConverter<bool>::toJSI(runtime, arg.isSupported));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "hasActiveCard"), JSIConverter<bool>::toJSI(runtime, arg.hasActiveCard));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -78,8 +78,8 @@ namespace margelo::nitro {
       if (!nitro::isPlainObject(runtime, obj)) {
         return false;
       }
-      if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "canMakePayments")))) return false;
-      if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "canSetupCards")))) return false;
+      if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSupported")))) return false;
+      if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "hasActiveCard")))) return false;
       return true;
     }
   };

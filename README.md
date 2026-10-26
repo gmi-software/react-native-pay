@@ -195,7 +195,8 @@ import { callback } from 'react-native-nitro-modules'
 function CheckoutScreen() {
   const {
     // Payment availability
-    canMakePayments,
+    isSupported,
+    isCheckingStatus,
 
     // Cart management
     items,
@@ -246,7 +247,11 @@ function CheckoutScreen() {
     }
   }
 
-  if (!canMakePayments) {
+  if (isCheckingStatus) {
+    return <View><ActivityIndicator /></View>
+  }
+
+  if (!isSupported) {
     return (
       <View>
         <Text>Apple Pay or Google Pay is not available on this device</Text>
@@ -393,9 +398,10 @@ interface UsePaymentCheckoutConfig {
 ```typescript no-check
 interface UsePaymentCheckoutReturn {
   // Payment availability
-  canMakePayments: boolean; // Can user make payments?
-  canSetupCards: boolean; // Can user add cards?
-  isCheckingStatus: boolean; // Loading state for availability check
+  isSupported: boolean; // Device supports Apple Pay / Google Pay
+  hasActiveCard: boolean; // A card on supportedNetworks is ready
+  isCheckingStatus: boolean; // true until the availability check settles
+  refreshStatus: () => void; // Check again, e.g. after the user added a card
 
   // Cart management
   items: PaymentItem[]; // Current cart items
@@ -455,26 +461,31 @@ Low-level payment handler for direct control.
 
 #### Methods
 
-##### `payServiceStatus(): PayServiceStatus`
+##### `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
 
-Check payment service availability.
+Check payment service availability without blocking the JS thread. Pass the networks, capabilities and Google Pay environment your payment request uses.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 
-const status = HybridPaymentHandler.payServiceStatus();
-console.log("Can make payments:", status.canMakePayments);
-console.log("Can setup cards:", status.canSetupCards);
+const status = await HybridPaymentHandler.payServiceStatus({
+  supportedNetworks: ["visa", "mastercard"],
+  googlePayEnvironment: "PRODUCTION",
+});
+console.log("Wallet supported:", status.isSupported);
+console.log("Card ready:", status.hasActiveCard);
 ```
 
 **Returns:**
 
 ```typescript
 interface PayServiceStatus {
-  canMakePayments: boolean;
-  canSetupCards: boolean;
+  isSupported: boolean; // iOS: canMakePayments(); Android: isReadyToPay
+  hasActiveCard: boolean; // iOS: canMakePayments(usingNetworks:capabilities:); Android: isReadyToPay with existingPaymentMethodRequired
 }
 ```
+
+Android asks the `TEST` environment unless you pass `googlePayEnvironment`, and in `TEST` `hasActiveCard` is `true` whether or not the user has a card. See [Check availability](https://gmi-software.github.io/react-native-pay/docs/guides/availability) for which button to show.
 
 ##### `startPayment(request: PaymentRequest, options?: StartPaymentOptions): Promise<PaymentResult>`
 
@@ -533,16 +544,6 @@ interface PaymentToken {
 }
 ```
 
-##### `canMakePayments(usingNetworks: string[]): boolean`
-
-Check if specific card networks are supported.
-
-```typescript
-import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
-
-const canPay = HybridPaymentHandler.canMakePayments(["visa", "mastercard"]);
-```
-
 ##### `isPaymentInProgress(): boolean`
 
 Check whether a payment started with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet. While it returns `true`, `startPayment` resolves with `{ success: false, error: "A payment is already in progress" }`.
@@ -552,6 +553,10 @@ import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 
 const isBusy = HybridPaymentHandler.isPaymentInProgress();
 ```
+
+##### `openPaymentSetup(): void`
+
+iOS only: opens Wallet so the user can add a card. Call it from an `ApplePayButton` with `buttonType="setUp"`. It does nothing on Android, where the Google Pay sheet lets the user add a card.
 
 ---
 
@@ -912,8 +917,10 @@ import {
 import { Platform } from 'react-native'
 import { callback } from 'react-native-nitro-modules'
 
-// 1. Check availability
-const { canMakePayments } = HybridPaymentHandler.payServiceStatus()
+// 1. Check availability, against the environment you pay in
+const { isSupported } = await HybridPaymentHandler.payServiceStatus({
+  googlePayEnvironment: 'PRODUCTION',
+})
 
 // 2. Create payment request
 const paymentRequest = createPaymentRequest({
@@ -951,7 +958,7 @@ const handlePayment = async () => {
 
 // 4. Render the button. onPress must be wrapped with callback().
 function PaymentButton() {
-  if (!canMakePayments) return null
+  if (!isSupported) return null
 
   return Platform.OS === 'ios' ? (
     <ApplePayButton

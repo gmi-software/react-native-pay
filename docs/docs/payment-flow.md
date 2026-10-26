@@ -8,7 +8,7 @@ The library does **not** charge the user directly. It opens the native wallet sh
 
 At a minimum:
 
-1. App checks wallet availability (`canMakePayments` / `payServiceStatus()`).
+1. App checks wallet availability (`isSupported` / `payServiceStatus()`).
 2. App builds a `PaymentRequest` from cart items.
 3. User confirms payment in the native sheet.
 4. App receives `PaymentResult` (`success`, `token`, optional `transactionId`).

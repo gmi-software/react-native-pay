@@ -231,9 +231,37 @@ export interface StartPaymentOptions {
   ) => Promise<PaymentAuthorizationResult>
 }
 
+/**
+ * Wallet readiness on this device, from `HybridPaymentHandler.payServiceStatus()`.
+ */
 export interface PayServiceStatus {
-  canMakePayments: boolean
-  canSetupCards: boolean
+  /**
+   * The device can pay with Apple Pay or Google Pay, with or without a card.
+   * iOS: `PKPaymentAuthorizationViewController.canMakePayments()`.
+   * Android: `isReadyToPay` without `existingPaymentMethodRequired`.
+   */
+  isSupported: boolean
+  /**
+   * The user has a card ready on one of the checked networks.
+   * iOS: `canMakePayments(usingNetworks:capabilities:)`.
+   * Android: `isReadyToPay` with `existingPaymentMethodRequired: true`.
+   * `false` when no checked network is recognised.
+   */
+  hasActiveCard: boolean
+}
+
+/**
+ * What `payServiceStatus` checks. Pass the values your payment request uses.
+ */
+export interface PayServiceStatusOptions {
+  // Networks a card must be on to count for `hasActiveCard`. Defaults to
+  // `['visa', 'mastercard', 'amex', 'discover']`.
+  supportedNetworks?: string[]
+  // iOS only. `MerchantCapability` values a card must support. Defaults to
+  // `['3DS']`; `'3DS'` is added when neither `'3DS'` nor `'EMV'` is given.
+  merchantCapabilities?: string[]
+  // Android only. The Google Pay environment to ask. Defaults to `'TEST'`.
+  googlePayEnvironment?: GooglePayEnvironment
 }
 
 // Backward compatibility alias

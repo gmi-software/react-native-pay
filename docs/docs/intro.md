@@ -19,7 +19,7 @@
 
 ## High-level flow
 
-1. **Check availability** — `canMakePayments` from `usePaymentCheckout()` or `HybridPaymentHandler.payServiceStatus()`.
+1. **Check availability** — `isSupported` and `hasActiveCard` from `usePaymentCheckout()` or `HybridPaymentHandler.payServiceStatus()`. See [Check availability](/docs/guides/availability).
 2. **Build the cart** — `addItem()` / `addItems()` (or build a `PaymentRequest` yourself).
 3. **Show the button** — `ApplePayButton` on iOS, `GooglePayButton` on Android.
 4. **Start payment** — `startPayment()`; user completes the sheet; you receive a **token**.

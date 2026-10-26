@@ -10,19 +10,24 @@ import { HybridPaymentHandler, createPaymentRequest } from '@gmisoftware/react-n
 
 ## Methods
 
-### payServiceStatus()
+### payServiceStatus(options?)
 
-Synchronously returns whether the payment service is available on the device.
+Resolves with whether the device supports the wallet and whether a card is ready. The check runs off the JS thread.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const status = HybridPaymentHandler.payServiceStatus()
-// status: { canMakePayments: boolean, canSetupCards: boolean }
+const status = await HybridPaymentHandler.payServiceStatus({
+  supportedNetworks: ['visa', 'mastercard'],
+  googlePayEnvironment: 'PRODUCTION',
+})
+// status: { isSupported: boolean, hasActiveCard: boolean }
 ```
 
-- **canMakePayments** — User can complete a payment (has a valid card, etc.).
-- **canSetupCards** — User can add or manage cards (e.g. Wallet settings).
+- **isSupported** — The device can pay with Apple Pay / Google Pay, whether or not a card is set up.
+- **hasActiveCard** — The user has a card ready on one of `supportedNetworks`.
+
+Pass the networks, capabilities and Google Pay environment your payment request uses ([PayServiceStatusOptions](/docs/api/types#payservicestatusoptions)). A failed check resolves both flags as `false`, except that on iOS an unknown `merchantCapabilities` value rejects the Promise, as it fails `startPayment`. Without `googlePayEnvironment`, Android asks the `TEST` environment, where `hasActiveCard` is `true` whether or not the user has a card. What each platform checks, and which button to show, is in [Check availability](/docs/guides/availability).
 
 ---
 
@@ -101,14 +106,14 @@ const isBusy = HybridPaymentHandler.isPaymentInProgress()
 
 ---
 
-### canMakePayments(usingNetworks)
+### openPaymentSetup()
 
-Returns whether the user can make payments with the given card networks.
+iOS only. Opens Wallet (Settings on iPad) so the user can add a card. Call it from a **Set up Apple Pay** button (`ApplePayButton` with `buttonType="setUp"`) when `isSupported` is `true` and `hasActiveCard` is `false`. It does nothing on devices without Apple Pay, and nothing on Android, where the Google Pay sheet lets the user add a card.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
+HybridPaymentHandler.openPaymentSetup()
 ```
 
 ## When to use

@@ -10,10 +10,10 @@ Only `PRODUCTION` with real cards proves that a charge goes through. Each test e
 |---|---|---|
 | iOS Simulator | The sheet opens and shows your line items and the "Pay *merchantName*" total. Cancel, [`onAuthorize`](/docs/guides/server-processing#charge-before-the-sheet-closes) success and failure, and the double-tap guard. No card or account needed. | A token your gateway can charge. Apple doesn't document what the Simulator's token contains, and developers report that its `paymentData` is empty. Apple also says the Simulator doesn't support every Apple Pay feature, without listing which. |
 | iPhone with a sandbox tester | The full sheet with Apple's test cards, Face ID or passcode, and a token your payment processor can test decrypting. | A completed charge. Apple says sandbox transactions are declined before fulfillment, because the test key doesn't match your production key. |
-| Android, `TEST` environment | The Google Pay sheet with Google's test cards, the result handling, and `onAuthorize`. No Google Pay merchant ID needed. | Availability: `canMakePayments` is always `true` in `TEST`. A live charge: `TEST` tokens never carry real card data, so only your gateway's test environment can process them. Your production request: the merchant ID and the `PRODUCTION` checks only run in `PRODUCTION`. |
+| Android, `TEST` environment | The Google Pay sheet with Google's test cards, the result handling, and `onAuthorize`. No Google Pay merchant ID needed. | Availability: `hasActiveCard` is always `true` in `TEST`. A live charge: `TEST` tokens never carry real card data, so only your gateway's test environment can process them. Your production request: the merchant ID and the `PRODUCTION` checks only run in `PRODUCTION`. |
 | Android, `PRODUCTION` | Everything, with real cards. | Nothing. It needs [production access](#production-access) first. |
 
-Availability is hard to test on both platforms. On iOS, `canMakePayments` comes from `PKPaymentAuthorizationViewController.canMakePayments()`, which Apple documents as `true` when the device supports payments, even with no card in Wallet. On Android, the library checks availability against the `TEST` environment until a payment has started, even in a `PRODUCTION` build ([#16](https://github.com/gmi-software/react-native-pay/issues/16)).
+Availability is hard to test on both platforms. On iOS, `isSupported` comes from `PKPaymentAuthorizationViewController.canMakePayments()`, which Apple documents as `true` when the device supports payments, even with no card in Wallet; `hasActiveCard` also needs a card on your networks. On Android, both flags come from the environment you pass as `googlePayEnvironment`, so only a `PRODUCTION` build shows real answers. See [Check availability](/docs/guides/availability).
 
 ## Apple Pay
 
@@ -83,7 +83,7 @@ Some gateways, such as Stripe, Braintree, and Adyen, show their own test cards i
 
 **What `TEST` can't verify:**
 
-- **Availability.** With `existingPaymentMethodRequired`, `isReadyToPay` [always returns `true` in `TEST`](https://developers.google.com/pay/api/android/reference/request-objects#IsReadyToPayRequest), so `canMakePayments` is `true` even with no card. You can't test the "no card" path in `TEST`.
+- **Availability.** With `existingPaymentMethodRequired`, `isReadyToPay` [always returns `true` in `TEST`](https://developers.google.com/pay/api/android/reference/request-objects#IsReadyToPayRequest), so `hasActiveCard` is `true` even with no card. An emulator with no Google account signed in answers `false` instead. You can't test the "no card" path of a signed-in user in `TEST`.
 - **A live charge.** `TEST` tokens never carry real card data. With your gateway's test values, its test environment can process them, but nothing is charged.
 - **Your production request.** The library sends `googlePayMerchantId` and requires `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` only in `PRODUCTION`. A missing value fails with, for example, `googlePayMerchantId is required in PRODUCTION`, which you only see in a `PRODUCTION` build.
 

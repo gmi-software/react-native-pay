@@ -16,7 +16,7 @@ import {
 import { callback } from 'react-native-nitro-modules'
 
 const {
-  canMakePayments,
+  isSupported,
   isCheckingStatus,
   items,
   total,

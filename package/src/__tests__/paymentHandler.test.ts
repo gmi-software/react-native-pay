@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 
 const IN_PROGRESS_RESULT = {
   success: false,
@@ -15,10 +15,8 @@ jest.mock('react-native-nitro-modules', () => ({
       // Mirrors the per-instance in-progress guard of the native handlers.
       let inFlight = false
       const instance = {
-        payServiceStatus: () => ({
-          canMakePayments: true,
-          canSetupCards: true,
-        }),
+        payServiceStatus: () =>
+          Promise.resolve({ isSupported: true, hasActiveCard: true }),
         isPaymentInProgress: () => inFlight,
         startPayment: () => {
           if (inFlight) {
@@ -84,8 +82,11 @@ describe('shared PaymentHandler instance', () => {
 
   afterEach(() => settlePresentations())
 
-  it('uses one native handler for the hook and HybridPaymentHandler', () => {
-    renderHook(() => usePaymentCheckout({}))
+  it('uses one native handler for the hook and HybridPaymentHandler', async () => {
+    const { result } = renderHook(() => usePaymentCheckout({}))
+    await waitFor(() => {
+      expect(result.current.isCheckingStatus).toBe(false)
+    })
 
     expect(mockInstances).toHaveLength(1)
     expect(mockInstances[0]).toBe(HybridPaymentHandler)

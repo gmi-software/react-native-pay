@@ -7,11 +7,16 @@ Use `HybridPaymentHandler` and `createPaymentRequest` when you want full control
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const status = HybridPaymentHandler.payServiceStatus()
-if (!status.canMakePayments) {
+const status = await HybridPaymentHandler.payServiceStatus({
+  supportedNetworks: ['visa', 'mastercard', 'amex'],
+  googlePayEnvironment: 'PRODUCTION',
+})
+if (!status.isSupported) {
   // Hide the pay button and show "Apple Pay / Google Pay not available"
 }
 ```
+
+Pass the same networks and Google Pay environment as the payment request in step 2. On iOS, when `isSupported` is `true` but `hasActiveCard` is `false`, you can show a **Set up Apple Pay** button instead; see [Check availability](/docs/guides/availability).
 
 ## 2. Build the payment request
 
@@ -56,7 +61,7 @@ To charge the token before the Apple Pay sheet closes, pass `startPayment(paymen
 
 ## 4. Render the button
 
-Use the platform-specific button, and pass it `status.canMakePayments` from step 1 so it stays hidden when payments are unavailable. Its `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, or the tap does nothing:
+Use the platform-specific button, and pass it `status.isSupported` from step 1 so it stays hidden when payments are unavailable. Its `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, or the tap does nothing:
 
 ```tsx
 import { Platform } from 'react-native'
@@ -64,13 +69,13 @@ import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
 import { callback } from 'react-native-nitro-modules'
 
 function PaymentButton({
-  canMakePayments,
+  isSupported,
   handlePayment,
 }: {
-  canMakePayments: boolean
+  isSupported: boolean
   handlePayment: () => Promise<void>
 }) {
-  if (!canMakePayments) return null
+  if (!isSupported) return null
 
   return Platform.OS === 'ios' ? (
     <ApplePayButton

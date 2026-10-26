@@ -100,7 +100,7 @@ The hook provides state for UI rendering but does not own UI components.
 Recommended consumer pattern:
 
 - Use `isCheckingStatus` for initial availability loading.
-- Use `canMakePayments` for gating payment controls.
+- Use `isSupported` for gating payment controls, and `hasActiveCard` to choose between a pay and a "Set up" button on iOS.
 - Use `isProcessing` for disabled/loading button state.
 - Use `error` for actionable feedback.
 

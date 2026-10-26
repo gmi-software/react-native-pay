@@ -50,6 +50,21 @@ All notable changes to this project are documented in this file.
   `startPayment` now marks the payment in progress as soon as it is called, as on Android, instead
   of when it starts presenting the sheet, so `isPaymentInProgress()` sees a payment started in the
   same JS tick.
+- **Availability checks are asynchronous and report `isSupported` and `hasActiveCard`.**
+  `HybridPaymentHandler.payServiceStatus()` now returns a Promise, and `PayServiceStatus` is
+  `{ isSupported, hasActiveCard }` instead of `{ canMakePayments, canSetupCards }`, which meant
+  different things on each platform. `usePaymentCheckout` returns `isSupported`, `hasActiveCard`
+  and a new `refreshStatus()` instead of `canMakePayments` and `canSetupCards`. The check takes the
+  networks, merchant capabilities and Google Pay environment to check against; the hook passes
+  those of its payment request. To migrate, `await` the call and read `isSupported` where you read
+  `canMakePayments` (the same check on iOS, and the one Google recommends for showing the button on
+  Android). See
+  [Check availability](https://gmi-software.github.io/react-native-pay/docs/guides/availability).
+- **`HybridPaymentHandler.canMakePayments(networks)` is removed.** It answered the same question as
+  `hasActiveCard`: call `payServiceStatus({ supportedNetworks: networks })` and read
+  `hasActiveCard`. On Android it never asked the device, so `['visa']` was always `true`.
+- **iOS: `HybridPaymentHandler.openPaymentSetup()`** opens Wallet so the user can add a card, for a
+  "Set up Apple Pay" button (`ApplePayButton` with `buttonType="setUp"`). It does nothing on Android.
 
 ### Fixed
 
@@ -59,6 +74,17 @@ All notable changes to this project are documented in this file.
 - **iOS: an unknown `shippingType` fails the payment** with `Unknown shipping type "<value>". Use
   "shipping", "delivery", "storePickup" or "servicePickup"` instead of silently becoming
   `"shipping"`. Android ignores `shippingType`.
+- **Android: availability checks no longer block the JS thread.** `payServiceStatus()` made two
+  `isReadyToPay` calls one after the other and waited up to 5 seconds for each on the JS thread, so
+  every checkout screen froze touches, animations and timers until Google Play services answered.
+  Both calls now run at once and resolve the Promise when they finish; one that takes longer than
+  5 seconds counts as `false`. On iOS, the PassKit checks run off the JS thread too.
+- **Android: availability is checked in the environment you pay in.** The check always used `TEST`
+  until a payment had started, and in `TEST` Google Pay reports a card whether or not there is one,
+  so production apps showed the pay button for users without a card. It now uses
+  `googlePayEnvironment` from the hook config or the options.
+- **`hasActiveCard` is `false` when no checked network is one the platform knows.** iOS passed an
+  empty network list to PassKit, which can answer `true` for it.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

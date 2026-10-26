@@ -1,6 +1,7 @@
 import type { HybridObject } from 'react-native-nitro-modules'
 import type {
   PayServiceStatus,
+  PayServiceStatusOptions,
   PaymentRequest,
   PaymentResult,
   StartPaymentOptions,
@@ -8,11 +9,12 @@ import type {
 
 export interface PaymentHandler
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
-  payServiceStatus(): PayServiceStatus
+  payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>
   startPayment(
     request: PaymentRequest,
     options?: StartPaymentOptions
   ): Promise<PaymentResult>
-  canMakePayments(usingNetworks: string[]): boolean
   isPaymentInProgress(): boolean
+  // iOS only: opens Wallet to add a card. Does nothing on Android.
+  openPaymentSetup(): void
 }

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Alert,
+  AppState,
   TouchableOpacity,
   ScrollView,
   Platform,
@@ -13,6 +14,7 @@ import {
   ApplePayButton,
   formatAmount,
   GooglePayButton,
+  HybridPaymentHandler,
   usePaymentCheckout,
 } from "@gmisoftware/react-native-pay";
 import { callback } from "react-native-nitro-modules";
@@ -29,9 +31,10 @@ export default function TabOneScreen() {
 
   // Initialize checkout hook
   const {
-    canMakePayments,
-    canSetupCards,
+    isSupported,
+    hasActiveCard,
     isCheckingStatus,
+    refreshStatus,
     items,
     total,
     addItem,
@@ -58,6 +61,14 @@ export default function TabOneScreen() {
           },
   });
 
+  // A card added in Wallet after "Set up Apple Pay" shows up on return.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshStatus();
+    });
+    return () => subscription.remove();
+  }, [refreshStatus]);
+
   const handleCycleSimulatedServer = () => {
     const next =
       (SIMULATED_SERVER_MODES.indexOf(simulatedServer) + 1) %
@@ -67,15 +78,17 @@ export default function TabOneScreen() {
 
   // Show status info
   const handleCheckStatus = () => {
-    if (canMakePayments) {
+    if (hasActiveCard) {
       Alert.alert(
         `${paymentServiceName} Available`,
         `${paymentServiceName} is ready to use!`,
       );
-    } else if (canSetupCards) {
+    } else if (isSupported) {
       Alert.alert(
-        "Setup Required",
-        `Please set up ${paymentServiceName} in Settings`,
+        "No Card Yet",
+        Platform.OS === "ios"
+          ? "Tap Set up Apple Pay to add a card in Wallet"
+          : "You can add a card in the Google Pay sheet",
       );
     } else {
       Alert.alert(
@@ -132,17 +145,6 @@ export default function TabOneScreen() {
     }
   };
 
-  if (isCheckingStatus) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>
-          Checking {paymentServiceName} availability...
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{paymentServiceName} Demo</Text>
@@ -153,31 +155,40 @@ export default function TabOneScreen() {
         <TouchableOpacity style={styles.button} onPress={handleCheckStatus}>
           <Text style={styles.buttonText}>Check Status</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={refreshStatus}>
+          <Text style={styles.buttonText}>Refresh Status</Text>
+        </TouchableOpacity>
 
         <View style={styles.statusContainer}>
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Can Make Payments:</Text>
+            <Text style={styles.statusLabel}>Supported:</Text>
             <Text
               style={[
                 styles.statusValue,
-                canMakePayments ? styles.statusYes : styles.statusNo,
+                isSupported ? styles.statusYes : styles.statusNo,
               ]}
             >
-              {canMakePayments ? "✓ Yes" : "✗ No"}
+              {isSupported ? "✓ Yes" : "✗ No"}
             </Text>
           </View>
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Can Setup Cards:</Text>
+            <Text style={styles.statusLabel}>Card Ready:</Text>
             <Text
               style={[
                 styles.statusValue,
-                canSetupCards ? styles.statusYes : styles.statusNo,
+                hasActiveCard ? styles.statusYes : styles.statusNo,
               ]}
             >
-              {canSetupCards ? "✓ Yes" : "✗ No"}
+              {hasActiveCard ? "✓ Yes" : "✗ No"}
             </Text>
           </View>
         </View>
+        {/* In place, so a refresh never hides the rest of the screen. */}
+        {isCheckingStatus && (
+          <Text style={styles.loadingText}>
+            Checking {paymentServiceName} availability...
+          </Text>
+        )}
       </View>
 
       {/* Simulated Server Section */}
@@ -272,7 +283,7 @@ export default function TabOneScreen() {
       )}
 
       {/* Payment Button */}
-      {items.length > 0 && !result?.success && canMakePayments && (
+      {items.length > 0 && !result?.success && isSupported && (
         <View style={styles.section}>
           <Text style={styles.paymentTitle}>Complete Payment</Text>
           {isProcessing ? (
@@ -283,12 +294,23 @@ export default function TabOneScreen() {
           ) : (
             <>
               {Platform.OS === "ios" ? (
-                <ApplePayButton
-                  buttonType="buy"
-                  buttonStyle="black"
-                  onPress={callback(handlePayment)}
-                  style={styles.payButton}
-                />
+                hasActiveCard ? (
+                  <ApplePayButton
+                    buttonType="buy"
+                    buttonStyle="black"
+                    onPress={callback(handlePayment)}
+                    style={styles.payButton}
+                  />
+                ) : (
+                  <ApplePayButton
+                    buttonType="setUp"
+                    buttonStyle="black"
+                    onPress={callback(() =>
+                      HybridPaymentHandler.openPaymentSetup(),
+                    )}
+                    style={styles.payButton}
+                  />
+                )
               ) : (
                 <GooglePayButton
                   buttonType="buy"
@@ -303,7 +325,7 @@ export default function TabOneScreen() {
         </View>
       )}
 
-      {!canMakePayments && (
+      {!isSupported && !isCheckingStatus && (
         <View style={styles.unavailableBox}>
           <Text style={styles.unavailableText}>
             {paymentServiceName} is not available on this device
