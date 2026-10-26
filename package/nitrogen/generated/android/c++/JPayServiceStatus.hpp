@@ -31,13 +31,13 @@ namespace margelo::nitro::pay {
     [[nodiscard]]
     PayServiceStatus toCpp() const {
       static const auto clazz = javaClassStatic();
-      static const auto fieldCanMakePayments = clazz->getField<jboolean>("canMakePayments");
-      jboolean canMakePayments = this->getFieldValue(fieldCanMakePayments);
-      static const auto fieldCanSetupCards = clazz->getField<jboolean>("canSetupCards");
-      jboolean canSetupCards = this->getFieldValue(fieldCanSetupCards);
+      static const auto fieldIsSupported = clazz->getField<jboolean>("isSupported");
+      jboolean isSupported = this->getFieldValue(fieldIsSupported);
+      static const auto fieldHasActiveCard = clazz->getField<jboolean>("hasActiveCard");
+      jboolean hasActiveCard = this->getFieldValue(fieldHasActiveCard);
       return PayServiceStatus(
-        static_cast<bool>(canMakePayments),
-        static_cast<bool>(canSetupCards)
+        static_cast<bool>(isSupported),
+        static_cast<bool>(hasActiveCard)
       );
     }
 
@@ -52,8 +52,8 @@ namespace margelo::nitro::pay {
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
-        value.canMakePayments,
-        value.canSetupCards
+        value.isSupported,
+        value.hasActiveCard
       );
     }
   };

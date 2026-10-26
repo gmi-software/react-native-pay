@@ -31,7 +31,7 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   // Methods
   @DoNotStrip
   @Keep
-  abstract fun payServiceStatus(options: PayServiceStatusOptions?): PayServiceStatus
+  abstract fun payServiceStatus(options: PayServiceStatusOptions?): Promise<PayServiceStatus>
   
   @DoNotStrip
   @Keep
@@ -39,11 +39,11 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun canMakePayments(usingNetworks: Array<String>): Boolean
+  abstract fun isPaymentInProgress(): Boolean
   
   @DoNotStrip
   @Keep
-  abstract fun isPaymentInProgress(): Boolean
+  abstract fun openPaymentSetup(): Unit
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

@@ -163,6 +163,62 @@ namespace margelo::nitro::pay::bridge::swift {
   using std__weak_ptr_HybridApplePayButtonSpec_ = std::weak_ptr<HybridApplePayButtonSpec>;
   inline std__weak_ptr_HybridApplePayButtonSpec_ weakify_std__shared_ptr_HybridApplePayButtonSpec_(const std::shared_ptr<HybridApplePayButtonSpec>& strong) noexcept { return strong; }
   
+  // pragma MARK: std::shared_ptr<Promise<PayServiceStatus>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<PayServiceStatus>>`.
+   */
+  using std__shared_ptr_Promise_PayServiceStatus__ = std::shared_ptr<Promise<PayServiceStatus>>;
+  inline std::shared_ptr<Promise<PayServiceStatus>> create_std__shared_ptr_Promise_PayServiceStatus__() noexcept {
+    return Promise<PayServiceStatus>::create();
+  }
+  inline PromiseHolder<PayServiceStatus> wrap_std__shared_ptr_Promise_PayServiceStatus__(std::shared_ptr<Promise<PayServiceStatus>> promise) noexcept {
+    return PromiseHolder<PayServiceStatus>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const PayServiceStatus& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const PayServiceStatus&)>`.
+   */
+  using Func_void_PayServiceStatus = std::function<void(const PayServiceStatus& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const PayServiceStatus& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_PayServiceStatus_Wrapper final {
+  public:
+    explicit Func_void_PayServiceStatus_Wrapper(std::function<void(const PayServiceStatus& /* result */)>&& func): _function(std::make_unique<std::function<void(const PayServiceStatus& /* result */)>>(std::move(func))) {}
+    inline void call(PayServiceStatus result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const PayServiceStatus& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_PayServiceStatus create_Func_void_PayServiceStatus(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_PayServiceStatus_Wrapper wrap_Func_void_PayServiceStatus(Func_void_PayServiceStatus value) noexcept {
+    return Func_void_PayServiceStatus_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::function<void(const std::exception_ptr& /* error */)>
+  /**
+   * Specialized version of `std::function<void(const std::exception_ptr&)>`.
+   */
+  using Func_void_std__exception_ptr = std::function<void(const std::exception_ptr& /* error */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::exception_ptr& / * error * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__exception_ptr_Wrapper final {
+  public:
+    explicit Func_void_std__exception_ptr_Wrapper(std::function<void(const std::exception_ptr& /* error */)>&& func): _function(std::make_unique<std::function<void(const std::exception_ptr& /* error */)>>(std::move(func))) {}
+    inline void call(std::exception_ptr error) const noexcept {
+      _function->operator()(error);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::exception_ptr& /* error */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
+    return Func_void_std__exception_ptr_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::vector<std::string>
   /**
    * Specialized version of `std::vector<std::string>`.
@@ -186,6 +242,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<std::string> get_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<GooglePayEnvironment>
+  /**
+   * Specialized version of `std::optional<GooglePayEnvironment>`.
+   */
+  using std__optional_GooglePayEnvironment_ = std::optional<GooglePayEnvironment>;
+  inline std::optional<GooglePayEnvironment> create_std__optional_GooglePayEnvironment_(const GooglePayEnvironment& value) noexcept {
+    return std::optional<GooglePayEnvironment>(value);
+  }
+  inline bool has_value_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline GooglePayEnvironment get_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
     return optional.value();
   }
   
@@ -435,28 +506,6 @@ namespace margelo::nitro::pay::bridge::swift {
     return Func_void_PaymentResult_Wrapper(std::move(value));
   }
   
-  // pragma MARK: std::function<void(const std::exception_ptr& /* error */)>
-  /**
-   * Specialized version of `std::function<void(const std::exception_ptr&)>`.
-   */
-  using Func_void_std__exception_ptr = std::function<void(const std::exception_ptr& /* error */)>;
-  /**
-   * Wrapper class for a `std::function<void(const std::exception_ptr& / * error * /)>`, this can be used from Swift.
-   */
-  class Func_void_std__exception_ptr_Wrapper final {
-  public:
-    explicit Func_void_std__exception_ptr_Wrapper(std::function<void(const std::exception_ptr& /* error */)>&& func): _function(std::make_unique<std::function<void(const std::exception_ptr& /* error */)>>(std::move(func))) {}
-    inline void call(std::exception_ptr error) const noexcept {
-      _function->operator()(error);
-    }
-  private:
-    std::unique_ptr<std::function<void(const std::exception_ptr& /* error */)>> _function;
-  } SWIFT_NONCOPYABLE;
-  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept;
-  inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
-    return Func_void_std__exception_ptr_Wrapper(std::move(value));
-  }
-  
   // pragma MARK: std::vector<PaymentItem>
   /**
    * Specialized version of `std::vector<PaymentItem>`.
@@ -491,21 +540,6 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<ShippingMethod> get_std__optional_std__vector_ShippingMethod__(const std::optional<std::vector<ShippingMethod>>& optional) noexcept {
-    return optional.value();
-  }
-  
-  // pragma MARK: std::optional<GooglePayEnvironment>
-  /**
-   * Specialized version of `std::optional<GooglePayEnvironment>`.
-   */
-  using std__optional_GooglePayEnvironment_ = std::optional<GooglePayEnvironment>;
-  inline std::optional<GooglePayEnvironment> create_std__optional_GooglePayEnvironment_(const GooglePayEnvironment& value) noexcept {
-    return std::optional<GooglePayEnvironment>(value);
-  }
-  inline bool has_value_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline GooglePayEnvironment get_std__optional_GooglePayEnvironment_(const std::optional<GooglePayEnvironment>& optional) noexcept {
     return optional.value();
   }
   
@@ -642,13 +676,13 @@ namespace margelo::nitro::pay::bridge::swift {
   using std__weak_ptr_HybridPaymentHandlerSpec_ = std::weak_ptr<HybridPaymentHandlerSpec>;
   inline std__weak_ptr_HybridPaymentHandlerSpec_ weakify_std__shared_ptr_HybridPaymentHandlerSpec_(const std::shared_ptr<HybridPaymentHandlerSpec>& strong) noexcept { return strong; }
   
-  // pragma MARK: Result<PayServiceStatus>
-  using Result_PayServiceStatus_ = Result<PayServiceStatus>;
-  inline Result_PayServiceStatus_ create_Result_PayServiceStatus_(const PayServiceStatus& value) noexcept {
-    return Result<PayServiceStatus>::withValue(value);
+  // pragma MARK: Result<std::shared_ptr<Promise<PayServiceStatus>>>
+  using Result_std__shared_ptr_Promise_PayServiceStatus___ = Result<std::shared_ptr<Promise<PayServiceStatus>>>;
+  inline Result_std__shared_ptr_Promise_PayServiceStatus___ create_Result_std__shared_ptr_Promise_PayServiceStatus___(const std::shared_ptr<Promise<PayServiceStatus>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<PayServiceStatus>>>::withValue(value);
   }
-  inline Result_PayServiceStatus_ create_Result_PayServiceStatus_(const std::exception_ptr& error) noexcept {
-    return Result<PayServiceStatus>::withError(error);
+  inline Result_std__shared_ptr_Promise_PayServiceStatus___ create_Result_std__shared_ptr_Promise_PayServiceStatus___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<PayServiceStatus>>>::withError(error);
   }
   
   // pragma MARK: Result<std::shared_ptr<Promise<PaymentResult>>>
@@ -667,6 +701,15 @@ namespace margelo::nitro::pay::bridge::swift {
   }
   inline Result_bool_ create_Result_bool_(const std::exception_ptr& error) noexcept {
     return Result<bool>::withError(error);
+  }
+  
+  // pragma MARK: Result<void>
+  using Result_void_ = Result<void>;
+  inline Result_void_ create_Result_void_() noexcept {
+    return Result<void>::withValue();
+  }
+  inline Result_void_ create_Result_void_(const std::exception_ptr& error) noexcept {
+    return Result<void>::withError(error);
   }
 
 } // namespace margelo::nitro::pay::bridge::swift

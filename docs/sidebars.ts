@@ -38,6 +38,7 @@ const sidebars: SidebarsConfig = {
       label: 'Recipes & Guides',
       link: {type: 'doc', id: 'guides/manual-flow'},
       items: [
+        'guides/availability',
         'guides/dynamic-cart',
         'guides/contact-details',
         'guides/testing',

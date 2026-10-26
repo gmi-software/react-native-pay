@@ -25,14 +25,12 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 
 #include "PayServiceStatus.hpp"
+#include <NitroModules/Promise.hpp>
 #include "PayServiceStatusOptions.hpp"
 #include <optional>
 #include "PaymentResult.hpp"
-#include <NitroModules/Promise.hpp>
 #include "PaymentRequest.hpp"
 #include "StartPaymentOptions.hpp"
-#include <string>
-#include <vector>
 
 namespace margelo::nitro::pay {
 
@@ -65,10 +63,10 @@ namespace margelo::nitro::pay {
 
     public:
       // Methods
-      virtual PayServiceStatus payServiceStatus(const std::optional<PayServiceStatusOptions>& options) = 0;
+      virtual std::shared_ptr<Promise<PayServiceStatus>> payServiceStatus(const std::optional<PayServiceStatusOptions>& options) = 0;
       virtual std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) = 0;
-      virtual bool canMakePayments(const std::vector<std::string>& usingNetworks) = 0;
       virtual bool isPaymentInProgress() = 0;
+      virtual void openPaymentSetup() = 0;
 
     protected:
       // Hybrid Setup

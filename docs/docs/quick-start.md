@@ -57,7 +57,7 @@ import { callback } from 'react-native-nitro-modules'
 
 function CheckoutScreen() {
   const {
-    canMakePayments,
+    isSupported,
     isCheckingStatus,
     items,
     total,
@@ -92,7 +92,7 @@ function CheckoutScreen() {
     return <View><ActivityIndicator /></View>
   }
 
-  if (!canMakePayments) {
+  if (!isSupported) {
     return <View><Text>Apple Pay / Google Pay is not available</Text></View>
   }
 

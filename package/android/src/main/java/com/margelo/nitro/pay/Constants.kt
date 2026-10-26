@@ -40,6 +40,9 @@ object PaymentConstants {
     const val ERROR_AUTHORIZATION_FAILED = "Payment authorization failed"
     const val ERROR_AUTHORIZATION_TIMED_OUT = "Payment authorization timed out"
     
+    // How long an availability check waits for Google Pay
+    const val READY_TO_PAY_TIMEOUT_SECONDS = 5L
+    
     // Errors (keep in sync with iOS `ErrorMessage`)
     const val ERROR_PAYMENT_IN_PROGRESS = "A payment is already in progress"
     const val ERROR_NO_ACTIVITY = "No activity available to show payment UI"

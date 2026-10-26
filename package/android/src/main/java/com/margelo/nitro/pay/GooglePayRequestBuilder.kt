@@ -15,8 +15,8 @@ object GooglePayRequestBuilder {
      * Creates an IsReadyToPay request for the cards in [cardParameters]
      */
     internal fun createIsReadyToPayRequest(
-        existingPaymentMethodRequired: Boolean? = null,
-        cardParameters: GooglePayCardParameters = GooglePayCardParameters.from(null, null)
+        cardParameters: GooglePayCardParameters,
+        existingPaymentMethodRequired: Boolean? = null
     ): JSONObject {
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)

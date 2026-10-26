@@ -31,10 +31,10 @@ All notable changes to this project are documented in this file.
   `myDebit`, which Apple Pay accepts in `supportedNetworks` and reports in results. Android
   accepts `jcb` and `interac`, and `electron`, `maestro` and `elo` for Brazilian combo cards.
 - **`GooglePayButton` takes `supportedNetworks`, `googlePayAllowedAuthMethods` and
-  `merchantCapabilities`,** and **`HybridPaymentHandler.payServiceStatus(options?)`** takes the
-  same values under the same names (`PayServiceStatusOptions`). Give them the values of your
-  request, so the button and the Android readiness check use the same cards as the payment.
-  `usePaymentCheckout` passes its config to `payServiceStatus` and checks again when they change.
+  `merchantCapabilities`,** and `PayServiceStatusOptions` takes `googlePayAllowedAuthMethods`, under
+  the same names as in `PaymentRequest`. Give them the values of your request, so the button and
+  `hasActiveCard` count the same cards as the payment. `usePaymentCheckout` passes its config to
+  `payServiceStatus`.
 - **Android honours a debit-only `merchantCapabilities`.** `'Debit'` without `'Credit'` now leaves
   credit cards out of the Google Pay request (`allowCreditCards: false`), as UK gambling merchants
   must. Prepaid cards stay allowed. Google Pay cannot leave debit cards out, so `'Credit'` alone
@@ -48,14 +48,13 @@ All notable changes to this project are documented in this file.
   `token.paymentMethod.network` needs a case for it.
 - **An unknown name in `supportedNetworks` fails the payment** on both platforms, with an `error`
   that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or
-  "mastercard"`. iOS used to drop it silently. Names now match ignoring case, so `'Visa'` works, and a network the
-  platform does not offer is left out; the payment fails when none is left. `canMakePayments` and
-  `payServiceStatus` throw for an unknown name, and `canMakePayments` returns `false` when the
-  platform offers none of the networks.
+  "mastercard"`. iOS used to drop it silently. Names now match ignoring case, so `'Visa'` works,
+  and a network the platform does not offer is left out; the payment fails when none is left.
+  `payServiceStatus` rejects with the same message for a value the payment would refuse, instead
+  of answering `hasActiveCard: false`.
 - **An unknown value in `merchantCapabilities` fails the payment on Android too,** with the same
   `error` as on iOS: `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or
-  "Debit"`. Android used to ignore the field. `payServiceStatus` throws for an unknown value on
-  both platforms.
+  "Debit"`. Android used to ignore the field.
 - **Android: `PaymentMethod.displayName` is the wallet's description of the card** (Google Pay's
   `paymentMethodData.description`, for example "Visa •••• 1234") instead of `"VISA 1234"`. Google
   Pay asks apps not to show `cardNetwork` to the payer. Use `network` for logic.
@@ -85,6 +84,21 @@ All notable changes to this project are documented in this file.
   `startPayment` now marks the payment in progress as soon as it is called, as on Android, instead
   of when it starts presenting the sheet, so `isPaymentInProgress()` sees a payment started in the
   same JS tick.
+- **Availability checks are asynchronous and report `isSupported` and `hasActiveCard`.**
+  `HybridPaymentHandler.payServiceStatus()` now returns a Promise, and `PayServiceStatus` is
+  `{ isSupported, hasActiveCard }` instead of `{ canMakePayments, canSetupCards }`, which meant
+  different things on each platform. `usePaymentCheckout` returns `isSupported`, `hasActiveCard`
+  and a new `refreshStatus()` instead of `canMakePayments` and `canSetupCards`. The check takes the
+  networks, merchant capabilities and Google Pay environment to check against; the hook passes
+  those of its payment request. To migrate, `await` the call and read `isSupported` where you read
+  `canMakePayments` (the same check on iOS, and the one Google recommends for showing the button on
+  Android). See
+  [Check availability](https://gmi-software.github.io/react-native-pay/docs/guides/availability).
+- **`HybridPaymentHandler.canMakePayments(networks)` is removed.** It answered the same question as
+  `hasActiveCard`: call `payServiceStatus({ supportedNetworks: networks })` and read
+  `hasActiveCard`. On Android it never asked the device, so `['visa']` was always `true`.
+- **iOS: `HybridPaymentHandler.openPaymentSetup()`** opens Wallet so the user can add a card, for a
+  "Set up Apple Pay" button (`ApplePayButton` with `buttonType="setUp"`). It does nothing on Android.
 
 ### Fixed
 
@@ -103,6 +117,15 @@ All notable changes to this project are documented in this file.
 - **iOS: an unknown `shippingType` fails the payment** with `Unknown shipping type "<value>". Use
   "shipping", "delivery", "storePickup" or "servicePickup"` instead of silently becoming
   `"shipping"`. Android ignores `shippingType`.
+- **Android: availability checks no longer block the JS thread.** `payServiceStatus()` made two
+  `isReadyToPay` calls one after the other and waited up to 5 seconds for each on the JS thread, so
+  every checkout screen froze touches, animations and timers until Google Play services answered.
+  Both calls now run at once and resolve the Promise when they finish; one that takes longer than
+  5 seconds counts as `false`. On iOS, the PassKit checks run off the JS thread too.
+- **Android: availability is checked in the environment you pay in.** The check always used `TEST`
+  until a payment had started, and in `TEST` Google Pay reports a card whether or not there is one,
+  so production apps showed the pay button for users without a card. It now uses
+  `googlePayEnvironment` from the hook config or the options.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

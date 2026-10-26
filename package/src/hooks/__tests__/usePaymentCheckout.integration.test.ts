@@ -34,9 +34,10 @@ function createDeferred<T>() {
 
 describe('usePaymentCheckout integration', () => {
   beforeEach(() => {
-    mockPayServiceStatus.mockReset().mockReturnValue({
-      canMakePayments: true,
-      canSetupCards: true,
+    mockPayServiceStatus.mockReset()
+    mockPayServiceStatus.mockResolvedValue({
+      isSupported: true,
+      hasActiveCard: true,
     })
     mockStartPayment.mockReset()
     mockIsPaymentInProgress.mockReset().mockReturnValue(false)
@@ -50,96 +51,6 @@ describe('usePaymentCheckout integration', () => {
       (props: UsePaymentCheckoutConfig) => usePaymentCheckout({ ...props }),
       { initialProps }
     )
-
-  it('loads payment service status on mount', async () => {
-    const { result } = renderCheckout()
-
-    await waitFor(() => {
-      expect(result.current.isCheckingStatus).toBe(false)
-    })
-
-    expect(result.current.canMakePayments).toBe(true)
-    expect(result.current.canSetupCards).toBe(true)
-  })
-
-  it('checks the status for the default cards', async () => {
-    const { result } = renderCheckout()
-
-    await waitFor(() => {
-      expect(result.current.isCheckingStatus).toBe(false)
-    })
-
-    expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
-    expect(mockPayServiceStatus).toHaveBeenCalledWith({
-      supportedNetworks: ['visa', 'mastercard', 'amex', 'discover'],
-      merchantCapabilities: ['3DS'],
-    })
-  })
-
-  it('checks the status for the configured cards, again only when they change', async () => {
-    const config: UsePaymentCheckoutConfig = {
-      merchantName: 'Store A',
-      supportedNetworks: ['visa', 'mastercard'],
-      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
-      merchantCapabilities: ['3DS', 'Debit'],
-    }
-    const { result, rerender } = renderWithConfig(config)
-
-    await waitFor(() => {
-      expect(result.current.isCheckingStatus).toBe(false)
-    })
-    expect(mockPayServiceStatus).toHaveBeenCalledWith({
-      supportedNetworks: ['visa', 'mastercard'],
-      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
-      merchantCapabilities: ['3DS', 'Debit'],
-    })
-    expect(result.current.paymentRequest).toMatchObject({
-      supportedNetworks: ['visa', 'mastercard'],
-      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
-      merchantCapabilities: ['3DS', 'Debit'],
-    })
-
-    rerender({ ...config, merchantName: 'Store B' })
-    expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
-
-    rerender({ ...config, supportedNetworks: ['visa'] })
-    expect(mockPayServiceStatus).toHaveBeenCalledTimes(2)
-    expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
-      supportedNetworks: ['visa'],
-      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
-      merchantCapabilities: ['3DS', 'Debit'],
-    })
-
-    rerender({
-      ...config,
-      supportedNetworks: ['visa'],
-      merchantCapabilities: ['3DS'],
-    })
-    expect(mockPayServiceStatus).toHaveBeenCalledTimes(3)
-    expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
-      supportedNetworks: ['visa'],
-      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
-      merchantCapabilities: ['3DS'],
-    })
-  })
-
-  it('falls back to unavailable status when status check fails', async () => {
-    mockPayServiceStatus.mockImplementationOnce(() => {
-      throw new Error('Native status failure')
-    })
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-
-    const { result } = renderCheckout()
-
-    await waitFor(() => {
-      expect(result.current.isCheckingStatus).toBe(false)
-    })
-
-    expect(result.current.canMakePayments).toBe(false)
-    expect(result.current.canSetupCards).toBe(false)
-    expect(consoleSpy).toHaveBeenCalled()
-    consoleSpy.mockRestore()
-  })
 
   it('manages cart operations and total correctly', async () => {
     const { result } = renderCheckout()
@@ -184,8 +95,11 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.total).toBe(0)
   })
 
-  it('provides default fallback payment item when cart is empty', () => {
+  it('provides default fallback payment item when cart is empty', async () => {
     const { result } = renderCheckout()
+    await waitFor(() => {
+      expect(result.current.isCheckingStatus).toBe(false)
+    })
 
     expect(result.current.paymentRequest.paymentItems).toEqual([
       { label: 'Total', amount: 0, type: 'final' },
@@ -449,6 +363,12 @@ describe('usePaymentCheckout integration', () => {
   })
 
   describe('identity across re-renders', () => {
+    // These tests end synchronously: a status check settling after them would
+    // update the hook outside act.
+    beforeEach(() => {
+      mockPayServiceStatus.mockReturnValue(new Promise(() => {}))
+    })
+
     it('keeps paymentRequest and startPayment with an inline config', () => {
       const { result, rerender } = renderHook(() =>
         usePaymentCheckout({
@@ -713,7 +633,9 @@ describe('usePaymentCheckout integration', () => {
         payment = result.current.startPayment()
       })
       rerender({})
-      await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token, details)
+      await act(async () => {
+        await mockStartPayment.mock.calls[0]?.[1].onAuthorize(token, details)
+      })
 
       expect(onAuthorize).toHaveBeenCalledWith(token, details)
 

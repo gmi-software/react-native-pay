@@ -12,21 +12,22 @@ import { HybridPaymentHandler, createPaymentRequest } from '@gmisoftware/react-n
 
 ### payServiceStatus(options?)
 
-Synchronously returns whether the payment service is available on the device.
+Resolves with whether the device supports the wallet and whether a card is ready. The check runs off the JS thread.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const status = HybridPaymentHandler.payServiceStatus({
+const status = await HybridPaymentHandler.payServiceStatus({
   supportedNetworks: ['visa', 'mastercard'],
+  googlePayEnvironment: 'PRODUCTION',
 })
-// status: { canMakePayments: boolean, canSetupCards: boolean }
+// status: { isSupported: boolean, hasActiveCard: boolean }
 ```
 
-- **canMakePayments** — User can complete a payment (has a valid card, etc.).
-- **canSetupCards** — User can add or manage cards (e.g. Wallet settings).
+- **isSupported** — The device can pay with Apple Pay / Google Pay, whether or not a card is set up.
+- **hasActiveCard** — The user has a card ready on one of `supportedNetworks`.
 
-`options` ([`PayServiceStatusOptions`](/docs/api/types#payservicestatusoptions)) names the cards your payment accepts: pass the `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` of your `PaymentRequest`. Android asks Google Pay about those cards; without `options` it asks about `visa`, `mastercard`, `amex` and `discover`, of every card type. iOS does not use them yet. On both platforms an unknown network name or merchant capability throws.
+Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods` and `googlePayEnvironment` your payment request uses ([PayServiceStatusOptions](/docs/api/types#payservicestatusoptions)); `hasActiveCard` then counts only cards the payment accepts. Without them, both platforms ask about `visa`, `mastercard`, `amex` and `discover`. The Promise rejects with the same message as `startPayment` for a value the payment would refuse: an unknown network, capability or auth method, or no network the platform offers. A check that fails for any other reason resolves both flags as `false`. Without `googlePayEnvironment`, Android asks the `TEST` environment, where `hasActiveCard` is `true` whether or not the user has a card. What each platform checks, and which button to show, is in [Check availability](/docs/guides/availability).
 
 ---
 
@@ -105,17 +106,15 @@ const isBusy = HybridPaymentHandler.isPaymentInProgress()
 
 ---
 
-### canMakePayments(usingNetworks)
+### openPaymentSetup()
 
-Returns whether the user can make payments with the given card networks.
+iOS only. Opens Wallet (Settings on iPad) so the user can add a card. Call it from a **Set up Apple Pay** button (`ApplePayButton` with `buttonType="setUp"`) when `isSupported` is `true` and `hasActiveCard` is `false`. It does nothing on devices without Apple Pay, and nothing on Android, where the Google Pay sheet lets the user add a card.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
+HybridPaymentHandler.openPaymentSetup()
 ```
-
-It returns `false` when the platform offers none of the networks, and throws for a name that is not a [`PaymentNetwork`](/docs/api/types#paymentnetwork). On Android it only checks that Google Pay offers one of the networks; it does not ask about the payer's cards.
 
 ## When to use
 

@@ -18,21 +18,9 @@ public extension PayServiceStatusOptions {
   /**
    * Create a new instance of `PayServiceStatusOptions`.
    */
-  init(supportedNetworks: [String]?, googlePayAllowedAuthMethods: [String]?, merchantCapabilities: [String]?) {
+  init(supportedNetworks: [String]?, merchantCapabilities: [String]?, googlePayAllowedAuthMethods: [String]?, googlePayEnvironment: GooglePayEnvironment?) {
     self.init({ () -> bridge.std__optional_std__vector_std__string__ in
       if let __unwrappedValue = supportedNetworks {
-        return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
-          var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
-          for __item in __unwrappedValue {
-            __vector.push_back(std.string(__item))
-          }
-          return __vector
-        }())
-      } else {
-        return .init()
-      }
-    }(), { () -> bridge.std__optional_std__vector_std__string__ in
-      if let __unwrappedValue = googlePayAllowedAuthMethods {
         return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
           var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
           for __item in __unwrappedValue {
@@ -55,6 +43,24 @@ public extension PayServiceStatusOptions {
       } else {
         return .init()
       }
+    }(), { () -> bridge.std__optional_std__vector_std__string__ in
+      if let __unwrappedValue = googlePayAllowedAuthMethods {
+        return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
+          var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
+          for __item in __unwrappedValue {
+            __vector.push_back(std.string(__item))
+          }
+          return __vector
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_GooglePayEnvironment_ in
+      if let __unwrappedValue = googlePayEnvironment {
+        return bridge.create_std__optional_GooglePayEnvironment_(__unwrappedValue)
+      } else {
+        return .init()
+      }
     }())
   }
 
@@ -63,6 +69,18 @@ public extension PayServiceStatusOptions {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__supportedNetworks) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__supportedNetworks)
+        return __unwrapped.map({ __item in String(__item) })
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var merchantCapabilities: [String]? {
+    return { () -> [String]? in
+      if bridge.has_value_std__optional_std__vector_std__string__(self.__merchantCapabilities) {
+        let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__merchantCapabilities)
         return __unwrapped.map({ __item in String(__item) })
       } else {
         return nil
@@ -83,14 +101,7 @@ public extension PayServiceStatusOptions {
   }
   
   @inline(__always)
-  var merchantCapabilities: [String]? {
-    return { () -> [String]? in
-      if bridge.has_value_std__optional_std__vector_std__string__(self.__merchantCapabilities) {
-        let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__merchantCapabilities)
-        return __unwrapped.map({ __item in String(__item) })
-      } else {
-        return nil
-      }
-    }()
+  var googlePayEnvironment: GooglePayEnvironment? {
+    return self.__googlePayEnvironment.value
   }
 }

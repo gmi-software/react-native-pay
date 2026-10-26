@@ -291,29 +291,41 @@ export interface StartPaymentOptions {
   ) => Promise<PaymentAuthorizationResult>
 }
 
+/**
+ * Wallet readiness on this device, from `HybridPaymentHandler.payServiceStatus()`.
+ */
 export interface PayServiceStatus {
-  canMakePayments: boolean
-  canSetupCards: boolean
+  /**
+   * The device can pay with Apple Pay or Google Pay, with or without a card.
+   * iOS: `PKPaymentAuthorizationViewController.canMakePayments()`.
+   * Android: `isReadyToPay` without `existingPaymentMethodRequired`.
+   */
+  isSupported: boolean
+  /**
+   * The user has a card ready on one of the checked networks.
+   * iOS: `canMakePayments(usingNetworks:capabilities:)`.
+   * Android: `isReadyToPay` with `existingPaymentMethodRequired: true`.
+   */
+  hasActiveCard: boolean
 }
 
 /**
- * The cards `payServiceStatus` asks about. Pass the values of your
- * `PaymentRequest`, so the check matches the payment. Android asks Google
- * Pay about these cards; iOS only rejects unknown values.
+ * What `payServiceStatus` checks. Pass the values your payment request uses.
  */
 export interface PayServiceStatusOptions {
-  /**
-   * As `PaymentRequest.supportedNetworks`. Defaults to `visa`, `mastercard`,
-   * `amex` and `discover`.
-   */
+  // Networks a card must be on to count for `hasActiveCard`, as
+  // `PaymentRequest.supportedNetworks`. Defaults to
+  // `['visa', 'mastercard', 'amex', 'discover']`.
   supportedNetworks?: string[]
-  /** As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults to both. */
-  googlePayAllowedAuthMethods?: string[]
-  /**
-   * As `PaymentRequest.merchantCapabilities`. On Android, `'Debit'` without
-   * `'Credit'` leaves credit cards out.
-   */
+  // `MerchantCapability` values. iOS: what a card must support; defaults to
+  // `['3DS']`, and `'3DS'` is added when neither `'3DS'` nor `'EMV'` is given.
+  // Android: `'Debit'` without `'Credit'` leaves credit cards out.
   merchantCapabilities?: string[]
+  // Android only. As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults
+  // to both.
+  googlePayAllowedAuthMethods?: string[]
+  // Android only. The Google Pay environment to ask. Defaults to `'TEST'`.
+  googlePayEnvironment?: GooglePayEnvironment
 }
 
 // Backward compatibility alias

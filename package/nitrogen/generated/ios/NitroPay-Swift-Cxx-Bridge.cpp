@@ -39,10 +39,10 @@ namespace margelo::nitro::pay::bridge::swift {
     return swiftPart.toUnsafe();
   }
   
-  // pragma MARK: std::function<void(const PaymentResult& /* result */)>
-  Func_void_PaymentResult create_Func_void_PaymentResult(void* NON_NULL swiftClosureWrapper) noexcept {
-    auto swiftClosure = NitroPay::Func_void_PaymentResult::fromUnsafe(swiftClosureWrapper);
-    return [swiftClosure = std::move(swiftClosure)](const PaymentResult& result) mutable -> void {
+  // pragma MARK: std::function<void(const PayServiceStatus& /* result */)>
+  Func_void_PayServiceStatus create_Func_void_PayServiceStatus(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_PayServiceStatus::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PayServiceStatus& result) mutable -> void {
       swiftClosure.call(result);
     };
   }
@@ -52,6 +52,14 @@ namespace margelo::nitro::pay::bridge::swift {
     auto swiftClosure = NitroPay::Func_void_std__exception_ptr::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const std::exception_ptr& error) mutable -> void {
       swiftClosure.call(error);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const PaymentResult& /* result */)>
+  Func_void_PaymentResult create_Func_void_PaymentResult(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_PaymentResult::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentResult& result) mutable -> void {
+      swiftClosure.call(result);
     };
   }
   

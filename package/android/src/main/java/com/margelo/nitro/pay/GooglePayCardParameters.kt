@@ -73,6 +73,9 @@ internal data class GooglePayCardParameters(
 
         private val MERCHANT_CAPABILITIES = listOf("3DS", "EMV", "Credit", "Debit")
 
+        /** The cards checked when the caller names none */
+        val DEFAULT = from(null, null)
+
         /**
          * Reads `supportedNetworks`, the allowed auth methods and the merchant
          * capabilities; null uses the defaults. A network Google Pay does not

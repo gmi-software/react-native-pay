@@ -28,11 +28,13 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `GooglePayEnvironment` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 
 #include <string>
 #include <vector>
 #include <optional>
+#include "GooglePayEnvironment.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -42,12 +44,13 @@ namespace margelo::nitro::pay {
   struct PayServiceStatusOptions final {
   public:
     std::optional<std::vector<std::string>> supportedNetworks     SWIFT_PRIVATE;
-    std::optional<std::vector<std::string>> googlePayAllowedAuthMethods     SWIFT_PRIVATE;
     std::optional<std::vector<std::string>> merchantCapabilities     SWIFT_PRIVATE;
+    std::optional<std::vector<std::string>> googlePayAllowedAuthMethods     SWIFT_PRIVATE;
+    std::optional<GooglePayEnvironment> googlePayEnvironment     SWIFT_PRIVATE;
 
   public:
     PayServiceStatusOptions() = default;
-    explicit PayServiceStatusOptions(std::optional<std::vector<std::string>> supportedNetworks, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<std::vector<std::string>> merchantCapabilities): supportedNetworks(supportedNetworks), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), merchantCapabilities(merchantCapabilities) {}
+    explicit PayServiceStatusOptions(std::optional<std::vector<std::string>> supportedNetworks, std::optional<std::vector<std::string>> merchantCapabilities, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<GooglePayEnvironment> googlePayEnvironment): supportedNetworks(supportedNetworks), merchantCapabilities(merchantCapabilities), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), googlePayEnvironment(googlePayEnvironment) {}
 
   public:
     friend bool operator==(const PayServiceStatusOptions& lhs, const PayServiceStatusOptions& rhs) = default;
@@ -64,15 +67,17 @@ namespace margelo::nitro {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::pay::PayServiceStatusOptions(
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"))),
+        JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"))),
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"))),
-        JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities")))
+        JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PayServiceStatusOptions& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.supportedNetworks));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.googlePayAllowedAuthMethods));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.merchantCapabilities));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.googlePayAllowedAuthMethods));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::toJSI(runtime, arg.googlePayEnvironment));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -84,8 +89,9 @@ namespace margelo::nitro {
         return false;
       }
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks")))) return false;
-      if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods")))) return false;
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities")))) return false;
+      if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment")))) return false;
       return true;
     }
   };

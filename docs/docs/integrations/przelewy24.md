@@ -68,7 +68,7 @@ import {
 import {callback} from 'react-native-nitro-modules'
 
 export function CheckoutWithPrzelewy24() {
-  const {startPayment, canMakePayments, isProcessing} = usePaymentCheckout({
+  const {startPayment, isSupported, isProcessing} = usePaymentCheckout({
     merchantName: 'Your Store',
     countryCode: 'PL',
     currencyCode: 'PLN',
@@ -96,7 +96,7 @@ export function CheckoutWithPrzelewy24() {
     })
   }
 
-  if (!canMakePayments) return null
+  if (!isSupported) return null
   if (isProcessing) return <ActivityIndicator />
 
   return (
