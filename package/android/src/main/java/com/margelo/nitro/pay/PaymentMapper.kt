@@ -30,6 +30,7 @@ object PaymentMapper {
             val info = paymentMethodData.getJSONObject("info")
             val cardNetwork = info.optString("cardNetwork", "unknown")
             val cardDetails = info.optString("cardDetails", "****")
+            val cardFundingSource = info.optNonEmpty("cardFundingSource") ?: "UNKNOWN"
             
             // Create payment method. Google Pay asks to show `description`
             // to the payer, not `cardNetwork`.
@@ -37,7 +38,7 @@ object PaymentMapper {
                 displayName = paymentMethodData.optNonEmpty("description")
                     ?: "$cardNetwork $cardDetails",
                 network = GooglePayNetworks.fromGooglePay(cardNetwork),
-                type = PaymentMethodType.UNKNOWN,
+                type = mapCardFundingSource(cardFundingSource),
                 secureElementPass = null,
                 billingAddress = null
             )
@@ -133,6 +134,18 @@ object PaymentMapper {
             phoneNumber = result.phoneNumber,
             shippingMethod = result.shippingMethod
         )
+    }
+    
+    /**
+     * Maps a Google Pay `cardFundingSource` value to PaymentMethodType, or UNKNOWN
+     */
+    fun mapCardFundingSource(fundingSource: String): PaymentMethodType {
+        return when {
+            fundingSource.equals("CREDIT", ignoreCase = true) -> PaymentMethodType.CREDIT
+            fundingSource.equals("DEBIT", ignoreCase = true) -> PaymentMethodType.DEBIT
+            fundingSource.equals("PREPAID", ignoreCase = true) -> PaymentMethodType.PREPAID
+            else -> PaymentMethodType.UNKNOWN
+        }
     }
     
     /**

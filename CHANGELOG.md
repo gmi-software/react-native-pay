@@ -84,6 +84,10 @@ All notable changes to this project are documented in this file.
   still received Amex tokens, and JCB or Interac could not be enabled. The payment request, the
   `GooglePayButton` and the readiness check behind `payServiceStatus` now use the same networks
   and auth methods.
+- **Android: `PaymentMethod.type` reports the card's funding source.** It was always
+  `'unknown'`. It now reads Google Pay's `cardFundingSource`, so a result reports `'credit'`,
+  `'debit'` or `'prepaid'`, and `'unknown'` only when Google Pay does not know. `'store'` stays
+  iOS only.
 - **Requested contact details are no longer lost.** iOS asked for the billing and shipping
   address but never returned them, and Android ignored `billingContactRequired` and
   `shippingContactRequired`. See Added.

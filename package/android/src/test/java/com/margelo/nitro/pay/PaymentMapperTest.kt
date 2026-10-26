@@ -72,7 +72,7 @@ class PaymentMapperTest {
                 """
                 {
                   "type": "CARD",
-                  "info": {"cardNetwork": "MASTERCARD", "cardDetails": "4242"},
+                  "info": {"cardNetwork": "MASTERCARD", "cardDetails": "4242", "cardFundingSource": "CREDIT"},
                   "tokenizationData": {"type": "PAYMENT_GATEWAY", "token": "gateway-token"}
                 }
                 """
@@ -86,7 +86,7 @@ class PaymentMapperTest {
         assertEquals("gateway-token", token.paymentData)
         assertEquals("MASTERCARD 4242", token.paymentMethod.displayName)
         assertEquals(PaymentNetwork.MASTERCARD, token.paymentMethod.network)
-        assertEquals(PaymentMethodType.UNKNOWN, token.paymentMethod.type)
+        assertEquals(PaymentMethodType.CREDIT, token.paymentMethod.type)
         assertNull(token.paymentMethod.billingAddress)
     }
 
@@ -99,6 +99,7 @@ class PaymentMapperTest {
         assertTrue(result.success)
         assertEquals("unknown ****", result.token!!.paymentMethod.displayName)
         assertEquals(PaymentNetwork.UNKNOWN, result.token!!.paymentMethod.network)
+        assertEquals(PaymentMethodType.UNKNOWN, result.token!!.paymentMethod.type)
     }
 
     @Test
@@ -333,6 +334,63 @@ class PaymentMapperTest {
             val cardNetwork = GooglePayNetworks.toGooglePay(network) ?: continue
             assertEquals(network, GooglePayNetworks.fromGooglePay(cardNetwork))
         }
+    }
+
+    @Test
+    fun mapCardFundingSource_mapsGooglePayValuesIgnoringCase() {
+        assertEquals(PaymentMethodType.CREDIT, PaymentMapper.mapCardFundingSource("CREDIT"))
+        assertEquals(PaymentMethodType.DEBIT, PaymentMapper.mapCardFundingSource("DEBIT"))
+        assertEquals(PaymentMethodType.PREPAID, PaymentMapper.mapCardFundingSource("PREPAID"))
+        assertEquals(PaymentMethodType.DEBIT, PaymentMapper.mapCardFundingSource("debit"))
+        assertEquals(PaymentMethodType.PREPAID, PaymentMapper.mapCardFundingSource("Prepaid"))
+    }
+
+    @Test
+    fun mapCardFundingSource_reportsUnrecognizedValuesAsUnknown() {
+        assertEquals(PaymentMethodType.UNKNOWN, PaymentMapper.mapCardFundingSource("UNKNOWN"))
+        assertEquals(PaymentMethodType.UNKNOWN, PaymentMapper.mapCardFundingSource("STORE"))
+        assertEquals(PaymentMethodType.UNKNOWN, PaymentMapper.mapCardFundingSource(""))
+    }
+
+    @Test
+    fun mapPaymentDataToResult_readsEachFundingSource() {
+        val expected = mapOf(
+            "CREDIT" to PaymentMethodType.CREDIT,
+            "DEBIT" to PaymentMethodType.DEBIT,
+            "PREPAID" to PaymentMethodType.PREPAID,
+            "UNKNOWN" to PaymentMethodType.UNKNOWN
+        )
+
+        for ((fundingSource, type) in expected) {
+            val result = PaymentMapper.mapPaymentDataToResult(
+                paymentData(
+                    """
+                    {
+                      "info": {"cardNetwork": "VISA", "cardDetails": "1111", "cardFundingSource": "$fundingSource"},
+                      "tokenizationData": {"token": "gateway-token"}
+                    }
+                    """
+                )
+            )
+
+            assertEquals(fundingSource, type, result.token!!.paymentMethod.type)
+        }
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsANullFundingSourceAsUnknown() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "info": {"cardNetwork": "VISA", "cardDetails": "1111", "cardFundingSource": null},
+                  "tokenizationData": {"token": "gateway-token"}
+                }
+                """
+            )
+        )
+
+        assertEquals(PaymentMethodType.UNKNOWN, result.token!!.paymentMethod.type)
     }
 
     @Test

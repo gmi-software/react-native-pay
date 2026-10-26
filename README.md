@@ -795,7 +795,7 @@ interface PaymentToken {
 interface PaymentMethod {
   displayName?: string; // for the payer, e.g. "Visa •••• 1234"; don't parse it
   network?: PaymentNetwork; // "unknown" when the library cannot name it
-  type: PaymentMethodType;
+  type: PaymentMethodType; // funding source; "store" is iOS only
   secureElementPass?: PKSecureElementPass;
   billingAddress?: CNContact;
 }

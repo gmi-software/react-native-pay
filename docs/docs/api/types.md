@@ -169,6 +169,7 @@ type PaymentMethodType = 'unknown' | 'debit' | 'credit' | 'prepaid' | 'store'
 
 - **displayName** — Describes the card to the payer, as the wallet words it: `PKPaymentMethod.displayName` on iOS, `paymentMethodData.description` on Android (for example "Visa •••• 1234"). Show it as is; don't parse it.
 - **network** — The card's [`PaymentNetwork`](#paymentnetwork), or `'unknown'` for a network the library cannot name. Use `network` rather than `displayName` for logic.
+- **type** — How the card is funded: `PKPaymentMethod.type` on iOS, Google Pay's `cardFundingSource` on Android. Android reports `'credit'`, `'debit'` or `'prepaid'`, and `'unknown'` when Google Pay does not know; `'store'` (a store card) is iOS only.
 
 ---
 
