@@ -309,7 +309,7 @@ enum PaymentReadiness {
     // Checked when the caller names no networks, like the hook's default.
     static let defaultNetworks = ["visa", "mastercard", "amex", "discover"]
 
-    /// Rejects what the payment would refuse, with the same message.
+    /// Rejects what the payment would refuse, with the same error.
     static func hasActiveCard(networks: [String], merchantCapabilities: [String]?) throws -> Bool {
         let capabilities = try PaymentRequestBuilder.buildMerchantCapabilities(merchantCapabilities ?? [])
         let paymentNetworks = try PaymentRequestBuilder.buildSupportedNetworks(networks)

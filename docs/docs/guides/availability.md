@@ -12,7 +12,7 @@ Decide which wallet button to show before the user taps anything. The library re
 | `isSupported` | `PKPaymentAuthorizationViewController.canMakePayments()`: hardware and parental controls allow Apple Pay | `isReadyToPay`: Google Pay is available, and the user has a card or can add one |
 | `hasActiveCard` | `canMakePayments(usingNetworks:capabilities:)` with your `supportedNetworks` and `merchantCapabilities` | `isReadyToPay` with `existingPaymentMethodRequired: true` and your `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` |
 
-Both flags are `false` when the check fails or, on Android, when Google Pay does not answer within 5 seconds. A value the payment would refuse rejects the `payServiceStatus` Promise with the same message as `startPayment`: an unknown network, merchant capability or auth method, or a network list the platform offers none of (Google Pay has no `idcredit` or `privateLabel`). The hook logs the rejection and reports both flags as `false`.
+Both flags are `false` when the check fails or, on Android, when Google Pay does not answer within 5 seconds. A value the payment would refuse rejects the `payServiceStatus` Promise with the configuration error that would fail `startPayment`: an unknown network, merchant capability or auth method, or a network list the platform offers none of (Google Pay has no `idcredit` or `privateLabel`). The hook logs the rejection and reports both flags as `false`.
 
 ### Ask the environment you pay in
 

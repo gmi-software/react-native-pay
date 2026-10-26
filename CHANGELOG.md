@@ -50,8 +50,8 @@ All notable changes to this project are documented in this file.
   that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or
   "mastercard"`. iOS used to drop it silently. Names now match ignoring case, so `'Visa'` works,
   and a network the platform does not offer is left out; the payment fails when none is left.
-  `payServiceStatus` rejects with the same message for a value the payment would refuse, instead
-  of answering `hasActiveCard: false`.
+  `payServiceStatus` rejects with the same configuration error for a value the payment would
+  refuse, instead of answering `hasActiveCard: false`.
 - **An unknown value in `merchantCapabilities` fails the payment on Android too,** with the same
   `error` as on iOS: `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or
   "Debit"`. Android used to ignore the field.

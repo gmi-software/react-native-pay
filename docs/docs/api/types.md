@@ -230,7 +230,7 @@ interface PayServiceStatusOptions {
 }
 ```
 
-The values are checked as in `startPayment`, and the Promise rejects with the same message for a value the payment would refuse.
+The values are checked as in `startPayment`, and the Promise rejects with the same configuration error for a value the payment would refuse.
 
 ---
 

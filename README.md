@@ -464,7 +464,7 @@ Low-level payment handler for direct control.
 
 ##### `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
 
-Check payment service availability without blocking the JS thread. Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods` and `googlePayEnvironment` your payment request uses. The Promise rejects with the payment's message for a value the payment would refuse.
+Check payment service availability without blocking the JS thread. Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods` and `googlePayEnvironment` your payment request uses. The Promise rejects with the payment's configuration error for a value the payment would refuse.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";

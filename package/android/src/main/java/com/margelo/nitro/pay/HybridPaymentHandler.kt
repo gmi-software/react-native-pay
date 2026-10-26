@@ -65,7 +65,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     override fun payServiceStatus(options: PayServiceStatusOptions?): Promise<PayServiceStatus> {
         val environment = determineEnvironment(options?.googlePayEnvironment)
-        // Rejects what the payment would refuse, with the same message.
+        // Rejects what the payment would refuse, with the same error.
         val cardParameters = try {
             GooglePayCardParameters.from(
                 options?.supportedNetworks,
