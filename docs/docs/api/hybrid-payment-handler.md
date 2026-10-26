@@ -106,22 +106,6 @@ const isBusy = HybridPaymentHandler.isPaymentInProgress()
 
 ---
 
-### canMakePayments(usingNetworks, options?)
-
-Resolves with whether the user has a card ready on one of the given networks, like `hasActiveCard`. Both platforms ask the device. It resolves `false` when no network is one the platform knows.
-
-```ts
-import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
-
-const canPay = await HybridPaymentHandler.canMakePayments(['visa', 'mastercard'], {
-  googlePayEnvironment: 'PRODUCTION',
-})
-```
-
-`options` takes `merchantCapabilities` (iOS) and `googlePayEnvironment` (Android, `'TEST'` by default). See [CanMakePaymentsOptions](/docs/api/types#canmakepaymentsoptions).
-
----
-
 ### openPaymentSetup()
 
 iOS only. Opens Wallet (Settings on iPad) so the user can add a card. Call it from a **Set up Apple Pay** button (`ApplePayButton` with `buttonType="setUp"`) when `isSupported` is `true` and `hasActiveCard` is `false`. It does nothing on devices without Apple Pay, and nothing on Android, where the Google Pay sheet lets the user add a card.

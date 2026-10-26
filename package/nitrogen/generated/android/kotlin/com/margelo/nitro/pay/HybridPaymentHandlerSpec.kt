@@ -39,10 +39,6 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun canMakePayments(usingNetworks: Array<String>, options: CanMakePaymentsOptions?): Promise<Boolean>
-  
-  @DoNotStrip
-  @Keep
   abstract fun isPaymentInProgress(): Boolean
   
   @DoNotStrip

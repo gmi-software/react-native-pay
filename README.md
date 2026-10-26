@@ -539,18 +539,6 @@ interface PaymentToken {
 }
 ```
 
-##### `canMakePayments(usingNetworks: string[], options?: CanMakePaymentsOptions): Promise<boolean>`
-
-Check whether the user has a card ready on one of the given networks. Both platforms ask the device.
-
-```typescript
-import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
-
-const canPay = await HybridPaymentHandler.canMakePayments(["visa", "mastercard"], {
-  googlePayEnvironment: "PRODUCTION",
-});
-```
-
 ##### `isPaymentInProgress(): boolean`
 
 Check whether a payment started with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet. While it returns `true`, `startPayment` resolves with `{ success: false, error: "A payment is already in progress" }`.

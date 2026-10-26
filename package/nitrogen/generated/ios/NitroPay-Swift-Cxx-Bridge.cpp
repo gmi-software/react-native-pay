@@ -88,14 +88,6 @@ namespace margelo::nitro::pay::bridge::swift {
     };
   }
   
-  // pragma MARK: std::function<void(bool /* result */)>
-  Func_void_bool create_Func_void_bool(void* NON_NULL swiftClosureWrapper) noexcept {
-    auto swiftClosure = NitroPay::Func_void_bool::fromUnsafe(swiftClosureWrapper);
-    return [swiftClosure = std::move(swiftClosure)](bool result) mutable -> void {
-      swiftClosure.call(result);
-    };
-  }
-  
   // pragma MARK: std::shared_ptr<HybridPaymentHandlerSpec>
   std::shared_ptr<HybridPaymentHandlerSpec> create_std__shared_ptr_HybridPaymentHandlerSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     NitroPay::HybridPaymentHandlerSpec_cxx swiftPart = NitroPay::HybridPaymentHandlerSpec_cxx::fromUnsafe(swiftUnsafePointer);

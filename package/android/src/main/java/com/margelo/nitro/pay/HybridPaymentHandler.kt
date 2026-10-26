@@ -85,19 +85,6 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         return promise
     }
     
-    override fun canMakePayments(
-        usingNetworks: Array<String>,
-        options: CanMakePaymentsOptions?
-    ): Promise<Boolean> {
-        val promise = Promise<Boolean>()
-        isReadyToPay(
-            determineEnvironment(options?.googlePayEnvironment),
-            GooglePayRequestBuilder.googleCardNetworks(usingNetworks),
-            existingPaymentMethodRequired = true
-        ).addOnCompleteListener { promise.resolve(it.result) }
-        return promise
-    }
-    
     override fun isPaymentInProgress(): Boolean {
         return pendingPayment.isInProgress
     }

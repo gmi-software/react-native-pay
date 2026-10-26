@@ -207,17 +207,6 @@ interface PayServiceStatusOptions {
 }
 ```
 
-## CanMakePaymentsOptions
-
-What `canMakePayments(usingNetworks, options)` checks besides the networks.
-
-```ts
-interface CanMakePaymentsOptions {
-  merchantCapabilities?: string[] // iOS only. Default: ['3DS']
-  googlePayEnvironment?: 'TEST' | 'PRODUCTION' // Android only. Default: 'TEST'
-}
-```
-
 ---
 
 ## GooglePayEnvironment

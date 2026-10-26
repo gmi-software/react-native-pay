@@ -51,15 +51,18 @@ All notable changes to this project are documented in this file.
   of when it starts presenting the sheet, so `isPaymentInProgress()` sees a payment started in the
   same JS tick.
 - **Availability checks are asynchronous and report `isSupported` and `hasActiveCard`.**
-  `HybridPaymentHandler.payServiceStatus()` and `canMakePayments(networks)` now return Promises,
-  and `PayServiceStatus` is `{ isSupported, hasActiveCard }` instead of
-  `{ canMakePayments, canSetupCards }`, which meant different things on each platform.
-  `usePaymentCheckout` returns `isSupported`, `hasActiveCard` and a new `refreshStatus()` instead of
-  `canMakePayments` and `canSetupCards`. Both checks take the networks, merchant capabilities and
-  Google Pay environment to check against; the hook passes its config. To migrate, `await` the
-  handler methods and read `isSupported` where you read `canMakePayments` (the same check on iOS,
-  and the one Google recommends for showing the button on Android). See
+  `HybridPaymentHandler.payServiceStatus()` now returns a Promise, and `PayServiceStatus` is
+  `{ isSupported, hasActiveCard }` instead of `{ canMakePayments, canSetupCards }`, which meant
+  different things on each platform. `usePaymentCheckout` returns `isSupported`, `hasActiveCard`
+  and a new `refreshStatus()` instead of `canMakePayments` and `canSetupCards`. The check takes the
+  networks, merchant capabilities and Google Pay environment to check against; the hook passes
+  those of its payment request. To migrate, `await` the call and read `isSupported` where you read
+  `canMakePayments` (the same check on iOS, and the one Google recommends for showing the button on
+  Android). See
   [Check availability](https://gmi-software.github.io/react-native-pay/docs/guides/availability).
+- **`HybridPaymentHandler.canMakePayments(networks)` is removed.** It answered the same question as
+  `hasActiveCard`: call `payServiceStatus({ supportedNetworks: networks })` and read
+  `hasActiveCard`. On Android it never asked the device, so `['visa']` was always `true`.
 - **iOS: `HybridPaymentHandler.openPaymentSetup()`** opens Wallet so the user can add a card, for a
   "Set up Apple Pay" button (`ApplePayButton` with `buttonType="setUp"`). It does nothing on Android.
 
@@ -80,10 +83,8 @@ All notable changes to this project are documented in this file.
   until a payment had started, and in `TEST` Google Pay reports a card whether or not there is one,
   so production apps showed the pay button for users without a card. It now uses
   `googlePayEnvironment` from the hook config or the options.
-- **Android: `canMakePayments(networks)` asks Google Pay.** It only checked that a name was in a
-  fixed list, so `['visa']` was always `true`. It now asks whether the user has a card on those
-  networks, like iOS. Both platforms answer `false` when no network is one they know; iOS answered
-  for an empty network list instead.
+- **`hasActiveCard` is `false` when no checked network is one the platform knows.** iOS passed an
+  empty network list to PassKit, which can answer `true` for it.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

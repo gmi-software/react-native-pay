@@ -544,16 +544,6 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         }
     }
     
-    func canMakePayments(usingNetworks: [String], options: CanMakePaymentsOptions?) throws -> Promise<Bool> {
-        let merchantCapabilities = options?.merchantCapabilities
-        return Promise.parallel {
-            try PaymentReadiness.hasActiveCard(
-                networks: usingNetworks,
-                merchantCapabilities: merchantCapabilities
-            )
-        }
-    }
-    
     func openPaymentSetup() throws {
         // Hands over to Wallet (Settings on iPad); does nothing without Apple Pay support.
         DispatchQueue.main.async {

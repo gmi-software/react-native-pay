@@ -59,8 +59,6 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
-// Forward declaration of `CanMakePaymentsOptions` to properly resolve imports.
-namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -124,8 +122,6 @@ namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 #include "PaymentAuthorizationStatus.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
 #include "JPaymentDetails.hpp"
-#include "CanMakePaymentsOptions.hpp"
-#include "JCanMakePaymentsOptions.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -184,31 +180,6 @@ namespace margelo::nitro::pay {
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<JPaymentResult>(__boxedResult);
         __promise->resolve(__result->toCpp());
-      });
-      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
-        jni::JniException __jniError(__throwable);
-        __promise->reject(std::make_exception_ptr(__jniError));
-      });
-      return __promise;
-    }();
-  }
-  std::shared_ptr<Promise<bool>> JHybridPaymentHandlerSpec::canMakePayments(const std::vector<std::string>& usingNetworks, const std::optional<CanMakePaymentsOptions>& options) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JArrayClass<jni::JString>> /* usingNetworks */, jni::alias_ref<JCanMakePaymentsOptions> /* options */)>("canMakePayments");
-    auto __result = method(_javaPart, [&](auto&& __input) {
-      size_t __size = __input.size();
-      jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
-      for (size_t __i = 0; __i < __size; __i++) {
-        const auto& __element = __input[__i];
-        auto __elementJni = jni::make_jstring(__element);
-        __array->setElement(__i, *__elementJni);
-      }
-      return __array;
-    }(usingNetworks), options.has_value() ? JCanMakePaymentsOptions::fromCpp(options.value()) : nullptr);
-    return [&]() {
-      auto __promise = Promise<bool>::create();
-      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
-        auto __result = jni::static_ref_cast<jni::JBoolean>(__boxedResult);
-        __promise->resolve(static_cast<bool>(__result->value()));
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

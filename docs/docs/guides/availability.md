@@ -103,18 +103,8 @@ const { isSupported, hasActiveCard } =
   })
 ```
 
-To check other networks only, use `canMakePayments`. It answers like `hasActiveCard`:
-
-```ts
-import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
-
-const canPayWithAmex = await HybridPaymentHandler.canMakePayments(['amex'], {
-  googlePayEnvironment: 'PRODUCTION',
-})
-```
-
 ## Next
 
 - [usePaymentCheckout](/docs/api/use-payment-checkout): the hook's availability fields
-- [HybridPaymentHandler](/docs/api/hybrid-payment-handler): `payServiceStatus`, `canMakePayments` and `openPaymentSetup`
+- [HybridPaymentHandler](/docs/api/hybrid-payment-handler): `payServiceStatus` and `openPaymentSetup`
 - [Components](/docs/api/components): `ApplePayButton` and `GooglePayButton`

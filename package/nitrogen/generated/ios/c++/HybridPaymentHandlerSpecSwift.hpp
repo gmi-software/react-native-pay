@@ -64,8 +64,6 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
-// Forward declaration of `CanMakePaymentsOptions` to properly resolve imports.
-namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -99,7 +97,6 @@ namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 #include "PaymentDetails.hpp"
 #include <functional>
 #include "PaymentAuthorizationStatus.hpp"
-#include "CanMakePaymentsOptions.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -161,14 +158,6 @@ namespace margelo::nitro::pay {
     }
     inline std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) override {
       auto __result = _swiftPart.startPayment(std::forward<decltype(request)>(request), options);
-      if (__result.hasError()) [[unlikely]] {
-        std::rethrow_exception(__result.error());
-      }
-      auto __value = std::move(__result.value());
-      return __value;
-    }
-    inline std::shared_ptr<Promise<bool>> canMakePayments(const std::vector<std::string>& usingNetworks, const std::optional<CanMakePaymentsOptions>& options) override {
-      auto __result = _swiftPart.canMakePayments(usingNetworks, options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

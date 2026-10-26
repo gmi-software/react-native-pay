@@ -264,15 +264,5 @@ export interface PayServiceStatusOptions {
   googlePayEnvironment?: GooglePayEnvironment
 }
 
-/**
- * What `canMakePayments(usingNetworks, options)` checks besides the networks.
- */
-export interface CanMakePaymentsOptions {
-  // iOS only. Same as `PayServiceStatusOptions.merchantCapabilities`.
-  merchantCapabilities?: string[]
-  // Android only. The Google Pay environment to ask. Defaults to `'TEST'`.
-  googlePayEnvironment?: GooglePayEnvironment
-}
-
 // Backward compatibility alias
 export type ApplePayStatus = PayServiceStatus

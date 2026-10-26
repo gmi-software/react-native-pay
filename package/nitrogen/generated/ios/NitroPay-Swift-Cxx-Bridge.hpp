@@ -22,8 +22,6 @@ namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 namespace margelo::nitro::pay { struct CNPhoneNumber; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
-// Forward declaration of `CanMakePaymentsOptions` to properly resolve imports.
-namespace margelo::nitro::pay { struct CanMakePaymentsOptions; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
@@ -79,7 +77,6 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
-#include "CanMakePaymentsOptions.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
@@ -667,55 +664,6 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.value();
   }
   
-  // pragma MARK: std::shared_ptr<Promise<bool>>
-  /**
-   * Specialized version of `std::shared_ptr<Promise<bool>>`.
-   */
-  using std__shared_ptr_Promise_bool__ = std::shared_ptr<Promise<bool>>;
-  inline std::shared_ptr<Promise<bool>> create_std__shared_ptr_Promise_bool__() noexcept {
-    return Promise<bool>::create();
-  }
-  inline PromiseHolder<bool> wrap_std__shared_ptr_Promise_bool__(std::shared_ptr<Promise<bool>> promise) noexcept {
-    return PromiseHolder<bool>(std::move(promise));
-  }
-  
-  // pragma MARK: std::function<void(bool /* result */)>
-  /**
-   * Specialized version of `std::function<void(bool)>`.
-   */
-  using Func_void_bool = std::function<void(bool /* result */)>;
-  /**
-   * Wrapper class for a `std::function<void(bool / * result * /)>`, this can be used from Swift.
-   */
-  class Func_void_bool_Wrapper final {
-  public:
-    explicit Func_void_bool_Wrapper(std::function<void(bool /* result */)>&& func): _function(std::make_unique<std::function<void(bool /* result */)>>(std::move(func))) {}
-    inline void call(bool result) const noexcept {
-      _function->operator()(result);
-    }
-  private:
-    std::unique_ptr<std::function<void(bool /* result */)>> _function;
-  } SWIFT_NONCOPYABLE;
-  Func_void_bool create_Func_void_bool(void* NON_NULL swiftClosureWrapper) noexcept;
-  inline Func_void_bool_Wrapper wrap_Func_void_bool(Func_void_bool value) noexcept {
-    return Func_void_bool_Wrapper(std::move(value));
-  }
-  
-  // pragma MARK: std::optional<CanMakePaymentsOptions>
-  /**
-   * Specialized version of `std::optional<CanMakePaymentsOptions>`.
-   */
-  using std__optional_CanMakePaymentsOptions_ = std::optional<CanMakePaymentsOptions>;
-  inline std::optional<CanMakePaymentsOptions> create_std__optional_CanMakePaymentsOptions_(const CanMakePaymentsOptions& value) noexcept {
-    return std::optional<CanMakePaymentsOptions>(value);
-  }
-  inline bool has_value_std__optional_CanMakePaymentsOptions_(const std::optional<CanMakePaymentsOptions>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline CanMakePaymentsOptions get_std__optional_CanMakePaymentsOptions_(const std::optional<CanMakePaymentsOptions>& optional) noexcept {
-    return optional.value();
-  }
-  
   // pragma MARK: std::shared_ptr<HybridPaymentHandlerSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridPaymentHandlerSpec>`.
@@ -744,15 +692,6 @@ namespace margelo::nitro::pay::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_PaymentResult___ create_Result_std__shared_ptr_Promise_PaymentResult___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<PaymentResult>>>::withError(error);
-  }
-  
-  // pragma MARK: Result<std::shared_ptr<Promise<bool>>>
-  using Result_std__shared_ptr_Promise_bool___ = Result<std::shared_ptr<Promise<bool>>>;
-  inline Result_std__shared_ptr_Promise_bool___ create_Result_std__shared_ptr_Promise_bool___(const std::shared_ptr<Promise<bool>>& value) noexcept {
-    return Result<std::shared_ptr<Promise<bool>>>::withValue(value);
-  }
-  inline Result_std__shared_ptr_Promise_bool___ create_Result_std__shared_ptr_Promise_bool___(const std::exception_ptr& error) noexcept {
-    return Result<std::shared_ptr<Promise<bool>>>::withError(error);
   }
   
   // pragma MARK: Result<bool>
