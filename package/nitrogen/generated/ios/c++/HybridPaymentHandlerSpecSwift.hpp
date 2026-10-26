@@ -160,6 +160,14 @@ namespace margelo::nitro::pay {
       auto __value = std::move(__result.value());
       return __value;
     }
+    inline bool isPaymentInProgress() override {
+      auto __result = _swiftPart.isPaymentInProgress();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
 
   private:
     NitroPay::HybridPaymentHandlerSpec_cxx _swiftPart;

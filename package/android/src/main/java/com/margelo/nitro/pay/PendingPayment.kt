@@ -11,6 +11,10 @@ import java.util.concurrent.atomic.AtomicReference
 internal class PendingPayment<T> {
     private val settleCallback = AtomicReference<((T) -> Unit)?>(null)
 
+    /** Whether a payment has claimed the slot and not settled yet. */
+    val isInProgress: Boolean
+        get() = settleCallback.get() != null
+
     /**
      * Claims the slot for a new payment.
      * Returns `false` without touching the in-flight payment if one exists.

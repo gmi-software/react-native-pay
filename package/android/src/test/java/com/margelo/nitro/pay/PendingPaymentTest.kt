@@ -68,6 +68,22 @@ class PendingPaymentTest {
     }
 
     @Test
+    fun isInProgressFollowsTheSlot() {
+        val pending = PendingPayment<String>()
+
+        assertFalse(pending.isInProgress)
+
+        pending.tryBegin { }
+        assertTrue(pending.isInProgress)
+
+        pending.tryBegin { }
+        assertTrue(pending.isInProgress)
+
+        pending.settle("done")
+        assertFalse(pending.isInProgress)
+    }
+
+    @Test
     fun concurrentBeginsClaimTheSlotOnce() {
         val pending = PendingPayment<Int>()
         val threads = 16

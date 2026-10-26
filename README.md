@@ -532,6 +532,16 @@ import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 const canPay = HybridPaymentHandler.canMakePayments(["visa", "mastercard"]);
 ```
 
+##### `isPaymentInProgress(): boolean`
+
+Check whether a payment started with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet. While it returns `true`, `startPayment` resolves with `{ success: false, error: "A payment is already in progress" }`.
+
+```typescript
+import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
+
+const isBusy = HybridPaymentHandler.isPaymentInProgress();
+```
+
 ---
 
 ### Button Components
