@@ -274,16 +274,6 @@ enum PaymentReadiness {
     // Checked when the caller names no networks, like the hook's default.
     static let defaultNetworks = ["visa", "mastercard", "amex", "discover"]
 
-    static func status(supportedNetworks: [String]?, merchantCapabilities: [String]?) throws -> PayServiceStatus {
-        return PayServiceStatus(
-            isSupported: PKPaymentAuthorizationViewController.canMakePayments(),
-            hasActiveCard: try hasActiveCard(
-                networks: supportedNetworks ?? defaultNetworks,
-                merchantCapabilities: merchantCapabilities
-            )
-        )
-    }
-
     static func hasActiveCard(networks: [String], merchantCapabilities: [String]?) throws -> Bool {
         let capabilities = try PaymentRequestBuilder.buildMerchantCapabilities(merchantCapabilities ?? [])
         let paymentNetworks = networks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
@@ -541,12 +531,15 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // PassKit asks the Wallet service, so both checks run off the JS thread.
     // Its `canMakePayments` class methods may be called from any thread.
     func payServiceStatus(options: PayServiceStatusOptions?) throws -> Promise<PayServiceStatus> {
-        let supportedNetworks = options?.supportedNetworks
+        let networks = options?.supportedNetworks ?? PaymentReadiness.defaultNetworks
         let merchantCapabilities = options?.merchantCapabilities
         return Promise.parallel {
-            try PaymentReadiness.status(
-                supportedNetworks: supportedNetworks,
-                merchantCapabilities: merchantCapabilities
+            PayServiceStatus(
+                isSupported: PKPaymentAuthorizationViewController.canMakePayments(),
+                hasActiveCard: try PaymentReadiness.hasActiveCard(
+                    networks: networks,
+                    merchantCapabilities: merchantCapabilities
+                )
             )
         }
     }

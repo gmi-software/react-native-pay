@@ -17,7 +17,7 @@ object GooglePayRequestBuilder {
      * @param cardNetworks Google Pay `allowedCardNetworks` values, see [googleCardNetworks].
      */
     fun createIsReadyToPayRequest(
-        cardNetworks: List<String> = PaymentConstants.DEFAULT_CARD_NETWORKS,
+        cardNetworks: List<String>,
         existingPaymentMethodRequired: Boolean? = null
     ): JSONObject {
         return JSONObject().apply {

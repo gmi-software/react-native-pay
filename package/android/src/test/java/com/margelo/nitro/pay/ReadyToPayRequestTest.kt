@@ -64,8 +64,9 @@ class ReadyToPayRequestTest {
     }
 
     @Test
-    fun isReadyToPayRequest_defaultsToTheNetworksOfPaymentRequests() {
+    fun isReadyToPayRequest_canAskWithoutRequiringACard() {
         val request = GooglePayRequestBuilder.createIsReadyToPayRequest(
+            cardNetworks = PaymentConstants.DEFAULT_CARD_NETWORKS,
             existingPaymentMethodRequired = false
         )
 
@@ -73,6 +74,7 @@ class ReadyToPayRequestTest {
             listOf("VISA", "MASTERCARD", "AMEX", "DISCOVER"),
             request.allowedCardNetworks()
         )
+        assertTrue(request.has("existingPaymentMethodRequired"))
         assertFalse(request.getBoolean("existingPaymentMethodRequired"))
     }
 }

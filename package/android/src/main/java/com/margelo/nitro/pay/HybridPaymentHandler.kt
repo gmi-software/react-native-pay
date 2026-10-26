@@ -64,54 +64,38 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     // MARK: - Public API
     
     override fun payServiceStatus(options: PayServiceStatusOptions?): Promise<PayServiceStatus> {
-        return try {
-            val client = createPaymentsClient(determineEnvironment(options?.googlePayEnvironment))
-            val cardNetworks = options?.supportedNetworks
-                ?.let { GooglePayRequestBuilder.googleCardNetworks(it) }
-                ?: PaymentConstants.DEFAULT_CARD_NETWORKS
-            // Both requests run at once; neither blocks the calling (JS) thread.
-            val isSupported = isReadyToPay(
-                client,
-                PaymentConstants.DEFAULT_CARD_NETWORKS,
-                existingPaymentMethodRequired = false
+        val environment = determineEnvironment(options?.googlePayEnvironment)
+        val cardNetworks = options?.supportedNetworks
+            ?.let { GooglePayRequestBuilder.googleCardNetworks(it) }
+            ?: PaymentConstants.DEFAULT_CARD_NETWORKS
+        // Both requests run at once; neither blocks the calling (JS) thread.
+        val isSupported = isReadyToPay(
+            environment,
+            PaymentConstants.DEFAULT_CARD_NETWORKS,
+            existingPaymentMethodRequired = false
+        )
+        val hasActiveCard = isReadyToPay(environment, cardNetworks, existingPaymentMethodRequired = true)
+        
+        val promise = Promise<PayServiceStatus>()
+        Tasks.whenAll(isSupported, hasActiveCard).addOnCompleteListener {
+            promise.resolve(
+                PayServiceStatus(isSupported = isSupported.result, hasActiveCard = hasActiveCard.result)
             )
-            val hasActiveCard = isReadyToPay(client, cardNetworks, existingPaymentMethodRequired = true)
-            
-            val promise = Promise<PayServiceStatus>()
-            Tasks.whenAllComplete(isSupported, hasActiveCard).addOnCompleteListener {
-                promise.resolve(
-                    PayServiceStatus(
-                        isSupported = isSupported.resultOrFalse(),
-                        hasActiveCard = hasActiveCard.resultOrFalse()
-                    )
-                )
-            }
-            promise
-        } catch (e: Exception) {
-            PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Error checking status", e)
-            Promise.resolved(PayServiceStatus(isSupported = false, hasActiveCard = false))
         }
+        return promise
     }
     
     override fun canMakePayments(
         usingNetworks: Array<String>,
         options: CanMakePaymentsOptions?
     ): Promise<Boolean> {
-        return try {
-            val client = createPaymentsClient(determineEnvironment(options?.googlePayEnvironment))
-            val hasActiveCard = isReadyToPay(
-                client,
-                GooglePayRequestBuilder.googleCardNetworks(usingNetworks),
-                existingPaymentMethodRequired = true
-            )
-            
-            val promise = Promise<Boolean>()
-            hasActiveCard.addOnCompleteListener { promise.resolve(it.resultOrFalse()) }
-            promise
-        } catch (e: Exception) {
-            PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Error checking networks", e)
-            Promise.resolved(false)
-        }
+        val promise = Promise<Boolean>()
+        isReadyToPay(
+            determineEnvironment(options?.googlePayEnvironment),
+            GooglePayRequestBuilder.googleCardNetworks(usingNetworks),
+            existingPaymentMethodRequired = true
+        ).addOnCompleteListener { promise.resolve(it.result) }
+        return promise
     }
     
     override fun isPaymentInProgress(): Boolean {
@@ -259,33 +243,38 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
 
     /**
      * Asks Google Pay without waiting for the answer. The task completes on
-     * the main thread, with a `TimeoutException` if Google Pay does not answer.
+     * the main thread and never fails: an error, or no answer within the
+     * timeout, counts as not ready.
      */
     private fun isReadyToPay(
-        client: PaymentsClient,
+        environment: Int,
         cardNetworks: List<String>,
         existingPaymentMethodRequired: Boolean
     ): Task<Boolean> {
         // No network Google Pay knows: no card can be on it.
         if (cardNetworks.isEmpty()) return Tasks.forResult(false)
         
-        val requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
-            cardNetworks = cardNetworks,
-            existingPaymentMethodRequired = existingPaymentMethodRequired
-        )
-        val request = IsReadyToPayRequest.fromJson(requestJson.toString())
-        return Tasks.withTimeout(
-            client.isReadyToPay(request),
-            PaymentConstants.READY_TO_PAY_TIMEOUT_SECONDS,
-            TimeUnit.SECONDS
-        )
-    }
-    
-    /** A failed or timed-out check counts as not ready. */
-    private fun Task<Boolean>.resultOrFalse(): Boolean {
-        if (isSuccessful) return result == true
-        PayLog.w(PaymentConstants.TAG_PAYMENT_HANDLER, "isReadyToPay failed", exception)
-        return false
+        val answer: Task<Boolean> = try {
+            val requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
+                cardNetworks = cardNetworks,
+                existingPaymentMethodRequired = existingPaymentMethodRequired
+            )
+            Tasks.withTimeout(
+                createPaymentsClient(environment).isReadyToPay(
+                    IsReadyToPayRequest.fromJson(requestJson.toString())
+                ),
+                PaymentConstants.READY_TO_PAY_TIMEOUT_SECONDS,
+                TimeUnit.SECONDS
+            )
+        } catch (e: Exception) {
+            Tasks.forException(e)
+        }
+        return answer.continueWith { task ->
+            if (!task.isSuccessful) {
+                PayLog.w(PaymentConstants.TAG_PAYMENT_HANDLER, "isReadyToPay failed", task.exception)
+            }
+            task.isSuccessful && task.result == true
+        }
     }
     
     private fun handlePaymentSuccess(paymentData: PaymentData) {
