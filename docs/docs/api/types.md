@@ -187,7 +187,7 @@ Used in config and `PaymentRequest` for Android.
 type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 ```
 
-Use `'TEST'` for development/sandbox; `'PRODUCTION'` for live charges.
+Use `'TEST'` for development/sandbox; `'PRODUCTION'` for live charges. Android uses `'TEST'` when the value is omitted. See [Testing payments](/docs/guides/testing#test-environment).
 
 ---
 
