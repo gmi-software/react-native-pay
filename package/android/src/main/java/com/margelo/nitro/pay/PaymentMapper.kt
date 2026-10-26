@@ -36,7 +36,7 @@ object PaymentMapper {
             val paymentMethod = PaymentMethod(
                 displayName = paymentMethodData.optNonEmpty("description")
                     ?: "$cardNetwork $cardDetails",
-                network = mapCardNetwork(cardNetwork),
+                network = GooglePayNetworks.fromGooglePay(cardNetwork),
                 type = PaymentMethodType.UNKNOWN,
                 secureElementPass = null,
                 billingAddress = null
@@ -133,13 +133,6 @@ object PaymentMapper {
             phoneNumber = result.phoneNumber,
             shippingMethod = result.shippingMethod
         )
-    }
-    
-    /**
-     * Maps a Google Pay `cardNetwork` value to PaymentNetwork, or UNKNOWN
-     */
-    fun mapCardNetwork(network: String): PaymentNetwork {
-        return GooglePayNetworks.fromGooglePay(network)
     }
     
     /**

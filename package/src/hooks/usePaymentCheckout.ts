@@ -28,8 +28,6 @@ import {
   sanitizePaymentRequest,
 } from '../utils'
 
-const DEFAULT_SUPPORTED_NETWORKS = ['visa', 'mastercard', 'amex', 'discover']
-
 // Values that survive a JSON round trip unchanged: functions are dropped, and
 // NaN and Infinity become null. No objects: a `JSON.stringify` key list would
 // filter their keys too.
@@ -295,27 +293,6 @@ export function usePaymentCheckout(
   // Set synchronously, so two calls in the same frame still see each other.
   const isPaymentInFlight = useRef(false)
 
-  // Checked again when the accepted cards change, not on other config changes.
-  const statusOptionsKey = JSON.stringify({
-    supportedNetworks:
-      stableRequestConfig.supportedNetworks ?? DEFAULT_SUPPORTED_NETWORKS,
-    googlePayAllowedAuthMethods:
-      stableRequestConfig.googlePayAllowedAuthMethods,
-  } satisfies PayServiceStatusOptions)
-
-  useEffect(() => {
-    try {
-      const options: PayServiceStatusOptions = JSON.parse(statusOptionsKey)
-      const paymentStatus = getPaymentHandler().payServiceStatus(options)
-      setStatus(paymentStatus)
-    } catch (err) {
-      console.error('Failed to check payment status:', err)
-      setStatus({ canMakePayments: false, canSetupCards: false })
-    } finally {
-      setIsCheckingStatus(false)
-    }
-  }, [statusOptionsKey])
-
   const total = useMemo(() => calculateTotal(items), [items])
 
   const paymentRequest = useMemo<PaymentRequest>(() => {
@@ -323,7 +300,7 @@ export function usePaymentCheckout(
       merchantName,
       countryCode = 'US',
       currencyCode = 'USD',
-      supportedNetworks = DEFAULT_SUPPORTED_NETWORKS,
+      supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
       merchantCapabilities = ['3DS'],
       applePayMerchantIdentifier,
       googlePayMerchantId,
@@ -357,6 +334,25 @@ export function usePaymentCheckout(
       phoneNumberRequired,
     })
   }, [stableRequestConfig, items])
+
+  // The request's cards, so the status is checked again only when they change.
+  const statusOptionsKey = JSON.stringify({
+    supportedNetworks: paymentRequest.supportedNetworks,
+    googlePayAllowedAuthMethods: paymentRequest.googlePayAllowedAuthMethods,
+  } satisfies PayServiceStatusOptions)
+
+  useEffect(() => {
+    try {
+      const options: PayServiceStatusOptions = JSON.parse(statusOptionsKey)
+      const paymentStatus = getPaymentHandler().payServiceStatus(options)
+      setStatus(paymentStatus)
+    } catch (err) {
+      console.error('Failed to check payment status:', err)
+      setStatus({ canMakePayments: false, canSetupCards: false })
+    } finally {
+      setIsCheckingStatus(false)
+    }
+  }, [statusOptionsKey])
 
   // Cart operations
   const addItem = useCallback(

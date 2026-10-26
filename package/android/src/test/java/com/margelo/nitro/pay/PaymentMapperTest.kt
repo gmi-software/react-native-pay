@@ -308,30 +308,30 @@ class PaymentMapperTest {
     }
 
     @Test
-    fun mapCardNetwork_mapsGooglePayNetworksIgnoringCase() {
-        assertEquals(PaymentNetwork.VISA, PaymentMapper.mapCardNetwork("VISA"))
-        assertEquals(PaymentNetwork.MASTERCARD, PaymentMapper.mapCardNetwork("MASTERCARD"))
-        assertEquals(PaymentNetwork.AMEX, PaymentMapper.mapCardNetwork("AMEX"))
-        assertEquals(PaymentNetwork.DISCOVER, PaymentMapper.mapCardNetwork("DISCOVER"))
-        assertEquals(PaymentNetwork.JCB, PaymentMapper.mapCardNetwork("JCB"))
-        assertEquals(PaymentNetwork.INTERAC, PaymentMapper.mapCardNetwork("INTERAC"))
-        assertEquals(PaymentNetwork.MAESTRO, PaymentMapper.mapCardNetwork("maestro"))
-        assertEquals(PaymentNetwork.ELECTRON, PaymentMapper.mapCardNetwork("Electron"))
-        assertEquals(PaymentNetwork.ELO, PaymentMapper.mapCardNetwork("elo"))
+    fun fromGooglePay_mapsGooglePayNetworksIgnoringCase() {
+        assertEquals(PaymentNetwork.VISA, GooglePayNetworks.fromGooglePay("VISA"))
+        assertEquals(PaymentNetwork.MASTERCARD, GooglePayNetworks.fromGooglePay("MASTERCARD"))
+        assertEquals(PaymentNetwork.AMEX, GooglePayNetworks.fromGooglePay("AMEX"))
+        assertEquals(PaymentNetwork.DISCOVER, GooglePayNetworks.fromGooglePay("DISCOVER"))
+        assertEquals(PaymentNetwork.JCB, GooglePayNetworks.fromGooglePay("JCB"))
+        assertEquals(PaymentNetwork.INTERAC, GooglePayNetworks.fromGooglePay("INTERAC"))
+        assertEquals(PaymentNetwork.MAESTRO, GooglePayNetworks.fromGooglePay("maestro"))
+        assertEquals(PaymentNetwork.ELECTRON, GooglePayNetworks.fromGooglePay("Electron"))
+        assertEquals(PaymentNetwork.ELO, GooglePayNetworks.fromGooglePay("elo"))
     }
 
     @Test
-    fun mapCardNetwork_reportsUnrecognizedNetworksAsUnknown() {
-        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork("unknown"))
-        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork("ELO_DEBIT"))
-        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork(""))
+    fun fromGooglePay_reportsUnrecognizedNetworksAsUnknown() {
+        assertEquals(PaymentNetwork.UNKNOWN, GooglePayNetworks.fromGooglePay("unknown"))
+        assertEquals(PaymentNetwork.UNKNOWN, GooglePayNetworks.fromGooglePay("ELO_DEBIT"))
+        assertEquals(PaymentNetwork.UNKNOWN, GooglePayNetworks.fromGooglePay(""))
     }
 
     @Test
-    fun mapCardNetwork_readsBackEveryNetworkTheRequestSends() {
+    fun fromGooglePay_readsBackEveryNetworkTheRequestSends() {
         for (network in PaymentNetwork.entries) {
             val cardNetwork = GooglePayNetworks.toGooglePay(network) ?: continue
-            assertEquals(network, PaymentMapper.mapCardNetwork(cardNetwork))
+            assertEquals(network, GooglePayNetworks.fromGooglePay(cardNetwork))
         }
     }
 

@@ -11,16 +11,18 @@ import com.google.android.gms.wallet.button.PayButton
  */
 class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButtonSpec() {
     
+    /** What a PayButton is built from: a different value needs a new button */
+    private data class ButtonConfig(
+        val buttonType: GooglePayButtonType,
+        val theme: GooglePayButtonTheme,
+        val radius: Double?,
+        val cardParameters: GooglePayCardParameters
+    )
+    
     // View state
     private var payButton: PayButton? = null
     private val container: FrameLayout = FrameLayout(context)
-    
-    // Configuration tracking for change detection
-    private var currentButtonType: GooglePayButtonType? = null
-    private var currentTheme: GooglePayButtonTheme? = null
-    private var currentRadius: Double? = null
-    private var currentSupportedNetworks: Array<String>? = null
-    private var currentAllowedAuthMethods: Array<String>? = null
+    private var buttonConfig: ButtonConfig? = null
     
     // Props
     override var buttonType: GooglePayButtonType = GooglePayButtonType.BUY
@@ -48,30 +50,24 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         val context = container.context ?: return
         
         try {
-            if (shouldReuseButton()) {
+            // Built first, so invalid networks keep the existing button.
+            val config = ButtonConfig(
+                buttonType,
+                theme,
+                radius,
+                GooglePayCardParameters.from(supportedNetworks, allowedAuthMethods)
+            )
+            if (payButton?.parent == container && config == buttonConfig) {
                 updateExistingButton()
                 return
             }
             
-            recreateButton(context)
+            recreateButton(context, config)
             
         } catch (e: Exception) {
             PayLog.e(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Error setting up button", e)
             restoreExistingButton()
         }
-    }
-    
-    /**
-     * Checks if the existing button can be reused
-     */
-    private fun shouldReuseButton(): Boolean {
-        val hasButton = payButton != null && payButton?.parent == container
-        val propsUnchanged = currentButtonType == buttonType &&
-                             currentTheme == theme &&
-                             currentRadius == radius &&
-                             currentSupportedNetworks contentEquals supportedNetworks &&
-                             currentAllowedAuthMethods contentEquals allowedAuthMethods
-        return hasButton && propsUnchanged
     }
     
     /**
@@ -87,14 +83,8 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
     /**
      * Recreates the button with new configuration
      */
-    private fun recreateButton(context: android.content.Context) {
-        PayLog.d(
-            PaymentConstants.TAG_GOOGLE_PAY_BUTTON,
-            "Recreating button - type: $buttonType, theme: $theme, radius: $radius"
-        )
-        
-        // Before removing the button: invalid networks keep the existing one.
-        val cardParameters = GooglePayCardParameters.from(supportedNetworks, allowedAuthMethods)
+    private fun recreateButton(context: android.content.Context, config: ButtonConfig) {
+        PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Recreating button - $config")
         
         // Remove existing button
         container.removeAllViews()
@@ -102,20 +92,16 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         // Create new button
         val newButton = GooglePayButtonFactory.createButton(
             context,
-            buttonType,
-            theme,
-            radius,
-            cardParameters,
+            config.buttonType,
+            config.theme,
+            config.radius,
+            config.cardParameters,
             onPress
         )
         
         // Update state
         payButton = newButton
-        currentButtonType = buttonType
-        currentTheme = theme
-        currentRadius = radius
-        currentSupportedNetworks = supportedNetworks
-        currentAllowedAuthMethods = allowedAuthMethods
+        buttonConfig = config
         
         // Add to container
         val layoutParams = FrameLayout.LayoutParams(
