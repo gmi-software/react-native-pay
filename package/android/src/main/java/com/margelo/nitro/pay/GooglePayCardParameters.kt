@@ -61,7 +61,7 @@ internal data class GooglePayCardParameters(
     }
 
     companion object {
-        val DEFAULT_NETWORKS = arrayOf("visa", "mastercard", "amex", "discover")
+        private val DEFAULT_NETWORKS = arrayOf("visa", "mastercard", "amex", "discover")
         private val AUTH_METHODS = listOf(
             PaymentConstants.AUTH_PAN_ONLY,
             PaymentConstants.AUTH_CRYPTOGRAM_3DS

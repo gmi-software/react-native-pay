@@ -21,7 +21,7 @@ object GooglePayRequestBuilder {
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
-            put("allowedPaymentMethods", createButtonPaymentMethods(cardParameters))
+            put("allowedPaymentMethods", createAllowedPaymentMethods(cardParameters))
             existingPaymentMethodRequired?.let {
                 put("existingPaymentMethodRequired", it)
             }
@@ -29,9 +29,10 @@ object GooglePayRequestBuilder {
     }
 
     /**
-     * The `allowedPaymentMethods` of a PayButton: the cards in [cardParameters]
+     * The `allowedPaymentMethods` of an IsReadyToPay request or a PayButton:
+     * the cards in [cardParameters]
      */
-    internal fun createButtonPaymentMethods(cardParameters: GooglePayCardParameters): JSONArray {
+    internal fun createAllowedPaymentMethods(cardParameters: GooglePayCardParameters): JSONArray {
         return JSONArray().apply {
             put(createBaseCardPaymentMethod(cardParameters))
         }

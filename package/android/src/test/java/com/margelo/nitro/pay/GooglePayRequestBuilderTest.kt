@@ -445,7 +445,7 @@ class GooglePayRequestBuilderTest {
         val request = build(paymentRequest(coffee, supportedNetworks = arrayOf("visa", "mastercard")))
         val parameters = cardParametersOf(arrayOf("visa", "mastercard"))
         val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(true, parameters)
-        val button = GooglePayRequestBuilder.createButtonPaymentMethods(parameters)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(parameters)
 
         val expected = listOf("VISA", "MASTERCARD")
         assertEquals(expected, request.cardParameters().strings("allowedCardNetworks"))

@@ -21,7 +21,7 @@ object GooglePayButtonFactory {
         cardParameters: GooglePayCardParameters,
         onPress: (() -> Unit)?
     ): PayButton {
-        val allowedPaymentMethods = GooglePayRequestBuilder.createButtonPaymentMethods(cardParameters)
+        val allowedPaymentMethods = GooglePayRequestBuilder.createAllowedPaymentMethods(cardParameters)
         
         val buttonOptions = ButtonOptions.newBuilder()
             .setButtonType(mapButtonType(buttonType))
