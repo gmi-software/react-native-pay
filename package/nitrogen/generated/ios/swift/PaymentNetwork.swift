@@ -39,6 +39,52 @@ public extension PaymentNetwork {
         self = .interac
       case "privateLabel":
         self = .privatelabel
+      case "cartesBancaires":
+        self = .cartesbancaires
+      case "chinaUnionPay":
+        self = .chinaunionpay
+      case "dankort":
+        self = .dankort
+      case "eftpos":
+        self = .eftpos
+      case "girocard":
+        self = .girocard
+      case "mada":
+        self = .mada
+      case "mir":
+        self = .mir
+      case "quicPay":
+        self = .quicpay
+      case "suica":
+        self = .suica
+      case "vPay":
+        self = .vpay
+      case "waon":
+        self = .waon
+      case "nanaco":
+        self = .nanaco
+      case "bancontact":
+        self = .bancontact
+      case "postFinance":
+        self = .postfinance
+      case "pagoBancomat":
+        self = .pagobancomat
+      case "tmoney":
+        self = .tmoney
+      case "meeza":
+        self = .meeza
+      case "napas":
+        self = .napas
+      case "bankAxept":
+        self = .bankaxept
+      case "himyan":
+        self = .himyan
+      case "jaywan":
+        self = .jaywan
+      case "myDebit":
+        self = .mydebit
+      case "unknown":
+        self = .unknown
       default:
         return nil
     }
@@ -71,6 +117,52 @@ public extension PaymentNetwork {
         return "interac"
       case .privatelabel:
         return "privateLabel"
+      case .cartesbancaires:
+        return "cartesBancaires"
+      case .chinaunionpay:
+        return "chinaUnionPay"
+      case .dankort:
+        return "dankort"
+      case .eftpos:
+        return "eftpos"
+      case .girocard:
+        return "girocard"
+      case .mada:
+        return "mada"
+      case .mir:
+        return "mir"
+      case .quicpay:
+        return "quicPay"
+      case .suica:
+        return "suica"
+      case .vpay:
+        return "vPay"
+      case .waon:
+        return "waon"
+      case .nanaco:
+        return "nanaco"
+      case .bancontact:
+        return "bancontact"
+      case .postfinance:
+        return "postFinance"
+      case .pagobancomat:
+        return "pagoBancomat"
+      case .tmoney:
+        return "tmoney"
+      case .meeza:
+        return "meeza"
+      case .napas:
+        return "napas"
+      case .bankaxept:
+        return "bankAxept"
+      case .himyan:
+        return "himyan"
+      case .jaywan:
+        return "jaywan"
+      case .mydebit:
+        return "myDebit"
+      case .unknown:
+        return "unknown"
     }
   }
 }

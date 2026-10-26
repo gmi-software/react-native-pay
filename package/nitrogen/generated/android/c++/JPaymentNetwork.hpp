@@ -75,6 +75,75 @@ namespace margelo::nitro::pay {
         case PaymentNetwork::PRIVATELABEL:
           static const auto fieldPRIVATELABEL = clazz->getStaticField<JPaymentNetwork>("PRIVATELABEL");
           return clazz->getStaticFieldValue(fieldPRIVATELABEL);
+        case PaymentNetwork::CARTESBANCAIRES:
+          static const auto fieldCARTESBANCAIRES = clazz->getStaticField<JPaymentNetwork>("CARTESBANCAIRES");
+          return clazz->getStaticFieldValue(fieldCARTESBANCAIRES);
+        case PaymentNetwork::CHINAUNIONPAY:
+          static const auto fieldCHINAUNIONPAY = clazz->getStaticField<JPaymentNetwork>("CHINAUNIONPAY");
+          return clazz->getStaticFieldValue(fieldCHINAUNIONPAY);
+        case PaymentNetwork::DANKORT:
+          static const auto fieldDANKORT = clazz->getStaticField<JPaymentNetwork>("DANKORT");
+          return clazz->getStaticFieldValue(fieldDANKORT);
+        case PaymentNetwork::EFTPOS:
+          static const auto fieldEFTPOS = clazz->getStaticField<JPaymentNetwork>("EFTPOS");
+          return clazz->getStaticFieldValue(fieldEFTPOS);
+        case PaymentNetwork::GIROCARD:
+          static const auto fieldGIROCARD = clazz->getStaticField<JPaymentNetwork>("GIROCARD");
+          return clazz->getStaticFieldValue(fieldGIROCARD);
+        case PaymentNetwork::MADA:
+          static const auto fieldMADA = clazz->getStaticField<JPaymentNetwork>("MADA");
+          return clazz->getStaticFieldValue(fieldMADA);
+        case PaymentNetwork::MIR:
+          static const auto fieldMIR = clazz->getStaticField<JPaymentNetwork>("MIR");
+          return clazz->getStaticFieldValue(fieldMIR);
+        case PaymentNetwork::QUICPAY:
+          static const auto fieldQUICPAY = clazz->getStaticField<JPaymentNetwork>("QUICPAY");
+          return clazz->getStaticFieldValue(fieldQUICPAY);
+        case PaymentNetwork::SUICA:
+          static const auto fieldSUICA = clazz->getStaticField<JPaymentNetwork>("SUICA");
+          return clazz->getStaticFieldValue(fieldSUICA);
+        case PaymentNetwork::VPAY:
+          static const auto fieldVPAY = clazz->getStaticField<JPaymentNetwork>("VPAY");
+          return clazz->getStaticFieldValue(fieldVPAY);
+        case PaymentNetwork::WAON:
+          static const auto fieldWAON = clazz->getStaticField<JPaymentNetwork>("WAON");
+          return clazz->getStaticFieldValue(fieldWAON);
+        case PaymentNetwork::NANACO:
+          static const auto fieldNANACO = clazz->getStaticField<JPaymentNetwork>("NANACO");
+          return clazz->getStaticFieldValue(fieldNANACO);
+        case PaymentNetwork::BANCONTACT:
+          static const auto fieldBANCONTACT = clazz->getStaticField<JPaymentNetwork>("BANCONTACT");
+          return clazz->getStaticFieldValue(fieldBANCONTACT);
+        case PaymentNetwork::POSTFINANCE:
+          static const auto fieldPOSTFINANCE = clazz->getStaticField<JPaymentNetwork>("POSTFINANCE");
+          return clazz->getStaticFieldValue(fieldPOSTFINANCE);
+        case PaymentNetwork::PAGOBANCOMAT:
+          static const auto fieldPAGOBANCOMAT = clazz->getStaticField<JPaymentNetwork>("PAGOBANCOMAT");
+          return clazz->getStaticFieldValue(fieldPAGOBANCOMAT);
+        case PaymentNetwork::TMONEY:
+          static const auto fieldTMONEY = clazz->getStaticField<JPaymentNetwork>("TMONEY");
+          return clazz->getStaticFieldValue(fieldTMONEY);
+        case PaymentNetwork::MEEZA:
+          static const auto fieldMEEZA = clazz->getStaticField<JPaymentNetwork>("MEEZA");
+          return clazz->getStaticFieldValue(fieldMEEZA);
+        case PaymentNetwork::NAPAS:
+          static const auto fieldNAPAS = clazz->getStaticField<JPaymentNetwork>("NAPAS");
+          return clazz->getStaticFieldValue(fieldNAPAS);
+        case PaymentNetwork::BANKAXEPT:
+          static const auto fieldBANKAXEPT = clazz->getStaticField<JPaymentNetwork>("BANKAXEPT");
+          return clazz->getStaticFieldValue(fieldBANKAXEPT);
+        case PaymentNetwork::HIMYAN:
+          static const auto fieldHIMYAN = clazz->getStaticField<JPaymentNetwork>("HIMYAN");
+          return clazz->getStaticFieldValue(fieldHIMYAN);
+        case PaymentNetwork::JAYWAN:
+          static const auto fieldJAYWAN = clazz->getStaticField<JPaymentNetwork>("JAYWAN");
+          return clazz->getStaticFieldValue(fieldJAYWAN);
+        case PaymentNetwork::MYDEBIT:
+          static const auto fieldMYDEBIT = clazz->getStaticField<JPaymentNetwork>("MYDEBIT");
+          return clazz->getStaticFieldValue(fieldMYDEBIT);
+        case PaymentNetwork::UNKNOWN:
+          static const auto fieldUNKNOWN = clazz->getStaticField<JPaymentNetwork>("UNKNOWN");
+          return clazz->getStaticFieldValue(fieldUNKNOWN);
         default:
           std::string stringValue = std::to_string(static_cast<int>(value));
           throw std::invalid_argument("Invalid enum value (" + stringValue + "!");

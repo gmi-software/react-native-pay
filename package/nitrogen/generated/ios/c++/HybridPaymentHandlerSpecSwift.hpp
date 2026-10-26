@@ -14,6 +14,8 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
@@ -64,10 +66,12 @@ namespace margelo::nitro::pay { struct PaymentDetails; }
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 
 #include "PayServiceStatus.hpp"
+#include "PayServiceStatusOptions.hpp"
+#include <optional>
+#include <string>
+#include <vector>
 #include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
-#include <string>
-#include <optional>
 #include "PaymentToken.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentNetwork.hpp"
@@ -77,7 +81,6 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledPhoneNumber.hpp"
-#include <vector>
 #include "CNPhoneNumber.hpp"
 #include "CNLabeledEmailAddress.hpp"
 #include "CNLabeledPostalAddress.hpp"
@@ -145,8 +148,8 @@ namespace margelo::nitro::pay {
 
   public:
     // Methods
-    inline PayServiceStatus payServiceStatus() override {
-      auto __result = _swiftPart.payServiceStatus();
+    inline PayServiceStatus payServiceStatus(const std::optional<PayServiceStatusOptions>& options) override {
+      auto __result = _swiftPart.payServiceStatus(options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

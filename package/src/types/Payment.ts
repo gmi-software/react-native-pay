@@ -14,6 +14,15 @@ export type PaymentMethodType =
   | 'prepaid'
   | 'store'
 
+/**
+ * A card network. Use these names in `PaymentRequest.supportedNetworks`.
+ *
+ * Google Pay offers `visa`, `mastercard`, `amex`, `discover`, `jcb` and
+ * `interac`, plus `electron`, `maestro` and `elo` for Brazilian combo cards.
+ * Apple Pay offers all of them, some only on newer iOS versions.
+ *
+ * `'unknown'` only appears in results, for a network this library cannot name.
+ */
 export type PaymentNetwork =
   | 'visa'
   | 'mastercard'
@@ -26,6 +35,29 @@ export type PaymentNetwork =
   | 'idcredit'
   | 'interac'
   | 'privateLabel'
+  | 'cartesBancaires'
+  | 'chinaUnionPay'
+  | 'dankort'
+  | 'eftpos'
+  | 'girocard'
+  | 'mada'
+  | 'mir'
+  | 'quicPay'
+  | 'suica'
+  | 'vPay'
+  | 'waon'
+  | 'nanaco'
+  | 'bancontact'
+  | 'postFinance'
+  | 'pagoBancomat'
+  | 'tmoney'
+  | 'meeza'
+  | 'napas'
+  | 'bankAxept'
+  | 'himyan'
+  | 'jaywan'
+  | 'myDebit'
+  | 'unknown'
 
 export type PassActivationState =
   | 'activated'
@@ -35,6 +67,14 @@ export type PassActivationState =
   | 'deactivated'
 
 export type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
+
+/**
+ * How Google Pay may authenticate a card. `'PAN_ONLY'` covers cards saved
+ * to the Google account and returns the card number; `'CRYPTOGRAM_3DS'`
+ * covers cards tokenized on the device and returns a 3-D Secure cryptogram.
+ * Google Pay does not offer `jcb` or `discover` with `'CRYPTOGRAM_3DS'`.
+ */
+export type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 
 /**
  * Apple Pay merchant capability. `'3DS'` and `'EMV'` are payment protocols
@@ -103,7 +143,12 @@ export interface ShippingMethod {
 }
 
 export interface PaymentMethod {
+  /**
+   * Describes the card to the payer, for example `'Visa 1234'`. Comes from
+   * the wallet; don't parse it.
+   */
   displayName?: string
+  /** `'unknown'` for a network this library cannot name. */
   network?: PaymentNetwork
   type: PaymentMethodType
   secureElementPass?: PKSecureElementPass // Available from iOS 13.4+
@@ -128,6 +173,12 @@ export interface PaymentRequest {
   // `MerchantCapability` values. Not typed as such: Nitro would generate a
   // native enum that rejects `'3ds'` or unknown values without a message.
   merchantCapabilities: string[]
+  /**
+   * `PaymentNetwork` values, matched ignoring case. An unknown name fails the
+   * payment. A network the platform does not offer is left out, and the
+   * payment fails when none is left: Google Pay has no `cartesBancaires`,
+   * for example, and Apple Pay has no `bancontact` before iOS 16.
+   */
   supportedNetworks: string[]
   /**
    * A `ShippingType` value. iOS only; Android ignores it. An unknown value
@@ -168,6 +219,12 @@ export interface PaymentRequest {
   googlePayEnvironment?: GooglePayEnvironment
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  /**
+   * `GooglePayAuthMethod` values, matched ignoring case. Defaults to both.
+   * Android only. An unknown value fails the payment. Not typed as
+   * `GooglePayAuthMethod` for the same reason as `merchantCapabilities`.
+   */
+  googlePayAllowedAuthMethods?: string[]
 }
 
 /**
@@ -234,6 +291,21 @@ export interface StartPaymentOptions {
 export interface PayServiceStatus {
   canMakePayments: boolean
   canSetupCards: boolean
+}
+
+/**
+ * The cards `payServiceStatus` asks about. Pass the values of your
+ * `PaymentRequest`, so the check matches the payment. Android asks Google
+ * Pay about these cards; iOS only rejects unknown network names.
+ */
+export interface PayServiceStatusOptions {
+  /**
+   * As `PaymentRequest.supportedNetworks`. Defaults to `visa`, `mastercard`,
+   * `amex` and `discover`.
+   */
+  supportedNetworks?: string[]
+  /** As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults to both. */
+  googlePayAllowedAuthMethods?: string[]
 }
 
 // Backward compatibility alias

@@ -98,6 +98,43 @@ class PaymentMapperTest {
 
         assertTrue(result.success)
         assertEquals("unknown ****", result.token!!.paymentMethod.displayName)
+        assertEquals(PaymentNetwork.UNKNOWN, result.token!!.paymentMethod.network)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_showsTheDescriptionToThePayer() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "type": "CARD",
+                  "description": "Visa •••• 4242",
+                  "info": {"cardNetwork": "VISA", "cardDetails": "4242"},
+                  "tokenizationData": {"type": "PAYMENT_GATEWAY", "token": "gateway-token"}
+                }
+                """
+            )
+        )
+
+        assertEquals("Visa •••• 4242", result.token!!.paymentMethod.displayName)
+        assertEquals(PaymentNetwork.VISA, result.token!!.paymentMethod.network)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_fallsBackToNetworkAndDetailsForABlankDescription() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "description": " ",
+                  "info": {"cardNetwork": "AMEX", "cardDetails": "0005"},
+                  "tokenizationData": {"token": "gateway-token"}
+                }
+                """
+            )
+        )
+
+        assertEquals("AMEX 0005", result.token!!.paymentMethod.displayName)
     }
 
     @Test
@@ -244,7 +281,8 @@ class PaymentMapperTest {
             supportedNetworks = emptyArray(), shippingType = null, shippingMethods = methods,
             billingContactRequired = null, shippingContactRequired = null, emailRequired = null,
             phoneNumberRequired = null, googlePayMerchantId = null, googlePayEnvironment = null,
-            googlePayGateway = null, googlePayGatewayMerchantId = null
+            googlePayGateway = null, googlePayGatewayMerchantId = null,
+            googlePayAllowedAuthMethods = null
         )
         val standard = ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), null)
         val express = ShippingMethod("express", "Express", PaymentAmount.create("9.00"), null)
@@ -283,9 +321,18 @@ class PaymentMapperTest {
     }
 
     @Test
-    fun mapCardNetwork_reportsUnknownNetworksAsVisa() {
-        // Current behavior, tracked in #13.
-        assertEquals(PaymentNetwork.VISA, PaymentMapper.mapCardNetwork("unknown"))
+    fun mapCardNetwork_reportsUnrecognizedNetworksAsUnknown() {
+        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork("unknown"))
+        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork("ELO_DEBIT"))
+        assertEquals(PaymentNetwork.UNKNOWN, PaymentMapper.mapCardNetwork(""))
+    }
+
+    @Test
+    fun mapCardNetwork_readsBackEveryNetworkTheRequestSends() {
+        for (network in PaymentNetwork.entries) {
+            val cardNetwork = GooglePayNetworks.toGooglePay(network) ?: continue
+            assertEquals(network, PaymentMapper.mapCardNetwork(cardNetwork))
+        }
     }
 
     @Test

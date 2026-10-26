@@ -1,6 +1,7 @@
 import type { HybridObject } from 'react-native-nitro-modules'
 import type {
   PayServiceStatus,
+  PayServiceStatusOptions,
   PaymentRequest,
   PaymentResult,
   StartPaymentOptions,
@@ -8,7 +9,7 @@ import type {
 
 export interface PaymentHandler
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
-  payServiceStatus(): PayServiceStatus
+  payServiceStatus(options?: PayServiceStatusOptions): PayServiceStatus
   startPayment(
     request: PaymentRequest,
     options?: StartPaymentOptions

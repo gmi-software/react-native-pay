@@ -17,6 +17,8 @@ namespace margelo::nitro::pay { enum class GooglePayButtonTheme; }
 #include "GooglePayButtonTheme.hpp"
 #include "JGooglePayButtonTheme.hpp"
 #include <optional>
+#include <string>
+#include <vector>
 #include <functional>
 #include "JFunc_void.hpp"
 #include <NitroModules/JNICallable.hpp>
@@ -77,6 +79,60 @@ namespace margelo::nitro::pay {
   void JHybridGooglePayButtonSpec::setRadius(std::optional<double> radius) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JDouble> /* radius */)>("setRadius");
     method(_javaPart, radius.has_value() ? jni::JDouble::valueOf(radius.value()) : nullptr);
+  }
+  std::optional<std::vector<std::string>> JHybridGooglePayButtonSpec::getSupportedNetworks() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JArrayClass<jni::JString>>()>("getSupportedNetworks");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&](auto&& __input) {
+      size_t __size = __input->size();
+      std::vector<std::string> __vector;
+      __vector.reserve(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        auto __element = __input->getElement(__i);
+        __vector.push_back(__element->toStdString());
+      }
+      return __vector;
+    }(__result)) : std::nullopt;
+  }
+  void JHybridGooglePayButtonSpec::setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JArrayClass<jni::JString>> /* supportedNetworks */)>("setSupportedNetworks");
+    method(_javaPart, supportedNetworks.has_value() ? [&](auto&& __input) {
+      size_t __size = __input.size();
+      jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        const auto& __element = __input[__i];
+        auto __elementJni = jni::make_jstring(__element);
+        __array->setElement(__i, *__elementJni);
+      }
+      return __array;
+    }(supportedNetworks.value()) : nullptr);
+  }
+  std::optional<std::vector<std::string>> JHybridGooglePayButtonSpec::getAllowedAuthMethods() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JArrayClass<jni::JString>>()>("getAllowedAuthMethods");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional([&](auto&& __input) {
+      size_t __size = __input->size();
+      std::vector<std::string> __vector;
+      __vector.reserve(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        auto __element = __input->getElement(__i);
+        __vector.push_back(__element->toStdString());
+      }
+      return __vector;
+    }(__result)) : std::nullopt;
+  }
+  void JHybridGooglePayButtonSpec::setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JArrayClass<jni::JString>> /* allowedAuthMethods */)>("setAllowedAuthMethods");
+    method(_javaPart, allowedAuthMethods.has_value() ? [&](auto&& __input) {
+      size_t __size = __input.size();
+      jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
+      for (size_t __i = 0; __i < __size; __i++) {
+        const auto& __element = __input[__i];
+        auto __elementJni = jni::make_jstring(__element);
+        __array->setElement(__i, *__elementJni);
+      }
+      return __array;
+    }(allowedAuthMethods.value()) : nullptr);
   }
   std::optional<std::function<void()>> JHybridGooglePayButtonSpec::getOnPress() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JFunc_void::javaobject>()>("getOnPress_cxx");

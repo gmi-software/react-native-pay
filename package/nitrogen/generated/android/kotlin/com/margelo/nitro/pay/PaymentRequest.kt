@@ -68,7 +68,10 @@ data class PaymentRequest(
   val googlePayGateway: String?,
   @DoNotStrip
   @Keep
-  val googlePayGatewayMerchantId: String?
+  val googlePayGatewayMerchantId: String?,
+  @DoNotStrip
+  @Keep
+  val googlePayAllowedAuthMethods: Array<String>?
 ) {
   /* primary constructor */
 
@@ -92,6 +95,7 @@ data class PaymentRequest(
       && Objects.deepEquals(this.googlePayEnvironment, other.googlePayEnvironment)
       && Objects.deepEquals(this.googlePayGateway, other.googlePayGateway)
       && Objects.deepEquals(this.googlePayGatewayMerchantId, other.googlePayGatewayMerchantId)
+      && Objects.deepEquals(this.googlePayAllowedAuthMethods, other.googlePayAllowedAuthMethods)
   }
 
   override fun hashCode(): Int {
@@ -112,7 +116,8 @@ data class PaymentRequest(
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
-      googlePayGatewayMerchantId
+      googlePayGatewayMerchantId,
+      googlePayAllowedAuthMethods
     ).contentDeepHashCode()
   }
 
@@ -124,8 +129,8 @@ data class PaymentRequest(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?): PaymentRequest {
-      return PaymentRequest(applePayMerchantIdentifier, merchantName, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId)
+    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: Array<String>?): PaymentRequest {
+      return PaymentRequest(applePayMerchantIdentifier, merchantName, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, googlePayAllowedAuthMethods)
     }
   }
 }

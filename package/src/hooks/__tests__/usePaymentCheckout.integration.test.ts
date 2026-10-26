@@ -34,7 +34,7 @@ function createDeferred<T>() {
 
 describe('usePaymentCheckout integration', () => {
   beforeEach(() => {
-    mockPayServiceStatus.mockReturnValue({
+    mockPayServiceStatus.mockReset().mockReturnValue({
       canMakePayments: true,
       canSetupCards: true,
     })
@@ -60,6 +60,50 @@ describe('usePaymentCheckout integration', () => {
 
     expect(result.current.canMakePayments).toBe(true)
     expect(result.current.canSetupCards).toBe(true)
+  })
+
+  it('checks the status for the default cards', async () => {
+    const { result } = renderCheckout()
+
+    await waitFor(() => {
+      expect(result.current.isCheckingStatus).toBe(false)
+    })
+
+    expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
+    expect(mockPayServiceStatus).toHaveBeenCalledWith({
+      supportedNetworks: ['visa', 'mastercard', 'amex', 'discover'],
+    })
+  })
+
+  it('checks the status for the configured cards, again only when they change', async () => {
+    const config: UsePaymentCheckoutConfig = {
+      merchantName: 'Store A',
+      supportedNetworks: ['visa', 'mastercard'],
+      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+    }
+    const { result, rerender } = renderWithConfig(config)
+
+    await waitFor(() => {
+      expect(result.current.isCheckingStatus).toBe(false)
+    })
+    expect(mockPayServiceStatus).toHaveBeenCalledWith({
+      supportedNetworks: ['visa', 'mastercard'],
+      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+    })
+    expect(result.current.paymentRequest).toMatchObject({
+      supportedNetworks: ['visa', 'mastercard'],
+      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+    })
+
+    rerender({ ...config, merchantName: 'Store B' })
+    expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
+
+    rerender({ ...config, supportedNetworks: ['visa'] })
+    expect(mockPayServiceStatus).toHaveBeenCalledTimes(2)
+    expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
+      supportedNetworks: ['visa'],
+      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+    })
   })
 
   it('falls back to unavailable status when status check fails', async () => {
@@ -441,6 +485,10 @@ describe('usePaymentCheckout integration', () => {
       googlePayEnvironment: ['TEST', 'PRODUCTION'],
       googlePayGateway: ['stripe', 'adyen'],
       googlePayGatewayMerchantId: ['gateway-a', 'gateway-b'],
+      googlePayAllowedAuthMethods: [
+        ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+        ['CRYPTOGRAM_3DS'],
+      ],
       billingContactRequired: [false, true],
       shippingContactRequired: [false, true],
       emailRequired: [false, true],

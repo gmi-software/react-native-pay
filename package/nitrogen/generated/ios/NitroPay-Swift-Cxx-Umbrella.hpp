@@ -36,6 +36,8 @@ namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PassActivationState; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -83,6 +85,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PayServiceStatus.hpp"
+#include "PayServiceStatusOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
 #include "PaymentContact.hpp"

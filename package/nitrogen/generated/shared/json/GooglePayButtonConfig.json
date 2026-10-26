@@ -7,6 +7,8 @@
     "buttonType": true,
     "theme": true,
     "radius": true,
+    "supportedNetworks": true,
+    "allowedAuthMethods": true,
     "onPress": true,
     "hybridRef": true
   }

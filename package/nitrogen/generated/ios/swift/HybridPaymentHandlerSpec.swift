@@ -13,7 +13,7 @@ public protocol HybridPaymentHandlerSpec_protocol: HybridObject {
   
 
   // Methods
-  func payServiceStatus() throws -> PayServiceStatus
+  func payServiceStatus(options: PayServiceStatusOptions?) throws -> PayServiceStatus
   func startPayment(request: PaymentRequest, options: StartPaymentOptions?) throws -> Promise<PaymentResult>
   func canMakePayments(usingNetworks: [String]) throws -> Bool
   func isPaymentInProgress() throws -> Bool

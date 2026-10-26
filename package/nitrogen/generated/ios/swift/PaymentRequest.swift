@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: [String]?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -112,6 +112,18 @@ public extension PaymentRequest {
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = googlePayGatewayMerchantId {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__vector_std__string__ in
+      if let __unwrappedValue = googlePayAllowedAuthMethods {
+        return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
+          var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
+          for __item in __unwrappedValue {
+            __vector.push_back(std.string(__item))
+          }
+          return __vector
+        }())
       } else {
         return .init()
       }
@@ -274,6 +286,18 @@ public extension PaymentRequest {
       if bridge.has_value_std__optional_std__string_(self.__googlePayGatewayMerchantId) {
         let __unwrapped = bridge.get_std__optional_std__string_(self.__googlePayGatewayMerchantId)
         return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var googlePayAllowedAuthMethods: [String]? {
+    return { () -> [String]? in
+      if bridge.has_value_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods) {
+        let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods)
+        return __unwrapped.map({ __item in String(__item) })
       } else {
         return nil
       }

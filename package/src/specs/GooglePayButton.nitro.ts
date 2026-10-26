@@ -20,6 +20,13 @@ export interface GooglePayButtonProps extends HybridViewProps {
   buttonType: GooglePayButtonType
   theme: GooglePayButtonTheme
   radius?: number
+  /**
+   * As `PaymentRequest.supportedNetworks`. Pass the same values as the
+   * request, so the button shows a card the payer can use.
+   */
+  supportedNetworks?: string[]
+  /** As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults to both. */
+  allowedAuthMethods?: string[]
   onPress?: () => void
 }
 

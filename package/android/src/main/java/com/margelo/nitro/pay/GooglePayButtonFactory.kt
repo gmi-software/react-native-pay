@@ -1,7 +1,6 @@
 package com.margelo.nitro.pay
 
 import android.content.Context
-import android.util.Log
 import com.google.android.gms.wallet.button.ButtonConstants
 import com.google.android.gms.wallet.button.ButtonOptions
 import com.google.android.gms.wallet.button.PayButton
@@ -12,21 +11,22 @@ import com.google.android.gms.wallet.button.PayButton
 object GooglePayButtonFactory {
     
     /**
-     * Creates a configured PayButton
+     * Creates a configured PayButton that shows the cards in [cardParameters]
      */
-    fun createButton(
+    internal fun createButton(
         context: Context,
         buttonType: GooglePayButtonType,
         theme: GooglePayButtonTheme,
         radius: Double?,
+        cardParameters: GooglePayCardParameters,
         onPress: (() -> Unit)?
     ): PayButton {
-        val allowedPaymentMethods = GooglePayRequestBuilder.createAllowedCardNetworks()
+        val allowedPaymentMethods = GooglePayRequestBuilder.createButtonPaymentMethods(cardParameters)
         
         val buttonOptions = ButtonOptions.newBuilder()
             .setButtonType(mapButtonType(buttonType))
             .setButtonTheme(mapTheme(theme))
-            .setAllowedPaymentMethods(createAllowedPaymentMethodsJson(allowedPaymentMethods))
+            .setAllowedPaymentMethods(allowedPaymentMethods.toString())
             .apply {
                 radius?.let { r ->
                     if (r >= 0) {
@@ -70,26 +70,4 @@ object GooglePayButtonFactory {
             GooglePayButtonTheme.LIGHT -> ButtonConstants.ButtonTheme.LIGHT
         }
     }
-    
-    /**
-     * Creates allowed payment methods JSON for button configuration
-     */
-    private fun createAllowedPaymentMethodsJson(
-        allowedNetworks: org.json.JSONArray
-    ): String {
-        return org.json.JSONArray().apply {
-            put(org.json.JSONObject().apply {
-                put("type", PaymentConstants.PAYMENT_METHOD_CARD)
-                put("parameters", org.json.JSONObject().apply {
-                    put("allowedAuthMethods", org.json.JSONArray().apply {
-                        put(PaymentConstants.AUTH_PAN_ONLY)
-                        put(PaymentConstants.AUTH_CRYPTOGRAM_3DS)
-                    })
-                    put("allowedCardNetworks", allowedNetworks)
-                })
-            })
-        }.toString()
-    }
 }
-
-

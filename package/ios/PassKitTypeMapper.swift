@@ -2,22 +2,6 @@ import PassKit
 import Contacts
 import NitroModules
 
-// MARK: - Constants
-
-private enum PaymentNetworkString {
-    static let visa = "visa"
-    static let mastercard = "mastercard"
-    static let amex = "amex"
-    static let discover = "discover"
-    static let jcb = "jcb"
-    static let maestro = "maestro"
-    static let electron = "electron"
-    static let elo = "elo"
-    static let idcredit = "idcredit"
-    static let interac = "interac"
-    static let privateLabel = "privateLabel"
-}
-
 // MARK: - Type Converter
 
 /// Converts Apple PassKit and Contacts types to Nitro-generated types
@@ -25,21 +9,9 @@ enum PassKitTypeMapper {
     
     // MARK: - Enum Conversions
     
+    /// The network a payer paid with, or `.unknown` for one this library cannot name
     static func convert(_ network: PKPaymentNetwork) -> PaymentNetwork {
-        switch network {
-        case .visa: return .visa
-        case .masterCard: return .mastercard
-        case .amex: return .amex
-        case .discover: return .discover
-        case .JCB: return .jcb
-        case .maestro: return .maestro
-        case .electron: return .electron
-        case .elo: return .elo
-        case .idCredit: return .idcredit
-        case .interac: return .interac
-        case .privateLabel: return .privatelabel
-        default: return .visa
-        }
+        return paymentNetworks.first { convertToPKPaymentNetwork($0) == network } ?? .unknown
     }
     
     static func convert(_ type: PKPaymentMethodType) -> PaymentMethodType {
@@ -62,22 +34,82 @@ enum PassKitTypeMapper {
         }
     }
     
-    // MARK: - String to Enum Conversions
-    
-    static func convertToPKPaymentNetwork(_ string: String) -> PKPaymentNetwork? {
-        switch string {
-        case PaymentNetworkString.visa: return .visa
-        case PaymentNetworkString.mastercard: return .masterCard
-        case PaymentNetworkString.amex: return .amex
-        case PaymentNetworkString.discover: return .discover
-        case PaymentNetworkString.jcb: return .JCB
-        case PaymentNetworkString.maestro: return .maestro
-        case PaymentNetworkString.electron: return .electron
-        case PaymentNetworkString.elo: return .elo
-        case PaymentNetworkString.idcredit: return .idCredit
-        case PaymentNetworkString.interac: return .interac
-        case PaymentNetworkString.privateLabel: return .privateLabel
-        default: return nil
+    // MARK: - Payment Networks
+
+    /// Every `PaymentNetwork` but `.unknown`
+    private static let paymentNetworks: [PaymentNetwork] = [
+        .visa, .mastercard, .amex, .discover, .jcb, .maestro, .electron, .elo,
+        .idcredit, .interac, .privatelabel, .cartesbancaires, .chinaunionpay,
+        .dankort, .eftpos, .girocard, .mada, .mir, .quicpay, .suica, .vpay,
+        .waon, .nanaco, .bancontact, .postfinance, .pagobancomat, .tmoney,
+        .meeza, .napas, .bankaxept, .himyan, .jaywan, .mydebit,
+    ]
+
+    /// The network with this name, ignoring case, or nil for a name that is
+    /// not a `PaymentNetwork` value
+    static func paymentNetwork(named name: String) -> PaymentNetwork? {
+        return paymentNetworks.first {
+            $0.stringValue.caseInsensitiveCompare(name) == .orderedSame
+        }
+    }
+
+    /// The PassKit network, or nil when this iOS version doesn't have it
+    static func convertToPKPaymentNetwork(_ network: PaymentNetwork) -> PKPaymentNetwork? {
+        switch network {
+        case .visa: return .visa
+        case .mastercard: return .masterCard
+        case .amex: return .amex
+        case .discover: return .discover
+        case .jcb: return .JCB
+        case .maestro: return .maestro
+        case .electron: return .electron
+        case .elo: return .elo
+        case .idcredit: return .idCredit
+        case .interac: return .interac
+        case .privatelabel: return .privateLabel
+        case .cartesbancaires: return .cartesBancaires
+        case .chinaunionpay: return .chinaUnionPay
+        case .dankort: return .dankort
+        case .eftpos: return .eftpos
+        case .girocard: return .girocard
+        case .mada: return .mada
+        case .mir: return .mir
+        case .quicpay: return .quicPay
+        case .suica: return .suica
+        case .vpay: return .vPay
+        case .waon: return .waon
+        case .nanaco: return .nanaco
+        case .bancontact:
+            guard #available(iOS 16.0, *) else { return nil }
+            return .bancontact
+        case .postfinance:
+            guard #available(iOS 16.4, *) else { return nil }
+            return .postFinance
+        case .pagobancomat:
+            guard #available(iOS 17.0, *) else { return nil }
+            return .pagoBancomat
+        case .tmoney:
+            guard #available(iOS 17.0, *) else { return nil }
+            return .tmoney
+        case .meeza:
+            guard #available(iOS 17.4, *) else { return nil }
+            return .meeza
+        case .napas:
+            guard #available(iOS 17.5, *) else { return nil }
+            return .NAPAS
+        case .bankaxept:
+            guard #available(iOS 17.5, *) else { return nil }
+            return .bankAxept
+        case .himyan:
+            guard #available(iOS 18.4, *) else { return nil }
+            return .himyan
+        case .jaywan:
+            guard #available(iOS 18.4, *) else { return nil }
+            return .jaywan
+        case .mydebit:
+            guard #available(iOS 26.0, *) else { return nil }
+            return .myDebit
+        case .unknown: return nil
         }
     }
     

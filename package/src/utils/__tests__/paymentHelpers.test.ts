@@ -182,5 +182,7 @@ describe('paymentHelpers', () => {
     expect(formatNetworkName('visa')).toBe('Visa')
     expect(formatNetworkName('amex')).toBe('American Express')
     expect(formatNetworkName('privateLabel')).toBe('Private Label')
+    expect(formatNetworkName('cartesBancaires')).toBe('Cartes Bancaires')
+    expect(formatNetworkName('unknown')).toBe('Unknown')
   })
 })

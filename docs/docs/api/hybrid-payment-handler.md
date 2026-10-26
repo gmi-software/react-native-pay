@@ -10,19 +10,23 @@ import { HybridPaymentHandler, createPaymentRequest } from '@gmisoftware/react-n
 
 ## Methods
 
-### payServiceStatus()
+### payServiceStatus(options?)
 
 Synchronously returns whether the payment service is available on the device.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const status = HybridPaymentHandler.payServiceStatus()
+const status = HybridPaymentHandler.payServiceStatus({
+  supportedNetworks: ['visa', 'mastercard'],
+})
 // status: { canMakePayments: boolean, canSetupCards: boolean }
 ```
 
 - **canMakePayments** — User can complete a payment (has a valid card, etc.).
 - **canSetupCards** — User can add or manage cards (e.g. Wallet settings).
+
+`options` ([`PayServiceStatusOptions`](/docs/api/types#payservicestatusoptions)) names the cards your payment accepts: pass the `supportedNetworks` and `googlePayAllowedAuthMethods` of your `PaymentRequest`. Android asks Google Pay about those cards; without `options` it asks about `visa`, `mastercard`, `amex` and `discover`. iOS does not use them yet. On both platforms an unknown network name throws.
 
 ---
 
@@ -110,6 +114,8 @@ import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
 const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
 ```
+
+It returns `false` when the platform offers none of the networks, and throws for a name that is not a [`PaymentNetwork`](/docs/api/types#paymentnetwork). On Android it only checks that Google Pay offers one of the networks; it does not ask about the payer's cards.
 
 ## When to use
 

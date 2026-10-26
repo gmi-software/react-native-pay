@@ -367,7 +367,7 @@ interface UsePaymentCheckoutConfig {
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
-  supportedNetworks?: string[]; // Default: ['visa', 'mastercard', 'amex', 'discover']
+  supportedNetworks?: string[]; // PaymentNetwork names. Default: ['visa', 'mastercard', 'amex', 'discover']
   merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']
   applePayMerchantIdentifier?: string; // Optional iOS override
   // Google Pay specific (Android)
@@ -375,6 +375,7 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
   // Contact details, returned in the result (see "Shipping and contact details")
   billingContactRequired?: boolean;
   shippingContactRequired?: boolean;
@@ -455,14 +456,16 @@ Low-level payment handler for direct control.
 
 #### Methods
 
-##### `payServiceStatus(): PayServiceStatus`
+##### `payServiceStatus(options?: PayServiceStatusOptions): PayServiceStatus`
 
-Check payment service availability.
+Check payment service availability. On Android, `options` names the cards to ask Google Pay about: pass the `supportedNetworks` and `googlePayAllowedAuthMethods` of your request. iOS only checks the network names.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 
-const status = HybridPaymentHandler.payServiceStatus();
+const status = HybridPaymentHandler.payServiceStatus({
+  supportedNetworks: ["visa", "mastercard"],
+});
 console.log("Can make payments:", status.canMakePayments);
 console.log("Can setup cards:", status.canSetupCards);
 ```
@@ -629,6 +632,10 @@ interface GooglePayButtonProps {
 
   radius?: number; // Corner radius in dp
 
+  // The cards your payment accepts, so the button never shows another card.
+  supportedNetworks?: string[]; // as PaymentRequest.supportedNetworks
+  allowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
+
   onPress?: () => void; // wrap with callback() from react-native-nitro-modules
   style?: ViewStyle;
 }
@@ -754,7 +761,7 @@ interface PaymentRequest {
   currencyCode: string;
   paymentItems: PaymentItem[];
   merchantCapabilities: string[]; // MerchantCapability values
-  supportedNetworks: string[];
+  supportedNetworks: string[]; // PaymentNetwork names; unknown names fail
   shippingType?: string; // ShippingType value, iOS only
   shippingMethods?: ShippingMethod[]; // → PaymentResult.shippingMethod
   billingContactRequired?: boolean; // → PaymentResult.billingContact
@@ -766,6 +773,7 @@ interface PaymentRequest {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
 }
 
 // Payment Result
@@ -785,14 +793,16 @@ interface PaymentToken {
 
 // Payment Method
 interface PaymentMethod {
-  displayName?: string;
-  network?: PaymentNetwork;
+  displayName?: string; // for the payer, e.g. "Visa •••• 1234"; don't parse it
+  network?: PaymentNetwork; // "unknown" when the library cannot name it
   type: PaymentMethodType;
   secureElementPass?: PKSecureElementPass;
   billingAddress?: CNContact;
 }
 
-// Payment Networks
+// Payment Networks. Google Pay offers visa, mastercard, amex, discover, jcb
+// and interac, plus electron, maestro and elo for Brazilian combo cards.
+// Apple Pay offers all of them; each platform leaves out the ones it lacks.
 type PaymentNetwork =
   | "visa"
   | "mastercard"
@@ -804,7 +814,33 @@ type PaymentNetwork =
   | "elo"
   | "idcredit"
   | "interac"
-  | "privateLabel";
+  | "privateLabel"
+  | "cartesBancaires"
+  | "chinaUnionPay"
+  | "dankort"
+  | "eftpos"
+  | "girocard"
+  | "mada"
+  | "mir"
+  | "quicPay"
+  | "suica"
+  | "vPay"
+  | "waon"
+  | "nanaco"
+  | "bancontact"
+  | "postFinance"
+  | "pagoBancomat"
+  | "tmoney"
+  | "meeza"
+  | "napas"
+  | "bankAxept"
+  | "himyan"
+  | "jaywan"
+  | "myDebit"
+  | "unknown"; // results only
+
+// Google Pay auth methods (Android)
+type GooglePayAuthMethod = "PAN_ONLY" | "CRYPTOGRAM_3DS";
 
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";

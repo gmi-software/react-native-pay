@@ -31,7 +31,7 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   // Methods
   @DoNotStrip
   @Keep
-  abstract fun payServiceStatus(): PayServiceStatus
+  abstract fun payServiceStatus(options: PayServiceStatusOptions?): PayServiceStatus
   
   @DoNotStrip
   @Keep

@@ -56,6 +56,10 @@ namespace margelo::nitro::pay {
     void setTheme(GooglePayButtonTheme theme) override;
     std::optional<double> getRadius() override;
     void setRadius(std::optional<double> radius) override;
+    std::optional<std::vector<std::string>> getSupportedNetworks() override;
+    void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) override;
+    std::optional<std::vector<std::string>> getAllowedAuthMethods() override;
+    void setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) override;
     std::optional<std::function<void()>> getOnPress() override;
     void setOnPress(const std::optional<std::function<void()>>& onPress) override;
 

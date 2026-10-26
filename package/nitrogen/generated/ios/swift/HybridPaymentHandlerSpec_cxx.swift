@@ -125,9 +125,9 @@ open class HybridPaymentHandlerSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func payServiceStatus() -> bridge.Result_PayServiceStatus_ {
+  public final func payServiceStatus(options: bridge.std__optional_PayServiceStatusOptions_) -> bridge.Result_PayServiceStatus_ {
     do {
-      let __result = try self.__implementation.payServiceStatus()
+      let __result = try self.__implementation.payServiceStatus(options: options.value)
       let __resultCpp = __result
       return bridge.create_Result_PayServiceStatus_(__resultCpp)
     } catch (let __error) {

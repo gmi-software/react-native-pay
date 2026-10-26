@@ -41,6 +41,8 @@ namespace margelo::nitro::pay { struct CNPostalAddress; }
 namespace margelo::nitro::pay { struct PaymentContact; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
 namespace margelo::nitro::pay { struct ShippingMethod; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -99,6 +101,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JShippingMethod.hpp"
 #include <variant>
 #include "JPaymentAmount.hpp"
+#include "PayServiceStatusOptions.hpp"
+#include "JPayServiceStatusOptions.hpp"
 #include "PaymentRequest.hpp"
 #include "JPaymentRequest.hpp"
 #include "PaymentItem.hpp"
@@ -152,9 +156,9 @@ namespace margelo::nitro::pay {
   
 
   // Methods
-  PayServiceStatus JHybridPaymentHandlerSpec::payServiceStatus() {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPayServiceStatus>()>("payServiceStatus");
-    auto __result = method(_javaPart);
+  PayServiceStatus JHybridPaymentHandlerSpec::payServiceStatus(const std::optional<PayServiceStatusOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPayServiceStatus>(jni::alias_ref<JPayServiceStatusOptions> /* options */)>("payServiceStatus");
+    auto __result = method(_javaPart, options.has_value() ? JPayServiceStatusOptions::fromCpp(options.value()) : nullptr);
     return __result->toCpp();
   }
   std::shared_ptr<Promise<PaymentResult>> JHybridPaymentHandlerSpec::startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) {

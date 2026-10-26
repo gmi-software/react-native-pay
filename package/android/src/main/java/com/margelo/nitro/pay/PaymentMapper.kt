@@ -31,9 +31,11 @@ object PaymentMapper {
             val cardNetwork = info.optString("cardNetwork", "unknown")
             val cardDetails = info.optString("cardDetails", "****")
             
-            // Create payment method
+            // Create payment method. Google Pay asks to show `description`
+            // to the payer, not `cardNetwork`.
             val paymentMethod = PaymentMethod(
-                displayName = "$cardNetwork $cardDetails",
+                displayName = paymentMethodData.optNonEmpty("description")
+                    ?: "$cardNetwork $cardDetails",
                 network = mapCardNetwork(cardNetwork),
                 type = PaymentMethodType.UNKNOWN,
                 secureElementPass = null,
@@ -134,21 +136,10 @@ object PaymentMapper {
     }
     
     /**
-     * Maps card network string to PaymentNetwork enum
+     * Maps a Google Pay `cardNetwork` value to PaymentNetwork, or UNKNOWN
      */
     fun mapCardNetwork(network: String): PaymentNetwork {
-        return when (network.uppercase()) {
-            "VISA" -> PaymentNetwork.VISA
-            "MASTERCARD" -> PaymentNetwork.MASTERCARD
-            "AMEX" -> PaymentNetwork.AMEX
-            "DISCOVER" -> PaymentNetwork.DISCOVER
-            "JCB" -> PaymentNetwork.JCB
-            "MAESTRO" -> PaymentNetwork.MAESTRO
-            "ELECTRON" -> PaymentNetwork.ELECTRON
-            "ELO" -> PaymentNetwork.ELO
-            "INTERAC" -> PaymentNetwork.INTERAC
-            else -> PaymentNetwork.VISA // Default fallback
-        }
+        return GooglePayNetworks.fromGooglePay(network)
     }
     
     /**

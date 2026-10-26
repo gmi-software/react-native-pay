@@ -56,6 +56,26 @@ namespace margelo::nitro::pay::views {
         throw std::runtime_error(std::string("GooglePayButton.radius: ") + exc.what());
       }
     }()),
+    supportedNetworks([&]() -> CachedProp<std::optional<std::vector<std::string>>> {
+      try {
+        const react::RawValue* rawValue = rawProps.at("supportedNetworks", nullptr, nullptr);
+        if (rawValue == nullptr) return sourceProps.supportedNetworks;
+        const auto& [runtime, value] = (std::pair<jsi::Runtime*, jsi::Value>)*rawValue;
+        return CachedProp<std::optional<std::vector<std::string>>>::fromRawValue(*runtime, value, sourceProps.supportedNetworks);
+      } catch (const std::exception& exc) {
+        throw std::runtime_error(std::string("GooglePayButton.supportedNetworks: ") + exc.what());
+      }
+    }()),
+    allowedAuthMethods([&]() -> CachedProp<std::optional<std::vector<std::string>>> {
+      try {
+        const react::RawValue* rawValue = rawProps.at("allowedAuthMethods", nullptr, nullptr);
+        if (rawValue == nullptr) return sourceProps.allowedAuthMethods;
+        const auto& [runtime, value] = (std::pair<jsi::Runtime*, jsi::Value>)*rawValue;
+        return CachedProp<std::optional<std::vector<std::string>>>::fromRawValue(*runtime, value, sourceProps.allowedAuthMethods);
+      } catch (const std::exception& exc) {
+        throw std::runtime_error(std::string("GooglePayButton.allowedAuthMethods: ") + exc.what());
+      }
+    }()),
     onPress([&]() -> CachedProp<std::optional<std::function<void()>>> {
       try {
         const react::RawValue* rawValue = rawProps.at("onPress", nullptr, nullptr);
@@ -82,6 +102,8 @@ namespace margelo::nitro::pay::views {
       case hashString("buttonType"): return true;
       case hashString("theme"): return true;
       case hashString("radius"): return true;
+      case hashString("supportedNetworks"): return true;
+      case hashString("allowedAuthMethods"): return true;
       case hashString("onPress"): return true;
       case hashString("hybridRef"): return true;
       default: return false;

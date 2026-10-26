@@ -63,19 +63,27 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     // MARK: - Public API
     
-    override fun payServiceStatus(): PayServiceStatus {
+    override fun payServiceStatus(options: PayServiceStatusOptions?): PayServiceStatus {
+        // Outside the try, so a configuration error reaches JS instead of
+        // reading as "unavailable".
+        val cardParameters = GooglePayCardParameters.from(
+            options?.supportedNetworks,
+            options?.googlePayAllowedAuthMethods
+        )
         return try {
             val client = createPaymentsClient(currentEnvironment)
             val canSetupCards = isReadyToPay(
                 client = client,
                 requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
-                    existingPaymentMethodRequired = false
+                    existingPaymentMethodRequired = false,
+                    cardParameters = cardParameters
                 )
             )
             val canMakePayments = isReadyToPay(
                 client = client,
                 requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
-                    existingPaymentMethodRequired = true
+                    existingPaymentMethodRequired = true,
+                    cardParameters = cardParameters
                 )
             )
             PayServiceStatus(
@@ -89,9 +97,9 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     }
     
     override fun canMakePayments(usingNetworks: Array<String>): Boolean {
-        return usingNetworks.any { network ->
-            PaymentConstants.SUPPORTED_NETWORKS.contains(network.lowercase())
-        }
+        return usingNetworks
+            .map { GooglePayNetworks.parse(it) }
+            .any { GooglePayNetworks.toGooglePay(it) != null }
     }
     
     override fun isPaymentInProgress(): Boolean {

@@ -27,6 +27,7 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  googlePayAllowedAuthMethods?: GooglePayAuthMethod[] // default: both
   // Contact details, returned in the result
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
@@ -41,6 +42,8 @@ interface UsePaymentCheckoutConfig {
 ```
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
+- **supportedNetworks** — The card networks the payer can choose, as [PaymentNetwork](/docs/api/types#paymentnetwork) names. Both platforms honour it. A network the platform does not offer is left out, and an unknown name fails the payment. On Android the hook checks `canMakePayments` for these networks too. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only).
+- **googlePayAllowedAuthMethods** — Android only. Which Google Pay cards to accept: `'PAN_ONLY'` (saved to the Google account), `'CRYPTOGRAM_3DS'` (tokenized on the device), or both, the default. See [GooglePayAuthMethod](/docs/api/types#googlepayauthmethod).
 - **merchantCapabilities** — Apple Pay only. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, and fails the payment for an unknown value. See [MerchantCapability](/docs/api/types#merchantcapability).
 - **billingContactRequired**, **shippingContactRequired**, **emailRequired**, **phoneNumberRequired** — Ask the payer for a billing address, a shipping address, an email address or a phone number. They come back as `result.billingContact`, `result.shippingContact`, `result.emailAddress` and `result.phoneNumber`. See [Shipping and contact details](/docs/guides/contact-details).
 - **onAuthorize** — Called with the token and the requested contact details after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
@@ -77,7 +80,7 @@ interface UsePaymentCheckoutReturn {
 
 - **canMakePayments** — Whether the user can pay with Apple Pay / Google Pay on this device.
 - **canSetupCards** — Whether the user can add or manage cards (e.g. in Wallet).
-- **isCheckingStatus** — `true` while availability is being checked on mount.
+- **isCheckingStatus** — `true` while availability is being checked on mount. The hook checks again when `supportedNetworks` or `googlePayAllowedAuthMethods` change.
 - **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.
 - **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult | null>`.
   - Returns `null` and sets `error` when the cart is empty.
@@ -86,7 +89,7 @@ interface UsePaymentCheckoutReturn {
   - Returns `null` if an exception is thrown while starting/processing the payment.
   - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ success: false, error }` and sets `error`.
   - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
-- **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (`supportedNetworks` and `merchantCapabilities` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
+- **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (arrays such as `supportedNetworks` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
 
 ## Example

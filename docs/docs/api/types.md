@@ -68,6 +68,7 @@ interface PaymentRequest {
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  googlePayAllowedAuthMethods?: string[] // GooglePayAuthMethod values
 }
 ```
 
@@ -76,6 +77,10 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 `merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
 
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
+
+`supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment, with an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
+
+`googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
 
 `billingContactRequired`, `shippingContactRequired`, `emailRequired` and `phoneNumberRequired` ask the payer for contact details, which come back in the result as [`PaymentDetails`](#paymentdetails). On Android, a phone number is collected with an address. See [Shipping and contact details](/docs/guides/contact-details).
 
@@ -162,18 +167,34 @@ type PaymentMethodType = 'unknown' | 'debit' | 'credit' | 'prepaid' | 'store'
 
 `PaymentMethodType` is exported separately for direct typing.
 
+- **displayName** — Describes the card to the payer, as the wallet words it: `PKPaymentMethod.displayName` on iOS, `paymentMethodData.description` on Android (for example "Visa •••• 1234"). Show it as is; don't parse it.
+- **network** — The card's [`PaymentNetwork`](#paymentnetwork), or `'unknown'` for a network the library cannot name. Use `network` rather than `displayName` for logic.
+
 ---
 
 ## PaymentNetwork
 
-Supported card networks.
+Card networks. Use these names in `supportedNetworks`; results report one of them in `token.paymentMethod.network`.
 
 ```ts
 type PaymentNetwork =
   | 'visa' | 'mastercard' | 'amex' | 'discover'
   | 'jcb' | 'maestro' | 'electron' | 'elo'
   | 'idcredit' | 'interac' | 'privateLabel'
+  | 'cartesBancaires' | 'chinaUnionPay' | 'dankort' | 'eftpos'
+  | 'girocard' | 'mada' | 'mir' | 'quicPay' | 'suica' | 'vPay'
+  | 'waon' | 'nanaco' | 'bancontact' | 'postFinance' | 'pagoBancomat'
+  | 'tmoney' | 'meeza' | 'napas' | 'bankAxept' | 'himyan' | 'jaywan'
+  | 'myDebit'
+  | 'unknown' // results only
 ```
+
+| Platform | Offers |
+|----------|--------|
+| Google Pay | `visa`, `mastercard`, `amex`, `discover`, `jcb`, `interac`, and `electron`, `maestro` and `elo` for Brazilian combo cards |
+| Apple Pay | Every network but `unknown`. Some need a newer iOS: `bancontact` 16, `postFinance` 16.4, `pagoBancomat` and `tmoney` 17, `meeza` 17.4, `napas` and `bankAxept` 17.5, `himyan` and `jaywan` 18.4, `myDebit` 26 |
+
+`'unknown'` is never a valid request value. A result reports it for a card on a network that is not listed here, instead of guessing.
 
 ---
 
@@ -190,6 +211,21 @@ interface PayServiceStatus {
 
 ---
 
+## PayServiceStatusOptions
+
+The cards `HybridPaymentHandler.payServiceStatus(options)` asks about. Pass the values of your `PaymentRequest`, so the check matches the payment.
+
+```ts
+interface PayServiceStatusOptions {
+  supportedNetworks?: string[]           // default: ['visa', 'mastercard', 'amex', 'discover']
+  googlePayAllowedAuthMethods?: string[] // default: both
+}
+```
+
+Android asks Google Pay whether the payer can pay with these cards. iOS only checks the network names.
+
+---
+
 ## GooglePayEnvironment
 
 Used in config and `PaymentRequest` for Android.
@@ -199,6 +235,21 @@ type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 ```
 
 Use `'TEST'` for development/sandbox; `'PRODUCTION'` for live charges. Android uses `'TEST'` when the value is omitted. See [Testing payments](/docs/guides/testing#test-environment).
+
+---
+
+## GooglePayAuthMethod
+
+How Google Pay may authenticate the card, used in `googlePayAllowedAuthMethods` (Android only).
+
+```ts
+type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
+```
+
+- `'PAN_ONLY'` — Cards saved to the payer's Google account. The token holds the card number.
+- `'CRYPTOGRAM_3DS'` — Cards tokenized on the device. The token holds a 3-D Secure cryptogram. Google Pay does not offer `jcb` or `discover` with it.
+
+The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Customer Authentication requires device tokens. Android matches the values ignoring case, and any other value fails the payment, with an `error` that contains `Unknown Google Pay auth method "<value>". Use "PAN_ONLY" or "CRYPTOGRAM_3DS"`. They are separate from `merchantCapabilities`: every Apple Pay card is a device token, so iOS has nothing like `'PAN_ONLY'`.
 
 ---
 

@@ -19,11 +19,15 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
     private var currentButtonType: GooglePayButtonType? = null
     private var currentTheme: GooglePayButtonTheme? = null
     private var currentRadius: Double? = null
+    private var currentSupportedNetworks: Array<String>? = null
+    private var currentAllowedAuthMethods: Array<String>? = null
     
     // Props
     override var buttonType: GooglePayButtonType = GooglePayButtonType.BUY
     override var theme: GooglePayButtonTheme = GooglePayButtonTheme.DARK
     override var radius: Double? = null
+    override var supportedNetworks: Array<String>? = null
+    override var allowedAuthMethods: Array<String>? = null
     override var onPress: (() -> Unit)? = null
     
     override var view: View = container
@@ -64,7 +68,9 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         val hasButton = payButton != null && payButton?.parent == container
         val propsUnchanged = currentButtonType == buttonType &&
                              currentTheme == theme &&
-                             currentRadius == radius
+                             currentRadius == radius &&
+                             currentSupportedNetworks contentEquals supportedNetworks &&
+                             currentAllowedAuthMethods contentEquals allowedAuthMethods
         return hasButton && propsUnchanged
     }
     
@@ -87,6 +93,9 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
             "Recreating button - type: $buttonType, theme: $theme, radius: $radius"
         )
         
+        // Before removing the button: invalid networks keep the existing one.
+        val cardParameters = GooglePayCardParameters.from(supportedNetworks, allowedAuthMethods)
+        
         // Remove existing button
         container.removeAllViews()
         
@@ -96,6 +105,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
             buttonType,
             theme,
             radius,
+            cardParameters,
             onPress
         )
         
@@ -104,6 +114,8 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
         currentButtonType = buttonType
         currentTheme = theme
         currentRadius = radius
+        currentSupportedNetworks = supportedNetworks
+        currentAllowedAuthMethods = allowedAuthMethods
         
         // Add to container
         val layoutParams = FrameLayout.LayoutParams(

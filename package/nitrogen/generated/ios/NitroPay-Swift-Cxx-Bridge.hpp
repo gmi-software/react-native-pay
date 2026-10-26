@@ -32,6 +32,8 @@ namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PassActivationState; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -81,6 +83,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PayServiceStatus.hpp"
+#include "PayServiceStatusOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
 #include "PaymentContact.hpp"
@@ -159,6 +162,47 @@ namespace margelo::nitro::pay::bridge::swift {
   // pragma MARK: std::weak_ptr<HybridApplePayButtonSpec>
   using std__weak_ptr_HybridApplePayButtonSpec_ = std::weak_ptr<HybridApplePayButtonSpec>;
   inline std__weak_ptr_HybridApplePayButtonSpec_ weakify_std__shared_ptr_HybridApplePayButtonSpec_(const std::shared_ptr<HybridApplePayButtonSpec>& strong) noexcept { return strong; }
+  
+  // pragma MARK: std::vector<std::string>
+  /**
+   * Specialized version of `std::vector<std::string>`.
+   */
+  using std__vector_std__string_ = std::vector<std::string>;
+  inline std::vector<std::string> create_std__vector_std__string_(size_t size) noexcept {
+    std::vector<std::string> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<std::vector<std::string>>
+  /**
+   * Specialized version of `std::optional<std::vector<std::string>>`.
+   */
+  using std__optional_std__vector_std__string__ = std::optional<std::vector<std::string>>;
+  inline std::optional<std::vector<std::string>> create_std__optional_std__vector_std__string__(const std::vector<std::string>& value) noexcept {
+    return std::optional<std::vector<std::string>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<std::string> get_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PayServiceStatusOptions>
+  /**
+   * Specialized version of `std::optional<PayServiceStatusOptions>`.
+   */
+  using std__optional_PayServiceStatusOptions_ = std::optional<PayServiceStatusOptions>;
+  inline std::optional<PayServiceStatusOptions> create_std__optional_PayServiceStatusOptions_(const PayServiceStatusOptions& value) noexcept {
+    return std::optional<PayServiceStatusOptions>(value);
+  }
+  inline bool has_value_std__optional_PayServiceStatusOptions_(const std::optional<PayServiceStatusOptions>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PayServiceStatusOptions get_std__optional_PayServiceStatusOptions_(const std::optional<PayServiceStatusOptions>& optional) noexcept {
+    return optional.value();
+  }
   
   // pragma MARK: std::optional<std::string>
   /**
@@ -420,17 +464,6 @@ namespace margelo::nitro::pay::bridge::swift {
   using std__vector_PaymentItem_ = std::vector<PaymentItem>;
   inline std::vector<PaymentItem> create_std__vector_PaymentItem_(size_t size) noexcept {
     std::vector<PaymentItem> vector;
-    vector.reserve(size);
-    return vector;
-  }
-  
-  // pragma MARK: std::vector<std::string>
-  /**
-   * Specialized version of `std::vector<std::string>`.
-   */
-  using std__vector_std__string_ = std::vector<std::string>;
-  inline std::vector<std::string> create_std__vector_std__string_(size_t size) noexcept {
-    std::vector<std::string> vector;
     vector.reserve(size);
     return vector;
   }

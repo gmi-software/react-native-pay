@@ -40,6 +40,29 @@ namespace margelo::nitro::pay {
     IDCREDIT      SWIFT_NAME(idcredit) = 8,
     INTERAC      SWIFT_NAME(interac) = 9,
     PRIVATELABEL      SWIFT_NAME(privatelabel) = 10,
+    CARTESBANCAIRES      SWIFT_NAME(cartesbancaires) = 11,
+    CHINAUNIONPAY      SWIFT_NAME(chinaunionpay) = 12,
+    DANKORT      SWIFT_NAME(dankort) = 13,
+    EFTPOS      SWIFT_NAME(eftpos) = 14,
+    GIROCARD      SWIFT_NAME(girocard) = 15,
+    MADA      SWIFT_NAME(mada) = 16,
+    MIR      SWIFT_NAME(mir) = 17,
+    QUICPAY      SWIFT_NAME(quicpay) = 18,
+    SUICA      SWIFT_NAME(suica) = 19,
+    VPAY      SWIFT_NAME(vpay) = 20,
+    WAON      SWIFT_NAME(waon) = 21,
+    NANACO      SWIFT_NAME(nanaco) = 22,
+    BANCONTACT      SWIFT_NAME(bancontact) = 23,
+    POSTFINANCE      SWIFT_NAME(postfinance) = 24,
+    PAGOBANCOMAT      SWIFT_NAME(pagobancomat) = 25,
+    TMONEY      SWIFT_NAME(tmoney) = 26,
+    MEEZA      SWIFT_NAME(meeza) = 27,
+    NAPAS      SWIFT_NAME(napas) = 28,
+    BANKAXEPT      SWIFT_NAME(bankaxept) = 29,
+    HIMYAN      SWIFT_NAME(himyan) = 30,
+    JAYWAN      SWIFT_NAME(jaywan) = 31,
+    MYDEBIT      SWIFT_NAME(mydebit) = 32,
+    UNKNOWN      SWIFT_NAME(unknown) = 33,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::pay
@@ -63,6 +86,29 @@ namespace margelo::nitro {
         case hashString("idcredit"): return margelo::nitro::pay::PaymentNetwork::IDCREDIT;
         case hashString("interac"): return margelo::nitro::pay::PaymentNetwork::INTERAC;
         case hashString("privateLabel"): return margelo::nitro::pay::PaymentNetwork::PRIVATELABEL;
+        case hashString("cartesBancaires"): return margelo::nitro::pay::PaymentNetwork::CARTESBANCAIRES;
+        case hashString("chinaUnionPay"): return margelo::nitro::pay::PaymentNetwork::CHINAUNIONPAY;
+        case hashString("dankort"): return margelo::nitro::pay::PaymentNetwork::DANKORT;
+        case hashString("eftpos"): return margelo::nitro::pay::PaymentNetwork::EFTPOS;
+        case hashString("girocard"): return margelo::nitro::pay::PaymentNetwork::GIROCARD;
+        case hashString("mada"): return margelo::nitro::pay::PaymentNetwork::MADA;
+        case hashString("mir"): return margelo::nitro::pay::PaymentNetwork::MIR;
+        case hashString("quicPay"): return margelo::nitro::pay::PaymentNetwork::QUICPAY;
+        case hashString("suica"): return margelo::nitro::pay::PaymentNetwork::SUICA;
+        case hashString("vPay"): return margelo::nitro::pay::PaymentNetwork::VPAY;
+        case hashString("waon"): return margelo::nitro::pay::PaymentNetwork::WAON;
+        case hashString("nanaco"): return margelo::nitro::pay::PaymentNetwork::NANACO;
+        case hashString("bancontact"): return margelo::nitro::pay::PaymentNetwork::BANCONTACT;
+        case hashString("postFinance"): return margelo::nitro::pay::PaymentNetwork::POSTFINANCE;
+        case hashString("pagoBancomat"): return margelo::nitro::pay::PaymentNetwork::PAGOBANCOMAT;
+        case hashString("tmoney"): return margelo::nitro::pay::PaymentNetwork::TMONEY;
+        case hashString("meeza"): return margelo::nitro::pay::PaymentNetwork::MEEZA;
+        case hashString("napas"): return margelo::nitro::pay::PaymentNetwork::NAPAS;
+        case hashString("bankAxept"): return margelo::nitro::pay::PaymentNetwork::BANKAXEPT;
+        case hashString("himyan"): return margelo::nitro::pay::PaymentNetwork::HIMYAN;
+        case hashString("jaywan"): return margelo::nitro::pay::PaymentNetwork::JAYWAN;
+        case hashString("myDebit"): return margelo::nitro::pay::PaymentNetwork::MYDEBIT;
+        case hashString("unknown"): return margelo::nitro::pay::PaymentNetwork::UNKNOWN;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum PaymentNetwork - invalid value!");
       }
@@ -80,6 +126,29 @@ namespace margelo::nitro {
         case margelo::nitro::pay::PaymentNetwork::IDCREDIT: return JSIConverter<std::string>::toJSI(runtime, "idcredit");
         case margelo::nitro::pay::PaymentNetwork::INTERAC: return JSIConverter<std::string>::toJSI(runtime, "interac");
         case margelo::nitro::pay::PaymentNetwork::PRIVATELABEL: return JSIConverter<std::string>::toJSI(runtime, "privateLabel");
+        case margelo::nitro::pay::PaymentNetwork::CARTESBANCAIRES: return JSIConverter<std::string>::toJSI(runtime, "cartesBancaires");
+        case margelo::nitro::pay::PaymentNetwork::CHINAUNIONPAY: return JSIConverter<std::string>::toJSI(runtime, "chinaUnionPay");
+        case margelo::nitro::pay::PaymentNetwork::DANKORT: return JSIConverter<std::string>::toJSI(runtime, "dankort");
+        case margelo::nitro::pay::PaymentNetwork::EFTPOS: return JSIConverter<std::string>::toJSI(runtime, "eftpos");
+        case margelo::nitro::pay::PaymentNetwork::GIROCARD: return JSIConverter<std::string>::toJSI(runtime, "girocard");
+        case margelo::nitro::pay::PaymentNetwork::MADA: return JSIConverter<std::string>::toJSI(runtime, "mada");
+        case margelo::nitro::pay::PaymentNetwork::MIR: return JSIConverter<std::string>::toJSI(runtime, "mir");
+        case margelo::nitro::pay::PaymentNetwork::QUICPAY: return JSIConverter<std::string>::toJSI(runtime, "quicPay");
+        case margelo::nitro::pay::PaymentNetwork::SUICA: return JSIConverter<std::string>::toJSI(runtime, "suica");
+        case margelo::nitro::pay::PaymentNetwork::VPAY: return JSIConverter<std::string>::toJSI(runtime, "vPay");
+        case margelo::nitro::pay::PaymentNetwork::WAON: return JSIConverter<std::string>::toJSI(runtime, "waon");
+        case margelo::nitro::pay::PaymentNetwork::NANACO: return JSIConverter<std::string>::toJSI(runtime, "nanaco");
+        case margelo::nitro::pay::PaymentNetwork::BANCONTACT: return JSIConverter<std::string>::toJSI(runtime, "bancontact");
+        case margelo::nitro::pay::PaymentNetwork::POSTFINANCE: return JSIConverter<std::string>::toJSI(runtime, "postFinance");
+        case margelo::nitro::pay::PaymentNetwork::PAGOBANCOMAT: return JSIConverter<std::string>::toJSI(runtime, "pagoBancomat");
+        case margelo::nitro::pay::PaymentNetwork::TMONEY: return JSIConverter<std::string>::toJSI(runtime, "tmoney");
+        case margelo::nitro::pay::PaymentNetwork::MEEZA: return JSIConverter<std::string>::toJSI(runtime, "meeza");
+        case margelo::nitro::pay::PaymentNetwork::NAPAS: return JSIConverter<std::string>::toJSI(runtime, "napas");
+        case margelo::nitro::pay::PaymentNetwork::BANKAXEPT: return JSIConverter<std::string>::toJSI(runtime, "bankAxept");
+        case margelo::nitro::pay::PaymentNetwork::HIMYAN: return JSIConverter<std::string>::toJSI(runtime, "himyan");
+        case margelo::nitro::pay::PaymentNetwork::JAYWAN: return JSIConverter<std::string>::toJSI(runtime, "jaywan");
+        case margelo::nitro::pay::PaymentNetwork::MYDEBIT: return JSIConverter<std::string>::toJSI(runtime, "myDebit");
+        case margelo::nitro::pay::PaymentNetwork::UNKNOWN: return JSIConverter<std::string>::toJSI(runtime, "unknown");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert PaymentNetwork to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -102,6 +171,29 @@ namespace margelo::nitro {
         case hashString("idcredit"):
         case hashString("interac"):
         case hashString("privateLabel"):
+        case hashString("cartesBancaires"):
+        case hashString("chinaUnionPay"):
+        case hashString("dankort"):
+        case hashString("eftpos"):
+        case hashString("girocard"):
+        case hashString("mada"):
+        case hashString("mir"):
+        case hashString("quicPay"):
+        case hashString("suica"):
+        case hashString("vPay"):
+        case hashString("waon"):
+        case hashString("nanaco"):
+        case hashString("bancontact"):
+        case hashString("postFinance"):
+        case hashString("pagoBancomat"):
+        case hashString("tmoney"):
+        case hashString("meeza"):
+        case hashString("napas"):
+        case hashString("bankAxept"):
+        case hashString("himyan"):
+        case hashString("jaywan"):
+        case hashString("myDebit"):
+        case hashString("unknown"):
           return true;
         default:
           return false;

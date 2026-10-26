@@ -54,7 +54,7 @@ namespace margelo::nitro::pay {
 
   public:
     // Methods
-    PayServiceStatus payServiceStatus() override;
+    PayServiceStatus payServiceStatus(const std::optional<PayServiceStatusOptions>& options) override;
     std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) override;
     bool canMakePayments(const std::vector<std::string>& usingNetworks) override;
     bool isPaymentInProgress() override;

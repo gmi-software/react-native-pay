@@ -13,8 +13,10 @@ import type {
   PaymentResult,
   PaymentItem,
   PayServiceStatus,
+  GooglePayAuthMethod,
   GooglePayEnvironment,
   MerchantCapability,
+  PayServiceStatusOptions,
   PaymentToken,
   PaymentAuthorizationResult,
   PaymentDetails,
@@ -25,6 +27,8 @@ import {
   normalizePaymentRequest,
   sanitizePaymentRequest,
 } from '../utils'
+
+const DEFAULT_SUPPORTED_NETWORKS = ['visa', 'mastercard', 'amex', 'discover']
 
 // Values that survive a JSON round trip unchanged: functions are dropped, and
 // NaN and Infinity become null. No objects: a `JSON.stringify` key list would
@@ -57,8 +61,10 @@ export interface UsePaymentCheckoutConfig {
   currencyCode?: string
 
   /**
-   * Supported card networks for the payment sheet.
-   * Defaults to `['visa', 'mastercard', 'amex', 'discover']`.
+   * Card networks the payer can pay with, as `PaymentNetwork` values.
+   * Defaults to `['visa', 'mastercard', 'amex', 'discover']`. On Android,
+   * `canMakePayments` is checked for these networks too. See
+   * `PaymentRequest.supportedNetworks`.
    */
   supportedNetworks?: string[]
 
@@ -96,6 +102,13 @@ export interface UsePaymentCheckoutConfig {
    * Merchant ID provided by your payment gateway for Google Pay tokenization.
    */
   googlePayGatewayMerchantId?: string
+
+  /**
+   * How Google Pay may authenticate the card. Defaults to both
+   * `'PAN_ONLY'` and `'CRYPTOGRAM_3DS'`; pass `['CRYPTOGRAM_3DS']` to accept
+   * device tokens only. Android only.
+   */
+  googlePayAllowedAuthMethods?: GooglePayAuthMethod[]
 
   /**
    * Ask for the billing name and postal address, returned as
@@ -282,9 +295,18 @@ export function usePaymentCheckout(
   // Set synchronously, so two calls in the same frame still see each other.
   const isPaymentInFlight = useRef(false)
 
+  // Checked again when the accepted cards change, not on other config changes.
+  const statusOptionsKey = JSON.stringify({
+    supportedNetworks:
+      stableRequestConfig.supportedNetworks ?? DEFAULT_SUPPORTED_NETWORKS,
+    googlePayAllowedAuthMethods:
+      stableRequestConfig.googlePayAllowedAuthMethods,
+  } satisfies PayServiceStatusOptions)
+
   useEffect(() => {
     try {
-      const paymentStatus = getPaymentHandler().payServiceStatus()
+      const options: PayServiceStatusOptions = JSON.parse(statusOptionsKey)
+      const paymentStatus = getPaymentHandler().payServiceStatus(options)
       setStatus(paymentStatus)
     } catch (err) {
       console.error('Failed to check payment status:', err)
@@ -292,7 +314,7 @@ export function usePaymentCheckout(
     } finally {
       setIsCheckingStatus(false)
     }
-  }, [])
+  }, [statusOptionsKey])
 
   const total = useMemo(() => calculateTotal(items), [items])
 
@@ -301,13 +323,14 @@ export function usePaymentCheckout(
       merchantName,
       countryCode = 'US',
       currencyCode = 'USD',
-      supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
+      supportedNetworks = DEFAULT_SUPPORTED_NETWORKS,
       merchantCapabilities = ['3DS'],
       applePayMerchantIdentifier,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayAllowedAuthMethods,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,
@@ -327,6 +350,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayAllowedAuthMethods,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,

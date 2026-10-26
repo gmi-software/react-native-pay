@@ -22,12 +22,6 @@ object PaymentConstants {
     const val BILLING_ADDRESS_FORMAT_MIN = "MIN"
     const val BILLING_ADDRESS_FORMAT_FULL = "FULL"
     
-    // Card networks
-    const val NETWORK_VISA = "VISA"
-    const val NETWORK_MASTERCARD = "MASTERCARD"
-    const val NETWORK_AMEX = "AMEX"
-    const val NETWORK_DISCOVER = "DISCOVER"
-    
     // Tokenization
     const val TOKENIZATION_PAYMENT_GATEWAY = "PAYMENT_GATEWAY"
     const val DEFAULT_GATEWAY = "example"
@@ -45,9 +39,6 @@ object PaymentConstants {
     const val AUTHORIZATION_TIMEOUT_MS = 25_000L
     const val ERROR_AUTHORIZATION_FAILED = "Payment authorization failed"
     const val ERROR_AUTHORIZATION_TIMED_OUT = "Payment authorization timed out"
-    
-    // Supported networks (lowercase for comparison)
-    val SUPPORTED_NETWORKS = listOf("visa", "mastercard", "amex", "discover")
     
     // Errors (keep in sync with iOS `ErrorMessage`)
     const val ERROR_PAYMENT_IN_PROGRESS = "A payment is already in progress"

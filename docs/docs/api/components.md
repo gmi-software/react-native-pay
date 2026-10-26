@@ -56,8 +56,12 @@ Renders the Google Pay button. Only available on Android.
 | `buttonType` | `GooglePayButtonType` | Yes | Button label type. |
 | `theme` | `'dark' \| 'light'` | Yes | Button theme. |
 | `radius` | `number` | No | Corner radius in dp. |
+| `supportedNetworks` | `string[]` | No | The card networks your payment accepts, as in `PaymentRequest.supportedNetworks`. Default: `visa`, `mastercard`, `amex`, `discover`. |
+| `allowedAuthMethods` | `string[]` | No | As in `PaymentRequest.googlePayAllowedAuthMethods`. Default: both. |
 | `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
+
+The button can show the payer's card, so give it the same `supportedNetworks` and `allowedAuthMethods` as the payment. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass `paymentRequest.supportedNetworks` and `paymentRequest.googlePayAllowedAuthMethods`. With an unknown network or auth method, the button keeps its previous configuration, or does not appear on the first render, and logs an error in debug builds.
 
 **GooglePayButtonType:**  
 `'buy'` | `'book'` | `'checkout'` | `'donate'` | `'order'` | `'pay'` | `'subscribe'` | `'plain'`
@@ -76,6 +80,7 @@ const handlePayment = async () => {
   buttonType="buy"
   theme="dark"
   radius={8}
+  supportedNetworks={['visa', 'mastercard']}
   onPress={callback(handlePayment)}
   style={{ width: '100%', height: 48 }}
 />

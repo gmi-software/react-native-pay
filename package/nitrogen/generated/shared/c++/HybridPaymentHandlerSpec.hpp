@@ -15,6 +15,8 @@
 
 // Forward declaration of `PayServiceStatus` to properly resolve imports.
 namespace margelo::nitro::pay { struct PayServiceStatus; }
+// Forward declaration of `PayServiceStatusOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentRequest` to properly resolve imports.
@@ -23,11 +25,12 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 
 #include "PayServiceStatus.hpp"
+#include "PayServiceStatusOptions.hpp"
+#include <optional>
 #include "PaymentResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include "PaymentRequest.hpp"
 #include "StartPaymentOptions.hpp"
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -62,7 +65,7 @@ namespace margelo::nitro::pay {
 
     public:
       // Methods
-      virtual PayServiceStatus payServiceStatus() = 0;
+      virtual PayServiceStatus payServiceStatus(const std::optional<PayServiceStatusOptions>& options) = 0;
       virtual std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) = 0;
       virtual bool canMakePayments(const std::vector<std::string>& usingNetworks) = 0;
       virtual bool isPaymentInProgress() = 0;

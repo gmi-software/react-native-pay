@@ -21,6 +21,8 @@ namespace margelo::nitro::pay { enum class GooglePayButtonTheme; }
 #include "GooglePayButtonType.hpp"
 #include "GooglePayButtonTheme.hpp"
 #include <optional>
+#include <string>
+#include <vector>
 #include <functional>
 
 namespace margelo::nitro::pay {
@@ -56,6 +58,10 @@ namespace margelo::nitro::pay {
       virtual void setTheme(GooglePayButtonTheme theme) = 0;
       virtual std::optional<double> getRadius() = 0;
       virtual void setRadius(std::optional<double> radius) = 0;
+      virtual std::optional<std::vector<std::string>> getSupportedNetworks() = 0;
+      virtual void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) = 0;
+      virtual std::optional<std::vector<std::string>> getAllowedAuthMethods() = 0;
+      virtual void setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) = 0;
       virtual std::optional<std::function<void()>> getOnPress() = 0;
       virtual void setOnPress(const std::optional<std::function<void()>>& onPress) = 0;
 
