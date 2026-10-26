@@ -56,6 +56,12 @@ abstract class HybridGooglePayButtonSpec: HybridView() {
   @set:Keep
   abstract var allowedAuthMethods: Array<String>?
   
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
+  abstract var merchantCapabilities: Array<String>?
+  
   abstract var onPress: (() -> Unit)?
   
   private var onPress_cxx: Func_void?

@@ -41,7 +41,7 @@ npx expo prebuild --clean
 
 ### "Unknown merchant capability"
 
-The payment fails with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).
+The payment fails with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value, on Android too. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).
 
 ### Invalid Apple button type/style errors
 

@@ -368,7 +368,7 @@ interface UsePaymentCheckoutConfig {
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
   supportedNetworks?: string[]; // PaymentNetwork names. Default: ['visa', 'mastercard', 'amex', 'discover']
-  merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']
+  merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']. Android: only Debit without Credit
   applePayMerchantIdentifier?: string; // Optional iOS override
   // Google Pay specific (Android)
   googlePayMerchantId?: string;
@@ -458,7 +458,7 @@ Low-level payment handler for direct control.
 
 ##### `payServiceStatus(options?: PayServiceStatusOptions): PayServiceStatus`
 
-Check payment service availability. On Android, `options` names the cards to ask Google Pay about: pass the `supportedNetworks` and `googlePayAllowedAuthMethods` of your request. iOS only checks the network names.
+Check payment service availability. On Android, `options` names the cards to ask Google Pay about: pass the `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` of your request. iOS only checks that the values are known.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
@@ -635,6 +635,7 @@ interface GooglePayButtonProps {
   // The cards your payment accepts, so the button never shows another card.
   supportedNetworks?: string[]; // as PaymentRequest.supportedNetworks
   allowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
+  merchantCapabilities?: string[]; // as PaymentRequest.merchantCapabilities
 
   onPress?: () => void; // wrap with callback() from react-native-nitro-modules
   style?: ViewStyle;
@@ -861,7 +862,9 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 
 ### Merchant capabilities
 
-`merchantCapabilities` is used by Apple Pay only. `"3DS"` and `"EMV"` are payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. `"Credit"` and `"Debit"` limit the accepted card types. iOS matches the values case-insensitively and adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
+`"3DS"` and `"EMV"` are Apple Pay payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. Android ignores them. `"Credit"` and `"Debit"` limit the accepted card types. iOS adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Both platforms match the values case-insensitively, and any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
+
+Google Pay can leave credit cards out, but not debit cards. On Android, `"Debit"` without `"Credit"` sends `allowCreditCards: false`, which UK gambling merchants must do; prepaid cards stay allowed. `["3DS", "Credit"]` accepts every card type on Android, so check the card on your server if you must refuse debit cards. Give `GooglePayButton` and `payServiceStatus` the same `merchantCapabilities` as the payment.
 
 ### Shipping and contact details
 

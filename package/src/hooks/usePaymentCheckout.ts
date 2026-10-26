@@ -67,8 +67,8 @@ export interface UsePaymentCheckoutConfig {
   supportedNetworks?: string[]
 
   /**
-   * Merchant capabilities passed to Apple Pay.
-   * Defaults to `['3DS']`.
+   * Merchant capabilities passed to Apple Pay. On Android, `'Debit'` without
+   * `'Credit'` leaves credit cards out. Defaults to `['3DS']`.
    */
   merchantCapabilities?: MerchantCapability[]
 
@@ -339,6 +339,7 @@ export function usePaymentCheckout(
   const statusOptionsKey = JSON.stringify({
     supportedNetworks: paymentRequest.supportedNetworks,
     googlePayAllowedAuthMethods: paymentRequest.googlePayAllowedAuthMethods,
+    merchantCapabilities: paymentRequest.merchantCapabilities,
   } satisfies PayServiceStatusOptions)
 
   useEffect(() => {

@@ -68,7 +68,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // reading as "unavailable".
         val cardParameters = GooglePayCardParameters.from(
             options?.supportedNetworks,
-            options?.googlePayAllowedAuthMethods
+            options?.googlePayAllowedAuthMethods,
+            options?.merchantCapabilities
         )
         return try {
             val client = createPaymentsClient(currentEnvironment)

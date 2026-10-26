@@ -35,6 +35,14 @@ All notable changes to this project are documented in this file.
   (`PayServiceStatusOptions`). Give them the values of your request, so the button and the Android
   readiness check use the same cards as the payment. `usePaymentCheckout` passes its config to
   `payServiceStatus` and checks again when they change.
+- **Android honours a debit-only `merchantCapabilities`.** `'Debit'` without `'Credit'` now leaves
+  credit cards out of the Google Pay request (`allowCreditCards: false`), as UK gambling merchants
+  must. Prepaid cards stay allowed. Google Pay cannot leave debit cards out, so `'Credit'` alone
+  still accepts every card type on Android; `'3DS'` and `'EMV'` have no effect there.
+  `GooglePayButton` takes a `merchantCapabilities` prop and `PayServiceStatusOptions` a
+  `merchantCapabilities` field, so the button and the readiness check are sent the same card
+  types. `usePaymentCheckout` passes its `merchantCapabilities` to `payServiceStatus` and checks
+  again when they change.
 
 ### Changed
 
@@ -47,6 +55,10 @@ All notable changes to this project are documented in this file.
   platform does not offer is left out; the payment fails when none is left. `canMakePayments` and
   `payServiceStatus` throw for an unknown name, and `canMakePayments` returns `false` when the
   platform offers none of the networks.
+- **An unknown value in `merchantCapabilities` fails the payment on Android too,** with the same
+  `error` as on iOS: `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or
+  "Debit"`. Android used to ignore the field. `payServiceStatus` throws for an unknown value on
+  both platforms.
 - **Android: `PaymentMethod.displayName` is the wallet's description of the card** (Google Pay's
   `paymentMethodData.description`, for example "Visa •••• 1234") instead of `"VISA 1234"`. Google
   Pay asks apps not to show `cardNetwork` to the payer. Use `network` for logic.

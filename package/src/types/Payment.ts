@@ -77,9 +77,11 @@ export type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 export type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 
 /**
- * Apple Pay merchant capability. `'3DS'` and `'EMV'` are payment protocols
+ * Merchant capability. `'3DS'` and `'EMV'` are Apple Pay payment protocols
  * (EMV only covers China UnionPay); `'Credit'` and `'Debit'` limit the
  * accepted card types. iOS adds `'3DS'` when neither protocol is given.
+ * Android only reads `'Debit'` without `'Credit'`, which leaves credit cards
+ * out: Google Pay cannot leave debit cards out.
  */
 export type MerchantCapability = '3DS' | 'EMV' | 'Credit' | 'Debit'
 
@@ -172,6 +174,7 @@ export interface PaymentRequest {
   paymentItems: PaymentItem[]
   // `MerchantCapability` values. Not typed as such: Nitro would generate a
   // native enum that rejects `'3ds'` or unknown values without a message.
+  // On Android, only `'Debit'` without `'Credit'` has an effect.
   merchantCapabilities: string[]
   /**
    * `PaymentNetwork` values, matched ignoring case. An unknown name fails the
@@ -296,7 +299,7 @@ export interface PayServiceStatus {
 /**
  * The cards `payServiceStatus` asks about. Pass the values of your
  * `PaymentRequest`, so the check matches the payment. Android asks Google
- * Pay about these cards; iOS only rejects unknown network names.
+ * Pay about these cards; iOS only rejects unknown values.
  */
 export interface PayServiceStatusOptions {
   /**
@@ -306,6 +309,11 @@ export interface PayServiceStatusOptions {
   supportedNetworks?: string[]
   /** As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults to both. */
   googlePayAllowedAuthMethods?: string[]
+  /**
+   * As `PaymentRequest.merchantCapabilities`. On Android, `'Debit'` without
+   * `'Credit'` leaves credit cards out.
+   */
+  merchantCapabilities?: string[]
 }
 
 // Backward compatibility alias

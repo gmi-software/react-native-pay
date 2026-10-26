@@ -60,6 +60,8 @@ namespace margelo::nitro::pay {
     void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) override;
     std::optional<std::vector<std::string>> getAllowedAuthMethods() override;
     void setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) override;
+    std::optional<std::vector<std::string>> getMerchantCapabilities() override;
+    void setMerchantCapabilities(const std::optional<std::vector<std::string>>& merchantCapabilities) override;
     std::optional<std::function<void()>> getOnPress() override;
     void setOnPress(const std::optional<std::function<void()>>& onPress) override;
 

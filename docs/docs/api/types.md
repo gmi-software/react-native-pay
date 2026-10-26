@@ -220,10 +220,11 @@ The cards `HybridPaymentHandler.payServiceStatus(options)` asks about. Pass the 
 interface PayServiceStatusOptions {
   supportedNetworks?: string[]           // default: ['visa', 'mastercard', 'amex', 'discover']
   googlePayAllowedAuthMethods?: string[] // default: both
+  merchantCapabilities?: string[]        // default: every card type
 }
 ```
 
-Android asks Google Pay whether the payer can pay with these cards. iOS only checks the network names.
+Android asks Google Pay whether the payer can pay with these cards. iOS only checks that the values are known.
 
 ---
 
@@ -256,16 +257,29 @@ The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Custo
 
 ## MerchantCapability
 
-Apple Pay merchant capabilities, used in `merchantCapabilities` (iOS only; Android ignores the field).
+Merchant capabilities, used in `merchantCapabilities`. They come from Apple Pay; Android only reads `'Credit'` and `'Debit'`.
 
 ```ts
 type MerchantCapability = '3DS' | 'EMV' | 'Credit' | 'Debit'
 ```
 
-- `'3DS'` and `'EMV'` are payment protocols. PassKit needs at least one of them. EMV only covers China UnionPay, so every other card needs 3DS.
+- `'3DS'` and `'EMV'` are Apple Pay payment protocols. PassKit needs at least one of them. EMV only covers China UnionPay, so every other card needs 3DS. Android ignores them.
 - `'Credit'` and `'Debit'` limit the accepted card types.
 
-iOS matches the values case-insensitively and adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, so `[]` is sent as 3DS and `['Credit']` as 3DS + Credit. Any other value fails the payment: the result has `success: false` and `error: 'Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"'`.
+Both platforms match the values case-insensitively. Any other value fails the payment: the result has `success: false` and `error: 'Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"'`.
+
+iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, so `[]` is sent as 3DS and `['Credit']` as 3DS + Credit.
+
+Google Pay can leave credit cards out, but not debit cards:
+
+| `merchantCapabilities` | iOS accepts | Android accepts |
+|---|---|---|
+| `['3DS']` | Every card type | Every card type |
+| `['3DS', 'Debit']` | Debit cards | Every card type but credit cards |
+| `['3DS', 'Credit']` | Credit cards | Every card type |
+| `['3DS', 'Credit', 'Debit']` | Credit and debit cards | Every card type |
+
+For `'Debit'` without `'Credit'`, Android sends `allowCreditCards: false` to Google Pay, which UK gambling merchants must do. Prepaid cards stay allowed. To refuse debit cards on Android, check the card on your server before you charge it. Give [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only) and [`payServiceStatus`](#payservicestatusoptions) the same `merchantCapabilities`, so they are sent the same card types as the payment.
 
 ---
 

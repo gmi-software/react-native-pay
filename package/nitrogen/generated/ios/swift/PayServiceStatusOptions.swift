@@ -18,7 +18,7 @@ public extension PayServiceStatusOptions {
   /**
    * Create a new instance of `PayServiceStatusOptions`.
    */
-  init(supportedNetworks: [String]?, googlePayAllowedAuthMethods: [String]?) {
+  init(supportedNetworks: [String]?, googlePayAllowedAuthMethods: [String]?, merchantCapabilities: [String]?) {
     self.init({ () -> bridge.std__optional_std__vector_std__string__ in
       if let __unwrappedValue = supportedNetworks {
         return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
@@ -33,6 +33,18 @@ public extension PayServiceStatusOptions {
       }
     }(), { () -> bridge.std__optional_std__vector_std__string__ in
       if let __unwrappedValue = googlePayAllowedAuthMethods {
+        return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
+          var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
+          for __item in __unwrappedValue {
+            __vector.push_back(std.string(__item))
+          }
+          return __vector
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__vector_std__string__ in
+      if let __unwrappedValue = merchantCapabilities {
         return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
           var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
           for __item in __unwrappedValue {
@@ -63,6 +75,18 @@ public extension PayServiceStatusOptions {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods)
+        return __unwrapped.map({ __item in String(__item) })
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var merchantCapabilities: [String]? {
+    return { () -> [String]? in
+      if bridge.has_value_std__optional_std__vector_std__string__(self.__merchantCapabilities) {
+        let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__merchantCapabilities)
         return __unwrapped.map({ __item in String(__item) })
       } else {
         return nil

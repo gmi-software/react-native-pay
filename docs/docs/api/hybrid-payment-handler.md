@@ -26,7 +26,7 @@ const status = HybridPaymentHandler.payServiceStatus({
 - **canMakePayments** — User can complete a payment (has a valid card, etc.).
 - **canSetupCards** — User can add or manage cards (e.g. Wallet settings).
 
-`options` ([`PayServiceStatusOptions`](/docs/api/types#payservicestatusoptions)) names the cards your payment accepts: pass the `supportedNetworks` and `googlePayAllowedAuthMethods` of your `PaymentRequest`. Android asks Google Pay about those cards; without `options` it asks about `visa`, `mastercard`, `amex` and `discover`. iOS does not use them yet. On both platforms an unknown network name throws.
+`options` ([`PayServiceStatusOptions`](/docs/api/types#payservicestatusoptions)) names the cards your payment accepts: pass the `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` of your `PaymentRequest`. Android asks Google Pay about those cards; without `options` it asks about `visa`, `mastercard`, `amex` and `discover`, of every card type. iOS does not use them yet. On both platforms an unknown network name or merchant capability throws.
 
 ---
 

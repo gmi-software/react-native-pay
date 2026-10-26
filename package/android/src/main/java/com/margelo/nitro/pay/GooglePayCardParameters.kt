@@ -52,12 +52,16 @@ internal object GooglePayNetworks {
  */
 internal data class GooglePayCardParameters(
     val cardNetworks: List<String>,
-    val authMethods: List<String>
+    val authMethods: List<String>,
+    val allowCreditCards: Boolean = true
 ) {
     /** The `parameters` of a CARD payment method, before any billing address */
     fun toJson(): JSONObject = JSONObject().apply {
         put("allowedAuthMethods", JSONArray(authMethods))
         put("allowedCardNetworks", JSONArray(cardNetworks))
+        if (!allowCreditCards) {
+            put("allowCreditCards", false)
+        }
     }
 
     companion object {
@@ -67,16 +71,24 @@ internal data class GooglePayCardParameters(
             PaymentConstants.AUTH_CRYPTOGRAM_3DS
         )
 
+        private val MERCHANT_CAPABILITIES = listOf("3DS", "EMV", "Credit", "Debit")
+
         /**
-         * Reads `supportedNetworks` and the allowed auth methods; null uses the
-         * defaults. A network Google Pay does not offer is left out.
+         * Reads `supportedNetworks`, the allowed auth methods and the merchant
+         * capabilities; null uses the defaults. A network Google Pay does not
+         * offer is left out.
+         *
+         * Of the capabilities, only Debit without Credit changes the request:
+         * it turns credit cards off. Google Pay cannot turn debit cards off, so
+         * Credit alone accepts both. 3DS and EMV are Apple Pay protocols.
          *
          * @throws IllegalArgumentException for an unknown value, or when no
          *   network or no auth method is left
          */
         fun from(
             supportedNetworks: Array<String>?,
-            authMethods: Array<String>?
+            authMethods: Array<String>?,
+            merchantCapabilities: Array<String>? = null
         ): GooglePayCardParameters {
             val networkNames = supportedNetworks ?: DEFAULT_NETWORKS
             require(networkNames.isNotEmpty()) { "supportedNetworks needs at least one network" }
@@ -98,7 +110,15 @@ internal data class GooglePayCardParameters(
                 "Google Pay needs at least one auth method: \"PAN_ONLY\" or \"CRYPTOGRAM_3DS\""
             }
 
-            return GooglePayCardParameters(cardNetworks, methods)
+            val capabilities = merchantCapabilities.orEmpty().map { capability ->
+                MERCHANT_CAPABILITIES.firstOrNull { it.equals(capability, ignoreCase = true) }
+                    ?: throw IllegalArgumentException(
+                        "Unknown merchant capability \"$capability\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
+                    )
+            }
+            val debitOnly = "Debit" in capabilities && "Credit" !in capabilities
+
+            return GooglePayCardParameters(cardNetworks, methods, allowCreditCards = !debitOnly)
         }
     }
 }

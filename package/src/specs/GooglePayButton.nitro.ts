@@ -27,6 +27,11 @@ export interface GooglePayButtonProps extends HybridViewProps {
   supportedNetworks?: string[]
   /** As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults to both. */
   allowedAuthMethods?: string[]
+  /**
+   * As `PaymentRequest.merchantCapabilities`. `'Debit'` without `'Credit'`
+   * leaves credit cards out.
+   */
+  merchantCapabilities?: string[]
   onPress?: () => void
 }
 

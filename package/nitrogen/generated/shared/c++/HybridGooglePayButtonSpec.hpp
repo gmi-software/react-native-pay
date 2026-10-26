@@ -62,6 +62,8 @@ namespace margelo::nitro::pay {
       virtual void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) = 0;
       virtual std::optional<std::vector<std::string>> getAllowedAuthMethods() = 0;
       virtual void setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) = 0;
+      virtual std::optional<std::vector<std::string>> getMerchantCapabilities() = 0;
+      virtual void setMerchantCapabilities(const std::optional<std::vector<std::string>>& merchantCapabilities) = 0;
       virtual std::optional<std::function<void()>> getOnPress() = 0;
       virtual void setOnPress(const std::optional<std::function<void()>>& onPress) = 0;
 

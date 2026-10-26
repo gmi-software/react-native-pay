@@ -72,6 +72,7 @@ describe('usePaymentCheckout integration', () => {
     expect(mockPayServiceStatus).toHaveBeenCalledTimes(1)
     expect(mockPayServiceStatus).toHaveBeenCalledWith({
       supportedNetworks: ['visa', 'mastercard', 'amex', 'discover'],
+      merchantCapabilities: ['3DS'],
     })
   })
 
@@ -80,6 +81,7 @@ describe('usePaymentCheckout integration', () => {
       merchantName: 'Store A',
       supportedNetworks: ['visa', 'mastercard'],
       googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      merchantCapabilities: ['3DS', 'Debit'],
     }
     const { result, rerender } = renderWithConfig(config)
 
@@ -89,10 +91,12 @@ describe('usePaymentCheckout integration', () => {
     expect(mockPayServiceStatus).toHaveBeenCalledWith({
       supportedNetworks: ['visa', 'mastercard'],
       googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      merchantCapabilities: ['3DS', 'Debit'],
     })
     expect(result.current.paymentRequest).toMatchObject({
       supportedNetworks: ['visa', 'mastercard'],
       googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      merchantCapabilities: ['3DS', 'Debit'],
     })
 
     rerender({ ...config, merchantName: 'Store B' })
@@ -103,6 +107,19 @@ describe('usePaymentCheckout integration', () => {
     expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
       supportedNetworks: ['visa'],
       googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      merchantCapabilities: ['3DS', 'Debit'],
+    })
+
+    rerender({
+      ...config,
+      supportedNetworks: ['visa'],
+      merchantCapabilities: ['3DS'],
+    })
+    expect(mockPayServiceStatus).toHaveBeenCalledTimes(3)
+    expect(mockPayServiceStatus).toHaveBeenLastCalledWith({
+      supportedNetworks: ['visa'],
+      googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      merchantCapabilities: ['3DS'],
     })
   })
 

@@ -9,6 +9,7 @@
     "radius": true,
     "supportedNetworks": true,
     "allowedAuthMethods": true,
+    "merchantCapabilities": true,
     "onPress": true,
     "hybridRef": true
   }

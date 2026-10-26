@@ -30,14 +30,15 @@ class GooglePayRequestBuilderTest {
         phoneNumberRequired: Boolean? = null,
         shippingMethods: Array<ShippingMethod>? = null,
         supportedNetworks: Array<String> = arrayOf("visa"),
-        googlePayAllowedAuthMethods: Array<String>? = null
+        googlePayAllowedAuthMethods: Array<String>? = null,
+        merchantCapabilities: Array<String> = arrayOf("3DS")
     ) = PaymentRequest(
         applePayMerchantIdentifier = null,
         merchantName = merchantName,
         countryCode = "US",
         currencyCode = currencyCode,
         paymentItems = items,
-        merchantCapabilities = arrayOf("3DS"),
+        merchantCapabilities = merchantCapabilities,
         supportedNetworks = supportedNetworks,
         shippingType = null,
         shippingMethods = shippingMethods,
@@ -437,8 +438,9 @@ class GooglePayRequestBuilderTest {
 
     private fun cardParametersOf(
         networks: Array<String>?,
-        authMethods: Array<String>? = null
-    ) = GooglePayCardParameters.from(networks, authMethods)
+        authMethods: Array<String>? = null,
+        merchantCapabilities: Array<String>? = null
+    ) = GooglePayCardParameters.from(networks, authMethods, merchantCapabilities)
 
     @Test
     fun supportedNetworks_areTheOnlyNetworksInTheRequestTheReadinessCheckAndTheButton() {
@@ -550,5 +552,77 @@ class GooglePayRequestBuilderTest {
             "Google Pay needs at least one auth method: \"PAN_ONLY\" or \"CRYPTOGRAM_3DS\"",
             empty.message
         )
+    }
+
+    // Merchant capabilities
+
+    @Test
+    fun debitOnly_leavesCreditCardsOutOfTheRequestTheReadinessCheckAndTheButton() {
+        val request = build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Debit")))
+        val parameters = cardParametersOf(null, merchantCapabilities = arrayOf("3DS", "Debit"))
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(true, parameters)
+        val button = GooglePayRequestBuilder.createButtonPaymentMethods(parameters)
+
+        assertFalse(request.cardParameters().getBoolean("allowCreditCards"))
+        assertFalse(readiness.cardParameters().getBoolean("allowCreditCards"))
+        assertFalse(button.getJSONObject(0).getJSONObject("parameters").getBoolean("allowCreditCards"))
+        assertEquals(
+            readiness.getJSONArray("allowedPaymentMethods").toString(),
+            button.toString()
+        )
+    }
+
+    @Test
+    fun debitOnly_isMatchedIgnoringCase() {
+        for (capabilities in listOf(arrayOf("debit"), arrayOf("3ds", "DEBIT"))) {
+            val parameters = build(paymentRequest(coffee, merchantCapabilities = capabilities)).cardParameters()
+
+            assertFalse(capabilities.joinToString(), parameters.getBoolean("allowCreditCards"))
+        }
+    }
+
+    @Test
+    fun creditOnly_acceptsEveryCardType() {
+        // Google Pay cannot leave debit cards out.
+        val parameters = build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Credit")))
+            .cardParameters()
+
+        assertFalse(parameters.has("allowCreditCards"))
+        assertFalse(parameters.has("allowPrepaidCards"))
+    }
+
+    @Test
+    fun creditAndDebit_acceptEveryCardType() {
+        val parameters = build(paymentRequest(coffee, merchantCapabilities = arrayOf("Debit", "credit")))
+            .cardParameters()
+
+        assertFalse(parameters.has("allowCreditCards"))
+    }
+
+    @Test
+    fun neitherCreditNorDebit_acceptsEveryCardType() {
+        for (capabilities in listOf(arrayOf("3DS"), arrayOf("EMV"), emptyArray())) {
+            val parameters = build(paymentRequest(coffee, merchantCapabilities = capabilities)).cardParameters()
+
+            assertFalse(capabilities.joinToString(), parameters.has("allowCreditCards"))
+        }
+        assertFalse(GooglePayRequestBuilder.createIsReadyToPayRequest().cardParameters().has("allowCreditCards"))
+    }
+
+    @Test
+    fun merchantCapabilities_rejectUnknownValuesLikeIos() {
+        for (capability in listOf("Prepaid", "3-D Secure", "")) {
+            val error = assertThrows(IllegalArgumentException::class.java) {
+                build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", capability)))
+            }
+
+            assertEquals(
+                "Unknown merchant capability \"$capability\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\"",
+                error.message
+            )
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            cardParametersOf(null, merchantCapabilities = arrayOf("Unknown"))
+        }
     }
 }

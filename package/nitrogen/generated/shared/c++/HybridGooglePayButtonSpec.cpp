@@ -24,6 +24,8 @@ namespace margelo::nitro::pay {
       prototype.registerHybridSetter("supportedNetworks", &HybridGooglePayButtonSpec::setSupportedNetworks);
       prototype.registerHybridGetter("allowedAuthMethods", &HybridGooglePayButtonSpec::getAllowedAuthMethods);
       prototype.registerHybridSetter("allowedAuthMethods", &HybridGooglePayButtonSpec::setAllowedAuthMethods);
+      prototype.registerHybridGetter("merchantCapabilities", &HybridGooglePayButtonSpec::getMerchantCapabilities);
+      prototype.registerHybridSetter("merchantCapabilities", &HybridGooglePayButtonSpec::setMerchantCapabilities);
       prototype.registerHybridGetter("onPress", &HybridGooglePayButtonSpec::getOnPress);
       prototype.registerHybridSetter("onPress", &HybridGooglePayButtonSpec::setOnPress);
     });

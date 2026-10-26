@@ -219,7 +219,7 @@ struct PaymentRequestBuilder {
         return ProcessInfo.processInfo.processName
     }
     
-    private static func buildMerchantCapabilities(_ capabilities: [String]) throws -> PKMerchantCapability {
+    static func buildMerchantCapabilities(_ capabilities: [String]) throws -> PKMerchantCapability {
         var merchantCapabilities: PKMerchantCapability = []
         for capability in capabilities {
             switch capability.uppercased() {
@@ -542,10 +542,13 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     // MARK: - Public Methods
     
     func payServiceStatus(options: PayServiceStatusOptions?) throws -> PayServiceStatus {
-        // Rejects unknown names like Android. The status itself does not
-        // depend on the networks on iOS.
+        // Rejects unknown values like Android. The status itself does not
+        // depend on the networks or capabilities on iOS.
         if let networks = options?.supportedNetworks {
             _ = try PaymentRequestBuilder.convertNetworks(networks)
+        }
+        if let capabilities = options?.merchantCapabilities {
+            _ = try PaymentRequestBuilder.buildMerchantCapabilities(capabilities)
         }
         let canMakePayments = PKPaymentAuthorizationViewController.canMakePayments()
         let canSetupCards = PKPaymentAuthorizationViewController.canMakePayments(usingNetworks: [])
