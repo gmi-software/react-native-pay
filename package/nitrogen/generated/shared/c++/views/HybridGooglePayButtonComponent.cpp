@@ -66,14 +66,14 @@ namespace margelo::nitro::pay::views {
         throw std::runtime_error(std::string("GooglePayButton.supportedNetworks: ") + exc.what());
       }
     }()),
-    allowedAuthMethods([&]() -> CachedProp<std::optional<std::vector<std::string>>> {
+    googlePayAllowedAuthMethods([&]() -> CachedProp<std::optional<std::vector<std::string>>> {
       try {
-        const react::RawValue* rawValue = rawProps.at("allowedAuthMethods", nullptr, nullptr);
-        if (rawValue == nullptr) return sourceProps.allowedAuthMethods;
+        const react::RawValue* rawValue = rawProps.at("googlePayAllowedAuthMethods", nullptr, nullptr);
+        if (rawValue == nullptr) return sourceProps.googlePayAllowedAuthMethods;
         const auto& [runtime, value] = (std::pair<jsi::Runtime*, jsi::Value>)*rawValue;
-        return CachedProp<std::optional<std::vector<std::string>>>::fromRawValue(*runtime, value, sourceProps.allowedAuthMethods);
+        return CachedProp<std::optional<std::vector<std::string>>>::fromRawValue(*runtime, value, sourceProps.googlePayAllowedAuthMethods);
       } catch (const std::exception& exc) {
-        throw std::runtime_error(std::string("GooglePayButton.allowedAuthMethods: ") + exc.what());
+        throw std::runtime_error(std::string("GooglePayButton.googlePayAllowedAuthMethods: ") + exc.what());
       }
     }()),
     merchantCapabilities([&]() -> CachedProp<std::optional<std::vector<std::string>>> {
@@ -113,7 +113,7 @@ namespace margelo::nitro::pay::views {
       case hashString("theme"): return true;
       case hashString("radius"): return true;
       case hashString("supportedNetworks"): return true;
-      case hashString("allowedAuthMethods"): return true;
+      case hashString("googlePayAllowedAuthMethods"): return true;
       case hashString("merchantCapabilities"): return true;
       case hashString("onPress"): return true;
       case hashString("hybridRef"): return true;

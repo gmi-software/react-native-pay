@@ -30,19 +30,16 @@ All notable changes to this project are documented in this file.
   `postFinance`, `pagoBancomat`, `tmoney`, `meeza`, `napas`, `bankAxept`, `himyan`, `jaywan` and
   `myDebit`, which Apple Pay accepts in `supportedNetworks` and reports in results. Android
   accepts `jcb` and `interac`, and `electron`, `maestro` and `elo` for Brazilian combo cards.
-- **`GooglePayButton` takes `supportedNetworks` and `allowedAuthMethods`,** and
-  **`HybridPaymentHandler.payServiceStatus(options?)`** takes the same two values
-  (`PayServiceStatusOptions`). Give them the values of your request, so the button and the Android
-  readiness check use the same cards as the payment. `usePaymentCheckout` passes its config to
-  `payServiceStatus` and checks again when they change.
+- **`GooglePayButton` takes `supportedNetworks`, `googlePayAllowedAuthMethods` and
+  `merchantCapabilities`,** and **`HybridPaymentHandler.payServiceStatus(options?)`** takes the
+  same values under the same names (`PayServiceStatusOptions`). Give them the values of your
+  request, so the button and the Android readiness check use the same cards as the payment.
+  `usePaymentCheckout` passes its config to `payServiceStatus` and checks again when they change.
 - **Android honours a debit-only `merchantCapabilities`.** `'Debit'` without `'Credit'` now leaves
   credit cards out of the Google Pay request (`allowCreditCards: false`), as UK gambling merchants
   must. Prepaid cards stay allowed. Google Pay cannot leave debit cards out, so `'Credit'` alone
-  still accepts every card type on Android; `'3DS'` and `'EMV'` have no effect there.
-  `GooglePayButton` takes a `merchantCapabilities` prop and `PayServiceStatusOptions` a
-  `merchantCapabilities` field, so the button and the readiness check are sent the same card
-  types. `usePaymentCheckout` passes its `merchantCapabilities` to `payServiceStatus` and checks
-  again when they change.
+  still accepts every card type on Android; `'3DS'` and `'EMV'` have no effect there. The button
+  and the readiness check leave credit cards out too.
 
 ### Changed
 

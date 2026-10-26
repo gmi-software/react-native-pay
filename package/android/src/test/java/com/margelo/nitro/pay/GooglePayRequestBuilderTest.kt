@@ -561,7 +561,7 @@ class GooglePayRequestBuilderTest {
         val request = build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Debit")))
         val parameters = cardParametersOf(null, merchantCapabilities = arrayOf("3DS", "Debit"))
         val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(true, parameters)
-        val button = GooglePayRequestBuilder.createButtonPaymentMethods(parameters)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(parameters)
 
         assertFalse(request.cardParameters().getBoolean("allowCreditCards"))
         assertFalse(readiness.cardParameters().getBoolean("allowCreditCards"))

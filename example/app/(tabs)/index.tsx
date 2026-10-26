@@ -297,7 +297,7 @@ export default function TabOneScreen() {
                   radius={8}
                   // The cards the request accepts, so the button shows one of them.
                   supportedNetworks={paymentRequest.supportedNetworks}
-                  allowedAuthMethods={paymentRequest.googlePayAllowedAuthMethods}
+                  googlePayAllowedAuthMethods={paymentRequest.googlePayAllowedAuthMethods}
                   merchantCapabilities={paymentRequest.merchantCapabilities}
                   onPress={callback(handlePayment)}
                   style={styles.payButton}

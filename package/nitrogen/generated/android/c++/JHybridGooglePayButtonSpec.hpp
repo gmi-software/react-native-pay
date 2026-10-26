@@ -58,8 +58,8 @@ namespace margelo::nitro::pay {
     void setRadius(std::optional<double> radius) override;
     std::optional<std::vector<std::string>> getSupportedNetworks() override;
     void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) override;
-    std::optional<std::vector<std::string>> getAllowedAuthMethods() override;
-    void setAllowedAuthMethods(const std::optional<std::vector<std::string>>& allowedAuthMethods) override;
+    std::optional<std::vector<std::string>> getGooglePayAllowedAuthMethods() override;
+    void setGooglePayAllowedAuthMethods(const std::optional<std::vector<std::string>>& googlePayAllowedAuthMethods) override;
     std::optional<std::vector<std::string>> getMerchantCapabilities() override;
     void setMerchantCapabilities(const std::optional<std::vector<std::string>>& merchantCapabilities) override;
     std::optional<std::function<void()>> getOnPress() override;

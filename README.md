@@ -634,7 +634,7 @@ interface GooglePayButtonProps {
 
   // The cards your payment accepts, so the button never shows another card.
   supportedNetworks?: string[]; // as PaymentRequest.supportedNetworks
-  allowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
+  googlePayAllowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
   merchantCapabilities?: string[]; // as PaymentRequest.merchantCapabilities
 
   onPress?: () => void; // wrap with callback() from react-native-nitro-modules

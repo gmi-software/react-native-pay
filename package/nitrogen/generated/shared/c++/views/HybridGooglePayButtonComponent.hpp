@@ -49,7 +49,7 @@ namespace margelo::nitro::pay::views {
     CachedProp<GooglePayButtonTheme> theme;
     CachedProp<std::optional<double>> radius;
     CachedProp<std::optional<std::vector<std::string>>> supportedNetworks;
-    CachedProp<std::optional<std::vector<std::string>>> allowedAuthMethods;
+    CachedProp<std::optional<std::vector<std::string>>> googlePayAllowedAuthMethods;
     CachedProp<std::optional<std::vector<std::string>>> merchantCapabilities;
     CachedProp<std::optional<std::function<void()>>> onPress;
     CachedProp<std::optional<std::function<void(const std::shared_ptr<HybridGooglePayButtonSpec>& /* ref */)>>> hybridRef;

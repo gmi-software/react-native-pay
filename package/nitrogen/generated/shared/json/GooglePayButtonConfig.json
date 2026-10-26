@@ -8,7 +8,7 @@
     "theme": true,
     "radius": true,
     "supportedNetworks": true,
-    "allowedAuthMethods": true,
+    "googlePayAllowedAuthMethods": true,
     "merchantCapabilities": true,
     "onPress": true,
     "hybridRef": true

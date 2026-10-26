@@ -57,12 +57,12 @@ Renders the Google Pay button. Only available on Android.
 | `theme` | `'dark' \| 'light'` | Yes | Button theme. |
 | `radius` | `number` | No | Corner radius in dp. |
 | `supportedNetworks` | `string[]` | No | The card networks your payment accepts, as in `PaymentRequest.supportedNetworks`. Default: `visa`, `mastercard`, `amex`, `discover`. |
-| `allowedAuthMethods` | `string[]` | No | As in `PaymentRequest.googlePayAllowedAuthMethods`. Default: both. |
+| `googlePayAllowedAuthMethods` | `string[]` | No | As in `PaymentRequest.googlePayAllowedAuthMethods`. Default: both. |
 | `merchantCapabilities` | `string[]` | No | As in `PaymentRequest.merchantCapabilities`. `'Debit'` without `'Credit'` leaves credit cards out. Default: every card type. |
 | `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
-The button can show the payer's card, so give it the same `supportedNetworks`, `allowedAuthMethods` and `merchantCapabilities` as the payment. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass `paymentRequest.supportedNetworks`, `paymentRequest.googlePayAllowedAuthMethods` and `paymentRequest.merchantCapabilities`. With an unknown network, auth method or merchant capability, the button keeps its previous configuration, or does not appear on the first render, and logs an error in debug builds.
+The button can show the payer's card, so give it the same `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` as the payment, under the same names. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass them from `paymentRequest`. With an unknown network, auth method or merchant capability, the button keeps its previous configuration, or does not appear on the first render, and logs an error in debug builds.
 
 **GooglePayButtonType:**  
 `'buy'` | `'book'` | `'checkout'` | `'donate'` | `'order'` | `'pay'` | `'subscribe'` | `'plain'`
