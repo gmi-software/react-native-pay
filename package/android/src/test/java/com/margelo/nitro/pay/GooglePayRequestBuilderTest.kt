@@ -405,6 +405,20 @@ class GooglePayRequestBuilderTest {
     }
 
     @Test
+    fun shippingMethods_doNotMakeUpForANegativeItemTotal() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(
+                paymentRequest(
+                    arrayOf(item("Coffee", "4.99"), item("Discount", "-10.00")),
+                    shippingMethods = arrayOf(method("express", "Express", "6.00"), method("standard", "Standard", "0"))
+                )
+            )
+        }
+
+        assertEquals("Payment total must not be negative, got -5.01", error.message)
+    }
+
+    @Test
     fun isReadyToPayRequest_neverAsksForContacts() {
         val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest()
             .getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")

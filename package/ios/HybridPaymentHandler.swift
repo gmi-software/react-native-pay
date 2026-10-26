@@ -158,12 +158,20 @@ struct PaymentRequestBuilder {
             return amount
         }
 
+        // Checked without shipping: methods are never negative, so then every
+        // method the payer can pick keeps the total valid.
+        var totalAmount = amounts.reduce(Decimal.zero) { partialResult, amount in
+            partialResult + amount.decimalValue
+        }
+        guard totalAmount >= Decimal.zero else {
+            throw PaymentRequestError(message: ErrorMessage.negativeTotal)
+        }
+
         var lineItems = zip(request.paymentItems, amounts).map { item, amount in
             let pkItem = PKPaymentSummaryItem(label: item.label, amount: amount)
             pkItem.type = item.type == .final ? .final : .pending
             return pkItem
         }
-        var lineAmounts = amounts
 
         if let identifier = selectedShippingMethodIdentifier,
            let method = request.shippingMethods?.first(where: { $0.identifier == identifier }) {
@@ -171,14 +179,7 @@ struct PaymentRequestBuilder {
             let shippingItem = PKShippingMethod(label: method.label, amount: amount)
             shippingItem.identifier = method.identifier
             lineItems.append(shippingItem)
-            lineAmounts.append(amount)
-        }
-
-        let totalAmount = lineAmounts.reduce(Decimal.zero) { partialResult, amount in
-            partialResult + amount.decimalValue
-        }
-        guard totalAmount >= Decimal.zero else {
-            throw PaymentRequestError(message: ErrorMessage.negativeTotal)
+            totalAmount += amount.decimalValue
         }
 
         // PassKit shows the last item as the grand total ("Pay <label>"), so

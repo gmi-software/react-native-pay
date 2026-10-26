@@ -193,11 +193,13 @@ object GooglePayRequestBuilder {
         request: PaymentRequest,
         shippingMethod: ShippingMethod?
     ): JSONObject {
-        val shippingAmount = shippingMethod?.let { PaymentAmounts.parse(it) } ?: BigDecimal.ZERO
-        val totalAmount = PaymentAmounts.total(request.paymentItems).add(shippingAmount)
-        require(totalAmount.signum() >= 0) {
-            "Payment total must not be negative, got ${totalAmount.toPlainString()}"
+        // Checked without shipping, like on iOS, where the payer can pick any method.
+        val itemsTotal = PaymentAmounts.total(request.paymentItems)
+        require(itemsTotal.signum() >= 0) {
+            "Payment total must not be negative, got ${itemsTotal.toPlainString()}"
         }
+        val shippingAmount = shippingMethod?.let { PaymentAmounts.parse(it) } ?: BigDecimal.ZERO
+        val totalAmount = itemsTotal.add(shippingAmount)
         val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
         
         return JSONObject().apply {

@@ -20,8 +20,8 @@ All notable changes to this project are documented in this file.
   (`identifier`, `label`, `amount`, `detail`). The selected method is shown as its own line,
   included in the total, and returned as `PaymentResult.shippingMethod` and in `onAuthorize`. On
   iOS the payer picks one, and the first is selected by default. Google Pay cannot offer a choice
-  yet, so Android charges the first method. An empty or repeated `identifier`, or a negative
-  `amount`, fails the payment.
+  yet, so Android charges the first method. An empty or repeated `identifier`, a negative
+  `amount`, or `paymentItems` that total less than zero without shipping fail the payment.
 
 ### Changed
 

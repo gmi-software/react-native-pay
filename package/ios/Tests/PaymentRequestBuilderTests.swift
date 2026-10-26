@@ -246,6 +246,17 @@ final class PaymentRequestBuilderTests: XCTestCase {
         )
     }
 
+    func testRejectsANegativeItemTotalEvenWhenShippingCoversIt() {
+        // Otherwise picking the free method in the sheet would make the total negative.
+        assertBuildFails(
+            paymentRequest(
+                items: [item("Coffee", "4.99"), item("Discount", "-10.00")],
+                shippingMethods: [method("express", "Express", "6.00"), method("standard", "Standard", "0")]
+            ),
+            with: "Payment total must not be negative"
+        )
+    }
+
     func testRejectsUnknownShippingType() {
         assertBuildFails(
             paymentRequest(items: [item("Coffee", "4.99")], shippingType: "pickup"),
