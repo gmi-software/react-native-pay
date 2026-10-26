@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wallet.AutoResolveHelper
 import com.google.android.gms.wallet.IsReadyToPayRequest
@@ -58,12 +59,6 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     }
     
     override val memorySize: Long get() = 0L
-    
-    override fun dispose() {
-        // Must not throw. Only an explicit JS call gets here, not a reload.
-        runCatching { stopListeningForSheetResult() }
-        super.dispose()
-    }
     
     // MARK: - Public API
     
@@ -129,11 +124,6 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             
             logPaymentRequest(paymentDataRequest, environment)
             
-            if (reactContext.currentActivity == null) {
-                handlePaymentError(PaymentConstants.ERROR_NO_ACTIVITY)
-                return promise
-            }
-            
             loadPaymentData(paymentDataRequest, environment)
             
         } catch (e: Exception) {
@@ -165,9 +155,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             }
             when (val error = task.exception) {
                 is ResolvableApiException -> showPaymentSheet(error)
-                is ApiException -> handlePaymentError(
-                    "Payment error: ${error.status.statusMessage ?: "Unknown error"}"
-                )
+                is ApiException -> handleWalletError(error.status)
                 else -> handlePaymentError("Payment error: ${error?.message ?: "Unknown error"}")
             }
         }
@@ -210,10 +198,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
                 handlePaymentError("Payment cancelled by user")
             }
             AutoResolveHelper.RESULT_ERROR -> {
-                val status = data?.let { AutoResolveHelper.getStatusFromIntent(it) }
-                val message = status?.statusMessage ?: "Unknown error"
-                PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment error: $message")
-                handlePaymentError("Payment error: $message")
+                handleWalletError(data?.let { AutoResolveHelper.getStatusFromIntent(it) })
             }
             else -> {
                 handlePaymentError("Payment failed with result code: $resultCode")
@@ -271,6 +256,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     private fun handlePaymentError(errorMessage: String) {
         val result = PaymentMapper.createErrorResult(errorMessage)
         settlePayment(result)
+    }
+    
+    private fun handleWalletError(status: Status?) {
+        val message = status?.statusMessage ?: "Unknown error"
+        PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment error: $message")
+        handlePaymentError("Payment error: $message")
     }
     
     private fun settlePayment(result: PaymentResult) {
