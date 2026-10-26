@@ -18,7 +18,50 @@ class PaymentMapperTest {
         success = true,
         transactionId = "transaction",
         token = null,
-        error = null
+        error = null,
+        billingContact = null,
+        shippingContact = null,
+        emailAddress = null,
+        phoneNumber = null
+    )
+
+    private val paymentDataWithContacts = PaymentData.fromJson(
+        """
+        {
+          "apiVersion": 2,
+          "apiVersionMinor": 0,
+          "email": "jane@example.com",
+          "shippingAddress": {
+            "name": "Sam Shipper",
+            "address1": "2 Shipping St",
+            "address2": "Unit 5",
+            "address3": "",
+            "locality": "Springfield",
+            "administrativeArea": "IL",
+            "countryCode": "us",
+            "postalCode": "62701",
+            "sortingCode": "",
+            "phoneNumber": "+1 555 0101"
+          },
+          "paymentMethodData": {
+            "type": "CARD",
+            "info": {
+              "cardNetwork": "VISA",
+              "cardDetails": "1111",
+              "billingAddress": {
+                "name": "Jane Appleseed",
+                "address1": "1 Billing St",
+                "locality": "Cupertino",
+                "administrativeArea": "CA",
+                "countryCode": "US",
+                "postalCode": "95014",
+                "phoneNumber": "+1 555 0100"
+              }
+            },
+            "tokenizationData": {"type": "PAYMENT_GATEWAY", "token": "gateway-token"}
+          }
+        }
+        """
     )
 
     @Test
@@ -65,6 +108,127 @@ class PaymentMapperTest {
         assertFalse(result.success)
         assertNull(result.token)
         assertTrue(result.error!!.startsWith("Failed to parse payment data:"))
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsTheRequestedContacts() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentDataWithContacts,
+            RequestedDetails(billingContact = true, shippingContact = true, email = true, phoneNumber = true)
+        )
+
+        assertTrue(result.success)
+        assertEquals(
+            PaymentContact(
+                name = "Jane Appleseed",
+                givenName = null,
+                familyName = null,
+                postalAddress = CNPostalAddress(
+                    street = "1 Billing St",
+                    city = "Cupertino",
+                    state = "CA",
+                    postalCode = "95014",
+                    country = null,
+                    isoCountryCode = "US"
+                )
+            ),
+            result.billingContact
+        )
+        assertEquals(
+            PaymentContact(
+                name = "Sam Shipper",
+                givenName = null,
+                familyName = null,
+                postalAddress = CNPostalAddress(
+                    street = "2 Shipping St\nUnit 5",
+                    city = "Springfield",
+                    state = "IL",
+                    postalCode = "62701",
+                    country = null,
+                    isoCountryCode = "US"
+                )
+            ),
+            result.shippingContact
+        )
+        assertEquals("jane@example.com", result.emailAddress)
+        // Requested with the shipping address, so read from it.
+        assertEquals("+1 555 0101", result.phoneNumber)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_readsThePhoneFromTheBillingAddressWithoutShipping() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentDataWithContacts,
+            RequestedDetails(phoneNumber = true)
+        )
+
+        // The billing address only carried the phone number, so it is not reported.
+        assertNull(result.billingContact)
+        assertNull(result.shippingContact)
+        assertNull(result.emailAddress)
+        assertEquals("+1 555 0100", result.phoneNumber)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsNoContactsUnlessRequested() {
+        val result = PaymentMapper.mapPaymentDataToResult(paymentDataWithContacts)
+
+        assertTrue(result.success)
+        assertNull(result.billingContact)
+        assertNull(result.shippingContact)
+        assertNull(result.emailAddress)
+        assertNull(result.phoneNumber)
+    }
+
+    @Test
+    fun mapPaymentDataToResult_omitsMissingAndBlankContactFields() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "info": {"billingAddress": {"name": " ", "countryCode": "gb", "postalCode": null}},
+                  "tokenizationData": {"token": "gateway-token"}
+                }
+                """
+            ),
+            RequestedDetails(billingContact = true, shippingContact = true, email = true, phoneNumber = true)
+        )
+
+        assertTrue(result.success)
+        assertEquals(
+            PaymentContact(
+                name = null,
+                givenName = null,
+                familyName = null,
+                postalAddress = CNPostalAddress(
+                    street = null,
+                    city = null,
+                    state = null,
+                    postalCode = null,
+                    country = null,
+                    isoCountryCode = "GB"
+                )
+            ),
+            result.billingContact
+        )
+        assertNull(result.shippingContact)
+        assertNull(result.emailAddress)
+        assertNull(result.phoneNumber)
+    }
+
+    @Test
+    fun paymentDetails_copiesTheResultsContacts() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentDataWithContacts,
+            RequestedDetails(shippingContact = true, email = true)
+        )
+
+        val details = PaymentMapper.paymentDetails(result)
+
+        assertNull(details.billingContact)
+        assertEquals(result.shippingContact, details.shippingContact)
+        assertEquals("jane@example.com", details.emailAddress)
+        assertNull(details.phoneNumber)
     }
 
     @Test

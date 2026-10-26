@@ -57,10 +57,12 @@ interface PaymentRequest {
   paymentItems: PaymentItem[]
   merchantCapabilities: string[]
   supportedNetworks: string[]
-  shippingType?: string
-  shippingMethods?: PaymentItem[]
-  billingContactRequired?: boolean
-  shippingContactRequired?: boolean
+  shippingType?: string            // ShippingType value, iOS only
+  shippingMethods?: PaymentItem[]   // not implemented, ignored
+  billingContactRequired?: boolean  // → PaymentResult.billingContact
+  shippingContactRequired?: boolean // → PaymentResult.shippingContact
+  emailRequired?: boolean           // → PaymentResult.emailAddress
+  phoneNumberRequired?: boolean     // → PaymentResult.phoneNumber
   // Google Pay (Android)
   googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
@@ -75,6 +77,10 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
 
+`billingContactRequired`, `shippingContactRequired`, `emailRequired` and `phoneNumberRequired` ask the payer for contact details, which come back in the result as [`PaymentDetails`](#paymentdetails). On Android, a phone number is collected with an address. See [Shipping and contact details](/docs/guides/contact-details).
+
+`shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` is not implemented: both platforms ignore it, so add the shipping cost to `paymentItems`.
+
 ---
 
 ## PaymentResult
@@ -82,15 +88,17 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 Returned from `startPayment()` (hook or handler).
 
 ```ts no-check
-interface PaymentResult {
+interface PaymentResult extends PaymentDetails {
   success: boolean
   transactionId?: string
   token?: PaymentToken
   error?: string
+  // From PaymentDetails, set only when requested:
+  // billingContact, shippingContact, emailAddress, phoneNumber
 }
 ```
 
-Send `token` (and optionally `transactionId`) to your backend to complete the charge with your gateway.
+Send `token` (and optionally `transactionId`) to your backend to complete the charge with your gateway. A successful result also holds the contact details the request asked for; see [PaymentDetails](#paymentdetails).
 
 ---
 
@@ -100,7 +108,10 @@ Optional second argument of `HybridPaymentHandler.startPayment()`. The hook take
 
 ```ts no-check
 interface StartPaymentOptions {
-  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
+  onAuthorize?: (
+    token: PaymentToken,
+    details: PaymentDetails
+  ) => Promise<PaymentAuthorizationResult>
 }
 
 interface PaymentAuthorizationResult {
@@ -206,6 +217,18 @@ iOS matches the values case-insensitively and adds `'3DS'` when neither `'3DS'` 
 
 ---
 
+## ShippingType
+
+How Apple Pay labels the address, used in `PaymentRequest.shippingType` (iOS only; Android ignores the field).
+
+```ts
+type ShippingType = 'shipping' | 'delivery' | 'storePickup' | 'servicePickup'
+```
+
+For example, `'delivery'` shows "Delivery Address" instead of "Shipping Address". Without `shippingType`, Apple Pay uses `'shipping'`. Any other value fails the payment: the result has `success: false` and `error: 'Unknown shipping type "<value>". Use "shipping", "delivery", "storePickup" or "servicePickup"'`.
+
+---
+
 ## Pass types (iOS)
 
 These iOS-only types appear in payment-related metadata returned by Apple Pay APIs (for example pass details tied to the selected card) and are mostly useful in advanced/native-integrated flows.
@@ -237,11 +260,41 @@ interface PKSecureElementPass extends PKPass {
 
 ---
 
+## PaymentDetails
+
+The contact details the payer shared in the payment sheet, on both platforms. Each field is set only when the matching `PaymentRequest` flag asked for it. `PaymentResult` includes these fields, and `onAuthorize` receives them as its second argument. See [Shipping and contact details](/docs/guides/contact-details).
+
+```ts no-check
+interface PaymentDetails {
+  billingContact?: PaymentContact  // billingContactRequired
+  shippingContact?: PaymentContact // shippingContactRequired
+  emailAddress?: string            // emailRequired
+  phoneNumber?: string             // phoneNumberRequired, as the payer entered it
+}
+```
+
+---
+
+## PaymentContact
+
+A name and postal address the payer chose. Parts the payer left empty are omitted.
+
+```ts no-check
+interface PaymentContact {
+  name?: string        // full name, e.g. 'Jane Appleseed'
+  givenName?: string   // iOS only
+  familyName?: string  // iOS only
+  postalAddress?: CNPostalAddress
+}
+```
+
+In `postalAddress`, `street` joins the address lines with `'\n'`, `isoCountryCode` is uppercase ISO 3166-1 alpha-2, and `country` (the country name) is iOS only.
+
+---
+
 ## Contact types
 
-Used on iOS when `billingContactRequired` / `shippingContactRequired` is requested in `PaymentRequest`.
-
-These fields are populated from the contact information the user approves in the Apple Pay sheet.
+`CNPostalAddress` is used by [`PaymentContact`](#paymentcontact). The other types describe `PaymentMethod.billingAddress`, the card's billing contact on iOS. For a billing address on both platforms, use `billingContactRequired` and read `PaymentResult.billingContact`.
 
 ```ts
 type CNContactType = 'person' | 'organization'

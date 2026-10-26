@@ -375,8 +375,16 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  // Contact details, returned in the result (see "Shipping and contact details")
+  billingContactRequired?: boolean;
+  shippingContactRequired?: boolean;
+  emailRequired?: boolean;
+  phoneNumberRequired?: boolean;
   // Charge the token while the sheet waits (see "Charging before the sheet closes")
-  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>;
+  onAuthorize?: (
+    token: PaymentToken,
+    details: PaymentDetails
+  ) => Promise<PaymentAuthorizationResult>;
 }
 ```
 
@@ -496,7 +504,10 @@ On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled 
 ```typescript no-check
 interface StartPaymentOptions {
   // Charge the token while the sheet waits (see "Charging before the sheet closes")
-  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>;
+  onAuthorize?: (
+    token: PaymentToken,
+    details: PaymentDetails
+  ) => Promise<PaymentAuthorizationResult>;
 }
 
 interface PaymentAuthorizationResult {
@@ -508,7 +519,7 @@ interface PaymentAuthorizationResult {
 **Returns:**
 
 ```typescript no-check
-interface PaymentResult {
+interface PaymentResult extends PaymentDetails {
   success: boolean;
   transactionId?: string;
   token?: PaymentToken;
@@ -744,10 +755,12 @@ interface PaymentRequest {
   paymentItems: PaymentItem[];
   merchantCapabilities: string[]; // MerchantCapability values
   supportedNetworks: string[];
-  shippingType?: string;
-  shippingMethods?: PaymentItem[];
-  billingContactRequired?: boolean;
-  shippingContactRequired?: boolean;
+  shippingType?: string; // ShippingType value, iOS only
+  shippingMethods?: PaymentItem[]; // Not implemented, ignored
+  billingContactRequired?: boolean; // → PaymentResult.billingContact
+  shippingContactRequired?: boolean; // → PaymentResult.shippingContact
+  emailRequired?: boolean; // → PaymentResult.emailAddress
+  phoneNumberRequired?: boolean; // → PaymentResult.phoneNumber
   // Google Pay specific
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
@@ -756,7 +769,7 @@ interface PaymentRequest {
 }
 
 // Payment Result
-interface PaymentResult {
+interface PaymentResult extends PaymentDetails {
   success: boolean;
   transactionId?: string;
   token?: PaymentToken;
@@ -814,9 +827,29 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 
 `merchantCapabilities` is used by Apple Pay only. `"3DS"` and `"EMV"` are payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. `"Credit"` and `"Debit"` limit the accepted card types. iOS matches the values case-insensitively and adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
 
+### Shipping and contact details
+
+Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `phoneNumberRequired` to ask the payer for a billing address, a shipping address, an email address or a phone number. Each one fills `billingContact`, `shippingContact`, `emailAddress` or `phoneNumber` in the result and in the second argument of `onAuthorize`, on both platforms. Google Pay only collects a phone number with an address: without `shippingContactRequired`, Android asks for it with at least the billing name, country and postal code. `shippingMethods` is not implemented yet. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
+
+`shippingType` (`"shipping"`, `"delivery"`, `"storePickup"` or `"servicePickup"`) only changes Apple Pay's labels. An unknown value fails the payment on iOS.
+
 ### Contact Types
 
 ```typescript no-check
+interface PaymentDetails {
+  billingContact?: PaymentContact; // billingContactRequired
+  shippingContact?: PaymentContact; // shippingContactRequired
+  emailAddress?: string; // emailRequired
+  phoneNumber?: string; // phoneNumberRequired
+}
+
+interface PaymentContact {
+  name?: string;
+  givenName?: string; // iOS only
+  familyName?: string; // iOS only
+  postalAddress?: CNPostalAddress; // isoCountryCode is uppercase
+}
+
 interface CNContact {
   identifier: string;
   contactType: "person" | "organization";
@@ -1255,7 +1288,7 @@ npm run specs
 ## Roadmap
 
 - [ ] Recurring payment support
-- [ ] Shipping address collection
+- [x] Shipping address collection
 - [ ] Multi-currency support
 - [ ] Payment request validation
 - [ ] Automated testing suite

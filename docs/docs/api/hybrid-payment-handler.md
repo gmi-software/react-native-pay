@@ -52,11 +52,13 @@ const result = await HybridPaymentHandler.startPayment(
 **PaymentResult:**
 
 ```ts no-check
-interface PaymentResult {
+interface PaymentResult extends PaymentDetails {
   success: boolean
   transactionId?: string
   token?: PaymentToken
   error?: string
+  // From PaymentDetails, set only when requested:
+  // billingContact, shippingContact, emailAddress, phoneNumber
 }
 ```
 
@@ -113,7 +115,7 @@ const canPay = HybridPaymentHandler.canMakePayments(['visa', 'mastercard'])
 
 - Custom checkout flow without the hook’s cart.
 - One-off payments where you already have a full `PaymentRequest`.
-- Flows that need full request control (for example `shippingType`, `shippingMethods`, `billingContactRequired`, or `shippingContactRequired`).
+- Flows that need full request control (for example `shippingType` or a request built on your backend). Contact details such as `shippingContactRequired` work with both APIs; see [Shipping and contact details](/docs/guides/contact-details).
 - Need to check availability or supported networks without using `usePaymentCheckout`.
 
 For most apps, [usePaymentCheckout](/docs/api/use-payment-checkout) is simpler: it builds the request from the cart and manages state.

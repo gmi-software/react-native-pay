@@ -17,6 +17,7 @@ import type {
   MerchantCapability,
   PaymentToken,
   PaymentAuthorizationResult,
+  PaymentDetails,
 } from '../types'
 import {
   createPaymentItem,
@@ -97,6 +98,30 @@ export interface UsePaymentCheckoutConfig {
   googlePayGatewayMerchantId?: string
 
   /**
+   * Ask for the billing name and postal address, returned as
+   * `result.billingContact`. See `PaymentRequest.billingContactRequired`.
+   */
+  billingContactRequired?: boolean
+
+  /**
+   * Ask for the shipping name and postal address, returned as
+   * `result.shippingContact`. See `PaymentRequest.shippingContactRequired`.
+   */
+  shippingContactRequired?: boolean
+
+  /**
+   * Ask for an email address, returned as `result.emailAddress`.
+   * See `PaymentRequest.emailRequired`.
+   */
+  emailRequired?: boolean
+
+  /**
+   * Ask for a phone number, returned as `result.phoneNumber`. On Android it
+   * comes with an address. See `PaymentRequest.phoneNumberRequired`.
+   */
+  phoneNumberRequired?: boolean
+
+  /**
    * Called with the token after the user authorizes the payment. Charge it on
    * your server and resolve with the outcome; `startPayment` then resolves
    * with `success: false` and your `error` on `'failure'`.
@@ -106,11 +131,15 @@ export interface UsePaymentCheckoutConfig {
    * On iOS, after a `'failure'` or a timeout the user can retry from the same
    * sheet, which calls this again with a new token. Make the charge idempotent
    * per order ID, not per token.
+   * `details` holds the contact details requested above.
    * An inline function is fine: `startPayment` keeps its identity and uses the
    * function from the latest render. A payment keeps the function it started
    * with until it settles, even if the config changes meanwhile.
    */
-  onAuthorize?: (token: PaymentToken) => Promise<PaymentAuthorizationResult>
+  onAuthorize?: (
+    token: PaymentToken,
+    details: PaymentDetails
+  ) => Promise<PaymentAuthorizationResult>
 }
 
 export interface UsePaymentCheckoutReturn {
@@ -279,6 +308,10 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      billingContactRequired,
+      shippingContactRequired,
+      emailRequired,
+      phoneNumberRequired,
     } = stableRequestConfig
 
     return sanitizePaymentRequest({
@@ -294,6 +327,10 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      billingContactRequired,
+      shippingContactRequired,
+      emailRequired,
+      phoneNumberRequired,
     })
   }, [stableRequestConfig, items])
 
@@ -384,7 +421,7 @@ export function usePaymentCheckout(
       const paymentResult = authorize
         ? await getPaymentHandler().startPayment(validatedRequest, {
             // `async` turns a synchronous return or throw into the Promise native expects.
-            onAuthorize: async (token) => authorize(token),
+            onAuthorize: async (token, details) => authorize(token, details),
           })
         : await getPaymentHandler().startPayment(validatedRequest)
 

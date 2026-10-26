@@ -21,7 +21,7 @@ import com.margelo.nitro.core.Promise
 import com.margelo.nitro.NitroModules
 import java.util.concurrent.TimeUnit
 
-private typealias AuthorizeCallback = (PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>
+private typealias AuthorizeCallback = (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>
 
 /**
  * Hybrid implementation of PaymentHandler for Google Pay on Android
@@ -36,6 +36,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     private val pendingPayment = PendingPayment<PaymentResult>()
     // Written on the JS thread, read on the main thread
     @Volatile private var onAuthorize: AuthorizeCallback? = null
+    @Volatile private var requestedDetails = RequestedDetails()
     private val mainHandler = Handler(Looper.getMainLooper())
     private var currentEnvironment: Int = WalletConstants.ENVIRONMENT_TEST
     
@@ -111,6 +112,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             return promise
         }
         onAuthorize = options?.onAuthorize
+        requestedDetails = RequestedDetails.from(request)
         
         try {
             val environment = determineEnvironment(request.googlePayEnvironment)
@@ -242,7 +244,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     private fun handlePaymentSuccess(paymentData: PaymentData) {
         PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment successful")
-        val result = PaymentMapper.mapPaymentDataToResult(paymentData)
+        val result = PaymentMapper.mapPaymentDataToResult(paymentData, requestedDetails)
         val authorize = onAuthorize
         val token = result.token
         if (authorize == null || token == null) {
@@ -307,7 +309,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         }, PaymentConstants.AUTHORIZATION_TIMEOUT_MS)
         
         try {
-            authorize(token)
+            authorize(token, PaymentMapper.paymentDetails(authorizedResult))
                 .then { authorization ->
                     authorization
                         .then { settleOnMain(PaymentMapper.applyAuthorization(it, authorizedResult)) }

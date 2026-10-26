@@ -22,6 +22,10 @@ private enum ErrorMessage {
     static func unknownMerchantCapability(_ capability: String) -> String {
         return "Unknown merchant capability \"\(capability)\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
     }
+
+    static func unknownShippingType(_ shippingType: String) -> String {
+        return "Unknown shipping type \"\(shippingType)\". Use \"shipping\", \"delivery\", \"storePickup\" or \"servicePickup\""
+    }
 }
 
 private struct PaymentRequestError: LocalizedError {
@@ -34,7 +38,7 @@ private struct PaymentRequestError: LocalizedError {
 // called within about 30 seconds, so settle first with a definite result.
 private let authorizationTimeout: TimeInterval = 25
 
-private typealias AuthorizeCallback = (PaymentToken) -> Promise<Promise<PaymentAuthorizationResult>>
+private typealias AuthorizeCallback = (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>
 
 private enum BundleKey {
     static let applePayMerchantIdentifiers = "ReactNativePayApplePayMerchantIdentifiers"
@@ -62,7 +66,7 @@ struct PaymentRequestBuilder {
         paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
         
         if let shippingType = request.shippingType {
-            paymentRequest.shippingType = convertShippingType(shippingType)
+            paymentRequest.shippingType = try convertShippingType(shippingType)
         }
         
         configureContactRequirements(paymentRequest, request: request)
@@ -165,13 +169,14 @@ struct PaymentRequestBuilder {
         return networks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
     }
     
-    private static func convertShippingType(_ type: String) -> PKShippingType {
+    private static func convertShippingType(_ type: String) throws -> PKShippingType {
         switch type {
         case "shipping": return .shipping
         case "delivery": return .delivery
         case "storePickup": return .storePickup
         case "servicePickup": return .servicePickup
-        default: return .shipping
+        default:
+            throw PaymentRequestError(message: ErrorMessage.unknownShippingType(type))
         }
     }
     
@@ -179,10 +184,19 @@ struct PaymentRequestBuilder {
         if request.billingContactRequired == true {
             paymentRequest.requiredBillingContactFields = [.postalAddress, .name]
         }
-        
+
+        // Apple Pay returns email and phone only with the shipping contact.
+        var shippingFields: Set<PKContactField> = []
         if request.shippingContactRequired == true {
-            paymentRequest.requiredShippingContactFields = [.postalAddress, .name]
+            shippingFields.formUnion([.postalAddress, .name])
         }
+        if request.emailRequired == true {
+            shippingFields.insert(.emailAddress)
+        }
+        if request.phoneNumberRequired == true {
+            shippingFields.insert(.phoneNumber)
+        }
+        paymentRequest.requiredShippingContactFields = shippingFields
     }
 }
 
@@ -231,12 +245,16 @@ private struct PaymentTokenConverter {
 
 private enum PaymentResultFactory {
 
-    static func success(token: PaymentToken) -> PaymentResult {
+    static func success(token: PaymentToken, details: PaymentDetails) -> PaymentResult {
         return PaymentResult.init(
             success: true,
             transactionId: UUID().uuidString,
             token: token,
-            error: nil
+            error: nil,
+            billingContact: details.billingContact,
+            shippingContact: details.shippingContact,
+            emailAddress: details.emailAddress,
+            phoneNumber: details.phoneNumber
         )
     }
 
@@ -245,7 +263,11 @@ private enum PaymentResultFactory {
             success: false,
             transactionId: nil,
             token: nil,
-            error: error
+            error: error,
+            billingContact: nil,
+            shippingContact: nil,
+            emailAddress: nil,
+            phoneNumber: nil
         )
     }
 
@@ -254,10 +276,14 @@ private enum PaymentResultFactory {
         return failure(String(describing: error))
     }
 
-    static func from(_ authorization: PaymentAuthorizationResult, token: PaymentToken) -> PaymentResult {
+    static func from(
+        _ authorization: PaymentAuthorizationResult,
+        token: PaymentToken,
+        details: PaymentDetails
+    ) -> PaymentResult {
         switch authorization.status {
         case .success:
-            return success(token: token)
+            return success(token: token, details: details)
         case .failure:
             return failure(authorization.error ?? ErrorMessage.authorizationFailed)
         }
@@ -268,6 +294,7 @@ private enum PaymentResultFactory {
 
 private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
+    private let paymentRequest: PKPaymentRequest
     private let onAuthorize: AuthorizeCallback?
     private var paymentAuthorized: Bool = false
     private var authorizedResult: PaymentResult?
@@ -276,8 +303,9 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
     private var presentationDate: Date?
     private let userDismissThreshold: TimeInterval = 0.75
     
-    init(paymentHandler: HybridPaymentHandler, onAuthorize: AuthorizeCallback?) {
+    init(paymentHandler: HybridPaymentHandler, paymentRequest: PKPaymentRequest, onAuthorize: AuthorizeCallback?) {
         self.paymentHandler = paymentHandler
+        self.paymentRequest = paymentRequest
         self.onAuthorize = onAuthorize
     }
 
@@ -292,9 +320,15 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
     ) {
         paymentAuthorized = true
         let paymentToken = PaymentTokenConverter.convert(payment.token)
+        let details = PassKitTypeMapper.convertPaymentDetails(
+            billingContact: payment.billingContact,
+            shippingContact: payment.shippingContact,
+            requiredBillingFields: paymentRequest.requiredBillingContactFields,
+            requiredShippingFields: paymentRequest.requiredShippingContactFields
+        )
 
         guard let onAuthorize else {
-            authorizedResult = PaymentResultFactory.success(token: paymentToken)
+            authorizedResult = PaymentResultFactory.success(token: paymentToken, details: details)
             completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
             return
         }
@@ -325,10 +359,10 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
             settle(PaymentResultFactory.failure(ErrorMessage.authorizationTimedOut))
         }
 
-        onAuthorize(paymentToken)
+        onAuthorize(paymentToken, details)
             .then { authorization in
                 authorization
-                    .then { settleOnMain(PaymentResultFactory.from($0, token: paymentToken)) }
+                    .then { settleOnMain(PaymentResultFactory.from($0, token: paymentToken, details: details)) }
                     .catch { settleOnMain(PaymentResultFactory.failure($0)) }
             }
             .catch { settleOnMain(PaymentResultFactory.failure($0)) }
@@ -422,7 +456,7 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
         let paymentRequest = try PaymentRequestBuilder.build(from: request)
         
-        delegate = PaymentDelegate(paymentHandler: self, onAuthorize: onAuthorize)
+        delegate = PaymentDelegate(paymentHandler: self, paymentRequest: paymentRequest, onAuthorize: onAuthorize)
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
             throw PaymentRequestError(message: ErrorMessage.unableToCreate)

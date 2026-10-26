@@ -19,7 +19,7 @@
 #include "JFunc_void.hpp"
 #include "views/JHybridGooglePayButtonStateUpdater.hpp"
 #include "JHybridPaymentHandlerSpec.hpp"
-#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::pay {
@@ -56,7 +56,7 @@ void registerAllNatives() {
   margelo::nitro::pay::JFunc_void_cxx::registerNatives();
   margelo::nitro::pay::views::JHybridGooglePayButtonStateUpdater::registerNatives();
   margelo::nitro::pay::JHybridPaymentHandlerSpec::CxxPart::registerNatives();
-  margelo::nitro::pay::JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_cxx::registerNatives();
+  margelo::nitro::pay::JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::registerNatives();
 
   // Register Nitro Hybrid Objects
   HybridObjectRegistry::registerHybridObjectConstructor(

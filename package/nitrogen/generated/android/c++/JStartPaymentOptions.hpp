@@ -24,11 +24,13 @@
 #include "JCNLabeledPostalAddress.hpp"
 #include "JCNPhoneNumber.hpp"
 #include "JCNPostalAddress.hpp"
-#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails.hpp"
 #include "JPKSecureElementPass.hpp"
 #include "JPassActivationState.hpp"
 #include "JPaymentAuthorizationResult.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
+#include "JPaymentContact.hpp"
+#include "JPaymentDetails.hpp"
 #include "JPaymentMethod.hpp"
 #include "JPaymentMethodType.hpp"
 #include "JPaymentNetwork.hpp"
@@ -37,6 +39,8 @@
 #include "PassActivationState.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
+#include "PaymentContact.hpp"
+#include "PaymentDetails.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
@@ -68,16 +72,16 @@ namespace margelo::nitro::pay {
     [[nodiscard]]
     StartPaymentOptions toCpp() const {
       static const auto clazz = javaClassStatic();
-      static const auto fieldOnAuthorize = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken::javaobject>("onAuthorize");
-      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken::javaobject> onAuthorize = this->getFieldValue(fieldOnAuthorize);
+      static const auto fieldOnAuthorize = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject>("onAuthorize");
+      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject> onAuthorize = this->getFieldValue(fieldOnAuthorize);
       return StartPaymentOptions(
-        onAuthorize != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)> {
-          if (onAuthorize->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_cxx::javaClassStatic())) [[likely]] {
-            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_cxx::javaobject>(onAuthorize);
+        onAuthorize != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)> {
+          if (onAuthorize->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::javaClassStatic())) [[likely]] {
+            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::javaobject>(onAuthorize);
             return downcast->cthis()->getFunction();
           } else {
             auto onAuthorizeRef = jni::make_global(onAuthorize);
-            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(PaymentToken)>(std::move(onAuthorizeRef));
+            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(PaymentToken, PaymentDetails)>(std::move(onAuthorizeRef));
           }
         }()) : std::nullopt
       );
@@ -89,12 +93,12 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JStartPaymentOptions::javaobject> fromCpp(const StartPaymentOptions& value) {
-      using JSignature = JStartPaymentOptions(jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken::javaobject>);
+      using JSignature = JStartPaymentOptions(jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
-        value.onAuthorize.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_cxx::fromCpp(value.onAuthorize.value()) : nullptr
+        value.onAuthorize.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::fromCpp(value.onAuthorize.value()) : nullptr
       );
     }
   };

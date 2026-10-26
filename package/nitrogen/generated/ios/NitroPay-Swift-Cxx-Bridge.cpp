@@ -63,11 +63,11 @@ namespace margelo::nitro::pay::bridge::swift {
     };
   }
   
-  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>
-  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(void* NON_NULL swiftClosureWrapper) noexcept {
-    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken::fromUnsafe(swiftClosureWrapper);
-    return [swiftClosure = std::move(swiftClosure)](const PaymentToken& token) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>> {
-      auto __result = swiftClosure.call(token);
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentToken& token, const PaymentDetails& details) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>> {
+      auto __result = swiftClosure.call(token, details);
       return __result;
     };
   }

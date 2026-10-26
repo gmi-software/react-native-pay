@@ -23,7 +23,11 @@ class GooglePayRequestBuilderTest {
         environment: GooglePayEnvironment? = null,
         googlePayMerchantId: String? = null,
         googlePayGateway: String? = null,
-        googlePayGatewayMerchantId: String? = null
+        googlePayGatewayMerchantId: String? = null,
+        billingContactRequired: Boolean? = null,
+        shippingContactRequired: Boolean? = null,
+        emailRequired: Boolean? = null,
+        phoneNumberRequired: Boolean? = null
     ) = PaymentRequest(
         applePayMerchantIdentifier = null,
         merchantName = merchantName,
@@ -34,8 +38,10 @@ class GooglePayRequestBuilderTest {
         supportedNetworks = arrayOf("visa"),
         shippingType = null,
         shippingMethods = null,
-        billingContactRequired = null,
-        shippingContactRequired = null,
+        billingContactRequired = billingContactRequired,
+        shippingContactRequired = shippingContactRequired,
+        emailRequired = emailRequired,
+        phoneNumberRequired = phoneNumberRequired,
         googlePayMerchantId = googlePayMerchantId,
         googlePayEnvironment = environment,
         googlePayGateway = googlePayGateway,
@@ -277,5 +283,78 @@ class GooglePayRequestBuilderTest {
         }
 
         assertTrue(error.message!!.contains("googlePayMerchantId"))
+    }
+
+    // Contact details
+
+    private fun JSONObject.cardParameters(): JSONObject =
+        getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")
+
+    @Test
+    fun contacts_areNotRequestedByDefault() {
+        val json = build(paymentRequest(coffee))
+
+        assertFalse(json.has("emailRequired"))
+        assertFalse(json.has("shippingAddressRequired"))
+        assertFalse(json.has("shippingAddressParameters"))
+        assertFalse(json.cardParameters().has("billingAddressRequired"))
+        assertFalse(json.cardParameters().has("billingAddressParameters"))
+    }
+
+    @Test
+    fun billingContact_requestsAFullBillingAddress() {
+        val json = build(paymentRequest(coffee, billingContactRequired = true))
+
+        val parameters = json.cardParameters()
+        assertTrue(parameters.getBoolean("billingAddressRequired"))
+        assertEquals("FULL", parameters.getJSONObject("billingAddressParameters").getString("format"))
+        assertFalse(parameters.getJSONObject("billingAddressParameters").getBoolean("phoneNumberRequired"))
+        assertFalse(json.has("shippingAddressRequired"))
+    }
+
+    @Test
+    fun shippingContact_requestsTheShippingAddressWithThePhoneNumber() {
+        val json = build(
+            paymentRequest(
+                coffee,
+                shippingContactRequired = true,
+                emailRequired = true,
+                phoneNumberRequired = true
+            )
+        )
+
+        assertTrue(json.getBoolean("emailRequired"))
+        assertTrue(json.getBoolean("shippingAddressRequired"))
+        assertTrue(json.getJSONObject("shippingAddressParameters").getBoolean("phoneNumberRequired"))
+        assertFalse(json.cardParameters().has("billingAddressRequired"))
+    }
+
+    @Test
+    fun phoneNumberWithoutShipping_requestsItWithAMinimalBillingAddress() {
+        val json = build(paymentRequest(coffee, phoneNumberRequired = true))
+
+        val parameters = json.cardParameters()
+        assertTrue(parameters.getBoolean("billingAddressRequired"))
+        assertEquals("MIN", parameters.getJSONObject("billingAddressParameters").getString("format"))
+        assertTrue(parameters.getJSONObject("billingAddressParameters").getBoolean("phoneNumberRequired"))
+        assertFalse(json.has("shippingAddressRequired"))
+        assertFalse(json.has("emailRequired"))
+    }
+
+    @Test
+    fun phoneNumberWithBillingContact_requestsItWithTheFullBillingAddress() {
+        val json = build(paymentRequest(coffee, billingContactRequired = true, phoneNumberRequired = true))
+
+        val billingParameters = json.cardParameters().getJSONObject("billingAddressParameters")
+        assertEquals("FULL", billingParameters.getString("format"))
+        assertTrue(billingParameters.getBoolean("phoneNumberRequired"))
+    }
+
+    @Test
+    fun isReadyToPayRequest_neverAsksForContacts() {
+        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest()
+            .getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")
+
+        assertFalse(parameters.has("billingAddressRequired"))
     }
 }

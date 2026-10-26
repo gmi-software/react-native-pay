@@ -63,6 +63,10 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JBoolean> billingContactRequired = this->getFieldValue(fieldBillingContactRequired);
       static const auto fieldShippingContactRequired = clazz->getField<jni::JBoolean>("shippingContactRequired");
       jni::local_ref<jni::JBoolean> shippingContactRequired = this->getFieldValue(fieldShippingContactRequired);
+      static const auto fieldEmailRequired = clazz->getField<jni::JBoolean>("emailRequired");
+      jni::local_ref<jni::JBoolean> emailRequired = this->getFieldValue(fieldEmailRequired);
+      static const auto fieldPhoneNumberRequired = clazz->getField<jni::JBoolean>("phoneNumberRequired");
+      jni::local_ref<jni::JBoolean> phoneNumberRequired = this->getFieldValue(fieldPhoneNumberRequired);
       static const auto fieldGooglePayMerchantId = clazz->getField<jni::JString>("googlePayMerchantId");
       jni::local_ref<jni::JString> googlePayMerchantId = this->getFieldValue(fieldGooglePayMerchantId);
       static const auto fieldGooglePayEnvironment = clazz->getField<JGooglePayEnvironment>("googlePayEnvironment");
@@ -119,6 +123,8 @@ namespace margelo::nitro::pay {
         }(shippingMethods)) : std::nullopt,
         billingContactRequired != nullptr ? std::make_optional(static_cast<bool>(billingContactRequired->value())) : std::nullopt,
         shippingContactRequired != nullptr ? std::make_optional(static_cast<bool>(shippingContactRequired->value())) : std::nullopt,
+        emailRequired != nullptr ? std::make_optional(static_cast<bool>(emailRequired->value())) : std::nullopt,
+        phoneNumberRequired != nullptr ? std::make_optional(static_cast<bool>(phoneNumberRequired->value())) : std::nullopt,
         googlePayMerchantId != nullptr ? std::make_optional(googlePayMerchantId->toStdString()) : std::nullopt,
         googlePayEnvironment != nullptr ? std::make_optional(googlePayEnvironment->toCpp()) : std::nullopt,
         googlePayGateway != nullptr ? std::make_optional(googlePayGateway->toStdString()) : std::nullopt,
@@ -132,7 +138,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentRequest::javaobject> fromCpp(const PaymentRequest& value) {
-      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -184,6 +190,8 @@ namespace margelo::nitro::pay {
         }(value.shippingMethods.value()) : nullptr,
         value.billingContactRequired.has_value() ? jni::JBoolean::valueOf(value.billingContactRequired.value()) : nullptr,
         value.shippingContactRequired.has_value() ? jni::JBoolean::valueOf(value.shippingContactRequired.value()) : nullptr,
+        value.emailRequired.has_value() ? jni::JBoolean::valueOf(value.emailRequired.value()) : nullptr,
+        value.phoneNumberRequired.has_value() ? jni::JBoolean::valueOf(value.phoneNumberRequired.value()) : nullptr,
         value.googlePayMerchantId.has_value() ? jni::make_jstring(value.googlePayMerchantId.value()) : nullptr,
         value.googlePayEnvironment.has_value() ? JGooglePayEnvironment::fromCpp(value.googlePayEnvironment.value()) : nullptr,
         value.googlePayGateway.has_value() ? jni::make_jstring(value.googlePayGateway.value()) : nullptr,

@@ -42,6 +42,10 @@ namespace margelo::nitro::pay { struct PayServiceStatus; }
 namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
+// Forward declaration of `PaymentContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentContact; }
+// Forward declaration of `PaymentDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -79,6 +83,8 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PayServiceStatus.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
+#include "PaymentContact.hpp"
+#include "PaymentDetails.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"

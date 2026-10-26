@@ -16,7 +16,9 @@ final class PaymentRequestBuilderTests: XCTestCase {
         supportedNetworks: [String] = ["visa"],
         shippingType: String? = nil,
         billingContactRequired: Bool? = nil,
-        shippingContactRequired: Bool? = nil
+        shippingContactRequired: Bool? = nil,
+        emailRequired: Bool? = nil,
+        phoneNumberRequired: Bool? = nil
     ) -> PaymentRequest {
         return PaymentRequest(
             applePayMerchantIdentifier: merchantIdentifier,
@@ -30,6 +32,8 @@ final class PaymentRequestBuilderTests: XCTestCase {
             shippingMethods: nil,
             billingContactRequired: billingContactRequired,
             shippingContactRequired: shippingContactRequired,
+            emailRequired: emailRequired,
+            phoneNumberRequired: phoneNumberRequired,
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,
@@ -119,6 +123,33 @@ final class PaymentRequestBuilderTests: XCTestCase {
         ))
         XCTAssertEqual(required.requiredBillingContactFields, [.postalAddress, .name])
         XCTAssertEqual(required.requiredShippingContactFields, [.postalAddress, .name])
+    }
+
+    func testRequestsEmailAndPhoneWithTheShippingContact() throws {
+        // Apple Pay returns email and phone only with the shipping contact.
+        let withoutAddress = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            billingContactRequired: true,
+            emailRequired: true,
+            phoneNumberRequired: true
+        ))
+        XCTAssertEqual(withoutAddress.requiredBillingContactFields, [.postalAddress, .name])
+        XCTAssertEqual(withoutAddress.requiredShippingContactFields, [.emailAddress, .phoneNumber])
+
+        let withAddress = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            shippingContactRequired: true,
+            emailRequired: true
+        ))
+        XCTAssertEqual(withAddress.requiredBillingContactFields, [])
+        XCTAssertEqual(withAddress.requiredShippingContactFields, [.postalAddress, .name, .emailAddress])
+    }
+
+    func testRejectsUnknownShippingType() {
+        assertBuildFails(
+            paymentRequest(items: [item("Coffee", "4.99")], shippingType: "pickup"),
+            with: "Unknown shipping type \"pickup\". Use \"shipping\", \"delivery\", \"storePickup\" or \"servicePickup\""
+        )
     }
 
     func testAppendsAMerchantTotalToASingleItem() throws {

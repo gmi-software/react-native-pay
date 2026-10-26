@@ -8,6 +8,14 @@ All notable changes to this project are documented in this file.
 
 - **`HybridPaymentHandler.isPaymentInProgress()`** synchronously returns whether a payment started
   with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet.
+- **Billing and shipping addresses, email and phone number come back in the result.** Set
+  `billingContactRequired`, `shippingContactRequired`, and the new `emailRequired` and
+  `phoneNumberRequired`, in `PaymentRequest` or in the `usePaymentCheckout` config. They fill
+  `billingContact`, `shippingContact`, `emailAddress` and `phoneNumber` on `PaymentResult`, on iOS
+  and Android. `onAuthorize` receives the same fields as its second argument, so your server can
+  check the address before it charges. Google Pay only collects a phone number with an address:
+  without `shippingContactRequired`, Android asks for it with at least the billing name, country
+  and postal code. New types: `PaymentContact`, `PaymentDetails` and `ShippingType`.
 
 ### Changed
 
@@ -35,6 +43,13 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- **Requested contact details are no longer lost.** iOS asked for the billing and shipping
+  address but never returned them, and Android ignored `billingContactRequired` and
+  `shippingContactRequired`. See Added.
+- **iOS: an unknown `shippingType` fails the payment** with `Unknown shipping type "<value>". Use
+  "shipping", "delivery", "storePickup" or "servicePickup"` instead of silently becoming
+  `"shipping"`. Android ignores `shippingType`.
+- **`shippingMethods` is documented as not implemented.** Neither platform has ever read it.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

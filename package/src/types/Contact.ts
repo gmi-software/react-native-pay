@@ -56,3 +56,21 @@ export interface CNContact {
   emailAddresses: CNLabeledEmailAddress[]
   postalAddresses: CNLabeledPostalAddress[]
 }
+
+/**
+ * A name and postal address the payer chose in the payment sheet.
+ * Returned as `PaymentResult.billingContact` and `PaymentResult.shippingContact`.
+ */
+export interface PaymentContact {
+  /** Full name, for example `'Jane Appleseed'`. */
+  name?: string
+  /** iOS only: Google Pay returns the name as one string. */
+  givenName?: string
+  /** iOS only: Google Pay returns the name as one string. */
+  familyName?: string
+  /**
+   * Parts the payer left empty are omitted. `street` joins the address lines
+   * with `'\n'`, and `isoCountryCode` is uppercase ISO 3166-1 alpha-2.
+   */
+  postalAddress?: CNPostalAddress
+}

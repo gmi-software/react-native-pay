@@ -39,6 +39,7 @@ const sidebars: SidebarsConfig = {
       link: {type: 'doc', id: 'guides/manual-flow'},
       items: [
         'guides/dynamic-cart',
+        'guides/contact-details',
         'guides/testing',
       ],
     },

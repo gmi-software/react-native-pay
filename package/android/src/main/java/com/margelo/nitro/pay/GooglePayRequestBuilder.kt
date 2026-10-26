@@ -39,15 +39,25 @@ object GooglePayRequestBuilder {
         fallbackMerchantName: String? = null
     ): JSONObject {
         validatePaymentRequest(request, environment)
+        val requested = RequestedDetails.from(request)
 
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
             put("merchantInfo", createMerchantInfo(request, environment, fallbackMerchantName))
             put("allowedPaymentMethods", JSONArray().apply {
-                put(createCardPaymentMethod(request, environment))
+                put(createCardPaymentMethod(request, environment, requested))
             })
             put("transactionInfo", createTransactionInfo(request))
+            if (requested.email) {
+                put("emailRequired", true)
+            }
+            if (requested.shippingContact) {
+                put("shippingAddressRequired", true)
+                put("shippingAddressParameters", JSONObject().apply {
+                    put("phoneNumberRequired", requested.phoneNumberOnShippingAddress)
+                })
+            }
         }
     }
     
@@ -89,9 +99,26 @@ object GooglePayRequestBuilder {
      */
     private fun createCardPaymentMethod(
         request: PaymentRequest,
-        environment: Int
+        environment: Int,
+        requested: RequestedDetails
     ): JSONObject {
         val baseMethod = createBaseCardPaymentMethod()
+        if (requested.billingAddressRequired) {
+            baseMethod.getJSONObject("parameters").apply {
+                put("billingAddressRequired", true)
+                put("billingAddressParameters", JSONObject().apply {
+                    // MIN is name, country and postal code: the least that carries a phone number.
+                    put(
+                        "format",
+                        if (requested.billingContact)
+                            PaymentConstants.BILLING_ADDRESS_FORMAT_FULL
+                        else
+                            PaymentConstants.BILLING_ADDRESS_FORMAT_MIN
+                    )
+                    put("phoneNumberRequired", requested.phoneNumberOnBillingAddress)
+                })
+            }
+        }
         baseMethod.put("tokenizationSpecification", createTokenizationSpec(request, environment))
         return baseMethod
     }

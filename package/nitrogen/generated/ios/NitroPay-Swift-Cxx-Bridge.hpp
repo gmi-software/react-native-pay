@@ -38,6 +38,10 @@ namespace margelo::nitro::pay { struct PayServiceStatus; }
 namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
+// Forward declaration of `PaymentContact` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentContact; }
+// Forward declaration of `PaymentDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -77,6 +81,8 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PayServiceStatus.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentAuthorizationStatus.hpp"
+#include "PaymentContact.hpp"
+#include "PaymentDetails.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
@@ -274,6 +280,36 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.value();
   }
   
+  // pragma MARK: std::optional<CNPostalAddress>
+  /**
+   * Specialized version of `std::optional<CNPostalAddress>`.
+   */
+  using std__optional_CNPostalAddress_ = std::optional<CNPostalAddress>;
+  inline std::optional<CNPostalAddress> create_std__optional_CNPostalAddress_(const CNPostalAddress& value) noexcept {
+    return std::optional<CNPostalAddress>(value);
+  }
+  inline bool has_value_std__optional_CNPostalAddress_(const std::optional<CNPostalAddress>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline CNPostalAddress get_std__optional_CNPostalAddress_(const std::optional<CNPostalAddress>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PaymentContact>
+  /**
+   * Specialized version of `std::optional<PaymentContact>`.
+   */
+  using std__optional_PaymentContact_ = std::optional<PaymentContact>;
+  inline std::optional<PaymentContact> create_std__optional_PaymentContact_(const PaymentContact& value) noexcept {
+    return std::optional<PaymentContact>(value);
+  }
+  inline bool has_value_std__optional_PaymentContact_(const std::optional<PaymentContact>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentContact get_std__optional_PaymentContact_(const std::optional<PaymentContact>& optional) noexcept {
+    return optional.value();
+  }
+  
   // pragma MARK: std::shared_ptr<Promise<PaymentResult>>
   /**
    * Specialized version of `std::shared_ptr<Promise<PaymentResult>>`.
@@ -445,27 +481,27 @@ namespace margelo::nitro::pay::bridge::swift {
     return Func_void_PaymentAuthorizationResult_Wrapper(std::move(value));
   }
   
-  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>
   /**
-   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken&)>`.
+   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken&, const PaymentDetails&)>`.
    */
-  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>;
+  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>;
   /**
-   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& / * token * /)>`, this can be used from Swift.
+   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& / * token * /, const PaymentDetails& / * details * /)>`, this can be used from Swift.
    */
-  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_Wrapper final {
+  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_Wrapper final {
   public:
-    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>(std::move(func))) {}
-    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>> call(PaymentToken token) const noexcept {
-      auto __result = _function->operator()(token);
+    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>(std::move(func))) {}
+    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>> call(PaymentToken token, PaymentDetails details) const noexcept {
+      auto __result = _function->operator()(token, details);
       return __result;
     }
   private:
-    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>> _function;
+    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(void* NON_NULL swiftClosureWrapper) noexcept;
-  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken value) noexcept {
-    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_Wrapper(std::move(value));
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails value) noexcept {
+    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_Wrapper(std::move(value));
   }
   
   // pragma MARK: std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>
@@ -502,18 +538,18 @@ namespace margelo::nitro::pay::bridge::swift {
     return Func_void_std__shared_ptr_Promise_PaymentAuthorizationResult___Wrapper(std::move(value));
   }
   
-  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>
+  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>
   /**
-   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& / * token * /)>>`.
+   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& / * token * /, const PaymentDetails& / * details * /)>>`.
    */
-  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>;
-  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>& value) noexcept {
-    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>(value);
+  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>;
+  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>& value) noexcept {
+    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>(value);
   }
-  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>& optional) noexcept {
+  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>& optional) noexcept {
     return optional.has_value();
   }
-  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */)>>& optional) noexcept {
+  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>& optional) noexcept {
     return optional.value();
   }
   
