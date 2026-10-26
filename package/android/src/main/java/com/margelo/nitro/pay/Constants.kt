@@ -46,6 +46,7 @@ object PaymentConstants {
     // Errors (keep in sync with iOS `ErrorMessage`)
     const val ERROR_PAYMENT_IN_PROGRESS = "A payment is already in progress"
     const val ERROR_NO_ACTIVITY = "No activity available to show payment UI"
+    const val ERROR_PAYMENT_CANCELLED = "Payment cancelled by user"
     
     // Logging tags
     const val TAG_PAYMENT_HANDLER = "HybridPaymentHandler"

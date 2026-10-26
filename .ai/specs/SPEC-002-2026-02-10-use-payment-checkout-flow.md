@@ -69,26 +69,29 @@ Functional contract highlights:
 2. During payment:
    - `isProcessing` is set `true`
    - previous `result`/`error` are cleared
-3. On successful native return:
+3. On successful native return (`status='success'`):
    - `result` is set
    - `error` remains `null`
-4. On unsuccessful native return (`success=false`):
+4. On a cancel (`status='cancelled'`, `code='CANCELLED'`):
+   - `result` is set
+   - `error` remains `null`
+5. On a failed native return (`status='failed'`):
    - `result` is set
    - `error` is set from native error or fallback message
-5. On thrown exception:
+6. On thrown exception:
    - `error` is set to normalized `Error`
    - function returns `null`
-6. On iOS merchant identifier resolution:
+7. On iOS merchant identifier resolution:
    - JavaScript config does not require a merchant identifier field for the default Apple Pay path.
    - If `applePayMerchantIdentifier` is provided and not blank, native uses it as an explicit override.
    - If the override is omitted, native resolves the first non-empty value from the app entitlement `com.apple.developer.in-app-payments`.
-   - If neither source yields a merchant identifier, native returns `success=false` with error `"No Apple Pay merchant identifier configured"`.
-7. On Android Google Pay production validation:
+   - If neither source yields a merchant identifier, native returns `status='failed'`, `code='CONFIGURATION'` with error `"No Apple Pay merchant identifier configured"`.
+8. On Android Google Pay production validation:
    - `googlePayMerchantId` is written into `merchantInfo.merchantId` only for `googlePayEnvironment='PRODUCTION'`.
    - In production, native validation requires non-blank `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
    - In non-production environments, the merchant ID may be omitted and gateway values fall back to native defaults.
-8. `reset()` clears transient payment state but does not clear cart items.
-9. When a payment is already in flight, `startPayment()` returns `{ success: false, error: 'A payment is already in progress' }` without calling native and without changing `isProcessing`, `result` or `error`:
+9. `reset()` clears transient payment state but does not clear cart items.
+10. When a payment is already in flight, `startPayment()` returns `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` without calling native and without changing `isProcessing`, `result` or `error`:
    - A payment started by this hook instance is detected by the hook's own ref.
    - A payment started by `HybridPaymentHandler.startPayment()` or another hook instance is detected by `PaymentHandler.isPaymentInProgress()`.
    - This check runs before the empty-cart check. The native guard in `startPayment` stays the source of truth.
@@ -102,7 +105,7 @@ Recommended consumer pattern:
 - Use `isCheckingStatus` for initial availability loading.
 - Use `isSupported` for gating payment controls, and `hasActiveCard` to choose between a pay and a "Set up" button on iOS.
 - Use `isProcessing` for disabled/loading button state.
-- Use `error` for actionable feedback.
+- Use `error` for actionable feedback. It stays `null` on a cancel; use `result.status` and `result.code` to tell outcomes apart.
 
 ## Configuration
 
@@ -168,6 +171,10 @@ Future behavior changes must include:
 - Should `reset()` optionally clear cart items via flag (`reset({ clearCart: true })`)?
 
 ## Changelog
+
+### 2026-10-26
+
+- Added contract 4 and renumbered the rest. Previous behavior: a cancel set `error` like any failure. New behavior: `PaymentResult` carries `status` and `code`, and a cancel leaves `error` as `null`. Contract 10 (formerly 9) now returns `code='IN_PROGRESS'`.
 
 ### 2026-10-23
 

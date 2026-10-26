@@ -6,7 +6,6 @@ import NitroModules
 
 private enum ErrorMessage {
     static let paymentCancelled = "Payment cancelled by user"
-    static let paymentDismissed = "Payment sheet was dismissed before authorization"
     static let paymentInProgress = "A payment is already in progress"
     static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
     static let unableToPresent = "Unable to present payment authorization"
@@ -50,13 +49,24 @@ private enum ErrorMessage {
     }
 }
 
+/// Why a payment ended without success.
+// Internal, not private, so the NitroPay unit tests can check the code.
 // `CustomStringConvertible` because Nitro rejects JS promises with the
 // error's description.
-private struct PaymentRequestError: LocalizedError, CustomStringConvertible {
+struct PaymentFailure: LocalizedError, CustomStringConvertible {
+    let code: PaymentErrorCode
     let message: String
 
     var errorDescription: String? { message }
     var description: String { message }
+
+    var status: PaymentStatus {
+        return code == .cancelled ? .cancelled : .failed
+    }
+
+    static func configuration(_ message: String) -> PaymentFailure {
+        return PaymentFailure(code: .configuration, message: message)
+    }
 }
 
 // PassKit fails the sheet on its own when the authorization completion is not
@@ -78,7 +88,7 @@ struct PaymentRequestBuilder {
     
     static func build(from request: PaymentRequest) throws -> PKPaymentRequest {
         guard let merchantIdentifier = resolveMerchantIdentifier(from: request) else {
-            throw PaymentRequestError(message: ErrorMessage.missingMerchantIdentifier)
+            throw PaymentFailure.configuration(ErrorMessage.missingMerchantIdentifier)
         }
 
         let paymentRequest = PKPaymentRequest()
@@ -135,10 +145,10 @@ struct PaymentRequestBuilder {
         var identifiers = Set<String>()
         return try methods.map { method in
             guard !method.identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw PaymentRequestError(message: ErrorMessage.missingShippingMethodIdentifier(method.label))
+                throw PaymentFailure.configuration(ErrorMessage.missingShippingMethodIdentifier(method.label))
             }
             guard identifiers.insert(method.identifier).inserted else {
-                throw PaymentRequestError(message: ErrorMessage.duplicateShippingMethodIdentifier(method.identifier))
+                throw PaymentFailure.configuration(ErrorMessage.duplicateShippingMethodIdentifier(method.identifier))
             }
             let amount = try shippingMethodAmount(method)
             let pkMethod = PKShippingMethod(label: method.label, amount: amount)
@@ -150,10 +160,10 @@ struct PaymentRequestBuilder {
 
     private static func shippingMethodAmount(_ method: ShippingMethod) throws -> NSDecimalNumber {
         guard let amount = method.amount.decimalNumber else {
-            throw PaymentRequestError(message: ErrorMessage.invalidAmount(method.label))
+            throw PaymentFailure.configuration(ErrorMessage.invalidAmount(method.label))
         }
         guard amount.decimalValue >= Decimal.zero else {
-            throw PaymentRequestError(message: ErrorMessage.negativeShippingMethodAmount(method.label))
+            throw PaymentFailure.configuration(ErrorMessage.negativeShippingMethodAmount(method.label))
         }
         return amount
     }
@@ -166,7 +176,7 @@ struct PaymentRequestBuilder {
     ) throws -> [PKPaymentSummaryItem] {
         let amounts = try request.paymentItems.map { item -> NSDecimalNumber in
             guard let amount = item.amount.decimalNumber else {
-                throw PaymentRequestError(message: ErrorMessage.invalidAmount(item.label))
+                throw PaymentFailure.configuration(ErrorMessage.invalidAmount(item.label))
             }
             return amount
         }
@@ -177,7 +187,7 @@ struct PaymentRequestBuilder {
             partialResult + amount.decimalValue
         }
         guard totalAmount >= Decimal.zero else {
-            throw PaymentRequestError(message: ErrorMessage.negativeTotal)
+            throw PaymentFailure.configuration(ErrorMessage.negativeTotal)
         }
 
         var lineItems = zip(request.paymentItems, amounts).map { item, amount in
@@ -231,7 +241,7 @@ struct PaymentRequestBuilder {
             case "CREDIT": merchantCapabilities.insert(.capabilityCredit)
             case "DEBIT": merchantCapabilities.insert(.capabilityDebit)
             default:
-                throw PaymentRequestError(message: ErrorMessage.unknownMerchantCapability(capability))
+                throw PaymentFailure.configuration(ErrorMessage.unknownMerchantCapability(capability))
             }
         }
         // PassKit requires 3DS or EMV. EMV only covers China UnionPay, so
@@ -246,11 +256,11 @@ struct PaymentRequestBuilder {
     /// this iOS version lacks is left out, and at least one must be left.
     static func buildSupportedNetworks(_ names: [String]) throws -> [PKPaymentNetwork] {
         guard !names.isEmpty else {
-            throw PaymentRequestError(message: ErrorMessage.missingSupportedNetwork)
+            throw PaymentFailure.configuration(ErrorMessage.missingSupportedNetwork)
         }
         let networks = try convertNetworks(names)
         guard !networks.isEmpty else {
-            throw PaymentRequestError(message: ErrorMessage.unavailableNetworks(names))
+            throw PaymentFailure.configuration(ErrorMessage.unavailableNetworks(names))
         }
         return networks
     }
@@ -261,7 +271,7 @@ struct PaymentRequestBuilder {
         var networks: [PKPaymentNetwork] = []
         for name in names {
             guard let network = PassKitTypeMapper.paymentNetwork(named: name) else {
-                throw PaymentRequestError(message: ErrorMessage.unknownNetwork(name))
+                throw PaymentFailure.configuration(ErrorMessage.unknownNetwork(name))
             }
             if let pkNetwork = PassKitTypeMapper.convertToPKPaymentNetwork(network),
                !networks.contains(pkNetwork) {
@@ -278,7 +288,7 @@ struct PaymentRequestBuilder {
         case "storePickup": return .storePickup
         case "servicePickup": return .servicePickup
         default:
-            throw PaymentRequestError(message: ErrorMessage.unknownShippingType(type))
+            throw PaymentFailure.configuration(ErrorMessage.unknownShippingType(type))
         }
     }
     
@@ -367,6 +377,8 @@ private enum PaymentResultFactory {
 
     static func success(token: PaymentToken, details: PaymentDetails) -> PaymentResult {
         return PaymentResult.init(
+            status: .success,
+            code: nil,
             success: true,
             transactionId: UUID().uuidString,
             token: token,
@@ -379,12 +391,14 @@ private enum PaymentResultFactory {
         )
     }
 
-    static func failure(_ error: String) -> PaymentResult {
+    static func failure(_ failure: PaymentFailure) -> PaymentResult {
         return PaymentResult.init(
+            status: failure.status,
+            code: failure.code,
             success: false,
             transactionId: nil,
             token: nil,
-            error: error,
+            error: failure.message,
             billingContact: nil,
             shippingContact: nil,
             emailAddress: nil,
@@ -393,9 +407,14 @@ private enum PaymentResultFactory {
         )
     }
 
-    static func failure(_ error: Error) -> PaymentResult {
+    static func failure(_ code: PaymentErrorCode, _ message: String) -> PaymentResult {
+        return failure(PaymentFailure(code: code, message: message))
+    }
+
+    /// An `onAuthorize` that rejected.
+    static func authorizationFailure(_ error: Error) -> PaymentResult {
         // Nitro reports JS rejections as `RuntimeError`, whose description is the message.
-        return failure(String(describing: error))
+        return failure(.providerError, String(describing: error))
     }
 
     static func from(
@@ -407,7 +426,7 @@ private enum PaymentResultFactory {
         case .success:
             return success(token: token, details: details)
         case .failure:
-            return failure(authorization.error ?? ErrorMessage.authorizationFailed)
+            return failure(.providerError, authorization.error ?? ErrorMessage.authorizationFailed)
         }
     }
 }
@@ -425,8 +444,6 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
     private var authorizedResult: PaymentResult?
     private var isAuthorizing: Bool = false
     private var finishedWhileAuthorizing: Bool = false
-    private var presentationDate: Date?
-    private let userDismissThreshold: TimeInterval = 0.75
     
     init(
         paymentHandler: HybridPaymentHandler,
@@ -440,10 +457,6 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         self.onAuthorize = onAuthorize
         self.selectedShippingMethodIdentifier = paymentRequest.shippingMethods?.first?.identifier
         self.summaryItems = paymentRequest.paymentSummaryItems
-    }
-
-    func markPresented() {
-        presentationDate = Date()
     }
     
     func paymentAuthorizationViewController(
@@ -507,16 +520,16 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + authorizationTimeout) {
-            settle(PaymentResultFactory.failure(ErrorMessage.authorizationTimedOut))
+            settle(PaymentResultFactory.failure(.providerError, ErrorMessage.authorizationTimedOut))
         }
 
         onAuthorize(paymentToken, details)
             .then { authorization in
                 authorization
                     .then { settleOnMain(PaymentResultFactory.from($0, token: paymentToken, details: details)) }
-                    .catch { settleOnMain(PaymentResultFactory.failure($0)) }
+                    .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
             }
-            .catch { settleOnMain(PaymentResultFactory.failure($0)) }
+            .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
     }
     
     /// The request's entry for the method the payer authorized with.
@@ -542,14 +555,11 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
             return
         }
 
-        let errorMessage: String
-        if let presentationDate,
-           Date().timeIntervalSince(presentationDate) >= userDismissThreshold {
-            errorMessage = ErrorMessage.paymentCancelled
-        } else {
-            errorMessage = ErrorMessage.paymentDismissed
-        }
-        paymentHandler?.handlePaymentResult(PaymentResultFactory.failure(errorMessage))
+        // PassKit doesn't say why a sheet closed before authorization, so a
+        // sheet that closes by itself also reports a cancel.
+        paymentHandler?.handlePaymentResult(
+            PaymentResultFactory.failure(.cancelled, ErrorMessage.paymentCancelled)
+        )
     }
 }
 
@@ -596,7 +606,7 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         // payment before the sheet is presented. Reject overlaps without
         // touching the in-flight payment, so its promise still settles.
         guard pendingPayment.tryBegin({ result in promise.resolve(withResult: result) }) else {
-            promise.resolve(withResult: PaymentResultFactory.failure(ErrorMessage.paymentInProgress))
+            promise.resolve(withResult: PaymentResultFactory.failure(.inProgress, ErrorMessage.paymentInProgress))
             return promise
         }
         let onAuthorize = options?.onAuthorize
@@ -604,8 +614,10 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         DispatchQueue.main.async {
             do {
                 try self.performPayment(request: request, onAuthorize: onAuthorize)
+            } catch let failure as PaymentFailure {
+                self.handlePaymentResult(PaymentResultFactory.failure(failure))
             } catch {
-                self.handlePaymentResult(PaymentResultFactory.failure(error.localizedDescription))
+                self.handlePaymentResult(PaymentResultFactory.failure(.unknown, error.localizedDescription))
             }
         }
         
@@ -633,18 +645,16 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         )
         
         guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
-            throw PaymentRequestError(message: ErrorMessage.unableToCreate)
+            throw PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToCreate)
         }
         
         paymentAuthVC.delegate = delegate
         
         guard let rootViewController = getRootViewController() else {
-            throw PaymentRequestError(message: ErrorMessage.unableToPresent)
+            throw PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent)
         }
         
-        rootViewController.present(paymentAuthVC, animated: true) {
-            self.delegate?.markPresented()
-        }
+        rootViewController.present(paymentAuthVC, animated: true)
     }
     
     private func getRootViewController() -> UIViewController? {

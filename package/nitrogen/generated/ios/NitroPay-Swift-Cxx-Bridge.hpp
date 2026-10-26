@@ -44,6 +44,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 namespace margelo::nitro::pay { struct PaymentContact; }
 // Forward declaration of `PaymentDetails` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentDetails; }
+// Forward declaration of `PaymentErrorCode` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentErrorCode; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -56,6 +58,8 @@ namespace margelo::nitro::pay { struct PaymentMethod; }
 namespace margelo::nitro::pay { enum class PaymentNetwork; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentStatus` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentStatus; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
@@ -88,12 +92,14 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentAuthorizationStatus.hpp"
 #include "PaymentContact.hpp"
 #include "PaymentDetails.hpp"
+#include "PaymentErrorCode.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
 #include "PaymentResult.hpp"
+#include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
 #include "ShippingMethod.hpp"
 #include "StartPaymentOptions.hpp"
@@ -272,6 +278,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline PayServiceStatusOptions get_std__optional_PayServiceStatusOptions_(const std::optional<PayServiceStatusOptions>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PaymentErrorCode>
+  /**
+   * Specialized version of `std::optional<PaymentErrorCode>`.
+   */
+  using std__optional_PaymentErrorCode_ = std::optional<PaymentErrorCode>;
+  inline std::optional<PaymentErrorCode> create_std__optional_PaymentErrorCode_(const PaymentErrorCode& value) noexcept {
+    return std::optional<PaymentErrorCode>(value);
+  }
+  inline bool has_value_std__optional_PaymentErrorCode_(const std::optional<PaymentErrorCode>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentErrorCode get_std__optional_PaymentErrorCode_(const std::optional<PaymentErrorCode>& optional) noexcept {
     return optional.value();
   }
   

@@ -1,15 +1,16 @@
 # Server-side processing
 
-After a successful payment, your app receives a **token** and optional **transactionId**. Your backend must use this token with your payment gateway (Stripe, Braintree, etc.) to create the charge.
+After a successful payment (`result.status === 'success'`), your app receives a **token**. Your backend must use this token with your payment gateway (Stripe, Braintree, etc.) to create the charge.
 
 ## What to send to the server
 
 From the client, send at least:
 
 - **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive.
-- **transactionId** — From `PaymentResult.transactionId`, for idempotency or logging.
 - **amount** (and currency) — So the server can validate and charge the correct amount.
-- Any **order/cart id** — So the server knows what was purchased.
+- Any **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
+
+Don't key idempotency on `PaymentResult.transactionId` or `token.transactionIdentifier`. `transactionId` is deprecated: the device generates a new one for every result, so a retry gets a new key. `transactionIdentifier` is missing on Android.
 
 Example:
 
@@ -34,13 +35,12 @@ function useOrderPayment() {
   // Pass this to the pay button's onPress, wrapped with callback().
   return async () => {
     const result = await startPayment()
-    if (result?.success && result.token) {
+    if (result?.status === 'success' && result.token) {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: result.token,
-          transactionId: result.transactionId,
           amount: total,
           currency: 'USD',
           orderId: order.id,
@@ -88,7 +88,7 @@ function useOrderPayment() {
 
   return async () => {
     const result = await startPayment()
-    // result.success is true only when onAuthorize returned 'success'.
+    // result.status is 'success' only when onAuthorize returned 'success'.
     // The token is already charged, so don't send it to your server again.
   }
 }
@@ -100,9 +100,9 @@ The second argument of `onAuthorize` holds the contact details and shipping meth
 
 How it behaves:
 
-- **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `success: false` and your `error`. A rejected promise is treated the same way.
+- **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`. A rejected promise is treated the same way.
 - **Retries on iOS:** if the user retries from the sheet after a failure or a timeout, `onAuthorize` runs again with the new token. The result reflects the last attempt. A retry can start while a timed-out charge is still running, so key idempotency on your order ID, not on the token.
-- **Timeout:** `onAuthorize` must settle within 25 seconds (Apple Pay itself gives up after about 30). Otherwise the payment fails with "Payment authorization timed out" and the late result is ignored. Your server may still have charged the card, so make the charge idempotent and reconcile by order ID.
+- **Timeout:** `onAuthorize` must settle within 25 seconds (Apple Pay itself gives up after about 30). Otherwise the payment fails with `code: 'PROVIDER_ERROR'` and "Payment authorization timed out", and the late result is ignored. Your server may still have charged the card, so make the charge idempotent and reconcile by order ID.
 - **Android:** Google Pay closes its sheet before it returns the token, and its basic flow has no step that waits for the merchant. `onAuthorize` still runs, with the same timeout, after the sheet closes, and its outcome decides the `PaymentResult`. The same callback works on both platforms.
 
 ## Example: Node.js (conceptual, gateway-specific)
@@ -128,7 +128,7 @@ app.post('/process-payment', async (req, res) => {
       tokenPayload: token.paymentData,
       token: token,
       orderId,
-      transactionId: token.transactionIdentifier,
+      idempotencyKey: `charge-${orderId}`,
     })
 
     res.json({ success: true, chargeId: charge.id })
@@ -142,7 +142,7 @@ app.post('/process-payment', async (req, res) => {
 
 - Mapping `PaymentToken` fields to provider-specific request fields.
 - Creating a payment method/source/intent from Apple Pay or Google Pay token payloads.
-- Idempotency (e.g. using `transactionId` to avoid duplicate charges).
+- Idempotency (e.g. a key derived from your order ID to avoid duplicate charges).
 - Handling failures and refunds.
 - Provider-specific walkthroughs in [Przelewy24 Apple Pay + Google Pay cookbook](/docs/integrations/przelewy24).
 

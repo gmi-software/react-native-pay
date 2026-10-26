@@ -1,6 +1,8 @@
 package com.margelo.nitro.pay
 
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.wallet.PaymentData
+import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.UUID
@@ -46,7 +48,8 @@ object PaymentMapper {
             // Create payment token
             val paymentToken = PaymentToken(
                 paymentMethod = paymentMethod,
-                transactionIdentifier = UUID.randomUUID().toString(),
+                // Google Pay doesn't return a transaction identifier.
+                transactionIdentifier = null,
                 paymentData = token
             )
             
@@ -54,6 +57,8 @@ object PaymentMapper {
             
             // Create successful result
             PaymentResult(
+                status = PaymentStatus.SUCCESS,
+                code = null,
                 success = true,
                 transactionId = UUID.randomUUID().toString(),
                 token = paymentToken,
@@ -65,7 +70,10 @@ object PaymentMapper {
                 shippingMethod = details.shippingMethod
             )
         } catch (e: JSONException) {
-            createErrorResult("Failed to parse payment data: ${e.message}")
+            createErrorResult(
+                PaymentErrorCode.PROVIDER_ERROR,
+                "Failed to parse payment data: ${e.message}"
+            )
         }
     }
     
@@ -158,16 +166,19 @@ object PaymentMapper {
         return when (authorization.status) {
             PaymentAuthorizationStatus.SUCCESS -> authorizedResult
             PaymentAuthorizationStatus.FAILURE -> createErrorResult(
+                PaymentErrorCode.PROVIDER_ERROR,
                 authorization.error ?: PaymentConstants.ERROR_AUTHORIZATION_FAILED
             )
         }
     }
     
     /**
-     * Creates an error PaymentResult
+     * Creates the PaymentResult of a payment that ended without success
      */
-    fun createErrorResult(errorMessage: String): PaymentResult {
+    fun createErrorResult(code: PaymentErrorCode, errorMessage: String): PaymentResult {
         return PaymentResult(
+            status = if (code == PaymentErrorCode.CANCELLED) PaymentStatus.CANCELLED else PaymentStatus.FAILED,
+            code = code,
             success = false,
             transactionId = null,
             token = null,
@@ -178,6 +189,42 @@ object PaymentMapper {
             phoneNumber = null,
             shippingMethod = null
         )
+    }
+
+    /**
+     * The result of a Google Pay error, from a failed `loadPaymentData` task or the
+     * sheet's `RESULT_ERROR`
+     */
+    fun walletErrorResult(statusCode: Int?, statusMessage: String?): PaymentResult {
+        val message = statusMessage ?: "Unknown error"
+        return createErrorResult(
+            mapWalletErrorCode(statusCode),
+            if (statusCode == null) "Payment error: $message"
+            else "Payment error: $message (status code $statusCode)"
+        )
+    }
+
+    /**
+     * Maps a Google Pay status code, a `WalletConstants.ERROR_CODE_*` or
+     * `CommonStatusCodes` value, to an error code.
+     * Keep in sync with the table in docs/docs/payment-flow.md#error-codes.
+     */
+    fun mapWalletErrorCode(statusCode: Int?): PaymentErrorCode {
+        return when (statusCode) {
+            null -> PaymentErrorCode.UNKNOWN
+            CommonStatusCodes.DEVELOPER_ERROR,
+            WalletConstants.ERROR_CODE_INVALID_PARAMETERS,
+            WalletConstants.ERROR_CODE_MERCHANT_ACCOUNT_ERROR,
+            WalletConstants.ERROR_CODE_UNSUPPORTED_API_VERSION -> PaymentErrorCode.CONFIGURATION
+            CommonStatusCodes.SIGN_IN_REQUIRED,
+            CommonStatusCodes.API_NOT_CONNECTED,
+            WalletConstants.ERROR_CODE_BUYER_ACCOUNT_ERROR,
+            WalletConstants.ERROR_CODE_AUTHENTICATION_FAILURE -> PaymentErrorCode.NOT_AVAILABLE
+            CommonStatusCodes.CANCELED,
+            WalletConstants.ERROR_CODE_USER_CANCELLED -> PaymentErrorCode.CANCELLED
+            // Includes SERVICE_UNAVAILABLE, NETWORK_ERROR and INTERNAL_ERROR.
+            else -> PaymentErrorCode.PROVIDER_ERROR
+        }
     }
 }
 

@@ -159,7 +159,9 @@ export interface PaymentMethod {
 
 export interface PaymentToken {
   paymentMethod: PaymentMethod
-  transactionIdentifier: string
+  // Apple's transaction identifier on iOS. Missing on Android: Google Pay
+  // doesn't return one.
+  transactionIdentifier?: string
   paymentData: string // Base64 encoded Data from PKPaymentToken
 }
 export interface PaymentRequest {
@@ -252,10 +254,46 @@ export interface PaymentDetails {
   shippingMethod?: ShippingMethod
 }
 
+/**
+ * How a payment ended. `'cancelled'` means the user closed the sheet before
+ * authorizing; it is not an error.
+ */
+export type PaymentStatus = 'success' | 'cancelled' | 'failed'
+
+/**
+ * Why a payment did not succeed. Set on every result whose `status` is not
+ * `'success'`.
+ *
+ * - `'CANCELLED'`: the user closed the sheet before authorizing.
+ * - `'IN_PROGRESS'`: another payment is still in flight. No sheet was shown.
+ * - `'CONFIGURATION'`: the request or the app's setup is invalid, such as a
+ *   missing merchant ID or an invalid amount. Retrying won't help.
+ * - `'NOT_AVAILABLE'`: the device can't show the payment sheet right now.
+ * - `'PROVIDER_ERROR'`: Apple Pay, Google Pay or your `onAuthorize` reported a
+ *   failure, including an `onAuthorize` timeout.
+ * - `'UNKNOWN'`: anything else.
+ */
+export type PaymentErrorCode =
+  | 'CANCELLED'
+  | 'IN_PROGRESS'
+  | 'CONFIGURATION'
+  | 'NOT_AVAILABLE'
+  | 'PROVIDER_ERROR'
+  | 'UNKNOWN'
+
 export interface PaymentResult extends PaymentDetails {
+  status: PaymentStatus
+  code?: PaymentErrorCode
+  // `status === 'success'`. Kept for compatibility.
   success: boolean
+  /**
+   * @deprecated A random ID generated on the device for each successful
+   * result. It doesn't come from Apple, Google or your gateway and changes on
+   * every attempt, so don't use it as an idempotency key: use your order ID.
+   */
   transactionId?: string
   token?: PaymentToken
+  // A message for logs. Also set when `status` is `'cancelled'`.
   error?: string
 }
 
@@ -267,7 +305,8 @@ export type PaymentAuthorizationStatus = 'success' | 'failure'
  */
 export interface PaymentAuthorizationResult {
   status: PaymentAuthorizationStatus
-  // Reported as `PaymentResult.error` when `status` is `'failure'`.
+  // Reported as `PaymentResult.error`, with code `'PROVIDER_ERROR'`, when
+  // `status` is `'failure'`.
   error?: string
 }
 

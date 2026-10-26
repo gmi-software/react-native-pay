@@ -1,6 +1,8 @@
 package com.margelo.nitro.pay
 
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.wallet.PaymentData
+import com.google.android.gms.wallet.WalletConstants
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -15,6 +17,8 @@ class PaymentMapperTest {
         PaymentData.fromJson("""{"apiVersion":2,"apiVersionMinor":0,"paymentMethodData":$paymentMethodData}""")
 
     private fun authorizedResult() = PaymentResult(
+        status = PaymentStatus.SUCCESS,
+        code = null,
         success = true,
         transactionId = "transaction",
         token = null,
@@ -79,11 +83,15 @@ class PaymentMapperTest {
             )
         )
 
+        assertEquals(PaymentStatus.SUCCESS, result.status)
+        assertNull(result.code)
         assertTrue(result.success)
         assertNull(result.error)
         assertNotNull(result.transactionId)
         val token = result.token!!
         assertEquals("gateway-token", token.paymentData)
+        // Google Pay returns no transaction identifier; don't invent one.
+        assertNull(token.transactionIdentifier)
         assertEquals("MASTERCARD 4242", token.paymentMethod.displayName)
         assertEquals(PaymentNetwork.MASTERCARD, token.paymentMethod.network)
         assertEquals(PaymentMethodType.CREDIT, token.paymentMethod.type)
@@ -144,6 +152,8 @@ class PaymentMapperTest {
             paymentData("""{"info": {"cardNetwork": "VISA", "cardDetails": "4242"}}""")
         )
 
+        assertEquals(PaymentStatus.FAILED, result.status)
+        assertEquals(PaymentErrorCode.PROVIDER_ERROR, result.code)
         assertFalse(result.success)
         assertNull(result.token)
         assertTrue(result.error!!.startsWith("Failed to parse payment data:"))
@@ -412,7 +422,10 @@ class PaymentMapperTest {
             authorizedResult()
         )
 
-        assertEquals(PaymentMapper.createErrorResult("Card declined"), result)
+        assertEquals(
+            PaymentMapper.createErrorResult(PaymentErrorCode.PROVIDER_ERROR, "Card declined"),
+            result
+        )
     }
 
     @Test
@@ -425,6 +438,116 @@ class PaymentMapperTest {
         assertFalse(result.success)
         assertNull(result.transactionId)
         assertNull(result.token)
+        assertEquals(PaymentErrorCode.PROVIDER_ERROR, result.code)
         assertEquals(PaymentConstants.ERROR_AUTHORIZATION_FAILED, result.error)
+    }
+
+    @Test
+    fun createErrorResult_reportsACancelAsCancelled() {
+        val result = PaymentMapper.createErrorResult(
+            PaymentErrorCode.CANCELLED,
+            PaymentConstants.ERROR_PAYMENT_CANCELLED
+        )
+
+        assertEquals(PaymentStatus.CANCELLED, result.status)
+        assertEquals(PaymentErrorCode.CANCELLED, result.code)
+        assertFalse(result.success)
+        assertEquals("Payment cancelled by user", result.error)
+    }
+
+    @Test
+    fun createErrorResult_reportsEveryOtherCodeAsFailed() {
+        PaymentErrorCode.values()
+            .filter { it != PaymentErrorCode.CANCELLED }
+            .forEach { code ->
+                val result = PaymentMapper.createErrorResult(code, "message")
+
+                assertEquals(code.name, PaymentStatus.FAILED, result.status)
+                assertEquals(code, result.code)
+                assertFalse(result.success)
+                assertNull(result.token)
+                assertNull(result.transactionId)
+            }
+    }
+
+    @Test
+    fun mapWalletErrorCode_reportsMerchantSetupErrorsAsConfiguration() {
+        listOf(
+            CommonStatusCodes.DEVELOPER_ERROR,
+            WalletConstants.ERROR_CODE_INVALID_PARAMETERS,
+            WalletConstants.ERROR_CODE_MERCHANT_ACCOUNT_ERROR,
+            WalletConstants.ERROR_CODE_UNSUPPORTED_API_VERSION,
+        ).forEach {
+            assertEquals("$it", PaymentErrorCode.CONFIGURATION, PaymentMapper.mapWalletErrorCode(it))
+        }
+    }
+
+    @Test
+    fun mapWalletErrorCode_reportsBuyerAndDeviceErrorsAsNotAvailable() {
+        listOf(
+            CommonStatusCodes.SIGN_IN_REQUIRED,
+            CommonStatusCodes.API_NOT_CONNECTED,
+            WalletConstants.ERROR_CODE_BUYER_ACCOUNT_ERROR,
+            WalletConstants.ERROR_CODE_AUTHENTICATION_FAILURE,
+        ).forEach {
+            assertEquals("$it", PaymentErrorCode.NOT_AVAILABLE, PaymentMapper.mapWalletErrorCode(it))
+        }
+    }
+
+    @Test
+    fun mapWalletErrorCode_reportsCancelsAsCancelled() {
+        assertEquals(
+            PaymentErrorCode.CANCELLED,
+            PaymentMapper.mapWalletErrorCode(CommonStatusCodes.CANCELED)
+        )
+        assertEquals(
+            PaymentErrorCode.CANCELLED,
+            PaymentMapper.mapWalletErrorCode(WalletConstants.ERROR_CODE_USER_CANCELLED)
+        )
+    }
+
+    @Test
+    fun mapWalletErrorCode_reportsOtherGooglePayErrorsAsProviderErrors() {
+        listOf(
+            CommonStatusCodes.NETWORK_ERROR,
+            CommonStatusCodes.INTERNAL_ERROR,
+            WalletConstants.ERROR_CODE_SERVICE_UNAVAILABLE,
+            WalletConstants.ERROR_CODE_UNKNOWN,
+        ).forEach {
+            assertEquals("$it", PaymentErrorCode.PROVIDER_ERROR, PaymentMapper.mapWalletErrorCode(it))
+        }
+    }
+
+    @Test
+    fun walletErrorResult_addsTheStatusCodeToTheMessage() {
+        val result = PaymentMapper.walletErrorResult(
+            CommonStatusCodes.DEVELOPER_ERROR,
+            "Merchant not enabled"
+        )
+
+        assertEquals(PaymentStatus.FAILED, result.status)
+        assertEquals(PaymentErrorCode.CONFIGURATION, result.code)
+        assertEquals("Payment error: Merchant not enabled (status code 10)", result.error)
+    }
+
+    @Test
+    fun walletErrorResult_reportsAMissingStatusAsUnknown() {
+        val result = PaymentMapper.walletErrorResult(null, null)
+
+        assertEquals(PaymentErrorCode.UNKNOWN, result.code)
+        assertEquals("Payment error: Unknown error", result.error)
+    }
+
+    @Test
+    fun walletErrorResult_reportsAUserCancelAsCancelled() {
+        val result = PaymentMapper.walletErrorResult(WalletConstants.ERROR_CODE_USER_CANCELLED, null)
+
+        assertEquals(PaymentStatus.CANCELLED, result.status)
+        assertEquals(PaymentErrorCode.CANCELLED, result.code)
+    }
+
+    @Test
+    fun mapWalletErrorCode_reportsAMissingStatusAsUnknown() {
+        assertEquals(PaymentErrorCode.UNKNOWN, PaymentMapper.mapWalletErrorCode(null))
     }
 }
