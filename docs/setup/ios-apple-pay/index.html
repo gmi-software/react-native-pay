@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">iOS (Apple Pay) | React Native Pay</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://gmi-software.github.io/react-native-pay/docs/setup/ios-apple-pay"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="iOS (Apple Pay) | React Native Pay"><meta data-rh="true" name="description" content="Configure your app and Apple Developer account for Apple Pay."><meta data-rh="true" property="og:description" content="Configure your app and Apple Developer account for Apple Pay."><link data-rh="true" rel="icon" href="/react-native-pay/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://gmi-software.github.io/react-native-pay/docs/setup/ios-apple-pay"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/setup/ios-apple-pay" hreflang="en"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/setup/ios-apple-pay" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Platform Setup","item":"https://gmi-software.github.io/react-native-pay/docs/setup/installation"},{"@type":"ListItem","position":2,"name":"iOS (Apple Pay)","item":"https://gmi-software.github.io/react-native-pay/docs/setup/ios-apple-pay"}]}</script><link rel="stylesheet" href="/react-native-pay/assets/css/styles.38087aaa.css">
-<script src="/react-native-pay/assets/js/runtime~main.5d4aa9dd.js" defer="defer"></script>
-<script src="/react-native-pay/assets/js/main.058c963c.js" defer="defer"></script>
+<script src="/react-native-pay/assets/js/runtime~main.b3ab22cf.js" defer="defer"></script>
+<script src="/react-native-pay/assets/js/main.af674336.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -45,8 +45,9 @@
 <div class="language-bash codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-bash codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token plain">npx expo prebuild --clean</span><br></span><span class="token-line" style="color:#F8F8F2"><span class="token plain">npx expo run:ios</span><br></span></code></pre></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="testing">Testing<a href="#testing" class="hash-link" aria-label="Direct link to Testing" title="Direct link to Testing" translate="no">​</a></h2>
 <ul>
-<li class="">Use a <strong>real device</strong> with a card added in Wallet for full flow.</li>
-<li class="">Simulator has limited Apple Pay support; for production-like testing, use a device.</li>
+<li class="">The <strong>iOS Simulator</strong> shows the Apple Pay sheet without a card, but its token can&#x27;t be charged. See <a class="" href="/react-native-pay/docs/guides/testing#ios-simulator">what the Simulator can&#x27;t verify</a>.</li>
+<li class="">On an <strong>iPhone</strong>, test with an Apple Pay sandbox tester and Apple&#x27;s test cards. See <a class="" href="/react-native-pay/docs/guides/testing#sandbox-on-an-iphone">Sandbox on an iPhone</a>.</li>
+<li class="">Before each release, run the <a class="" href="/react-native-pay/docs/guides/testing#release-checklist">release checklist</a>.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="troubleshooting">Troubleshooting<a href="#troubleshooting" class="hash-link" aria-label="Direct link to Troubleshooting" title="Direct link to Troubleshooting" translate="no">​</a></h2>
 <ul>
