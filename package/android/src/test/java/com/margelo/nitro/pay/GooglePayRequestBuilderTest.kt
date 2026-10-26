@@ -420,7 +420,7 @@ class GooglePayRequestBuilderTest {
 
     @Test
     fun isReadyToPayRequest_neverAsksForContacts() {
-        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest()
+        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest(PaymentConstants.DEFAULT_CARD_NETWORKS)
             .getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")
 
         assertFalse(parameters.has("billingAddressRequired"))
