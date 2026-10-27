@@ -55,6 +55,10 @@ npx expo prebuild --clean
 
 See [Apple Pay button not showing](#apple-pay-button-not-showing) for the full checklist.
 
+### "Unable to present payment authorization"
+
+`startPayment` resolves with `status: 'failed'`, `code: 'NOT_AVAILABLE'` and this `error` when PassKit could not show the Apple Pay sheet. No sheet appeared and nothing was charged. The payment has ended, so the next `startPayment` call opens a new sheet. If you see it while the app is in the foreground, [open an issue](https://github.com/gmi-software/react-native-pay/issues) with the iOS version and what was on screen.
+
 ### "Unknown merchant capability"
 
 The payment fails with `code: 'CONFIGURATION'` and `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value, on Android too. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).

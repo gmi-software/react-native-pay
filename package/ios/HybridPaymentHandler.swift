@@ -431,9 +431,67 @@ private enum PaymentResultFactory {
     }
 }
 
+// MARK: - Payment Sheet
+
+/// What the handler needs from `PKPaymentAuthorizationController`, so the
+/// unit tests can stand in a sheet that PassKit refuses to present.
+protocol PaymentSheet: AnyObject {
+    var delegate: PKPaymentAuthorizationControllerDelegate? { get set }
+    func present(completion: (@Sendable (Bool) -> Void)?)
+}
+
+extension PKPaymentAuthorizationController: PaymentSheet {}
+
+/// Presents the Apple Pay sheet and holds it until `release()`: the sheet's
+/// delegate is weak, and no view controller owns it. Main thread only.
+/// Internal, not private, so the NitroPay unit tests can reach it.
+final class PaymentSheetPresenter {
+    private let makeSheet: (PKPaymentRequest) -> PaymentSheet?
+    private var sheet: PaymentSheet?
+
+    init(makeSheet: @escaping (PKPaymentRequest) -> PaymentSheet? = PaymentSheetPresenter.makePassKitSheet) {
+        self.makeSheet = makeSheet
+    }
+
+    /// Calls `onFailure` when there is no sheet. PassKit then calls no
+    /// delegate method, so `onFailure` is the payment's only chance to settle.
+    func present(
+        _ request: PKPaymentRequest,
+        delegate: PKPaymentAuthorizationControllerDelegate,
+        onFailure: @escaping (PaymentFailure) -> Void
+    ) {
+        guard let sheet = makeSheet(request) else {
+            onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToCreate))
+            return
+        }
+        sheet.delegate = delegate
+        self.sheet = sheet
+        sheet.present { presented in
+            guard !presented else { return }
+            // PassKit does not say which thread this runs on.
+            DispatchQueue.main.async {
+                onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent))
+            }
+        }
+    }
+
+    func release() {
+        sheet = nil
+    }
+
+    static func makePassKitSheet(for request: PKPaymentRequest) -> PaymentSheet? {
+        // The controller's initializer never fails, but the view controller's
+        // returns nil when the device cannot pay or the request is invalid.
+        guard PKPaymentAuthorizationViewController(paymentRequest: request) != nil else {
+            return nil
+        }
+        return PKPaymentAuthorizationController(paymentRequest: request)
+    }
+}
+
 // MARK: - Payment Delegate
 
-private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDelegate {
+private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate {
     private weak var paymentHandler: HybridPaymentHandler?
     private let request: PaymentRequest
     private let paymentRequest: PKPaymentRequest
@@ -459,9 +517,9 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         self.summaryItems = paymentRequest.paymentSummaryItems
     }
     
-    func paymentAuthorizationViewController(
-        _ controller: PKPaymentAuthorizationViewController,
-        didSelect shippingMethod: PKShippingMethod,
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didSelectShippingMethod shippingMethod: PKShippingMethod,
         handler completion: @escaping (PKPaymentRequestShippingMethodUpdate) -> Void
     ) {
         selectedShippingMethodIdentifier = shippingMethod.identifier
@@ -476,8 +534,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         completion(PKPaymentRequestShippingMethodUpdate(paymentSummaryItems: summaryItems))
     }
 
-    func paymentAuthorizationViewController(
-        _ controller: PKPaymentAuthorizationViewController,
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
         didAuthorizePayment payment: PKPayment,
         handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
     ) {
@@ -538,15 +596,28 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
         return request.shippingMethods?.first { $0.identifier == identifier }
     }
 
-    func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
-        controller.dismiss(animated: true) {
-            // Report the merchant's outcome, not a cancellation, once it arrives.
-            if self.isAuthorizing {
-                self.finishedWhileAuthorizing = true
-                return
+    func paymentAuthorizationControllerDidFinish(_ controller: PKPaymentAuthorizationController) {
+        controller.dismiss {
+            // PassKit does not say which thread this runs on.
+            DispatchQueue.main.async {
+                // Report the merchant's outcome, not a cancellation, once it arrives.
+                if self.isAuthorizing {
+                    self.finishedWhileAuthorizing = true
+                    return
+                }
+                self.reportResult()
             }
-            self.reportResult()
         }
+    }
+
+    // Required on visionOS. PassKit shows the sheet on this window's scene. A
+    // scene is still foregroundInactive right after a system alert closes.
+    func presentationWindow(for controller: PKPaymentAuthorizationController) -> UIWindow? {
+        let windows = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
+            .flatMap(\.windows)
+        return windows.first(where: \.isKeyWindow) ?? windows.first
     }
 
     private func reportResult() {
@@ -568,8 +639,14 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationViewControllerDel
 class HybridPaymentHandler: HybridPaymentHandlerSpec {
     private let pendingPayment = PendingPayment<PaymentResult>()
     // Main thread only
+    private let sheetPresenter: PaymentSheetPresenter
     private var delegate: PaymentDelegate?
-    
+
+    init(sheetPresenter: PaymentSheetPresenter = PaymentSheetPresenter()) {
+        self.sheetPresenter = sheetPresenter
+        super.init()
+    }
+
     // MARK: - Public Methods
     
     // PassKit asks the Wallet service, so both checks run off the JS thread.
@@ -628,6 +705,7 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     func handlePaymentResult(_ result: PaymentResult) {
         delegate = nil
+        sheetPresenter.release()
         // One-shot settle: Nitro Promise crashes on a second resolve/reject.
         pendingPayment.settle(result)
     }
@@ -636,55 +714,21 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
         let paymentRequest = try PaymentRequestBuilder.build(from: request)
-        
-        delegate = PaymentDelegate(
+
+        let delegate = PaymentDelegate(
             paymentHandler: self,
             request: request,
             paymentRequest: paymentRequest,
             onAuthorize: onAuthorize
         )
-        
-        guard let paymentAuthVC = PKPaymentAuthorizationViewController(paymentRequest: paymentRequest) else {
-            throw PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToCreate)
-        }
-        
-        paymentAuthVC.delegate = delegate
-        
-        guard let rootViewController = getRootViewController() else {
-            throw PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent)
-        }
-        
-        rootViewController.present(paymentAuthVC, animated: true)
-    }
-    
-    private func getRootViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .filter { $0.activationState == .foregroundActive }
+        self.delegate = delegate
 
-        let rootViewController = scenes
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .rootViewController
-
-        return topViewController(from: rootViewController)
-    }
-
-    private func topViewController(from viewController: UIViewController?) -> UIViewController? {
-        guard let viewController else { return nil }
-
-        if let navigationController = viewController as? UINavigationController {
-            return topViewController(from: navigationController.visibleViewController)
-        }
-
-        if let tabBarController = viewController as? UITabBarController {
-            return topViewController(from: tabBarController.selectedViewController)
-        }
-
-        if let presentedViewController = viewController.presentedViewController {
-            return topViewController(from: presentedViewController)
-        }
-
-        return viewController
+        // The sheet has its own window, so a view controller of the app that
+        // is busy presenting or dismissing can neither refuse nor close it.
+        sheetPresenter.present(
+            paymentRequest,
+            delegate: delegate,
+            onFailure: { self.handlePaymentResult(PaymentResultFactory.failure($0)) }
+        )
     }
 }
