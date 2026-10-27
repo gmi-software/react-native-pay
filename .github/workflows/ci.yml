@@ -5,9 +5,14 @@ on:
   push:
     branches:
       - main
+  # The Release workflow runs every job here before it publishes.
+  workflow_call:
 
+# `github.workflow` is the caller's name when the Release workflow runs this
+# one, so a release rehearsal on main never cancels, or is cancelled by, the
+# CI run of a push to main.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:

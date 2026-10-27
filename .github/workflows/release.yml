@@ -1,0 +1,142 @@
+name: Release
+
+# Publishing is driven by a version tag, not by a commit pushed from CI. The
+# version bump and the CHANGELOG.md section land through a normal pull request,
+# and pushing the matching tag afterwards triggers the publish. See RELEASING.md.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  # Rehearsal against the current branch. Always a dry run: it validates the
+  # version and the full gate without tagging or publishing anything.
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Every CI job, including the iOS and Android builds and native unit tests,
+  # must pass on the tagged commit before anything is published.
+  ci:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: [ci]
+    runs-on: ubuntu-latest
+    permissions:
+      # Create the GitHub Release for the pushed tag.
+      contents: write
+      # Mint the OIDC token npm exchanges for a short-lived publish token, and
+      # sign the provenance attestation.
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # Node 24 ships npm >= 11.5.1, required for npm trusted publishing.
+          # `registry-url` is deliberately omitted: it writes an `_authToken`
+          # entry into .npmrc, which makes npm assume classic token auth and skip
+          # the OIDC flow. The registry is already pinned by publishConfig.
+          node-version: 24
+
+      - name: Verify npm supports trusted publishing
+        run: |
+          npm_version="$(npm --version)"
+          required=11.5.1
+          echo "npm $npm_version (need >= $required)"
+          if [ "$(printf '%s\n%s\n' "$required" "$npm_version" | sort -V | head -n1)" != "$required" ]; then
+            echo "::error::npm $npm_version is too old for trusted publishing (need >= $required)."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve version
+        id: version
+        run: |
+          version="$(node -p "require('./package/package.json').version")"
+          echo "package.json version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches package.json
+        if: github.event_name == 'push'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match package.json version $VERSION. Bump the version on main first."
+            exit 1
+          fi
+
+      - name: Verify version is not already published
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if npm view "@gmisoftware/react-native-pay@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::@gmisoftware/react-native-pay@$VERSION is already on npm."
+            exit 1
+          fi
+
+      # The section becomes the GitHub Release body. Checking it here stops a
+      # release whose pull request forgot the changelog before npm has it, and
+      # prints the body, which release-it skips in a rehearsal.
+      - name: Verify CHANGELOG.md has a section for the version
+        working-directory: package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/changelog-section.js "$VERSION"
+
+      - name: Copy README into the package
+        # npm reads the README shown on the registry page from the package
+        # directory while it builds the manifest, before any pack script runs.
+        # The `prepack` copy therefore never reaches the registry; the file must
+        # exist here first.
+        run: cp README.md package/README.md
+
+      - name: Publish
+        working-directory: package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # --no-increment: the version already lives in package.json, reviewed
+          #   and merged through a pull request.
+          # --no-git: the tag is pushed by the maintainer; CI never writes to git.
+          args=(--ci --no-increment --no-git)
+          if [ "${{ github.event_name }}" != 'push' ]; then
+            args+=(--dry-run)
+            echo 'Rehearsal run — nothing will be tagged or published.'
+          fi
+          bunx release-it "${args[@]}"
+
+      - name: Summary
+        if: always()
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "### Release v$VERSION"
+            echo
+            if [ "${{ github.event_name }}" != 'push' ]; then
+              echo "Rehearsal only — nothing was published."
+            else
+              echo "- [npm](https://www.npmjs.com/package/@gmisoftware/react-native-pay/v/$VERSION)"
+              echo "- [GitHub Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v$VERSION)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
