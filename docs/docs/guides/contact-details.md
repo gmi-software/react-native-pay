@@ -102,7 +102,7 @@ async function payWithShipping() {
     },
   })
 
-  if (result.success) {
+  if (result.status === 'success') {
     console.log('Shipping with', result.shippingMethod?.label)
   }
 }

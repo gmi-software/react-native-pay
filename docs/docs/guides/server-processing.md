@@ -10,7 +10,7 @@ From the client, send at least:
 - **amount** (and currency) — So the server can validate and charge the correct amount.
 - Any **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
 
-Don't key idempotency on `PaymentResult.transactionId` or `token.transactionIdentifier`. `transactionId` is deprecated: the device generates a new one for every result, so a retry gets a new key. `transactionIdentifier` is missing on Android.
+Don't key idempotency on `PaymentResult.transactionId` or `token.transactionIdentifier`. `transactionId` is deprecated: the device generates a new one for every successful result, so a retry gets a new key. `transactionIdentifier` is missing on Android.
 
 Example:
 
