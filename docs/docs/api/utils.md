@@ -152,6 +152,7 @@ import { formatNetworkName } from '@gmisoftware/react-native-pay'
 formatNetworkName('visa')       // "Visa"
 formatNetworkName('amex')      // "American Express"
 formatNetworkName('mastercard') // "Mastercard"
+formatNetworkName('unknown')    // "Unknown"
 ```
 
 ---

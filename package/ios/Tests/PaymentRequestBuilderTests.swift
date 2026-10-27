@@ -47,7 +47,8 @@ final class PaymentRequestBuilderTests: XCTestCase {
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,
-            googlePayGatewayMerchantId: nil
+            googlePayGatewayMerchantId: nil,
+            googlePayAllowedAuthMethods: nil
         )
     }
 
@@ -67,7 +68,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
             items: [item("Coffee", "4.99")],
             merchantIdentifier: "  merchant.com.example\n",
             merchantCapabilities: ["3DS", "Debit"],
-            supportedNetworks: ["visa", "amex", "unknown"],
+            supportedNetworks: ["visa", "amex"],
             shippingType: "delivery"
         ))
 
@@ -77,6 +78,48 @@ final class PaymentRequestBuilderTests: XCTestCase {
         XCTAssertEqual(request.merchantCapabilities, [.capability3DS, .capabilityDebit])
         XCTAssertEqual(request.supportedNetworks, [.visa, .amex])
         XCTAssertEqual(request.shippingType, .delivery)
+    }
+
+    func testMatchesNetworksCaseInsensitivelyWithoutDuplicates() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            supportedNetworks: ["VISA", "MasterCard", "cartesBancaires", "visa"]
+        ))
+
+        XCTAssertEqual(request.supportedNetworks, [.visa, .masterCard, .cartesBancaires])
+    }
+
+    func testRejectsUnknownNetworks() {
+        for name in ["vsa", "unknown", ""] {
+            assertBuildFails(
+                paymentRequest(items: [item("Coffee", "4.99")], supportedNetworks: ["visa", name]),
+                with: "Unknown payment network \"\(name)\". Use a PaymentNetwork value such as \"visa\" or \"mastercard\""
+            )
+        }
+    }
+
+    func testRejectsAnEmptyNetworkList() {
+        assertBuildFails(
+            paymentRequest(items: [item("Coffee", "4.99")], supportedNetworks: []),
+            with: "supportedNetworks needs at least one network"
+        )
+    }
+
+    func testLeavesOutNetworksThisIOSVersionLacks() throws {
+        let names = ["visa", "myDebit"]
+        if #available(iOS 26.0, *) {
+            let request = try PaymentRequestBuilder.build(from: paymentRequest(
+                items: [item("Coffee", "4.99")],
+                supportedNetworks: names
+            ))
+            XCTAssertEqual(request.supportedNetworks, [.visa, .myDebit])
+        } else {
+            XCTAssertEqual(try PaymentRequestBuilder.convertNetworks(names), [.visa])
+            assertBuildFails(
+                paymentRequest(items: [item("Coffee", "4.99")], supportedNetworks: ["myDebit"]),
+                with: "Apple Pay on this iOS version offers none of these networks: myDebit"
+            )
+        }
     }
 
     func testMatchesMerchantCapabilitiesCaseInsensitively() throws {

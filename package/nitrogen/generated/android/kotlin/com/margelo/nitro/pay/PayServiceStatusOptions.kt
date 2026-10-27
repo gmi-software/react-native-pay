@@ -26,6 +26,9 @@ data class PayServiceStatusOptions(
   val merchantCapabilities: Array<String>?,
   @DoNotStrip
   @Keep
+  val googlePayAllowedAuthMethods: Array<String>?,
+  @DoNotStrip
+  @Keep
   val googlePayEnvironment: GooglePayEnvironment?
 ) {
   /* primary constructor */
@@ -35,6 +38,7 @@ data class PayServiceStatusOptions(
     if (other !is PayServiceStatusOptions) return false
     return Objects.deepEquals(this.supportedNetworks, other.supportedNetworks)
       && Objects.deepEquals(this.merchantCapabilities, other.merchantCapabilities)
+      && Objects.deepEquals(this.googlePayAllowedAuthMethods, other.googlePayAllowedAuthMethods)
       && Objects.deepEquals(this.googlePayEnvironment, other.googlePayEnvironment)
   }
 
@@ -42,6 +46,7 @@ data class PayServiceStatusOptions(
     return arrayOf<Any?>(
       supportedNetworks,
       merchantCapabilities,
+      googlePayAllowedAuthMethods,
       googlePayEnvironment
     ).contentDeepHashCode()
   }
@@ -54,8 +59,8 @@ data class PayServiceStatusOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(supportedNetworks: Array<String>?, merchantCapabilities: Array<String>?, googlePayEnvironment: GooglePayEnvironment?): PayServiceStatusOptions {
-      return PayServiceStatusOptions(supportedNetworks, merchantCapabilities, googlePayEnvironment)
+    private fun fromCpp(supportedNetworks: Array<String>?, merchantCapabilities: Array<String>?, googlePayAllowedAuthMethods: Array<String>?, googlePayEnvironment: GooglePayEnvironment?): PayServiceStatusOptions {
+      return PayServiceStatusOptions(supportedNetworks, merchantCapabilities, googlePayAllowedAuthMethods, googlePayEnvironment)
     }
   }
 }

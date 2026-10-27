@@ -422,6 +422,10 @@ describe('usePaymentCheckout integration', () => {
       googlePayEnvironment: ['TEST', 'PRODUCTION'],
       googlePayGateway: ['stripe', 'adyen'],
       googlePayGatewayMerchantId: ['gateway-a', 'gateway-b'],
+      googlePayAllowedAuthMethods: [
+        ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+        ['CRYPTOGRAM_3DS'],
+      ],
       billingContactRequired: [false, true],
       shippingContactRequired: [false, true],
       emailRequired: [false, true],

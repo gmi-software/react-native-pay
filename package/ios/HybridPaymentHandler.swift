@@ -35,6 +35,16 @@ private enum ErrorMessage {
         return "Amount for \"\(label)\" must not be negative"
     }
 
+    static let missingSupportedNetwork = "supportedNetworks needs at least one network"
+
+    static func unknownNetwork(_ network: String) -> String {
+        return "Unknown payment network \"\(network)\". Use a PaymentNetwork value such as \"visa\" or \"mastercard\""
+    }
+
+    static func unavailableNetworks(_ networks: [String]) -> String {
+        return "Apple Pay on this iOS version offers none of these networks: \(networks.joined(separator: ", "))"
+    }
+
     static func unknownShippingType(_ shippingType: String) -> String {
         return "Unknown shipping type \"\(shippingType)\". Use \"shipping\", \"delivery\", \"storePickup\" or \"servicePickup\""
     }
@@ -86,7 +96,7 @@ struct PaymentRequestBuilder {
             selectedShippingMethodIdentifier: shippingMethods.first?.identifier
         )
         paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
-        paymentRequest.supportedNetworks = buildSupportedNetworks(request.supportedNetworks)
+        paymentRequest.supportedNetworks = try buildSupportedNetworks(request.supportedNetworks)
         
         if let shippingType = request.shippingType {
             paymentRequest.shippingType = try convertShippingType(shippingType)
@@ -232,8 +242,33 @@ struct PaymentRequestBuilder {
         return merchantCapabilities
     }
     
-    private static func buildSupportedNetworks(_ networks: [String]) -> [PKPaymentNetwork] {
-        return networks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
+    /// Same rules and messages as Android: an unknown name fails, a network
+    /// this iOS version lacks is left out, and at least one must be left.
+    static func buildSupportedNetworks(_ names: [String]) throws -> [PKPaymentNetwork] {
+        guard !names.isEmpty else {
+            throw PaymentRequestError(message: ErrorMessage.missingSupportedNetwork)
+        }
+        let networks = try convertNetworks(names)
+        guard !networks.isEmpty else {
+            throw PaymentRequestError(message: ErrorMessage.unavailableNetworks(names))
+        }
+        return networks
+    }
+
+    /// The PassKit networks for these names that this iOS version has,
+    /// without duplicates. Fails for a name that is not a `PaymentNetwork`.
+    static func convertNetworks(_ names: [String]) throws -> [PKPaymentNetwork] {
+        var networks: [PKPaymentNetwork] = []
+        for name in names {
+            guard let network = PassKitTypeMapper.paymentNetwork(named: name) else {
+                throw PaymentRequestError(message: ErrorMessage.unknownNetwork(name))
+            }
+            if let pkNetwork = PassKitTypeMapper.convertToPKPaymentNetwork(network),
+               !networks.contains(pkNetwork) {
+                networks.append(pkNetwork)
+            }
+        }
+        return networks
     }
     
     private static func convertShippingType(_ type: String) throws -> PKShippingType {
@@ -274,11 +309,10 @@ enum PaymentReadiness {
     // Checked when the caller names no networks, like the hook's default.
     static let defaultNetworks = ["visa", "mastercard", "amex", "discover"]
 
+    /// Rejects what the payment would refuse, with the same error.
     static func hasActiveCard(networks: [String], merchantCapabilities: [String]?) throws -> Bool {
         let capabilities = try PaymentRequestBuilder.buildMerchantCapabilities(merchantCapabilities ?? [])
-        let paymentNetworks = networks.compactMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
-        // PassKit may answer true for an empty list, but no card is on no network.
-        guard !paymentNetworks.isEmpty else { return false }
+        let paymentNetworks = try PaymentRequestBuilder.buildSupportedNetworks(networks)
         return PKPaymentAuthorizationViewController.canMakePayments(
             usingNetworks: paymentNetworks,
             capabilities: capabilities

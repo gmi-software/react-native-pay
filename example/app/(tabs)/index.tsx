@@ -45,6 +45,7 @@ export default function TabOneScreen() {
     result,
     error,
     reset,
+    paymentRequest,
   } = usePaymentCheckout({
     merchantName: "React Native Pay Demo",
     countryCode: "US",
@@ -316,6 +317,10 @@ export default function TabOneScreen() {
                   buttonType="buy"
                   theme="dark"
                   radius={8}
+                  // The cards the request accepts, so the button shows one of them.
+                  supportedNetworks={paymentRequest.supportedNetworks}
+                  googlePayAllowedAuthMethods={paymentRequest.googlePayAllowedAuthMethods}
+                  merchantCapabilities={paymentRequest.merchantCapabilities}
                   onPress={callback(handlePayment)}
                   style={styles.payButton}
                 />

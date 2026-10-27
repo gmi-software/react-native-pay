@@ -372,14 +372,15 @@ interface UsePaymentCheckoutConfig {
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
-  supportedNetworks?: string[]; // Default: ['visa', 'mastercard', 'amex', 'discover']
-  merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']
+  supportedNetworks?: string[]; // PaymentNetwork names. Default: ['visa', 'mastercard', 'amex', 'discover']
+  merchantCapabilities?: MerchantCapability[]; // Default: ['3DS']. Android: only Debit without Credit
   applePayMerchantIdentifier?: string; // Optional iOS override
   // Google Pay specific (Android)
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
   // Contact details, returned in the result (see "Shipping and contact details")
   billingContactRequired?: boolean;
   shippingContactRequired?: boolean;
@@ -463,7 +464,7 @@ Low-level payment handler for direct control.
 
 ##### `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
 
-Check payment service availability without blocking the JS thread. Pass the networks, capabilities and Google Pay environment your payment request uses.
+Check payment service availability without blocking the JS thread. Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods` and `googlePayEnvironment` your payment request uses. The Promise rejects with the payment's configuration error for a value the payment would refuse.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
@@ -634,6 +635,11 @@ interface GooglePayButtonProps {
 
   radius?: number; // Corner radius in dp
 
+  // The cards your payment accepts, so the button never shows another card.
+  supportedNetworks?: string[]; // as PaymentRequest.supportedNetworks
+  googlePayAllowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
+  merchantCapabilities?: string[]; // as PaymentRequest.merchantCapabilities
+
   onPress?: () => void; // wrap with callback() from react-native-nitro-modules
   style?: ViewStyle;
 }
@@ -759,7 +765,7 @@ interface PaymentRequest {
   currencyCode: string;
   paymentItems: PaymentItem[];
   merchantCapabilities: string[]; // MerchantCapability values
-  supportedNetworks: string[];
+  supportedNetworks: string[]; // PaymentNetwork names; unknown names fail
   shippingType?: string; // ShippingType value, iOS only
   shippingMethods?: ShippingMethod[]; // → PaymentResult.shippingMethod
   billingContactRequired?: boolean; // → PaymentResult.billingContact
@@ -771,6 +777,7 @@ interface PaymentRequest {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
 }
 
 // Payment Result
@@ -790,14 +797,16 @@ interface PaymentToken {
 
 // Payment Method
 interface PaymentMethod {
-  displayName?: string;
-  network?: PaymentNetwork;
-  type: PaymentMethodType;
+  displayName?: string; // for the payer, e.g. "Visa •••• 1234"; don't parse it
+  network?: PaymentNetwork; // "unknown" when the library cannot name it
+  type: PaymentMethodType; // funding source; "store" is iOS only
   secureElementPass?: PKSecureElementPass;
   billingAddress?: CNContact;
 }
 
-// Payment Networks
+// Payment Networks. Google Pay offers visa, mastercard, amex, discover, jcb
+// and interac, plus electron, maestro and elo for Brazilian combo cards.
+// Apple Pay offers all of them; each platform leaves out the ones it lacks.
 type PaymentNetwork =
   | "visa"
   | "mastercard"
@@ -809,7 +818,33 @@ type PaymentNetwork =
   | "elo"
   | "idcredit"
   | "interac"
-  | "privateLabel";
+  | "privateLabel"
+  | "cartesBancaires"
+  | "chinaUnionPay"
+  | "dankort"
+  | "eftpos"
+  | "girocard"
+  | "mada"
+  | "mir"
+  | "quicPay"
+  | "suica"
+  | "vPay"
+  | "waon"
+  | "nanaco"
+  | "bancontact"
+  | "postFinance"
+  | "pagoBancomat"
+  | "tmoney"
+  | "meeza"
+  | "napas"
+  | "bankAxept"
+  | "himyan"
+  | "jaywan"
+  | "myDebit"
+  | "unknown"; // results only
+
+// Google Pay auth methods (Android)
+type GooglePayAuthMethod = "PAN_ONLY" | "CRYPTOGRAM_3DS";
 
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";
@@ -830,7 +865,9 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 
 ### Merchant capabilities
 
-`merchantCapabilities` is used by Apple Pay only. `"3DS"` and `"EMV"` are payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. `"Credit"` and `"Debit"` limit the accepted card types. iOS matches the values case-insensitively and adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
+`"3DS"` and `"EMV"` are Apple Pay payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. Android ignores them. `"Credit"` and `"Debit"` limit the accepted card types. iOS adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Both platforms match the values case-insensitively, and any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
+
+Google Pay can leave credit cards out, but not debit cards. On Android, `"Debit"` without `"Credit"` sends `allowCreditCards: false`, which UK gambling merchants must do; prepaid cards stay allowed. `["3DS", "Credit"]` accepts every card type on Android, so check the card on your server if you must refuse debit cards. Give `GooglePayButton` and `payServiceStatus` the same `merchantCapabilities` as the payment.
 
 ### Shipping and contact details
 

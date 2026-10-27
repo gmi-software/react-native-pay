@@ -65,16 +65,23 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     override fun payServiceStatus(options: PayServiceStatusOptions?): Promise<PayServiceStatus> {
         val environment = determineEnvironment(options?.googlePayEnvironment)
-        val cardNetworks = options?.supportedNetworks
-            ?.let { GooglePayRequestBuilder.googleCardNetworks(it) }
-            ?: PaymentConstants.DEFAULT_CARD_NETWORKS
+        // Rejects what the payment would refuse, with the same error.
+        val cardParameters = try {
+            GooglePayCardParameters.from(
+                options?.supportedNetworks,
+                options?.googlePayAllowedAuthMethods,
+                options?.merchantCapabilities
+            )
+        } catch (e: IllegalArgumentException) {
+            return Promise.rejected(e)
+        }
         // Both requests run at once; neither blocks the calling (JS) thread.
         val isSupported = isReadyToPay(
             environment,
-            PaymentConstants.DEFAULT_CARD_NETWORKS,
+            GooglePayCardParameters.DEFAULT,
             existingPaymentMethodRequired = false
         )
-        val hasActiveCard = isReadyToPay(environment, cardNetworks, existingPaymentMethodRequired = true)
+        val hasActiveCard = isReadyToPay(environment, cardParameters, existingPaymentMethodRequired = true)
         
         val promise = Promise<PayServiceStatus>()
         Tasks.whenAll(isSupported, hasActiveCard).addOnCompleteListener {
@@ -235,15 +242,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
      */
     private fun isReadyToPay(
         environment: Int,
-        cardNetworks: List<String>,
+        cardParameters: GooglePayCardParameters,
         existingPaymentMethodRequired: Boolean
     ): Task<Boolean> {
-        // No network Google Pay knows: no card can be on it.
-        if (cardNetworks.isEmpty()) return Tasks.forResult(false)
-        
         val answer: Task<Boolean> = try {
             val requestJson = GooglePayRequestBuilder.createIsReadyToPayRequest(
-                cardNetworks = cardNetworks,
+                cardParameters = cardParameters,
                 existingPaymentMethodRequired = existingPaymentMethodRequired
             )
             Tasks.withTimeout(

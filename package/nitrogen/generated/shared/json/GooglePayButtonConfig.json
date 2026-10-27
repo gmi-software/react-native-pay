@@ -7,6 +7,9 @@
     "buttonType": true,
     "theme": true,
     "radius": true,
+    "supportedNetworks": true,
+    "googlePayAllowedAuthMethods": true,
+    "merchantCapabilities": true,
     "onPress": true,
     "hybridRef": true
   }

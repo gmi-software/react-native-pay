@@ -93,11 +93,12 @@ describe('usePaymentCheckout availability', () => {
       }
     )
 
-    it('checks the networks, capabilities and environment from the config', async () => {
+    it('checks the networks, capabilities, auth methods and environment from the config', async () => {
       const { result } = renderHook(() =>
         usePaymentCheckout({
           supportedNetworks: ['visa', 'mastercard'],
           merchantCapabilities: ['3DS', 'Debit'],
+          googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
           googlePayEnvironment: 'PRODUCTION',
         })
       )
@@ -110,6 +111,7 @@ describe('usePaymentCheckout availability', () => {
       expect(mockPayServiceStatus).toHaveBeenCalledWith({
         supportedNetworks: ['visa', 'mastercard'],
         merchantCapabilities: ['3DS', 'Debit'],
+        googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
         googlePayEnvironment: 'PRODUCTION',
       })
     })

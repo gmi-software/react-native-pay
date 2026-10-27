@@ -12,20 +12,16 @@ import java.math.RoundingMode
 object GooglePayRequestBuilder {
     
     /**
-     * Creates an IsReadyToPay request
-     *
-     * @param cardNetworks Google Pay `allowedCardNetworks` values, see [googleCardNetworks].
+     * Creates an IsReadyToPay request for the cards in [cardParameters]
      */
-    fun createIsReadyToPayRequest(
-        cardNetworks: List<String>,
+    internal fun createIsReadyToPayRequest(
+        cardParameters: GooglePayCardParameters,
         existingPaymentMethodRequired: Boolean? = null
     ): JSONObject {
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
-            put("allowedPaymentMethods", JSONArray().apply {
-                put(createBaseCardPaymentMethod(JSONArray(cardNetworks)))
-            })
+            put("allowedPaymentMethods", createAllowedPaymentMethods(cardParameters))
             existingPaymentMethodRequired?.let {
                 put("existingPaymentMethodRequired", it)
             }
@@ -33,13 +29,13 @@ object GooglePayRequestBuilder {
     }
 
     /**
-     * Maps `PaymentNetwork` names to Google Pay `allowedCardNetworks` values,
-     * without duplicates. Names Google Pay has no network for are dropped.
+     * The `allowedPaymentMethods` of an IsReadyToPay request or a PayButton:
+     * the cards in [cardParameters]
      */
-    fun googleCardNetworks(networks: Array<String>): List<String> {
-        return networks
-            .mapNotNull { PaymentConstants.GOOGLE_CARD_NETWORKS[it.lowercase()] }
-            .distinct()
+    internal fun createAllowedPaymentMethods(cardParameters: GooglePayCardParameters): JSONArray {
+        return JSONArray().apply {
+            put(createBaseCardPaymentMethod(cardParameters))
+        }
     }
     
     /**
@@ -56,13 +52,18 @@ object GooglePayRequestBuilder {
         validatePaymentRequest(request, environment)
         validateShippingMethods(request)
         val requested = RequestedDetails.from(request)
+        val cardParameters = GooglePayCardParameters.from(
+            request.supportedNetworks,
+            request.googlePayAllowedAuthMethods,
+            request.merchantCapabilities
+        )
 
         return JSONObject().apply {
             put("apiVersion", PaymentConstants.API_VERSION)
             put("apiVersionMinor", PaymentConstants.API_VERSION_MINOR)
             put("merchantInfo", createMerchantInfo(request, environment, fallbackMerchantName))
             put("allowedPaymentMethods", JSONArray().apply {
-                put(createCardPaymentMethod(request, environment, requested))
+                put(createCardPaymentMethod(request, environment, requested, cardParameters))
             })
             put("transactionInfo", createTransactionInfo(request, requested.shippingMethod))
             if (requested.email) {
@@ -100,15 +101,10 @@ object GooglePayRequestBuilder {
     /**
      * Creates base card payment method (no tokenization)
      */
-    private fun createBaseCardPaymentMethod(
-        allowedCardNetworks: JSONArray = createAllowedCardNetworks()
-    ): JSONObject {
+    private fun createBaseCardPaymentMethod(cardParameters: GooglePayCardParameters): JSONObject {
         return JSONObject().apply {
             put("type", PaymentConstants.PAYMENT_METHOD_CARD)
-            put("parameters", JSONObject().apply {
-                put("allowedAuthMethods", createAllowedAuthMethods())
-                put("allowedCardNetworks", allowedCardNetworks)
-            })
+            put("parameters", cardParameters.toJson())
         }
     }
     
@@ -118,9 +114,10 @@ object GooglePayRequestBuilder {
     private fun createCardPaymentMethod(
         request: PaymentRequest,
         environment: Int,
-        requested: RequestedDetails
+        requested: RequestedDetails,
+        cardParameters: GooglePayCardParameters
     ): JSONObject {
-        val baseMethod = createBaseCardPaymentMethod()
+        val baseMethod = createBaseCardPaymentMethod(cardParameters)
         if (requested.billingAddressRequired) {
             baseMethod.getJSONObject("parameters").apply {
                 put("billingAddressRequired", true)
@@ -287,23 +284,4 @@ object GooglePayRequestBuilder {
             )
         }
     }
-    
-    /**
-     * Creates allowed auth methods
-     */
-    private fun createAllowedAuthMethods(): JSONArray {
-        return JSONArray().apply {
-            put(PaymentConstants.AUTH_PAN_ONLY)
-            put(PaymentConstants.AUTH_CRYPTOGRAM_3DS)
-        }
-    }
-    
-    /**
-     * Creates allowed card networks
-     */
-    fun createAllowedCardNetworks(): JSONArray {
-        return JSONArray(PaymentConstants.DEFAULT_CARD_NETWORKS)
-    }
 }
-
-

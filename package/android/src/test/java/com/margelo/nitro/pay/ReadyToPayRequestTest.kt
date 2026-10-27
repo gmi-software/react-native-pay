@@ -17,41 +17,9 @@ class ReadyToPayRequestTest {
     }
 
     @Test
-    fun googleCardNetworks_mapsPaymentNetworkNames() {
-        assertEquals(
-            listOf("VISA", "MASTERCARD", "AMEX", "DISCOVER", "JCB", "INTERAC"),
-            GooglePayRequestBuilder.googleCardNetworks(
-                arrayOf("visa", "mastercard", "amex", "discover", "jcb", "interac")
-            )
-        )
-    }
-
-    @Test
-    fun googleCardNetworks_ignoresCaseAndDuplicates() {
-        assertEquals(
-            listOf("VISA", "AMEX"),
-            GooglePayRequestBuilder.googleCardNetworks(arrayOf("Visa", "AMEX", "visa"))
-        )
-    }
-
-    @Test
-    fun googleCardNetworks_dropsNetworksGooglePayDoesNotHave() {
-        assertEquals(
-            listOf("MASTERCARD"),
-            GooglePayRequestBuilder.googleCardNetworks(
-                arrayOf("idcredit", "privateLabel", "mastercard", "unknown")
-            )
-        )
-        assertEquals(
-            emptyList<String>(),
-            GooglePayRequestBuilder.googleCardNetworks(arrayOf("privateLabel"))
-        )
-    }
-
-    @Test
     fun isReadyToPayRequest_checksTheGivenNetworksForAnExistingCard() {
         val request = GooglePayRequestBuilder.createIsReadyToPayRequest(
-            cardNetworks = listOf("VISA", "JCB"),
+            cardParameters = GooglePayCardParameters.from(arrayOf("visa", "jcb"), null),
             existingPaymentMethodRequired = true
         )
 
@@ -66,7 +34,7 @@ class ReadyToPayRequestTest {
     @Test
     fun isReadyToPayRequest_canAskWithoutRequiringACard() {
         val request = GooglePayRequestBuilder.createIsReadyToPayRequest(
-            cardNetworks = PaymentConstants.DEFAULT_CARD_NETWORKS,
+            cardParameters = GooglePayCardParameters.DEFAULT,
             existingPaymentMethodRequired = false
         )
 

@@ -1,16 +1,23 @@
 import XCTest
 @testable import NitroPay
 
-// Only `hasActiveCard` paths that return before PassKit is asked: its answers
+// Only `hasActiveCard` paths that fail before PassKit is asked: its answers
 // depend on the device and the cards in Wallet.
 final class PaymentReadinessTests: XCTestCase {
 
-    func testNoCardWithoutARecognisedNetwork() throws {
-        XCTAssertFalse(try PaymentReadiness.hasActiveCard(networks: [], merchantCapabilities: nil))
-        XCTAssertFalse(try PaymentReadiness.hasActiveCard(
-            networks: ["unknown", "VISA"],
+    func testRejectsNetworksThePaymentWouldRefuse() {
+        XCTAssertThrowsError(try PaymentReadiness.hasActiveCard(networks: [], merchantCapabilities: nil)) { error in
+            XCTAssertEqual(String(describing: error), "supportedNetworks needs at least one network")
+        }
+        XCTAssertThrowsError(try PaymentReadiness.hasActiveCard(
+            networks: ["VISA", "unknown"],
             merchantCapabilities: ["3DS"]
-        ))
+        )) { error in
+            XCTAssertEqual(
+                String(describing: error),
+                "Unknown payment network \"unknown\". Use a PaymentNetwork value such as \"visa\" or \"mastercard\""
+            )
+        }
     }
 
     func testRejectsUnknownMerchantCapability() {

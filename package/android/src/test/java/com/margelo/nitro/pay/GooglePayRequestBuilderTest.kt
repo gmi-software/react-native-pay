@@ -28,15 +28,18 @@ class GooglePayRequestBuilderTest {
         shippingContactRequired: Boolean? = null,
         emailRequired: Boolean? = null,
         phoneNumberRequired: Boolean? = null,
-        shippingMethods: Array<ShippingMethod>? = null
+        shippingMethods: Array<ShippingMethod>? = null,
+        supportedNetworks: Array<String> = arrayOf("visa"),
+        googlePayAllowedAuthMethods: Array<String>? = null,
+        merchantCapabilities: Array<String> = arrayOf("3DS")
     ) = PaymentRequest(
         applePayMerchantIdentifier = null,
         merchantName = merchantName,
         countryCode = "US",
         currencyCode = currencyCode,
         paymentItems = items,
-        merchantCapabilities = arrayOf("3DS"),
-        supportedNetworks = arrayOf("visa"),
+        merchantCapabilities = merchantCapabilities,
+        supportedNetworks = supportedNetworks,
         shippingType = null,
         shippingMethods = shippingMethods,
         billingContactRequired = billingContactRequired,
@@ -46,7 +49,8 @@ class GooglePayRequestBuilderTest {
         googlePayMerchantId = googlePayMerchantId,
         googlePayEnvironment = environment,
         googlePayGateway = googlePayGateway,
-        googlePayGatewayMerchantId = googlePayGatewayMerchantId
+        googlePayGatewayMerchantId = googlePayGatewayMerchantId,
+        googlePayAllowedAuthMethods = googlePayAllowedAuthMethods
     )
 
     private fun build(
@@ -420,9 +424,206 @@ class GooglePayRequestBuilderTest {
 
     @Test
     fun isReadyToPayRequest_neverAsksForContacts() {
-        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest(PaymentConstants.DEFAULT_CARD_NETWORKS)
-            .getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")
+        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest(GooglePayCardParameters.DEFAULT).cardParameters()
 
         assertFalse(parameters.has("billingAddressRequired"))
+    }
+
+    // Card networks and auth methods
+
+    private fun JSONObject.strings(key: String): List<String> {
+        val array = getJSONArray(key)
+        return (0 until array.length()).map { array.getString(it) }
+    }
+
+    private fun cardParametersOf(
+        networks: Array<String>?,
+        authMethods: Array<String>? = null,
+        merchantCapabilities: Array<String>? = null
+    ) = GooglePayCardParameters.from(networks, authMethods, merchantCapabilities)
+
+    @Test
+    fun supportedNetworks_areTheOnlyNetworksInTheRequestTheReadinessCheckAndTheButton() {
+        val request = build(paymentRequest(coffee, supportedNetworks = arrayOf("visa", "mastercard")))
+        val parameters = cardParametersOf(arrayOf("visa", "mastercard"))
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(parameters, existingPaymentMethodRequired = true)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(parameters)
+
+        val expected = listOf("VISA", "MASTERCARD")
+        assertEquals(expected, request.cardParameters().strings("allowedCardNetworks"))
+        assertEquals(expected, readiness.cardParameters().strings("allowedCardNetworks"))
+        assertEquals(
+            expected,
+            button.getJSONObject(0).getJSONObject("parameters").strings("allowedCardNetworks")
+        )
+        assertEquals(
+            readiness.getJSONArray("allowedPaymentMethods").toString(),
+            button.toString()
+        )
+    }
+
+    @Test
+    fun supportedNetworks_mapEveryGooglePayNetworkIgnoringCase() {
+        val parameters = cardParametersOf(
+            arrayOf("VISA", "MasterCard", "amex", "discover", "jcb", "interac", "electron", "maestro", "elo")
+        )
+
+        assertEquals(
+            listOf("VISA", "MASTERCARD", "AMEX", "DISCOVER", "JCB", "INTERAC", "ELECTRON", "MAESTRO", "ELO"),
+            parameters.cardNetworks
+        )
+    }
+
+    @Test
+    fun supportedNetworks_leaveOutNetworksGooglePayDoesNotOffer() {
+        val parameters = cardParametersOf(arrayOf("cartesBancaires", "visa", "mada", "VISA"))
+
+        assertEquals(listOf("VISA"), parameters.cardNetworks)
+    }
+
+    @Test
+    fun supportedNetworks_defaultToTheFourCommonNetworks() {
+        val parameters = GooglePayRequestBuilder.createIsReadyToPayRequest(GooglePayCardParameters.DEFAULT).cardParameters()
+
+        assertEquals(
+            listOf("VISA", "MASTERCARD", "AMEX", "DISCOVER"),
+            parameters.strings("allowedCardNetworks")
+        )
+        assertEquals(listOf("PAN_ONLY", "CRYPTOGRAM_3DS"), parameters.strings("allowedAuthMethods"))
+    }
+
+    @Test
+    fun supportedNetworks_rejectUnknownNames() {
+        for (name in listOf("vsa", "unknown", "")) {
+            val error = assertThrows(IllegalArgumentException::class.java) {
+                build(paymentRequest(coffee, supportedNetworks = arrayOf("visa", name)))
+            }
+
+            assertEquals(
+                "Unknown payment network \"$name\". Use a PaymentNetwork value such as \"visa\" or \"mastercard\"",
+                error.message
+            )
+        }
+    }
+
+    @Test
+    fun supportedNetworks_rejectAListWithoutAGooglePayNetwork() {
+        val empty = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(coffee, supportedNetworks = emptyArray()))
+        }
+        val iosOnly = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(coffee, supportedNetworks = arrayOf("cartesBancaires", "mada")))
+        }
+
+        assertEquals("supportedNetworks needs at least one network", empty.message)
+        assertEquals("Google Pay offers none of these networks: cartesBancaires, mada", iosOnly.message)
+    }
+
+    @Test
+    fun authMethods_canBeRestrictedToCryptogram3ds() {
+        val request = build(
+            paymentRequest(coffee, googlePayAllowedAuthMethods = arrayOf("cryptogram_3ds"))
+        )
+
+        assertEquals(listOf("CRYPTOGRAM_3DS"), request.cardParameters().strings("allowedAuthMethods"))
+    }
+
+    @Test
+    fun authMethods_keepTheGivenOrderWithoutDuplicates() {
+        val parameters = cardParametersOf(null, arrayOf("CRYPTOGRAM_3DS", "PAN_ONLY", "pan_only"))
+
+        assertEquals(listOf("CRYPTOGRAM_3DS", "PAN_ONLY"), parameters.authMethods)
+    }
+
+    @Test
+    fun authMethods_rejectUnknownAndEmptyLists() {
+        val unknown = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(coffee, googlePayAllowedAuthMethods = arrayOf("3DS")))
+        }
+        val empty = assertThrows(IllegalArgumentException::class.java) {
+            build(paymentRequest(coffee, googlePayAllowedAuthMethods = emptyArray()))
+        }
+
+        assertEquals(
+            "Unknown Google Pay auth method \"3DS\". Use \"PAN_ONLY\" or \"CRYPTOGRAM_3DS\"",
+            unknown.message
+        )
+        assertEquals(
+            "Google Pay needs at least one auth method: \"PAN_ONLY\" or \"CRYPTOGRAM_3DS\"",
+            empty.message
+        )
+    }
+
+    // Merchant capabilities
+
+    @Test
+    fun debitOnly_leavesCreditCardsOutOfTheRequestTheReadinessCheckAndTheButton() {
+        val request = build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Debit")))
+        val parameters = cardParametersOf(null, merchantCapabilities = arrayOf("3DS", "Debit"))
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(parameters, existingPaymentMethodRequired = true)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(parameters)
+
+        assertFalse(request.cardParameters().getBoolean("allowCreditCards"))
+        assertFalse(readiness.cardParameters().getBoolean("allowCreditCards"))
+        assertFalse(button.getJSONObject(0).getJSONObject("parameters").getBoolean("allowCreditCards"))
+        assertEquals(
+            readiness.getJSONArray("allowedPaymentMethods").toString(),
+            button.toString()
+        )
+    }
+
+    @Test
+    fun debitOnly_isMatchedIgnoringCase() {
+        for (capabilities in listOf(arrayOf("debit"), arrayOf("3ds", "DEBIT"))) {
+            val parameters = build(paymentRequest(coffee, merchantCapabilities = capabilities)).cardParameters()
+
+            assertFalse(capabilities.joinToString(), parameters.getBoolean("allowCreditCards"))
+        }
+    }
+
+    @Test
+    fun creditOnly_acceptsEveryCardType() {
+        // Google Pay cannot leave debit cards out.
+        val parameters = build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Credit")))
+            .cardParameters()
+
+        assertFalse(parameters.has("allowCreditCards"))
+        assertFalse(parameters.has("allowPrepaidCards"))
+    }
+
+    @Test
+    fun creditAndDebit_acceptEveryCardType() {
+        val parameters = build(paymentRequest(coffee, merchantCapabilities = arrayOf("Debit", "credit")))
+            .cardParameters()
+
+        assertFalse(parameters.has("allowCreditCards"))
+    }
+
+    @Test
+    fun neitherCreditNorDebit_acceptsEveryCardType() {
+        for (capabilities in listOf(arrayOf("3DS"), arrayOf("EMV"), emptyArray())) {
+            val parameters = build(paymentRequest(coffee, merchantCapabilities = capabilities)).cardParameters()
+
+            assertFalse(capabilities.joinToString(), parameters.has("allowCreditCards"))
+        }
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(GooglePayCardParameters.DEFAULT)
+        assertFalse(readiness.cardParameters().has("allowCreditCards"))
+    }
+
+    @Test
+    fun merchantCapabilities_rejectUnknownValuesLikeIos() {
+        for (capability in listOf("Prepaid", "3-D Secure", "")) {
+            val error = assertThrows(IllegalArgumentException::class.java) {
+                build(paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", capability)))
+            }
+
+            assertEquals(
+                "Unknown merchant capability \"$capability\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\"",
+                error.message
+            )
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            cardParametersOf(null, merchantCapabilities = arrayOf("Unknown"))
+        }
     }
 }

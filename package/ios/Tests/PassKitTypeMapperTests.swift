@@ -5,9 +5,14 @@ import XCTest
 
 final class PassKitTypeMapperTests: XCTestCase {
 
+    // Every PaymentNetwork in src/types/Payment.ts but "unknown"
     private let networkNames = [
         "visa", "mastercard", "amex", "discover", "jcb", "maestro",
         "electron", "elo", "idcredit", "interac", "privateLabel",
+        "cartesBancaires", "chinaUnionPay", "dankort", "eftpos", "girocard",
+        "mada", "mir", "quicPay", "suica", "vPay", "waon", "nanaco",
+        "bancontact", "postFinance", "pagoBancomat", "tmoney", "meeza",
+        "napas", "bankAxept", "himyan", "jaywan", "myDebit",
     ]
 
     // Swift drops this `convert` overload when it is looked up before the
@@ -17,23 +22,41 @@ final class PassKitTypeMapperTests: XCTestCase {
         return PassKitTypeMapper.convert(network)
     }
 
+    private func pkNetwork(named name: String) -> PKPaymentNetwork? {
+        let network: PaymentNetwork? = PassKitTypeMapper.paymentNetwork(named: name)
+        return network.flatMap { PassKitTypeMapper.convertToPKPaymentNetwork($0) }
+    }
+
     func testConvertsEveryNetworkNameToPassKitAndBack() throws {
         for name in networkNames {
-            let pkNetwork = try XCTUnwrap(PassKitTypeMapper.convertToPKPaymentNetwork(name), name)
+            let network = try XCTUnwrap(PassKitTypeMapper.paymentNetwork(named: name), name)
+            XCTAssertEqual(network.stringValue, name)
+            guard let pkNetwork = pkNetwork(named: name) else {
+                // Only a network newer than the simulator's iOS has none.
+                if #available(iOS 26.0, *) { XCTFail("No PassKit network for \(name)") }
+                continue
+            }
             XCTAssertEqual(convert(pkNetwork), PaymentNetwork(fromString: name), name)
         }
-        XCTAssertEqual(PassKitTypeMapper.convertToPKPaymentNetwork("mastercard"), .masterCard)
-        XCTAssertEqual(PassKitTypeMapper.convertToPKPaymentNetwork("idcredit"), .idCredit)
+        XCTAssertEqual(pkNetwork(named: "mastercard"), .masterCard)
+        XCTAssertEqual(pkNetwork(named: "idcredit"), .idCredit)
+        XCTAssertEqual(pkNetwork(named: "cartesBancaires"), .cartesBancaires)
+    }
+
+    func testMatchesNetworkNamesIgnoringCase() {
+        XCTAssertEqual(pkNetwork(named: "Visa"), .visa)
+        XCTAssertEqual(pkNetwork(named: "PRIVATELABEL"), .privateLabel)
     }
 
     func testIgnoresUnknownNetworkNames() {
-        XCTAssertNil(PassKitTypeMapper.convertToPKPaymentNetwork("unknown"))
-        XCTAssertNil(PassKitTypeMapper.convertToPKPaymentNetwork("Visa"))
+        XCTAssertNil(PassKitTypeMapper.paymentNetwork(named: "unknown"))
+        XCTAssertNil(PassKitTypeMapper.paymentNetwork(named: "vsa"))
+        XCTAssertNil(PassKitTypeMapper.paymentNetwork(named: ""))
     }
 
-    func testReportsUnsupportedPassKitNetworksAsVisa() {
-        // Current behavior: PaymentNetwork has no "other" case.
-        XCTAssertEqual(convert(.girocard), .visa)
+    func testReportsUnrecognizedPassKitNetworksAsUnknown() {
+        XCTAssertEqual(convert(.barcode), .unknown)
+        XCTAssertEqual(convert(PKPaymentNetwork(rawValue: "NotANetwork")), .unknown)
     }
 
     func testConvertsPaymentMethodTypes() {

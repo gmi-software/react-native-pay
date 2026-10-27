@@ -22,8 +22,42 @@ All notable changes to this project are documented in this file.
   iOS the payer picks one, and the first is selected by default. Google Pay cannot offer a choice
   yet, so Android charges the first method. An empty or repeated `identifier`, a negative
   `amount`, or `paymentItems` that total less than zero without shipping fail the payment.
+- **`googlePayAllowedAuthMethods`** in `PaymentRequest` and the `usePaymentCheckout` config
+  (`GooglePayAuthMethod[]`: `'PAN_ONLY'`, `'CRYPTOGRAM_3DS'`) limits which Google Pay cards are
+  accepted, for example device tokens only under SCA. Both by default, as before.
+- **More card networks.** `PaymentNetwork` gains `cartesBancaires`, `chinaUnionPay`, `dankort`,
+  `eftpos`, `girocard`, `mada`, `mir`, `quicPay`, `suica`, `vPay`, `waon`, `nanaco`, `bancontact`,
+  `postFinance`, `pagoBancomat`, `tmoney`, `meeza`, `napas`, `bankAxept`, `himyan`, `jaywan` and
+  `myDebit`, which Apple Pay accepts in `supportedNetworks` and reports in results. Android
+  accepts `jcb` and `interac`, and `electron`, `maestro` and `elo` for Brazilian combo cards.
+- **`GooglePayButton` takes `supportedNetworks`, `googlePayAllowedAuthMethods` and
+  `merchantCapabilities`,** and `PayServiceStatusOptions` takes `googlePayAllowedAuthMethods`, under
+  the same names as in `PaymentRequest`. Give them the values of your request, so the button and
+  `hasActiveCard` count the same cards as the payment. `usePaymentCheckout` passes its config to
+  `payServiceStatus`.
+- **Android honours a debit-only `merchantCapabilities`.** `'Debit'` without `'Credit'` now leaves
+  credit cards out of the Google Pay request (`allowCreditCards: false`), as UK gambling merchants
+  must. Prepaid cards stay allowed. Google Pay cannot leave debit cards out, so `'Credit'` alone
+  still accepts every card type on Android; `'3DS'` and `'EMV'` have no effect there. The button
+  and the readiness check leave credit cards out too.
 
 ### Changed
+
+- **`PaymentNetwork` has a new `'unknown'` value,** reported for a card on a network the library
+  cannot name. Both platforms used to report such cards as `'visa'`. Code that switches over
+  `token.paymentMethod.network` needs a case for it.
+- **An unknown name in `supportedNetworks` fails the payment** on both platforms, with an `error`
+  that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or
+  "mastercard"`. iOS used to drop it silently. Names now match ignoring case, so `'Visa'` works,
+  and a network the platform does not offer is left out; the payment fails when none is left.
+  `payServiceStatus` rejects with the same configuration error for a value the payment would
+  refuse, instead of answering `hasActiveCard: false`.
+- **An unknown value in `merchantCapabilities` fails the payment on Android too,** with the same
+  `error` as on iOS: `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or
+  "Debit"`. Android used to ignore the field.
+- **Android: `PaymentMethod.displayName` is the wallet's description of the card** (Google Pay's
+  `paymentMethodData.description`, for example "Visa •••• 1234") instead of `"VISA 1234"`. Google
+  Pay asks apps not to show `cardNetwork` to the payer. Use `network` for logic.
 
 - **`PaymentRequest.shippingMethods` is `ShippingMethod[]`, not `PaymentItem[]`.** Neither
   platform ever read the old field, so only the type changes: give each method an `identifier`
@@ -68,6 +102,15 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- **Android: `supportedNetworks` limits the cards the payer can choose.** Android ignored it and
+  always offered Visa, Mastercard, Amex and Discover, so a merchant whose gateway refuses Amex
+  still received Amex tokens, and JCB or Interac could not be enabled. The payment request, the
+  `GooglePayButton` and the readiness check behind `payServiceStatus` now use the same networks
+  and auth methods.
+- **Android: `PaymentMethod.type` reports the card's funding source.** It was always
+  `'unknown'`. It now reads Google Pay's `cardFundingSource`, so a result reports `'credit'`,
+  `'debit'` or `'prepaid'`, and `'unknown'` only when Google Pay does not know. `'store'` stays
+  iOS only.
 - **Requested contact details are no longer lost.** iOS asked for the billing and shipping
   address but never returned them, and Android ignored `billingContactRequired` and
   `shippingContactRequired`. See Added.
@@ -83,8 +126,6 @@ All notable changes to this project are documented in this file.
   until a payment had started, and in `TEST` Google Pay reports a card whether or not there is one,
   so production apps showed the pay button for users without a card. It now uses
   `googlePayEnvironment` from the hook config or the options.
-- **`hasActiveCard` is `false` when no checked network is one the platform knows.** iOS passed an
-  empty network list to PassKit, which can answer `true` for it.
 - **iOS: Apple Pay requests always include 3DS or EMV.** PassKit needs one of them, but iOS
   matched only the exact strings `3DS`, `EMV`, `Credit` and `Debit` and dropped everything else,
   so `[]`, `['Credit']` or `['3ds']` built a request with neither. Values are now matched

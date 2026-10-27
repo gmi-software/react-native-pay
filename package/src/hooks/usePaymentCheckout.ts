@@ -13,9 +13,10 @@ import type {
   PaymentResult,
   PaymentItem,
   PayServiceStatus,
-  PayServiceStatusOptions,
+  GooglePayAuthMethod,
   GooglePayEnvironment,
   MerchantCapability,
+  PayServiceStatusOptions,
   PaymentToken,
   PaymentAuthorizationResult,
   PaymentDetails,
@@ -58,14 +59,16 @@ export interface UsePaymentCheckoutConfig {
   currencyCode?: string
 
   /**
-   * Supported card networks for the payment sheet.
+   * Card networks the payer can pay with, as `PaymentNetwork` values.
    * Defaults to `['visa', 'mastercard', 'amex', 'discover']`.
+   * `hasActiveCard` counts only cards on these networks. See
+   * `PaymentRequest.supportedNetworks`.
    */
   supportedNetworks?: string[]
 
   /**
-   * Merchant capabilities passed to Apple Pay.
-   * Defaults to `['3DS']`.
+   * Merchant capabilities passed to Apple Pay. On Android, `'Debit'` without
+   * `'Credit'` leaves credit cards out. Defaults to `['3DS']`.
    */
   merchantCapabilities?: MerchantCapability[]
 
@@ -97,6 +100,13 @@ export interface UsePaymentCheckoutConfig {
    * Merchant ID provided by your payment gateway for Google Pay tokenization.
    */
   googlePayGatewayMerchantId?: string
+
+  /**
+   * How Google Pay may authenticate the card. Defaults to both
+   * `'PAN_ONLY'` and `'CRYPTOGRAM_3DS'`; pass `['CRYPTOGRAM_3DS']` to accept
+   * device tokens only. Android only.
+   */
+  googlePayAllowedAuthMethods?: GooglePayAuthMethod[]
 
   /**
    * Ask for the billing name and postal address, returned as
@@ -308,6 +318,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayAllowedAuthMethods,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,
@@ -327,6 +338,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayAllowedAuthMethods,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,
@@ -339,8 +351,9 @@ export function usePaymentCheckout(
   const statusOptionsKey = JSON.stringify({
     supportedNetworks: paymentRequest.supportedNetworks,
     merchantCapabilities: paymentRequest.merchantCapabilities,
+    googlePayAllowedAuthMethods: paymentRequest.googlePayAllowedAuthMethods,
     googlePayEnvironment: paymentRequest.googlePayEnvironment,
-  })
+  } satisfies PayServiceStatusOptions)
 
   useEffect(() => {
     // Ignores a check that settles after a newer one started or after unmount.

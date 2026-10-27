@@ -30,12 +30,15 @@ object PaymentMapper {
             val info = paymentMethodData.getJSONObject("info")
             val cardNetwork = info.optString("cardNetwork", "unknown")
             val cardDetails = info.optString("cardDetails", "****")
+            val cardFundingSource = info.optNonEmpty("cardFundingSource") ?: "UNKNOWN"
             
-            // Create payment method
+            // Create payment method. Google Pay asks to show `description`
+            // to the payer, not `cardNetwork`.
             val paymentMethod = PaymentMethod(
-                displayName = "$cardNetwork $cardDetails",
-                network = mapCardNetwork(cardNetwork),
-                type = PaymentMethodType.UNKNOWN,
+                displayName = paymentMethodData.optNonEmpty("description")
+                    ?: "$cardNetwork $cardDetails",
+                network = GooglePayNetworks.fromGooglePay(cardNetwork),
+                type = mapCardFundingSource(cardFundingSource),
                 secureElementPass = null,
                 billingAddress = null
             )
@@ -134,20 +137,14 @@ object PaymentMapper {
     }
     
     /**
-     * Maps card network string to PaymentNetwork enum
+     * Maps a Google Pay `cardFundingSource` value to PaymentMethodType, or UNKNOWN
      */
-    fun mapCardNetwork(network: String): PaymentNetwork {
-        return when (network.uppercase()) {
-            "VISA" -> PaymentNetwork.VISA
-            "MASTERCARD" -> PaymentNetwork.MASTERCARD
-            "AMEX" -> PaymentNetwork.AMEX
-            "DISCOVER" -> PaymentNetwork.DISCOVER
-            "JCB" -> PaymentNetwork.JCB
-            "MAESTRO" -> PaymentNetwork.MAESTRO
-            "ELECTRON" -> PaymentNetwork.ELECTRON
-            "ELO" -> PaymentNetwork.ELO
-            "INTERAC" -> PaymentNetwork.INTERAC
-            else -> PaymentNetwork.VISA // Default fallback
+    fun mapCardFundingSource(fundingSource: String): PaymentMethodType {
+        return when {
+            fundingSource.equals("CREDIT", ignoreCase = true) -> PaymentMethodType.CREDIT
+            fundingSource.equals("DEBIT", ignoreCase = true) -> PaymentMethodType.DEBIT
+            fundingSource.equals("PREPAID", ignoreCase = true) -> PaymentMethodType.PREPAID
+            else -> PaymentMethodType.UNKNOWN
         }
     }
     

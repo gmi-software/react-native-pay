@@ -26,7 +26,30 @@ enum class PaymentNetwork(@DoNotStrip @Keep val value: Int) {
   ELO(7),
   IDCREDIT(8),
   INTERAC(9),
-  PRIVATELABEL(10);
+  PRIVATELABEL(10),
+  CARTESBANCAIRES(11),
+  CHINAUNIONPAY(12),
+  DANKORT(13),
+  EFTPOS(14),
+  GIROCARD(15),
+  MADA(16),
+  MIR(17),
+  QUICPAY(18),
+  SUICA(19),
+  VPAY(20),
+  WAON(21),
+  NANACO(22),
+  BANCONTACT(23),
+  POSTFINANCE(24),
+  PAGOBANCOMAT(25),
+  TMONEY(26),
+  MEEZA(27),
+  NAPAS(28),
+  BANKAXEPT(29),
+  HIMYAN(30),
+  JAYWAN(31),
+  MYDEBIT(32),
+  UNKNOWN(33);
 
   companion object
 }
