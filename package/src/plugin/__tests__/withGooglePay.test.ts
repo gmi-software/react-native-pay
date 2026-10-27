@@ -63,4 +63,17 @@ describe('withGooglePay', () => {
     expect(result).toEqual({ modResults: { name: 'app' } })
     expect(mockAddMetaDataItemToMainApplication).toHaveBeenCalled()
   })
+
+  it.each([
+    ['enableGooglePay is omitted', {}],
+    ['enableGooglePay is null', { enableGooglePay: null } as any],
+  ])('leaves the manifest alone when %s', (_label, props) => {
+    const config = { name: 'app' }
+    const result = withGooglePay(config as any, props)
+
+    expect(result).toBe(config)
+    expect(mockWithAndroidManifest).not.toHaveBeenCalled()
+    expect(mockAddMetaDataItemToMainApplication).not.toHaveBeenCalled()
+    expect(mockRemoveMetaDataItemFromMainApplication).not.toHaveBeenCalled()
+  })
 })

@@ -34,4 +34,16 @@ describe('withReactNativePay', () => {
     )
     expect(result).toEqual({ name: 'my-app', googlePay: true, applePay: true })
   })
+
+  it('passes empty props when listed without options', () => {
+    const inputConfig = { name: 'my-app' }
+
+    withReactNativePay(inputConfig as any, undefined)
+
+    expect(mockWithGooglePay).toHaveBeenCalledWith(inputConfig, {})
+    expect(mockWithApplePay).toHaveBeenCalledWith(
+      { name: 'my-app', googlePay: true },
+      {}
+    )
+  })
 })

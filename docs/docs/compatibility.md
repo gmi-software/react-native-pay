@@ -20,7 +20,7 @@ Install the correct Nitro version first; the payment library depends on it.
 ## Expo plugin behavior
 
 - **merchantIdentifier** — Optional in the plugin config. If omitted, Apple Pay entitlements are not added (use for Android-only or when you add Apple Pay later).
-- **enableGooglePay** — Defaults to **false**. Set to **true** to enable Google Pay on Android.
+- **enableGooglePay** — Optional. Set to **true** to enable Google Pay on Android, or **false** to remove the Google Pay manifest entry. If omitted, the plugin leaves the Android manifest as it is.
 
 ## Platform support
 
@@ -56,7 +56,7 @@ Use `Platform.OS` (or equivalent) to render the correct button and to pass platf
 No. The library works in bare React Native too. The Expo plugin only simplifies adding Apple Pay entitlements and Google Pay metadata; in a bare project you configure those in Xcode and Android Studio yourself.
 
 **Can I use only Apple Pay or only Google Pay?**  
-Yes. Omit `enableGooglePay` (or set false) for iOS-only; omit plugin `merchantIdentifier` for Android-only. In code, only render the button for the platform you support.
+Yes. Omit `enableGooglePay` for iOS-only (`false` removes an entry another plugin added); omit plugin `merchantIdentifier` for Android-only. In code, only render the button for the platform you support.
 
 **Which gateways are supported for Google Pay?**  
 Any gateway that supports the [Google Pay API](https://developers.google.com/pay/api/android) and the gateway token format. Commonly used: Stripe, Braintree, Square, Adyen, Authorize.net, Checkout.com. Set `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` accordingly.

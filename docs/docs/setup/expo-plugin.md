@@ -24,10 +24,12 @@ Add the plugin to `app.json` or `app.config.js`:
 
 ## Options
 
+Both options are optional. Listed without options (`"plugins": ["@gmisoftware/react-native-pay"]`), the plugin changes nothing.
+
 | Option | Type | Description |
 |--------|------|-------------|
-| `merchantIdentifier` | `string` or `string[]` | Apple Pay Merchant ID(s). If omitted, Apple Pay entitlements are not added. |
-| `enableGooglePay` | `boolean` | If `true`, adds the Google Pay metadata to the Android manifest. Default: `false`. |
+| `merchantIdentifier` | `string` or `string[]` | Apple Pay Merchant ID(s). If omitted, Apple Pay entitlements are not added. Each ID should start with `merchant.`; prebuild warns when one does not. |
+| `enableGooglePay` | `boolean` | `true` adds the Google Pay metadata (`com.google.android.gms.wallet.api.enabled`) to the Android manifest. `false` removes it. If omitted, the manifest is left as it is, so an entry added by another plugin (Stripe, for example) stays. |
 
 ## Examples
 

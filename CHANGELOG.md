@@ -144,6 +144,14 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- **Expo plugin: works without options and keeps an existing Google Pay manifest entry.** Listing
+  `"@gmisoftware/react-native-pay"` without an options object crashed `expo prebuild` with
+  `Cannot read properties of undefined (reading 'enableGooglePay')`. When `enableGooglePay` was
+  omitted, the plugin also removed `com.google.android.gms.wallet.api.enabled` from the Android
+  manifest, even if another plugin, such as Stripe's, had added it. The plugin now adds the entry
+  when `enableGooglePay` is `true`, removes it when it is `false`, and leaves the manifest alone
+  when it is omitted. Prebuild also warns when a `merchantIdentifier` does not start with
+  `merchant.`.
 - **iOS: `ApplePayButton` keeps its `PKPaymentButton` across re-renders.** Every prop update
   removed the button and created a new one, so an `onPress` with a new identity on each render
   rebuilt it on every parent re-render. It is now rebuilt only when `buttonType` or `buttonStyle`
