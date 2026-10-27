@@ -18,10 +18,13 @@ import {
   usePaymentCheckout,
   type UsePaymentCheckoutConfig,
 } from '../usePaymentCheckout'
+import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../../paymentHandler'
 
-const IN_PROGRESS_RESULT = {
+const CANCELLED_RESULT = {
+  status: 'cancelled',
+  code: 'CANCELLED',
   success: false,
-  error: 'A payment is already in progress',
+  error: 'Payment cancelled by user',
 }
 
 function createDeferred<T>() {
@@ -309,10 +312,13 @@ describe('usePaymentCheckout integration', () => {
   })
 
   it('sets an error when native payment response has success=false', async () => {
-    mockStartPayment.mockResolvedValueOnce({
+    const declined = {
+      status: 'failed',
+      code: 'PROVIDER_ERROR',
       success: false,
       error: 'Declined by issuer',
-    })
+    }
+    mockStartPayment.mockResolvedValueOnce(declined)
     const { result } = renderCheckout()
 
     act(() => {
@@ -324,10 +330,54 @@ describe('usePaymentCheckout integration', () => {
     })
 
     expect(result.current.error?.message).toBe('Declined by issuer')
-    expect(result.current.result).toEqual({
-      success: false,
-      error: 'Declined by issuer',
+    expect(result.current.result).toEqual(declined)
+  })
+
+  it('does not treat a cancel as an error', async () => {
+    mockStartPayment.mockResolvedValueOnce(CANCELLED_RESULT)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 9.99)
     })
+
+    let paymentResult: any = null
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toEqual(CANCELLED_RESULT)
+    expect(result.current.result?.status).toBe('cancelled')
+    expect(result.current.result?.code).toBe('CANCELLED')
+    expect(result.current.error).toBeNull()
+    expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('clears the previous error when the next payment is cancelled', async () => {
+    mockStartPayment
+      .mockResolvedValueOnce({
+        status: 'failed',
+        code: 'PROVIDER_ERROR',
+        success: false,
+        error: 'Declined by issuer',
+      })
+      .mockResolvedValueOnce(CANCELLED_RESULT)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 9.99)
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+    expect(result.current.error).not.toBeNull()
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(result.current.error).toBeNull()
+    expect(result.current.result).toEqual(CANCELLED_RESULT)
   })
 
   it('forwards Apple Pay override and Google Pay config when provided', async () => {
@@ -488,13 +538,20 @@ describe('usePaymentCheckout integration', () => {
       try {
         const authorization = await options.onAuthorize(token, details)
         return authorization.status === 'success'
-          ? { success: true, token, ...details }
+          ? { status: 'success', success: true, token, ...details }
           : {
+              status: 'failed',
+              code: 'PROVIDER_ERROR',
               success: false,
               error: authorization.error ?? 'Payment authorization failed',
             }
       } catch (err) {
-        return { success: false, error: (err as Error).message }
+        return {
+          status: 'failed',
+          code: 'PROVIDER_ERROR',
+          success: false,
+          error: (err as Error).message,
+        }
       }
     }
 
@@ -532,6 +589,7 @@ describe('usePaymentCheckout integration', () => {
 
       expect(onAuthorize).toHaveBeenCalledWith(token, details)
       expect(paymentResult).toEqual({
+        status: 'success',
         success: true,
         token,
         emailAddress: 'jane@example.com',
@@ -554,7 +612,12 @@ describe('usePaymentCheckout integration', () => {
         paymentResult = await result.current.startPayment()
       })
 
-      expect(paymentResult).toEqual({ success: false, error: 'Card declined' })
+      expect(paymentResult).toEqual({
+        status: 'failed',
+        code: 'PROVIDER_ERROR',
+        success: false,
+        error: 'Card declined',
+      })
       expect(result.current.error?.message).toBe('Card declined')
     })
 
@@ -664,7 +727,12 @@ describe('usePaymentCheckout integration', () => {
   })
 
   it('resets transient checkout state', async () => {
-    mockStartPayment.mockResolvedValueOnce({ success: false, error: 'Failed' })
+    mockStartPayment.mockResolvedValueOnce({
+      status: 'failed',
+      code: 'PROVIDER_ERROR',
+      success: false,
+      error: 'Failed',
+    })
     const { result } = renderCheckout()
 
     act(() => {
@@ -755,6 +823,8 @@ describe('usePaymentCheckout integration', () => {
 
   it('leaves its state alone when native reports a payment in progress', async () => {
     mockStartPayment.mockResolvedValueOnce({
+      status: 'failed',
+      code: 'PROVIDER_ERROR',
       success: false,
       error: 'Declined',
     })

@@ -20,6 +20,12 @@ import java.util.Objects
 data class PaymentResult(
   @DoNotStrip
   @Keep
+  val status: PaymentStatus,
+  @DoNotStrip
+  @Keep
+  val code: PaymentErrorCode?,
+  @DoNotStrip
+  @Keep
   val success: Boolean,
   @DoNotStrip
   @Keep
@@ -51,7 +57,9 @@ data class PaymentResult(
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is PaymentResult) return false
-    return Objects.deepEquals(this.success, other.success)
+    return Objects.deepEquals(this.status, other.status)
+      && Objects.deepEquals(this.code, other.code)
+      && Objects.deepEquals(this.success, other.success)
       && Objects.deepEquals(this.transactionId, other.transactionId)
       && Objects.deepEquals(this.token, other.token)
       && Objects.deepEquals(this.error, other.error)
@@ -64,6 +72,8 @@ data class PaymentResult(
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
+      status,
+      code,
       success,
       transactionId,
       token,
@@ -84,8 +94,8 @@ data class PaymentResult(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(success: Boolean, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?): PaymentResult {
-      return PaymentResult(success, transactionId, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod)
+    private fun fromCpp(status: PaymentStatus, code: PaymentErrorCode?, success: Boolean, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?): PaymentResult {
+      return PaymentResult(status, code, success, transactionId, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod)
     }
   }
 }

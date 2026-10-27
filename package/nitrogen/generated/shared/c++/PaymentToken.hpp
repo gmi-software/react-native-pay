@@ -33,6 +33,7 @@ namespace margelo::nitro::pay { struct PaymentMethod; }
 
 #include "PaymentMethod.hpp"
 #include <string>
+#include <optional>
 
 namespace margelo::nitro::pay {
 
@@ -42,12 +43,12 @@ namespace margelo::nitro::pay {
   struct PaymentToken final {
   public:
     PaymentMethod paymentMethod     SWIFT_PRIVATE;
-    std::string transactionIdentifier     SWIFT_PRIVATE;
+    std::optional<std::string> transactionIdentifier     SWIFT_PRIVATE;
     std::string paymentData     SWIFT_PRIVATE;
 
   public:
     PaymentToken() = default;
-    explicit PaymentToken(PaymentMethod paymentMethod, std::string transactionIdentifier, std::string paymentData): paymentMethod(paymentMethod), transactionIdentifier(transactionIdentifier), paymentData(paymentData) {}
+    explicit PaymentToken(PaymentMethod paymentMethod, std::optional<std::string> transactionIdentifier, std::string paymentData): paymentMethod(paymentMethod), transactionIdentifier(transactionIdentifier), paymentData(paymentData) {}
 
   public:
     friend bool operator==(const PaymentToken& lhs, const PaymentToken& rhs) = default;
@@ -64,14 +65,14 @@ namespace margelo::nitro {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::pay::PaymentToken(
         JSIConverter<margelo::nitro::pay::PaymentMethod>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "paymentMethod"))),
-        JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier"))),
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "paymentData")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PaymentToken& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "paymentMethod"), JSIConverter<margelo::nitro::pay::PaymentMethod>::toJSI(runtime, arg.paymentMethod));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier"), JSIConverter<std::string>::toJSI(runtime, arg.transactionIdentifier));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.transactionIdentifier));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "paymentData"), JSIConverter<std::string>::toJSI(runtime, arg.paymentData));
       return obj;
     }
@@ -84,7 +85,7 @@ namespace margelo::nitro {
         return false;
       }
       if (!JSIConverter<margelo::nitro::pay::PaymentMethod>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "paymentMethod")))) return false;
-      if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionIdentifier")))) return false;
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "paymentData")))) return false;
       return true;
     }

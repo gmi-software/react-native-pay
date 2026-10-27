@@ -20,6 +20,10 @@ namespace margelo::nitro::pay { struct PayServiceStatusOptions; }
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentStatus` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentStatus; }
+// Forward declaration of `PaymentErrorCode` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentErrorCode; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
 // Forward declaration of `PaymentMethod` to properly resolve imports.
@@ -73,6 +77,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include <vector>
 #include "GooglePayEnvironment.hpp"
 #include "PaymentResult.hpp"
+#include "PaymentStatus.hpp"
+#include "PaymentErrorCode.hpp"
 #include "PaymentToken.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentNetwork.hpp"

@@ -71,8 +71,8 @@ interface UsePaymentCheckoutReturn {
   // Payment
   startPayment: () => Promise<PaymentResult | null>
   isProcessing: boolean
-  result: PaymentResult | null
-  error: Error | null
+  result: PaymentResult | null   // last result; check result.status
+  error: Error | null            // null after a cancel
 
   // Utilities
   reset: () => void
@@ -90,10 +90,12 @@ Which button to show for each combination is in [Check availability](/docs/guide
 - **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult | null>`.
   - Returns `null` and sets `error` when the cart is empty.
   - Returns `null` and sets `error`, without opening the sheet, when an amount is invalid or the total is negative (see [`PaymentAmount`](/docs/api/types#paymentamount)).
-  - Returns `PaymentResult` (including `{ success: false, error }`) when the native flow completes with a failure result.
+  - Returns the native `PaymentResult` when the sheet closes. Check `status` and `code` (see [Error codes](/docs/payment-flow#error-codes)).
+  - A cancel returns `status: 'cancelled'` and `code: 'CANCELLED'`. It sets `result` but leaves `error` as `null`, so the user closing the sheet doesn't show up as a failed payment.
+  - Any other failure from the native flow returns `status: 'failed'` with its `code`, and sets `error` to an `Error` with the result's message.
   - Returns `null` if an exception is thrown while starting/processing the payment.
-  - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ success: false, error }` and sets `error`.
-  - Returns `{ success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
+  - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ status: 'failed', code: 'PROVIDER_ERROR', error }` and sets `error`.
+  - Returns `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
 - **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (arrays such as `supportedNetworks` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
 
@@ -134,9 +136,11 @@ addItems([
 ])
 
 const result = await startPayment()
-if (result?.success && result.token) {
+if (result?.status === 'success' && result.token) {
   // Send result.token to your server
 }
+// 'cancelled': the user closed the sheet; `error` stays null.
+// 'failed': `error` is set, and result.code says why.
 ```
 
 ## Empty cart

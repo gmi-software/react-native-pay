@@ -50,7 +50,7 @@ Implement a backend endpoint that:
 
 1. App displays wallet button (`ApplePayButton` on iOS, `GooglePayButton` on Android).
 2. User confirms payment in the native sheet.
-3. App receives `PaymentResult` (`token`, `transactionId`).
+3. App receives `PaymentResult` (`status`, `token`).
 4. App sends token + amount/currency/order data to backend over HTTPS.
 5. Backend calls Przelewy24 with platform-appropriate payload mapping.
 6. Backend verifies final status and returns checkout result to the app.
@@ -80,7 +80,7 @@ export function CheckoutWithPrzelewy24() {
 
   const onPayPress = async () => {
     const result = await startPayment()
-    if (!result?.success || !result.token) return
+    if (result?.status !== 'success' || !result.token) return
 
     await fetch('https://api.yourserver.com/payments/przelewy24/wallet', {
       method: 'POST',
@@ -90,7 +90,6 @@ export function CheckoutWithPrzelewy24() {
         amount: 49.99,
         currency: 'PLN',
         orderId: 'order_123',
-        transactionId: result.transactionId ?? result.token.transactionIdentifier,
         token: result.token,
       }),
     })
@@ -127,8 +126,7 @@ export function CheckoutWithPrzelewy24() {
 Forward at least:
 
 - `token.paymentData` (opaque payload; token format is platform/provider-dependent)
-- `token.transactionIdentifier` and/or `PaymentResult.transactionId`
-- order/cart identifier
+- order/cart identifier, which your backend also uses for idempotency
 - amount and currency
 - optional platform marker (`ios` / `android`) to simplify provider mapping
 
@@ -140,7 +138,7 @@ Provider field mapping must remain server-side. Keep this as an internal adapter
 
 ```ts no-check
 app.post('/payments/przelewy24/wallet', async (req, res) => {
-  const {platform, token, amount, currency, orderId, transactionId} = req.body
+  const {platform, token, amount, currency, orderId} = req.body
 
   // 1) Validate amount/currency/order ownership server-side.
   // 2) Branch mapping by wallet platform.
@@ -152,7 +150,8 @@ app.post('/payments/przelewy24/wallet', async (req, res) => {
     amountMinor: Math.round(amount * 100),
     currency,
     orderId,
-    idempotencyKey: transactionId ?? token?.transactionIdentifier,
+    // Not token.transactionIdentifier: it is missing on Android.
+    idempotencyKey: `wallet-${orderId}`,
     walletTokenPayload: token?.paymentData,
     rawToken: token,
   })
@@ -166,7 +165,7 @@ app.post('/payments/przelewy24/wallet', async (req, res) => {
 - Always use HTTPS between app and backend.
 - Never log raw token payloads.
 - Validate amount/currency/order ownership server-side.
-- Use idempotency keys based on transaction identifiers.
+- Use idempotency keys based on your order ID, not on `transactionId` or `token.transactionIdentifier`.
 - Treat provider callbacks/webhooks and verification as the source of final payment state.
 
 ## Notes

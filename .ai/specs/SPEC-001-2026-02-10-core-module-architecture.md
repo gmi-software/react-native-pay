@@ -58,7 +58,7 @@ Core shared models are defined in `package/src/types/Payment.ts`:
 
 - `PaymentRequest`: input contract for native payment start
 - `PaymentItem`: line items used for totals and display
-- `PaymentResult`: success/error envelope and token details
+- `PaymentResult`: outcome envelope and token details. `status` is `'success' | 'cancelled' | 'failed'`; `code` (`PaymentErrorCode`: `CANCELLED`, `IN_PROGRESS`, `CONFIGURATION`, `NOT_AVAILABLE`, `PROVIDER_ERROR`, `UNKNOWN`) is set on every non-success result. Every native exit path of `startPayment` maps to one code; `success` and `error` stay for compatibility. `startPayment` resolves for every outcome and never rejects.
 - `PayServiceStatus`: availability flags (`isSupported`, `hasActiveCard`)
 
 Cross-layer contract rule:
@@ -70,7 +70,7 @@ Cross-layer contract rule:
 Primary low-level contract:
 
 - `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
-- `startPayment(request: PaymentRequest): Promise<PaymentResult>`
+- `startPayment(request: PaymentRequest, options?: StartPaymentOptions): Promise<PaymentResult>`
 - `isPaymentInProgress(): boolean` — whether a payment started with `startPayment` has not settled yet. Backed by the native single-payment slot (`PendingPayment` on iOS and Android), which `startPayment` claims synchronously on the calling thread and frees when the payment settles.
 - `openPaymentSetup(): void` (iOS only)
 
@@ -148,6 +148,10 @@ Future migration policy:
 - Should this architecture spec be split into runtime architecture and build architecture as complexity grows?
 
 ## Changelog
+
+### 2026-10-26
+
+- Added `status` and `code` to `PaymentResult`. iOS reports every dismissal before authorization as `CANCELLED`, without the former 0.75 s "dismissed" heuristic. `transactionId` is deprecated, and `PaymentToken.transactionIdentifier` is optional: Android leaves it unset instead of generating one.
 
 ### 2026-10-23
 

@@ -111,7 +111,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // promise still settles and no second Google Pay sheet is requested.
         if (!pendingPayment.tryBegin { result -> promise.resolve(result) }) {
             PayLog.w(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_IN_PROGRESS)
-            promise.resolve(PaymentMapper.createErrorResult(PaymentConstants.ERROR_PAYMENT_IN_PROGRESS))
+            promise.resolve(
+                PaymentMapper.createErrorResult(
+                    PaymentErrorCode.IN_PROGRESS,
+                    PaymentConstants.ERROR_PAYMENT_IN_PROGRESS
+                )
+            )
             return promise
         }
         onAuthorize = options?.onAuthorize
@@ -120,11 +125,18 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         try {
             val environment = determineEnvironment(request.googlePayEnvironment)
             
-            val paymentDataRequest = GooglePayRequestBuilder.createPaymentDataRequest(
-                request,
-                environment,
-                fallbackMerchantName = appLabel()
-            )
+            val paymentDataRequest = try {
+                GooglePayRequestBuilder.createPaymentDataRequest(
+                    request,
+                    environment,
+                    fallbackMerchantName = appLabel()
+                )
+            } catch (e: IllegalArgumentException) {
+                // The builder's validation: only this call reports a configuration error.
+                PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Invalid payment request", e)
+                handlePaymentError(PaymentErrorCode.CONFIGURATION, "Failed to start payment: ${e.message}")
+                return promise
+            }
             
             logPaymentRequest(paymentDataRequest, environment)
             
@@ -132,7 +144,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             
         } catch (e: Exception) {
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to start payment", e)
-            handlePaymentError("Failed to start payment: ${e.message}")
+            handlePaymentError(PaymentErrorCode.UNKNOWN, "Failed to start payment: ${e.message}")
         }
         
         return promise
@@ -160,7 +172,10 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             when (val error = task.exception) {
                 is ResolvableApiException -> showPaymentSheet(error)
                 is ApiException -> handleWalletError(error.status)
-                else -> handlePaymentError("Payment error: ${error?.message ?: "Unknown error"}")
+                else -> handlePaymentError(
+                    PaymentErrorCode.UNKNOWN,
+                    "Payment error: ${error?.message ?: "Unknown error"}"
+                )
             }
         }
     }
@@ -168,7 +183,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     private fun showPaymentSheet(sheet: ResolvableApiException) {
         val activity = reactContext.currentActivity
         if (activity == null) {
-            handlePaymentError(PaymentConstants.ERROR_NO_ACTIVITY)
+            handlePaymentError(PaymentErrorCode.NOT_AVAILABLE, PaymentConstants.ERROR_NO_ACTIVITY)
             return
         }
         
@@ -180,7 +195,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             // Outside startPayment's try, so settle here instead of crashing.
             stopListeningForSheetResult()
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to show payment UI", e)
-            handlePaymentError("Failed to show payment UI: ${e.message}")
+            handlePaymentError(PaymentErrorCode.NOT_AVAILABLE, "Failed to show payment UI: ${e.message}")
         }
     }
     
@@ -195,17 +210,21 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
                     PaymentData.getFromIntent(it)?.let { paymentData ->
                         handlePaymentSuccess(paymentData)
                     }
-                } ?: handlePaymentError("No payment data received")
+                } ?: handlePaymentError(PaymentErrorCode.PROVIDER_ERROR, "No payment data received")
             }
             Activity.RESULT_CANCELED -> {
-                PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment cancelled by user")
-                handlePaymentError("Payment cancelled by user")
+                // Also returned when the user dismisses Google's sign-in prompt.
+                PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_CANCELLED)
+                handlePaymentError(PaymentErrorCode.CANCELLED, PaymentConstants.ERROR_PAYMENT_CANCELLED)
             }
             AutoResolveHelper.RESULT_ERROR -> {
                 handleWalletError(data?.let { AutoResolveHelper.getStatusFromIntent(it) })
             }
             else -> {
-                handlePaymentError("Payment failed with result code: $resultCode")
+                handlePaymentError(
+                    PaymentErrorCode.UNKNOWN,
+                    "Payment failed with result code: $resultCode"
+                )
             }
         }
     }
@@ -281,15 +300,13 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         authorizePayment(authorize, token, result)
     }
     
-    private fun handlePaymentError(errorMessage: String) {
-        val result = PaymentMapper.createErrorResult(errorMessage)
-        settlePayment(result)
+    private fun handlePaymentError(code: PaymentErrorCode, errorMessage: String) {
+        settlePayment(PaymentMapper.createErrorResult(code, errorMessage))
     }
     
     private fun handleWalletError(status: Status?) {
-        val message = status?.statusMessage ?: "Unknown error"
-        PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment error: $message")
-        handlePaymentError("Payment error: $message")
+        PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment error ${status?.statusCode}: ${status?.statusMessage}")
+        settlePayment(PaymentMapper.walletErrorResult(status?.statusCode, status?.statusMessage))
     }
     
     private fun settlePayment(result: PaymentResult) {
@@ -325,13 +342,19 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         val settleWithError = { error: Throwable ->
             settleOnMain(
                 PaymentMapper.createErrorResult(
+                    PaymentErrorCode.PROVIDER_ERROR,
                     error.message ?: PaymentConstants.ERROR_AUTHORIZATION_FAILED
                 )
             )
         }
         
         mainHandler.postDelayed({
-            settle(PaymentMapper.createErrorResult(PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT))
+            settle(
+                PaymentMapper.createErrorResult(
+                    PaymentErrorCode.PROVIDER_ERROR,
+                    PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT
+                )
+            )
         }, PaymentConstants.AUTHORIZATION_TIMEOUT_MS)
         
         try {

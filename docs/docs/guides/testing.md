@@ -113,25 +113,24 @@ Run these flows on an iPhone and on an Android device before every release, with
 In your own app, use your server against your gateway's test mode, and your gateway's decline test cards or amounts for the decline flow.
 
 - [ ] **Success.** Pay with a test card.
-  - `startPayment` resolves with `success: true` and a `token`, and your server charges once.
+  - `startPayment` resolves with `status: 'success'` and a `token`, and your server charges once.
   - With `onAuthorize`, the Apple Pay sheet shows its checkmark only after your server answers. On Android, the Google Pay sheet closes first and `onAuthorize` runs after.
 - [ ] **User cancel.** Open the sheet and close it without paying.
-  - `startPayment` resolves with `success: false` and `error: 'Payment cancelled by user'`. Your server is not called.
-  - On iOS, a sheet closed within 0.75 seconds of appearing reports `'Payment sheet was dismissed before authorization'`.
-  - The hook also sets `error` for a cancel, so check that your UI doesn't show it as a failed payment.
+  - `startPayment` resolves with `status: 'cancelled'` and `code: 'CANCELLED'`. Your server is not called.
+  - The hook leaves `error` as `null`, so your UI shows no failure.
 - [ ] **Decline through `onAuthorize`.** Set the example app to `decline`, or make your server decline.
-  - On iOS, the sheet shows the failure and lets the user retry, which calls `onAuthorize` again with a new token. Closing the sheet resolves `startPayment` with `success: false` and your `error`.
-  - On Android, the sheet has already closed, and `startPayment` resolves with `success: false` and your `error`.
+  - On iOS, the sheet shows the failure and lets the user retry, which calls `onAuthorize` again with a new token. Closing the sheet resolves `startPayment` with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`.
+  - On Android, the sheet has already closed, and `startPayment` resolves with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`.
   - The order isn't marked paid, and a retry doesn't charge twice. Make the charge idempotent per order ID, not per token.
 - [ ] **Slow server.** Make your server take longer than 25 seconds to answer `onAuthorize`.
-  - `startPayment` resolves with `success: false` and `error: 'Payment authorization timed out'`. On iOS, the user can first retry from the sheet.
+  - `startPayment` resolves with `code: 'PROVIDER_ERROR'` and `error: 'Payment authorization timed out'`. On iOS, the user can first retry from the sheet.
   - Your server may still charge after the app has given up. Check that your backend can reconcile that order.
 - [ ] **Double tap.** Tap the pay button twice quickly.
-  - Only one sheet opens. The second call resolves at once with `success: false` and `error: 'A payment is already in progress'`, and the first payment settles normally.
+  - Only one sheet opens. The second call resolves at once with `code: 'IN_PROGRESS'`, and the first payment settles normally.
   - Your UI doesn't show the second result as a failed payment, and your server charges once.
 - [ ] **Backgrounding.** Open the sheet, go to the home screen, and return to the app. Repeat after switching to another app.
   - `startPayment` settles exactly once, `isProcessing` returns to `false`, and the next tap opens a new sheet.
-  - If the next payment reports `'A payment is already in progress'`, or the app stays in its processing state, [open an issue](https://github.com/gmi-software/react-native-pay/issues) with the platform and OS version.
+  - If the next payment reports `code: 'IN_PROGRESS'`, or the app stays in its processing state, [open an issue](https://github.com/gmi-software/react-native-pay/issues) with the platform and OS version.
 
 Then check the release configuration:
 

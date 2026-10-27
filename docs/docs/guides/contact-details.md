@@ -49,7 +49,7 @@ function useShippedOrder() {
 
   return async () => {
     const result = await startPayment()
-    if (result?.success) {
+    if (result?.status === 'success') {
       console.log('Shipping to', result.shippingContact?.postalAddress?.city)
     }
   }
@@ -102,7 +102,7 @@ async function payWithShipping() {
     },
   })
 
-  if (result.success) {
+  if (result.status === 'success') {
     console.log('Shipping with', result.shippingMethod?.label)
   }
 }
@@ -111,7 +111,7 @@ async function payWithShipping() {
 - The selected method is shown as its own line, labelled with its `label`, and included in the total. The total is your `paymentItems` plus the method's `amount`.
 - The order matters. On iOS the first method is selected when the sheet opens, so put the default first.
 - `result.shippingMethod` and the second argument of `onAuthorize` hold the selected entry of `shippingMethods`, as you sent it.
-- Every `identifier` must be non-empty and unique, no `amount` may be negative, and the `paymentItems` must not total less than zero on their own: shipping can't make up for a larger discount. Otherwise the payment fails before the sheet opens, with an error such as `Shipping method identifier "express" is used more than once`.
+- Every `identifier` must be non-empty and unique, no `amount` may be negative, and the `paymentItems` must not total less than zero on their own: shipping can't make up for a larger discount. Otherwise the payment fails before the sheet opens, with `code: 'CONFIGURATION'` and an error such as `Shipping method identifier "express" is used more than once`.
 - **Android:** Google Pay can't offer a choice yet (see below), so Android charges the first method: it appears as a line item, is included in the total and is returned as `shippingMethod`.
 
 ## Platform differences

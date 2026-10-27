@@ -41,7 +41,7 @@ const handleAddCoffee = () => {
 
 const handlePayment = async () => {
   const paymentResult = await startPayment()
-  if (paymentResult?.success) {
+  if (paymentResult?.status === 'success') {
     reset()
     clearItems()
   }

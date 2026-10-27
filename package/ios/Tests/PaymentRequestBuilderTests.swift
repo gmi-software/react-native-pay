@@ -60,6 +60,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
     ) {
         XCTAssertThrowsError(try PaymentRequestBuilder.build(from: request), file: file, line: line) { error in
             XCTAssertEqual(error.localizedDescription, message, file: file, line: line)
+            XCTAssertEqual((error as? PaymentFailure)?.code, .configuration, file: file, line: line)
         }
     }
 

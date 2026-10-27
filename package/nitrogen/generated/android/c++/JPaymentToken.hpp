@@ -65,7 +65,7 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> paymentData = this->getFieldValue(fieldPaymentData);
       return PaymentToken(
         paymentMethod->toCpp(),
-        transactionIdentifier->toStdString(),
+        transactionIdentifier != nullptr ? std::make_optional(transactionIdentifier->toStdString()) : std::nullopt,
         paymentData->toStdString()
       );
     }
@@ -82,7 +82,7 @@ namespace margelo::nitro::pay {
       return create(
         clazz,
         JPaymentMethod::fromCpp(value.paymentMethod),
-        jni::make_jstring(value.transactionIdentifier),
+        value.transactionIdentifier.has_value() ? jni::make_jstring(value.transactionIdentifier.value()) : nullptr,
         jni::make_jstring(value.paymentData)
       );
     }
