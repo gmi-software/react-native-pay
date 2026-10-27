@@ -12,6 +12,13 @@ Common issues and fixes for React Native Pay.
 npx expo prebuild --clean
 ```
 
+## Reading a failed payment
+
+`startPayment` doesn't throw for a declined, cancelled or misconfigured payment. It resolves with a `PaymentResult` whose `status` and `code` say how it ended; [Error codes](/docs/payment-flow#error-codes) explains each code. When debugging:
+
+- Read `error`: it names the problem, and on Android it ends with Google Pay's status code. Branch on `code` in your app, though: the text may change.
+- A `'CANCELLED'` you didn't cause by closing the sheet usually points to setup. See [The Apple Pay sheet closes right away](#the-apple-pay-sheet-closes-right-away) and [Cancelled on a device without a Google account](#cancelled-on-a-device-without-a-google-account).
+
 ## iOS (Apple Pay)
 
 ### App crashes at launch with `folly dynamic.cpp:378 Check failed: 0`
@@ -39,9 +46,18 @@ npx expo prebuild --clean
 - Confirm the App ID has Apple Pay enabled and linked to your Merchant ID.
 - For production, ensure your Payment Processing Certificate is created and installed in your gateway.
 
+### The Apple Pay sheet closes right away
+
+`startPayment` resolves with `status: 'cancelled'` whenever the sheet closes before the user authorizes. PassKit doesn't tell the app why the sheet closed, so a sheet that closes by itself, or barely appears, reports the same cancel. One reported cause is a merchant ID that Apple Pay isn't set up for:
+
+- The merchant ID in the request, or the first one in your app's entitlements, must be listed under the **Apple Pay Payment Processing** capability in Xcode and in your App ID.
+- Rebuild after changing the Expo plugin's `merchantIdentifier`: `npx expo prebuild --clean`.
+
+See [Apple Pay button not showing](#apple-pay-button-not-showing) for the full checklist.
+
 ### "Unknown merchant capability"
 
-The payment fails with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value, on Android too. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).
+The payment fails with `code: 'CONFIGURATION'` and `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"` when `merchantCapabilities` contains any other value, on Android too. Case doesn't matter (`'3ds'` works). See [MerchantCapability](/docs/api/types#merchantcapability).
 
 ### Invalid Apple button type/style errors
 
@@ -67,6 +83,20 @@ Use only supported Apple button values:
 ### `hasActiveCard` is `true` without a card
 
 The check asked the Google Pay `TEST` environment, which reports a card whether or not there is one. Pass `googlePayEnvironment: 'PRODUCTION'` to `usePaymentCheckout` or `payServiceStatus`. An emulator with no Google account signed in reports `false` even in `TEST`. See [Check availability](/docs/guides/availability).
+
+### Cancelled on a device without a Google account
+
+Google Pay asks the user to sign in to a Google account before it shows the sheet. Dismissing that prompt returns the same result as closing the sheet, so `startPayment` resolves with `status: 'cancelled'`. Sign in to a Google account on the device or emulator, and add a card to it.
+
+### `CONFIGURATION` from Google Pay
+
+When Google Pay reports a setup problem, such as `DEVELOPER_ERROR`, the result has `code: 'CONFIGURATION'` and Google's status code at the end of `error` (for example `(status code 10)`). Google logs the details of merchant setup problems to logcat:
+
+```bash
+adb logcat -s WalletMerchantError
+```
+
+The `OR_BIBED_*` codes there are explained on Google's [troubleshooting page](https://developers.google.com/pay/api/android/support/troubleshooting), such as `OR_BIBED_06` for the `example` gateway in production.
 
 ### Manifest/build issues
 

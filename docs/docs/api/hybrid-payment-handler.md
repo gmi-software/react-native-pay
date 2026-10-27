@@ -58,14 +58,18 @@ const result = await HybridPaymentHandler.startPayment(
 
 ```ts no-check
 interface PaymentResult extends PaymentDetails {
-  success: boolean
-  transactionId?: string
+  status: 'success' | 'cancelled' | 'failed'
+  code?: PaymentErrorCode // set when status isn't 'success'
+  success: boolean        // status === 'success'
+  transactionId?: string  // deprecated
   token?: PaymentToken
-  error?: string
+  error?: string          // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
   // billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod
 }
 ```
+
+The promise resolves for every outcome, including a cancel and a misconfigured request; it doesn't reject. Branch on `status` and `code`. See [Error codes](/docs/payment-flow#error-codes) for each code and [PaymentResult](/docs/api/types#paymentresult) for the fields.
 
 **options.onAuthorize** charges the token before the Apple Pay sheet closes. The result follows your callback:
 
@@ -88,13 +92,13 @@ On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled 
 
 Build the request yourself or use [createPaymentRequest](/docs/api/utils#createpaymentrequestoptions) for a single line item with defaults.
 
-Only one payment can be in flight at a time, on iOS and Android. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. A payment stays in flight until the native side settles it, right before its `startPayment` promise resolves. A new payment can start from that moment, even before your `await` continues. On iOS, the payment settles only after the Apple Pay sheet has closed. With `onAuthorize`, it also waits for your callback to settle or time out, so on iOS the payment ends once both have happened. Use [`isPaymentInProgress()`](#ispaymentinprogress) to check first.
+Only one payment can be in flight at a time, on iOS and Android. A call made while another payment is still in progress, including one started by `usePaymentCheckout`, resolves immediately with `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` and does not affect the payment in flight. A payment stays in flight until the native side settles it, right before its `startPayment` promise resolves. A new payment can start from that moment, even before your `await` continues. On iOS, the payment settles only after the Apple Pay sheet has closed. With `onAuthorize`, it also waits for your callback to settle or time out, so on iOS the payment ends once both have happened. Use [`isPaymentInProgress()`](#ispaymentinprogress) to check first.
 
 ---
 
 ### isPaymentInProgress()
 
-Synchronously returns whether a payment started with `startPayment` has not settled yet, including one started by `usePaymentCheckout`. While it returns `true`, `startPayment` resolves immediately with `{ success: false, error: 'A payment is already in progress' }`.
+Synchronously returns whether a payment started with `startPayment` has not settled yet, including one started by `usePaymentCheckout`. While it returns `true`, `startPayment` resolves immediately with `code: 'IN_PROGRESS'`.
 
 ```ts
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'

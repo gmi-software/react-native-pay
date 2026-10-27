@@ -18,8 +18,14 @@ public extension PaymentResult {
   /**
    * Create a new instance of `PaymentResult`.
    */
-  init(success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
-    self.init(success, { () -> bridge.std__optional_std__string_ in
+  init(status: PaymentStatus, code: PaymentErrorCode?, success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
+    self.init(status, { () -> bridge.std__optional_PaymentErrorCode_ in
+      if let __unwrappedValue = code {
+        return bridge.create_std__optional_PaymentErrorCode_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), success, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = transactionId {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
@@ -70,6 +76,16 @@ public extension PaymentResult {
     }())
   }
 
+  @inline(__always)
+  var status: PaymentStatus {
+    return self.__status
+  }
+  
+  @inline(__always)
+  var code: PaymentErrorCode? {
+    return self.__code.value
+  }
+  
   @inline(__always)
   var success: Bool {
     return self.__success

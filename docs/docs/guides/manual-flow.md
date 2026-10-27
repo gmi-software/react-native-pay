@@ -46,11 +46,12 @@ const paymentRequest = createPaymentRequest({
 const handlePayment = async () => {
   try {
     const result = await HybridPaymentHandler.startPayment(paymentRequest)
-    if (result.success && result.token) {
-      await sendTokenToServer(result.token, result.transactionId)
-    } else {
-      console.error('Payment failed:', result.error)
+    if (result.status === 'success' && result.token) {
+      await sendTokenToServer(result.token, orderId)
+    } else if (result.status === 'failed') {
+      console.error('Payment failed:', result.code, result.error)
     }
+    // 'cancelled': the user closed the sheet, nothing to report
   } catch (err) {
     console.error('Payment error:', err)
   }

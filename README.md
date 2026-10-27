@@ -229,21 +229,19 @@ function CheckoutScreen() {
   const handlePay = async () => {
     const result = await startPayment()
 
-    if (result?.success && result.token) {
+    if (result?.status === 'success' && result.token) {
       // Send result.token to your server for processing
-      console.log('Payment successful:', result.transactionId)
-      console.log('Token:', result.token)
-
-      // Call your backend
       await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: result.token,
-          transactionId: result.transactionId,
+          orderId: 'order_123', // your order, also your idempotency key
         }),
       })
     }
+    // 'cancelled': the user closed the sheet, and `error` stays null.
+    // 'failed': `error` is set, and `result.code` says why.
   }
 
   if (isCheckingStatus) {
@@ -415,8 +413,8 @@ interface UsePaymentCheckoutReturn {
   // Payment processing
   startPayment: () => Promise<PaymentResult | null>;
   isProcessing: boolean; // Payment in progress?
-  result: PaymentResult | null; // Last payment result
-  error: Error | null; // Last error
+  result: PaymentResult | null; // Last payment result; check result.status
+  error: Error | null; // Last error; null after a cancel
 
   // Utilities
   reset: () => void; // Reset payment state
@@ -523,30 +521,34 @@ interface StartPaymentOptions {
 
 interface PaymentAuthorizationResult {
   status: "success" | "failure";
-  error?: string; // Becomes PaymentResult.error on failure
+  error?: string; // Becomes PaymentResult.error, with code "PROVIDER_ERROR", on failure
 }
 ```
 
-**Returns:**
+**Returns** a promise that resolves for every outcome, including a cancel and an invalid request:
 
 ```typescript no-check
 interface PaymentResult extends PaymentDetails {
-  success: boolean;
-  transactionId?: string;
+  status: "success" | "cancelled" | "failed";
+  code?: PaymentErrorCode; // Why it didn't succeed, see below
+  success: boolean; // status === "success"
+  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
-  error?: string;
+  error?: string; // Message for logs, also set on a cancel
 }
 
 interface PaymentToken {
   paymentMethod: PaymentMethod;
-  transactionIdentifier: string;
+  transactionIdentifier?: string; // Apple's ID on iOS, missing on Android
   paymentData: string; // Base64 encoded
 }
 ```
 
+A cancel has `status: "cancelled"` and `code: "CANCELLED"`; it is not an error. Any other outcome that isn't a success has `status: "failed"` and one of `IN_PROGRESS`, `CONFIGURATION`, `NOT_AVAILABLE`, `PROVIDER_ERROR` or `UNKNOWN`. Branch on `status` and `code`, not on `error`. The [error codes](https://gmi-software.github.io/react-native-pay/docs/payment-flow#error-codes) page says what each code means and which native cases produce it.
+
 ##### `isPaymentInProgress(): boolean`
 
-Check whether a payment started with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet. While it returns `true`, `startPayment` resolves with `{ success: false, error: "A payment is already in progress" }`.
+Check whether a payment started with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet. While it returns `true`, `startPayment` resolves with `{ status: "failed", code: "IN_PROGRESS" }` and the message `"A payment is already in progress"`.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
@@ -780,17 +782,29 @@ interface PaymentRequest {
 }
 
 // Payment Result
+type PaymentStatus = "success" | "cancelled" | "failed";
+
+type PaymentErrorCode =
+  | "CANCELLED"
+  | "IN_PROGRESS"
+  | "CONFIGURATION"
+  | "NOT_AVAILABLE"
+  | "PROVIDER_ERROR"
+  | "UNKNOWN";
+
 interface PaymentResult extends PaymentDetails {
-  success: boolean;
-  transactionId?: string;
+  status: PaymentStatus;
+  code?: PaymentErrorCode; // Set when status isn't "success"
+  success: boolean; // status === "success"
+  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
-  error?: string;
+  error?: string; // Message for logs, also set on a cancel
 }
 
 // Payment Token
 interface PaymentToken {
   paymentMethod: PaymentMethod;
-  transactionIdentifier: string;
+  transactionIdentifier?: string; // Apple's ID on iOS, missing on Android
   paymentData: string; // Base64 encoded
 }
 
@@ -975,7 +989,7 @@ const handlePayment = async () => {
   try {
     const result = await HybridPaymentHandler.startPayment(paymentRequest)
 
-    if (result.success && result.token) {
+    if (result.status === 'success' && result.token) {
       // Send the token to your server
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
@@ -983,8 +997,8 @@ const handlePayment = async () => {
         body: JSON.stringify({ token: result.token }),
       })
       if (!response.ok) throw new Error('Payment processing failed')
-    } else {
-      console.error('Payment failed:', result.error)
+    } else if (result.status === 'failed') {
+      console.error('Payment failed:', result.code, result.error)
     }
   } catch (error) {
     console.error('Payment error:', error)
@@ -1111,7 +1125,7 @@ function useOrderPayment() {
 
   return async () => {
     const result = await checkout.startPayment();
-    // result?.success reflects your server's answer
+    // result?.status is "success" only when your server approved
   };
 }
 ```

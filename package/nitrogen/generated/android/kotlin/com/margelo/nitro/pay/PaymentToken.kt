@@ -23,7 +23,7 @@ data class PaymentToken(
   val paymentMethod: PaymentMethod,
   @DoNotStrip
   @Keep
-  val transactionIdentifier: String,
+  val transactionIdentifier: String?,
   @DoNotStrip
   @Keep
   val paymentData: String
@@ -54,7 +54,7 @@ data class PaymentToken(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(paymentMethod: PaymentMethod, transactionIdentifier: String, paymentData: String): PaymentToken {
+    private fun fromCpp(paymentMethod: PaymentMethod, transactionIdentifier: String?, paymentData: String): PaymentToken {
       return PaymentToken(paymentMethod, transactionIdentifier, paymentData)
     }
   }

@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`PaymentResult.status` and `PaymentResult.code` say how a payment ended.** `status` is
+  `'success'`, `'cancelled'` or `'failed'`. `code` is set on every other result: `'CANCELLED'`,
+  `'IN_PROGRESS'`, `'CONFIGURATION'` (missing merchant ID, invalid amount, Google Pay developer
+  error), `'NOT_AVAILABLE'` (the device can't show the sheet), `'PROVIDER_ERROR'` (Apple Pay, Google
+  Pay or `onAuthorize` failed, including the `onAuthorize` timeout) or `'UNKNOWN'`. Every native exit
+  path of `startPayment` maps to one of them, so apps no longer need to match `error` strings to
+  tell a cancel or a setup error from a decline. `success` and `error` stay as before. New types:
+  `PaymentStatus` and `PaymentErrorCode`.
 - **`HybridPaymentHandler.isPaymentInProgress()`** synchronously returns whether a payment started
   with `startPayment` (directly or by `usePaymentCheckout`) has not settled yet.
 - **Billing and shipping addresses, email and phone number come back in the result.** Set
@@ -49,6 +57,20 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **`usePaymentCheckout` no longer treats a cancel as an error.** When the user closes the sheet,
+  the hook sets `result` to the cancelled result and leaves `error` as `null`, so UIs that render
+  `error` no longer show "Payment failed" for a cancel. Use `result.status` to tell the outcomes
+  apart. Failures still set `error`.
+- **iOS: every close of the sheet before authorization is a cancel.** iOS used to report
+  `'Payment sheet was dismissed before authorization'` instead of `'Payment cancelled by user'`
+  when the sheet closed within 0.75 seconds of appearing. Both now report `status: 'cancelled'` and
+  `'Payment cancelled by user'`.
+- **`PaymentResult` requires `status`.** Code that builds a `PaymentResult` itself, such as a test
+  mock of `startPayment`, needs to add it.
+- **`PaymentToken.transactionIdentifier` is optional, and missing on Android.** Android used to
+  fill it with a random UUID generated on the device; Google Pay doesn't return a transaction
+  identifier. Code that reads it as a `string` no longer type-checks. If your server uses it as an
+  idempotency key, key idempotency on your order ID instead. On iOS it is still Apple's identifier.
 - **`PaymentNetwork` has a new `'unknown'` value,** reported for a card on a network the library
   cannot name. Both platforms used to report such cards as `'visa'`. Code that switches over
   `token.paymentMethod.network` needs a case for it.
@@ -113,6 +135,12 @@ All notable changes to this project are documented in this file.
   development. The props are `ViewProps` plus the button's own; `hybridRef` is gone.
 - **Each pay button renders nothing on the other platform,** with a warning in development, instead
   of failing, since that native view does not exist there.
+
+### Deprecated
+
+- **`PaymentResult.transactionId`.** It is a random ID generated on the device for each successful
+  result, not an identifier from Apple, Google or the gateway, and it changes on every attempt. The
+  docs no longer suggest it as an idempotency key; use your order ID. It is still set for now.
 
 ### Fixed
 

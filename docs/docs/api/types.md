@@ -78,7 +78,7 @@ On iOS, `applePayMerchantIdentifier` is optional and only needed when you want t
 
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
 
-`supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment, with an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
+`supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
 
 `googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
 
@@ -94,16 +94,34 @@ Returned from `startPayment()` (hook or handler).
 
 ```ts no-check
 interface PaymentResult extends PaymentDetails {
-  success: boolean
-  transactionId?: string
+  status: PaymentStatus     // 'success' | 'cancelled' | 'failed'
+  code?: PaymentErrorCode   // set when status isn't 'success'
+  success: boolean          // status === 'success'
+  transactionId?: string    // deprecated
   token?: PaymentToken
-  error?: string
+  error?: string            // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
   // billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod
 }
+
+type PaymentStatus = 'success' | 'cancelled' | 'failed'
+
+type PaymentErrorCode =
+  | 'CANCELLED'
+  | 'IN_PROGRESS'
+  | 'CONFIGURATION'
+  | 'NOT_AVAILABLE'
+  | 'PROVIDER_ERROR'
+  | 'UNKNOWN'
 ```
 
-Send `token` (and optionally `transactionId`) to your backend to complete the charge with your gateway. A successful result also holds the contact details and shipping method the request asked for; see [PaymentDetails](#paymentdetails).
+- **status** — `'cancelled'` means the user closed the sheet before authorizing. It is not an error: `usePaymentCheckout` leaves `error` as `null` for it.
+- **code** — Why the payment didn't succeed. `'CANCELLED'` for a cancel, one of the others for a failure. See [Error codes](/docs/payment-flow#error-codes) for what each one means and which native cases produce it.
+- **success** — Kept for compatibility. Use `status` to tell a cancel from a failure.
+- **transactionId** — Deprecated. A random ID the device generates for each successful result; it doesn't come from Apple, Google or your gateway. Don't use it as an idempotency key: use your order ID.
+- **token** — Set on success. Send it to your backend to complete the charge with your gateway, unless `onAuthorize` already did.
+- **Contact details and shipping method** — A successful result also holds the ones the request asked for; see [PaymentDetails](#paymentdetails).
+- **error** — A message for logs, such as `'Payment cancelled by user'`. Don't match on it; use `code`.
 
 ---
 
@@ -121,7 +139,7 @@ interface StartPaymentOptions {
 
 interface PaymentAuthorizationResult {
   status: 'success' | 'failure'
-  error?: string // becomes PaymentResult.error on failure
+  error?: string // becomes PaymentResult.error, with code 'PROVIDER_ERROR', on failure
 }
 ```
 
@@ -136,13 +154,13 @@ The token you send to your server. **Do not log or expose; treat as sensitive.**
 ```ts no-check
 interface PaymentToken {
   paymentMethod: PaymentMethod
-  transactionIdentifier: string
+  transactionIdentifier?: string
   paymentData: string  // Opaque token payload (format depends on platform + gateway)
 }
 ```
 
 - **paymentMethod** — Card/network and optional billing contact.
-- **transactionIdentifier** — Unique id for this payment session.
+- **transactionIdentifier** — On iOS, Apple's identifier for the payment (`PKPaymentToken.transactionIdentifier`), generated on the device. Missing on Android: Google Pay doesn't return one. Key idempotency on your order ID instead.
 - **paymentData** — Opaque payload for your gateway.
   - iOS: Base64-encoded Apple Pay token data.
   - Android: Google Pay tokenization payload (`tokenizationData.token`), gateway-dependent.
@@ -257,7 +275,7 @@ type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 - `'PAN_ONLY'` — Cards saved to the payer's Google account. The token holds the card number.
 - `'CRYPTOGRAM_3DS'` — Cards tokenized on the device. The token holds a 3-D Secure cryptogram. Google Pay does not offer `jcb` or `discover` with it.
 
-The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Customer Authentication requires device tokens. Android matches the values ignoring case, and any other value fails the payment, with an `error` that contains `Unknown Google Pay auth method "<value>". Use "PAN_ONLY" or "CRYPTOGRAM_3DS"`. They are separate from `merchantCapabilities`: every Apple Pay card is a device token, so iOS has nothing like `'PAN_ONLY'`.
+The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Customer Authentication requires device tokens. Android matches the values ignoring case, and any other value fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown Google Pay auth method "<value>". Use "PAN_ONLY" or "CRYPTOGRAM_3DS"`. They are separate from `merchantCapabilities`: every Apple Pay card is a device token, so iOS has nothing like `'PAN_ONLY'`.
 
 ---
 
@@ -272,7 +290,7 @@ type MerchantCapability = '3DS' | 'EMV' | 'Credit' | 'Debit'
 - `'3DS'` and `'EMV'` are Apple Pay payment protocols. PassKit needs at least one of them. EMV only covers China UnionPay, so every other card needs 3DS. Android ignores them.
 - `'Credit'` and `'Debit'` limit the accepted card types.
 
-Both platforms match the values case-insensitively. Any other value fails the payment: the result has `success: false` and `error: 'Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"'`.
+Both platforms match the values case-insensitively. Any other value fails the payment: the result has `code: 'CONFIGURATION'` and `error: 'Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"'`.
 
 iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given, so `[]` is sent as 3DS and `['Credit']` as 3DS + Credit.
 
@@ -297,7 +315,7 @@ How Apple Pay labels the address, used in `PaymentRequest.shippingType` (iOS onl
 type ShippingType = 'shipping' | 'delivery' | 'storePickup' | 'servicePickup'
 ```
 
-For example, `'delivery'` shows "Delivery Address" instead of "Shipping Address". Without `shippingType`, Apple Pay uses `'shipping'`. Any other value fails the payment: the result has `success: false` and `error: 'Unknown shipping type "<value>". Use "shipping", "delivery", "storePickup" or "servicePickup"'`.
+For example, `'delivery'` shows "Delivery Address" instead of "Shipping Address". Without `shippingType`, Apple Pay uses `'shipping'`. Any other value fails the payment: the result has `code: 'CONFIGURATION'` and `error: 'Unknown shipping type "<value>". Use "shipping", "delivery", "storePickup" or "servicePickup"'`.
 
 ---
 

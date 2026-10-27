@@ -125,11 +125,11 @@ export default function TabOneScreen() {
   const handlePayment = async () => {
     const paymentResult = await startPayment();
 
-    if (paymentResult?.success) {
+    if (paymentResult?.status === "success") {
       console.log("Payment successful:", paymentResult.token);
       Alert.alert(
         "Payment Successful!",
-        `Transaction ID: ${paymentResult.transactionId}`,
+        `Paid with ${paymentResult.token?.paymentMethod.displayName ?? "your card"}`,
         [
           {
             text: "OK",
@@ -140,9 +140,17 @@ export default function TabOneScreen() {
           },
         ],
       );
-    } else if (paymentResult?.error) {
-      Alert.alert("Payment Failed", paymentResult.error, [{ text: "OK" }]);
+    } else if (
+      paymentResult?.status === "failed" &&
+      paymentResult.code !== "IN_PROGRESS"
+    ) {
+      Alert.alert(
+        "Payment Failed",
+        `${paymentResult.error} (${paymentResult.code})`,
+        [{ text: "OK" }],
+      );
     }
+    // "cancelled": the user closed the sheet, so there is nothing to report.
   };
 
   return (
@@ -273,17 +281,17 @@ export default function TabOneScreen() {
         </View>
       )}
 
-      {result?.success && (
+      {result?.status === "success" && (
         <View style={styles.successBox}>
           <Text style={styles.successTitle}>✅ Payment Successful!</Text>
           <Text style={styles.successMessage}>
-            Transaction: {result.transactionId}
+            Paid with {result.token?.paymentMethod.displayName ?? "your card"}
           </Text>
         </View>
       )}
 
       {/* Payment Button */}
-      {items.length > 0 && !result?.success && isSupported && (
+      {items.length > 0 && result?.status !== "success" && isSupported && (
         <View style={styles.section}>
           <Text style={styles.paymentTitle}>Complete Payment</Text>
           {isProcessing ? (

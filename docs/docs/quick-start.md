@@ -74,14 +74,14 @@ function CheckoutScreen() {
 
   const handlePay = async () => {
     const result = await startPayment()
-    if (result?.success && result.token) {
+    if (result?.status === 'success' && result.token) {
       // Send result.token to your backend
       await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: result.token,
-          transactionId: result.transactionId,
+          orderId: 'order_123', // your order
         }),
       })
     }

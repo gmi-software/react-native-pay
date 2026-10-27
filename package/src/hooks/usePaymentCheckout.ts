@@ -6,7 +6,10 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react'
-import { getPaymentHandler, PAYMENT_IN_PROGRESS_ERROR } from '../paymentHandler'
+import {
+  getPaymentHandler,
+  PAYMENT_IN_PROGRESS_RESULT,
+} from '../paymentHandler'
 import type {
   PaymentAmount,
   PaymentRequest,
@@ -135,7 +138,8 @@ export interface UsePaymentCheckoutConfig {
   /**
    * Called with the token after the user authorizes the payment. Charge it on
    * your server and resolve with the outcome; `startPayment` then resolves
-   * with `success: false` and your `error` on `'failure'`.
+   * with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error` on
+   * `'failure'`.
    * On iOS the Apple Pay sheet waits for it and shows the outcome. On Android
    * it runs after the Google Pay sheet has closed.
    * It must settle within 25 seconds, or the payment fails with a timeout.
@@ -187,7 +191,9 @@ export interface UsePaymentCheckoutReturn {
   // Payment processing
   startPayment: () => Promise<PaymentResult | null>
   isProcessing: boolean
+  /** The last result. A cancel has `status: 'cancelled'` and no `error`. */
   result: PaymentResult | null
+  /** Set when a payment fails or can't start; stays `null` on a cancel. */
   error: Error | null
 
   // Utilities
@@ -443,7 +449,7 @@ export function usePaymentCheckout(
       return null
     }
     if (isPaymentInProgress) {
-      return { success: false, error: PAYMENT_IN_PROGRESS_ERROR }
+      return { ...PAYMENT_IN_PROGRESS_RESULT }
     }
 
     if (items.length === 0) {
@@ -477,7 +483,8 @@ export function usePaymentCheckout(
 
       setResult(paymentResult)
 
-      if (!paymentResult.success) {
+      // A cancel is the user's choice, not an error.
+      if (paymentResult.status === 'failed') {
         setError(new Error(paymentResult.error || 'Payment failed'))
       }
 

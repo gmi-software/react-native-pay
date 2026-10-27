@@ -18,8 +18,14 @@ public extension PaymentToken {
   /**
    * Create a new instance of `PaymentToken`.
    */
-  init(paymentMethod: PaymentMethod, transactionIdentifier: String, paymentData: String) {
-    self.init(paymentMethod, std.string(transactionIdentifier), std.string(paymentData))
+  init(paymentMethod: PaymentMethod, transactionIdentifier: String?, paymentData: String) {
+    self.init(paymentMethod, { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = transactionIdentifier {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), std.string(paymentData))
   }
 
   @inline(__always)
@@ -28,8 +34,15 @@ public extension PaymentToken {
   }
   
   @inline(__always)
-  var transactionIdentifier: String {
-    return String(self.__transactionIdentifier)
+  var transactionIdentifier: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__transactionIdentifier) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__transactionIdentifier)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)

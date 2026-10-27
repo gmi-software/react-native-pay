@@ -1,10 +1,12 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../paymentHandler'
 
-const IN_PROGRESS_RESULT = {
+const DECLINED_RESULT = {
+  status: 'failed',
+  code: 'PROVIDER_ERROR',
   success: false,
-  error: 'A payment is already in progress',
+  error: 'Declined',
 }
-const DECLINED_RESULT = { success: false, error: 'Declined' }
 
 const mockInstances: object[] = []
 const mockPresentations: Array<(result: any) => void> = []
@@ -21,6 +23,8 @@ jest.mock('react-native-nitro-modules', () => ({
         startPayment: () => {
           if (inFlight) {
             return Promise.resolve({
+              status: 'failed',
+              code: 'IN_PROGRESS',
               success: false,
               error: 'A payment is already in progress',
             })
