@@ -13,8 +13,12 @@ const {
 
 export const withGooglePay: ConfigPlugin<ReactNativePayPluginProps> = (
   expoConfig,
-  { enableGooglePay = false }
+  { enableGooglePay }
 ) => {
+  if (enableGooglePay == null) {
+    return expoConfig
+  }
+
   return withAndroidManifest(expoConfig, (config) => {
     config.modResults = setGooglePayMetaData(enableGooglePay, config.modResults)
     return config

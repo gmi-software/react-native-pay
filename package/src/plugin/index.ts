@@ -3,13 +3,15 @@ import type { ReactNativePayPluginProps } from './type'
 import { withApplePay } from './withApplePay'
 import { withGooglePay } from './withGooglePay'
 
-const withReactNativePay: ConfigPlugin<ReactNativePayPluginProps> = (
+const withReactNativePay: ConfigPlugin<ReactNativePayPluginProps | void> = (
   config,
   props
 ) => {
-  config = withGooglePay(config, props)
+  const options = props ?? {}
 
-  config = withApplePay(config, props)
+  config = withGooglePay(config, options)
+
+  config = withApplePay(config, options)
 
   return config
 }
