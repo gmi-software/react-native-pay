@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Testing payments | React Native Pay</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://gmi-software.github.io/react-native-pay/docs/guides/testing"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Testing payments | React Native Pay"><meta data-rh="true" name="description" content="Before you release, run a payment end to end on both platforms: in the Apple Pay sandbox on an iPhone, and in the Google Pay TEST environment on Android. This page covers both setups, the production access Google requires, and the flows to check before every release."><meta data-rh="true" property="og:description" content="Before you release, run a payment end to end on both platforms: in the Apple Pay sandbox on an iPhone, and in the Google Pay TEST environment on Android. This page covers both setups, the production access Google requires, and the flows to check before every release."><link data-rh="true" rel="icon" href="/react-native-pay/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing" hreflang="en"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Recipes & Guides","item":"https://gmi-software.github.io/react-native-pay/docs/guides/manual-flow"},{"@type":"ListItem","position":2,"name":"Testing payments","item":"https://gmi-software.github.io/react-native-pay/docs/guides/testing"}]}</script><link rel="stylesheet" href="/react-native-pay/assets/css/styles.38087aaa.css">
-<script src="/react-native-pay/assets/js/runtime~main.75b7be82.js" defer="defer"></script>
+<script src="/react-native-pay/assets/js/runtime~main.c92875b2.js" defer="defer"></script>
 <script src="/react-native-pay/assets/js/main.dee1f125.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -87,40 +87,39 @@
 <ul class="contains-task-list containsTaskList_QWGu">
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Success.</strong> Pay with a test card.<!-- -->
 <ul>
-<li class=""><code>startPayment</code> resolves with <code>success: true</code> and a <code>token</code>, and your server charges once.</li>
+<li class=""><code>startPayment</code> resolves with <code>status: &#x27;success&#x27;</code> and a <code>token</code>, and your server charges once.</li>
 <li class="">With <code>onAuthorize</code>, the Apple Pay sheet shows its checkmark only after your server answers. On Android, the Google Pay sheet closes first and <code>onAuthorize</code> runs after.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>User cancel.</strong> Open the sheet and close it without paying.<!-- -->
 <ul>
-<li class=""><code>startPayment</code> resolves with <code>success: false</code> and <code>error: &#x27;Payment cancelled by user&#x27;</code>. Your server is not called.</li>
-<li class="">On iOS, a sheet closed within 0.75 seconds of appearing reports <code>&#x27;Payment sheet was dismissed before authorization&#x27;</code>.</li>
-<li class="">The hook also sets <code>error</code> for a cancel, so check that your UI doesn&#x27;t show it as a failed payment.</li>
+<li class=""><code>startPayment</code> resolves with <code>status: &#x27;cancelled&#x27;</code> and <code>code: &#x27;CANCELLED&#x27;</code>. Your server is not called.</li>
+<li class="">The hook leaves <code>error</code> as <code>null</code>, so your UI shows no failure.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Decline through <code>onAuthorize</code>.</strong> Set the example app to <code>decline</code>, or make your server decline.<!-- -->
 <ul>
-<li class="">On iOS, the sheet shows the failure and lets the user retry, which calls <code>onAuthorize</code> again with a new token. Closing the sheet resolves <code>startPayment</code> with <code>success: false</code> and your <code>error</code>.</li>
-<li class="">On Android, the sheet has already closed, and <code>startPayment</code> resolves with <code>success: false</code> and your <code>error</code>.</li>
+<li class="">On iOS, the sheet shows the failure and lets the user retry, which calls <code>onAuthorize</code> again with a new token. Closing the sheet resolves <code>startPayment</code> with <code>status: &#x27;failed&#x27;</code>, <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and your <code>error</code>.</li>
+<li class="">On Android, the sheet has already closed, and <code>startPayment</code> resolves with <code>status: &#x27;failed&#x27;</code>, <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and your <code>error</code>.</li>
 <li class="">The order isn&#x27;t marked paid, and a retry doesn&#x27;t charge twice. Make the charge idempotent per order ID, not per token.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Slow server.</strong> Make your server take longer than 25 seconds to answer <code>onAuthorize</code>.<!-- -->
 <ul>
-<li class=""><code>startPayment</code> resolves with <code>success: false</code> and <code>error: &#x27;Payment authorization timed out&#x27;</code>. On iOS, the user can first retry from the sheet.</li>
+<li class=""><code>startPayment</code> resolves with <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and <code>error: &#x27;Payment authorization timed out&#x27;</code>. On iOS, the user can first retry from the sheet.</li>
 <li class="">Your server may still charge after the app has given up. Check that your backend can reconcile that order.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Double tap.</strong> Tap the pay button twice quickly.<!-- -->
 <ul>
-<li class="">Only one sheet opens. The second call resolves at once with <code>success: false</code> and <code>error: &#x27;A payment is already in progress&#x27;</code>, and the first payment settles normally.</li>
+<li class="">Only one sheet opens. The second call resolves at once with <code>code: &#x27;IN_PROGRESS&#x27;</code>, and the first payment settles normally.</li>
 <li class="">Your UI doesn&#x27;t show the second result as a failed payment, and your server charges once.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Backgrounding.</strong> Open the sheet, go to the home screen, and return to the app. Repeat after switching to another app.<!-- -->
 <ul>
 <li class=""><code>startPayment</code> settles exactly once, <code>isProcessing</code> returns to <code>false</code>, and the next tap opens a new sheet.</li>
-<li class="">If the next payment reports <code>&#x27;A payment is already in progress&#x27;</code>, or the app stays in its processing state, <a href="https://github.com/gmi-software/react-native-pay/issues" target="_blank" rel="noopener noreferrer" class="">open an issue</a> with the platform and OS version.</li>
+<li class="">If the next payment reports <code>code: &#x27;IN_PROGRESS&#x27;</code>, or the app stays in its processing state, <a href="https://github.com/gmi-software/react-native-pay/issues" target="_blank" rel="noopener noreferrer" class="">open an issue</a> with the platform and OS version.</li>
 </ul>
 </li>
 </ul>
