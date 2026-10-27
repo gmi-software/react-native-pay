@@ -31,7 +31,7 @@ function useOrderPayment() {
     return clearItems
   }, [addItem, clearItems])
 
-  // Pass this to the pay button's onPress, wrapped with callback().
+  // Pass this to the pay button's onPress.
   return async () => {
     const result = await startPayment()
     if (result?.success && result.token) {

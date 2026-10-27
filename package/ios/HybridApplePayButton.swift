@@ -16,6 +16,9 @@ class HybridApplePayButton: HybridApplePayButtonSpec {
     
     // Internal state
     private var paymentButton: PKPaymentButton?
+    /// The type and style `paymentButton` was built with: a change needs a new button
+    private var builtType: ApplePayButtonType?
+    private var builtStyle: ApplePayButtonStyle?
     
     override init() {
         super.init()
@@ -23,6 +26,8 @@ class HybridApplePayButton: HybridApplePayButtonSpec {
     }
     
     func afterUpdate() {
+        // onPress is read at tap time, so only the type and style need a new button.
+        guard buttonType != builtType || buttonStyle != builtStyle else { return }
         setupButton()
     }
     
@@ -41,6 +46,8 @@ class HybridApplePayButton: HybridApplePayButtonSpec {
         )
         
         paymentButton = button
+        builtType = buttonType
+        builtStyle = buttonStyle
         
         // Add to view
         view.addSubview(button)

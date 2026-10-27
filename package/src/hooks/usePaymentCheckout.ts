@@ -255,11 +255,10 @@ export interface UsePaymentCheckoutReturn {
  *       {isProcessing ? (
  *         <ActivityIndicator />
  *       ) : (
- *         // onPress must be wrapped with callback() from react-native-nitro-modules
  *         <ApplePayButton
  *           buttonType="buy"
  *           buttonStyle="black"
- *           onPress={callback(startPayment)}
+ *           onPress={startPayment}
  *         />
  *       )}
  *       {error && <Text>Error: {error.message}</Text>}

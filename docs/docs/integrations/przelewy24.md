@@ -65,7 +65,6 @@ import {
   GooglePayButton,
   usePaymentCheckout,
 } from '@gmisoftware/react-native-pay'
-import {callback} from 'react-native-nitro-modules'
 
 export function CheckoutWithPrzelewy24() {
   const {startPayment, isSupported, isProcessing} = usePaymentCheckout({
@@ -105,7 +104,7 @@ export function CheckoutWithPrzelewy24() {
         <ApplePayButton
           buttonType="buy"
           buttonStyle="black"
-          onPress={callback(onPayPress)}
+          onPress={onPayPress}
           style={{width: '100%', height: 48}}
         />
       ) : (
@@ -113,7 +112,7 @@ export function CheckoutWithPrzelewy24() {
           buttonType="buy"
           theme="dark"
           radius={4}
-          onPress={callback(onPayPress)}
+          onPress={onPayPress}
           style={{width: '100%', height: 48}}
         />
       )}

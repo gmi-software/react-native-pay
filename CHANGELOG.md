@@ -41,6 +41,12 @@ All notable changes to this project are documented in this file.
   still accepts every card type on Android; `'3DS'` and `'EMV'` have no effect there. The button
   and the readiness check leave credit cards out too.
 
+- **`disabled` on `ApplePayButton` and `GooglePayButton`** ignores taps, for example while a
+  payment is in progress. The button looks the same: Apple's guidelines ask not to make the Apple
+  Pay button appear unavailable, and Google's do not allow changing the Google Pay button's color.
+- **`ApplePayButtonType`, `ApplePayButtonStyle`, `GooglePayButtonType`, `GooglePayButtonTheme`,
+  `ApplePayButtonProps` and `GooglePayButtonProps` are exported.**
+
 ### Changed
 
 - **`PaymentNetwork` has a new `'unknown'` value,** reported for a card on a network the library
@@ -100,8 +106,23 @@ All notable changes to this project are documented in this file.
 - **iOS: `HybridPaymentHandler.openPaymentSetup()`** opens Wallet so the user can add a card, for a
   "Set up Apple Pay" button (`ApplePayButton` with `buttonType="setUp"`). It does nothing on Android.
 
+- **The pay buttons take a plain function as `onPress`: remove `callback()`.** `ApplePayButton`
+  and `GooglePayButton` are now React components around the native views, so
+  `onPress={callback(handlePay)}` becomes `onPress={handlePay}`, and the `react-native-nitro-modules`
+  import can go. A wrapped `onPress` still works, but no longer type-checks, and logs a warning in
+  development. The props are `ViewProps` plus the button's own; `hybridRef` is gone.
+- **Each pay button renders nothing on the other platform,** with a warning in development, instead
+  of failing, since that native view does not exist there.
+
 ### Fixed
 
+- **iOS: `ApplePayButton` keeps its `PKPaymentButton` across re-renders.** Every prop update
+  removed the button and created a new one, so an `onPress` with a new identity on each render
+  rebuilt it on every parent re-render. It is now rebuilt only when `buttonType` or `buttonStyle`
+  changes.
+- **Android: `GooglePayButton`'s `radius` is in dp, as documented.** It was passed to Google Pay as
+  pixels, so corners were about a third of the requested size on a typical phone. Apps that
+  enlarged `radius` to compensate should set it back.
 - **Android: `supportedNetworks` limits the cards the payer can choose.** Android ignored it and
   always offered Visa, Mastercard, Amex and Discover, so a merchant whose gateway refuses Amex
   still received Amex tokens, and JCB or Interac could not be enabled. The payment request, the

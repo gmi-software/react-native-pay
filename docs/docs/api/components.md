@@ -1,6 +1,6 @@
 # Button components
 
-Native payment buttons: **ApplePayButton** (iOS) and **GooglePayButton** (Android). Use the one that matches the platform; the library does not render both on the same screen.
+Native payment buttons: **ApplePayButton** (iOS) and **GooglePayButton** (Android). Use the one that matches the platform. On the other platform a button renders nothing and, in development, logs a warning.
 
 ## ApplePayButton (iOS only)
 
@@ -12,7 +12,8 @@ Renders the system Apple Pay button. Only available on iOS.
 |------|------|----------|-------------|
 | `buttonType` | `ApplePayButtonType` | Yes | Button label type. |
 | `buttonStyle` | `ApplePayButtonStyle` | Yes | Visual style. |
-| `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
+| `onPress` | `() => void` | No | Called when the user taps the button. |
+| `disabled` | `boolean` | No | Ignores taps while `true`. See [Disabled buttons](#disabled-buttons). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
 **ApplePayButtonType:**  
@@ -25,7 +26,6 @@ Renders the system Apple Pay button. Only available on iOS.
 
 ```tsx
 import { ApplePayButton } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 const handlePayment = async () => {
   // Call startPayment() from usePaymentCheckout here
@@ -34,14 +34,10 @@ const handlePayment = async () => {
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
-  onPress={callback(handlePayment)}
+  onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
 ```
-
-### Nitro and onPress
-
-`ApplePayButton` is a Nitro view, so `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`. A bare function does not reach the native button, and tapping it does nothing. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
 
 ---
 
@@ -55,11 +51,12 @@ Renders the Google Pay button. Only available on Android.
 |------|------|----------|-------------|
 | `buttonType` | `GooglePayButtonType` | Yes | Button label type. |
 | `theme` | `'dark' \| 'light'` | Yes | Button theme. |
-| `radius` | `number` | No | Corner radius in dp. |
+| `radius` | `number` | No | Corner radius in dp, like other React Native sizes. |
 | `supportedNetworks` | `string[]` | No | The card networks your payment accepts, as in `PaymentRequest.supportedNetworks`. Default: `visa`, `mastercard`, `amex`, `discover`. |
 | `googlePayAllowedAuthMethods` | `string[]` | No | As in `PaymentRequest.googlePayAllowedAuthMethods`. Default: both. |
 | `merchantCapabilities` | `string[]` | No | As in `PaymentRequest.merchantCapabilities`. `'Debit'` without `'Credit'` leaves credit cards out. Default: every card type. |
-| `onPress` | `() => void`, wrapped with `callback()` | No | Called when the user taps the button. Must be wrapped, see [Nitro and onPress](#nitro-and-onpress). |
+| `onPress` | `() => void` | No | Called when the user taps the button. |
+| `disabled` | `boolean` | No | Ignores taps while `true`. See [Disabled buttons](#disabled-buttons). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
 The button can show the payer's card, so give it the same `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` as the payment, under the same names. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass them from `paymentRequest`. With an unknown network, auth method or merchant capability, the button keeps its previous configuration, or does not appear on the first render, and logs an error in debug builds.
@@ -71,7 +68,6 @@ The button can show the payer's card, so give it the same `supportedNetworks`, `
 
 ```tsx
 import { GooglePayButton } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 const handlePayment = async () => {
   // Call startPayment() from usePaymentCheckout here
@@ -82,14 +78,38 @@ const handlePayment = async () => {
   theme="dark"
   radius={8}
   supportedNetworks={['visa', 'mastercard']}
-  onPress={callback(handlePayment)}
+  onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
 ```
 
-### Nitro and onPress
+---
 
-Same as Apple: `onPress` must be wrapped, as in `onPress={callback(handlePayment)}`. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
+## Disabled buttons
+
+With `disabled`, the button ignores taps, for example while a payment is in progress. It looks the same as an enabled button. Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/apple-pay) ask you not to make the Apple Pay button appear unavailable, and Google's [brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines) do not allow changing the Google Pay button's color. If the payment cannot start yet, for example before the payer picks a size, Apple suggests keeping the button enabled and explaining the problem after the tap.
+
+```tsx
+import { ApplePayButton, usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+function PayButton() {
+  const { startPayment, isProcessing } = usePaymentCheckout({
+    merchantName: 'Your Store',
+    currencyCode: 'USD',
+    countryCode: 'US',
+  })
+
+  return (
+    <ApplePayButton
+      buttonType="buy"
+      buttonStyle="black"
+      onPress={startPayment}
+      disabled={isProcessing}
+      style={{ width: '100%', height: 48 }}
+    />
+  )
+}
+```
 
 ---
 
@@ -100,7 +120,6 @@ Render one button per platform:
 ```tsx
 import { Platform } from 'react-native'
 import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 const handlePayment = async () => {
   // Call startPayment() from usePaymentCheckout here
@@ -109,9 +128,9 @@ const handlePayment = async () => {
 const style = { width: '100%', height: 48 } as const
 
 {Platform.OS === 'ios' ? (
-  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePayment)} style={style} />
+  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePayment} style={style} />
 ) : (
-  <GooglePayButton buttonType="buy" theme="dark" onPress={callback(handlePayment)} style={style} />
+  <GooglePayButton buttonType="buy" theme="dark" onPress={handlePayment} style={style} />
 )}
 ```
 
