@@ -15,12 +15,13 @@ version bump and the changelog go through a normal pull request instead.
 ```bash
 cd package
 npm version 0.1.0 --no-git-tag-version --no-workspaces-update
-cd .. && bun install
 ```
 
 `--no-workspaces-update` stops npm from reifying the workspace, which this
-Bun-managed repository does not support; `bun install` then records the new
-version in `bun.lock`.
+Bun-managed repository does not support. `bun install` does not rewrite
+`bun.lock` for a version-only change, so also set the `version` of the
+`package` workspace near the top of `bun.lock`, then check that
+`bun install --frozen-lockfile` still passes.
 
 In [CHANGELOG.md](CHANGELOG.md), rename `## Unreleased` to the version and the
 date, for example `## 0.1.0 — 2026-10-27`. That section becomes the GitHub
