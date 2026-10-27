@@ -151,6 +151,15 @@ All notable changes to this project are documented in this file.
 - **Android: `GooglePayButton`'s `radius` is in dp, as documented.** It was passed to Google Pay as
   pixels, so corners were about a third of the requested size on a typical phone. Apps that
   enlarged `radius` to compensate should set it back.
+- **iOS: a payment no longer hangs when the Apple Pay sheet cannot stay on screen.** The sheet
+  was presented from the app's top view controller. When `startPayment()` ran while that view
+  controller was being dismissed, for example while a modal closed, UIKit closed the sheet with
+  it, or refused to show it, and PassKit never called back. The promise never settled, and every
+  later call returned "A payment is already in progress" until the app restarted. The sheet now
+  opens in its own window (`PKPaymentAuthorizationController`), so the app's view controllers
+  cannot refuse or close it. If PassKit still cannot show it, `startPayment` resolves with
+  `status: 'failed'`, `code: 'NOT_AVAILABLE'` and
+  `error: 'Unable to present payment authorization'`, and the next call opens a new sheet.
 - **Android: `supportedNetworks` limits the cards the payer can choose.** Android ignored it and
   always offered Visa, Mastercard, Amex and Discover, so a merchant whose gateway refuses Amex
   still received Amex tokens, and JCB or Interac could not be enabled. The payment request, the
