@@ -23,7 +23,7 @@
     "prettier": "^3.3.3",
     "react-native-nitro-modules": "^0.36.1",
     "react-test-renderer": "19.2.3",
-    "release-it": "^19.0.0",
+    "release-it": "^21.1.1",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -117,6 +117,7 @@
     "semi": false
   },
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "react-native": "src/index",

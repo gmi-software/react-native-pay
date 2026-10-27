@@ -30,6 +30,7 @@ cd example && bun install
 - iOS unit tests: `cd example && npx expo prebuild --platform ios`, then `cd ios && xcodebuild test -workspace example.xcworkspace -scheme NitroPay-Unit-Tests -destination 'platform=iOS Simulator,name=<iPhone>'`, with a name from `xcrun simctl list devices available`. Tests live in `package/ios/Tests`; the example links them through `expo-build-properties` in `app.json`.
 - Run example: `cd example && npx expo prebuild && npx expo run:ios` or `npx expo run:android`
 - Docs (dev): `bun run docs:start`. Docs (build): `bun run docs:build`
+- Release: CI publishes to npm when a `v<version>` tag is pushed; never run `npm publish` locally. Steps in `RELEASING.md`.
 
 ## Nitro Modules notes
 

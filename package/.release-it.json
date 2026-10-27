@@ -1,0 +1,20 @@
+{
+  "git": {
+    "tagName": "v${version}",
+    "requireCleanWorkingDir": true,
+    "requireUpstream": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}",
+    "releaseNotes": "node scripts/changelog-section.js ${version}"
+  },
+  "npm": {
+    "publish": true,
+    "publishArgs": ["--provenance"],
+    "skipChecks": true
+  },
+  "hooks": {
+    "before:init": ["bun run test:ci"]
+  }
+}
