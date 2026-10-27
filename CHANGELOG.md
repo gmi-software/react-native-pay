@@ -160,6 +160,13 @@ All notable changes to this project are documented in this file.
   cannot refuse or close it. If PassKit still cannot show it, `startPayment` resolves with
   `status: 'failed'`, `code: 'NOT_AVAILABLE'` and
   `error: 'Unable to present payment authorization'`, and the next call opens a new sheet.
+- **iOS: after `onAuthorize` reports a failure, the payer can retry from the Apple Pay sheet,** as
+  the docs said. PassKit treats a failure that carries no PassKit error as final, so the sheet
+  showed "Payment Failed" and closed. A `'failure'`, a rejected promise and the 25-second timeout
+  now complete the sheet with `PKPaymentError.unknownError` and your `error` text. The payer can
+  try again, and each retry calls `onAuthorize` with a new token. When the sheet closes,
+  `startPayment` resolves with the last attempt's result, which for a failure still has
+  `code: 'PROVIDER_ERROR'`.
 - **Android: `supportedNetworks` limits the cards the payer can choose.** Android ignored it and
   always offered Visa, Mastercard, Amex and Discover, so a merchant whose gateway refuses Amex
   still received Amex tokens, and JCB or Interac could not be enabled. The payment request, the

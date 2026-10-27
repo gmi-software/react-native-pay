@@ -371,6 +371,26 @@ private struct PaymentTokenConverter {
     }
 }
 
+// MARK: - Authorization Results
+
+// Internal, not private, so the NitroPay unit tests can reach it.
+enum AuthorizationResultBuilder {
+
+    /// The merchant's outcome for the sheet. PassKit ends the payment on a
+    /// failure without a PassKit error, but lets the payer try again after
+    /// `unknownError`, which calls `didAuthorizePayment` with a new token.
+    static func build(success: Bool, error: String?) -> PKPaymentAuthorizationResult {
+        guard !success else {
+            return PKPaymentAuthorizationResult(status: .success, errors: nil)
+        }
+        let retryable = PKPaymentError(
+            .unknownError,
+            userInfo: [NSLocalizedDescriptionKey: error ?? ErrorMessage.authorizationFailed]
+        )
+        return PKPaymentAuthorizationResult(status: .failure, errors: [retryable])
+    }
+}
+
 // MARK: - Payment Results
 
 private enum PaymentResultFactory {
@@ -564,10 +584,7 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
             isSettled = true
             self.isAuthorizing = false
             self.authorizedResult = result
-            completion(PKPaymentAuthorizationResult(
-                status: result.success ? .success : .failure,
-                errors: nil
-            ))
+            completion(AuthorizationResultBuilder.build(success: result.success, error: result.error))
             if self.finishedWhileAuthorizing {
                 self.reportResult()
             }
