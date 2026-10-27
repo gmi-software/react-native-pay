@@ -2,7 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 0.1.0 — 2026-10-27
+
+This release changes the public API: read **Changed** before upgrading from 0.0.x. The changes
+most apps need are: `usePaymentCheckout` returns `isSupported` and `hasActiveCard` instead of
+`canMakePayments` and `canSetupCards`, `HybridPaymentHandler.payServiceStatus()` returns a
+Promise, and the pay buttons take a plain function as `onPress`, without `callback()`.
 
 ### Added
 
