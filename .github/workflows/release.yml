@@ -85,6 +85,19 @@ jobs:
             exit 1
           fi
 
+      # A tag trigger matches the tag's name, whatever branch holds its commit.
+      # Publish only commits that reached main through the release pull request.
+      # The full-history checkout above fetched origin/main.
+      - name: Verify the tagged commit is on main
+        if: github.event_name == 'push'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Tag $TAG points at $(git rev-parse HEAD), which is not on main. Merge the release pull request, then tag main."
+            exit 1
+          fi
+
       - name: Verify version is not already published
         env:
           VERSION: ${{ steps.version.outputs.version }}

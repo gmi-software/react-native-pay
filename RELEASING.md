@@ -45,8 +45,9 @@ git push origin v0.1.0
 The workflow then runs every [CI](.github/workflows/ci.yml) job on the tagged
 commit (lint, typecheck, tests, the Nitro codegen check, the package contents
 check, and the iOS and Android builds with their unit tests); verifies the tag
-matches `package/package.json`, that the version is not already on npm and that
-`CHANGELOG.md` has a section for it; publishes to npm with provenance; and
+matches `package/package.json` and points at a commit on `main`, that the
+version is not already on npm and that `CHANGELOG.md` has a section for it;
+publishes to npm with provenance; and
 creates the GitHub Release with that section as its body.
 
 The iOS podspec reads its version from `package.json`, so there is no second
@@ -65,7 +66,7 @@ hand from `package/`, carry no provenance, and are tagged without the prefix.
 
 ## Pre-releases
 
-A version with a prerelease identifier works without extra configuration.
+A version with a pre-release identifier works without extra configuration.
 Tagging `v0.2.0-rc.1` publishes under the `rc` dist-tag rather than `latest`, so
 `npm install @gmisoftware/react-native-pay` is unaffected, and the GitHub
 Release is marked as a pre-release. release-it derives both from the version
