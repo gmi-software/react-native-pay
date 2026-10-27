@@ -131,7 +131,11 @@ jobs:
           # --no-increment: the version already lives in package.json, reviewed
           #   and merged through a pull request.
           # --no-git: the tag is pushed by the maintainer; CI never writes to git.
-          args=(--ci --no-increment --no-git)
+          # -VV: logs the output of release-it's own commands, including npm's
+          #   `+ <name>@<version>` once the registry accepts the package. `-V`
+          #   only logs hook output. npm's notices go to stderr, which release-it
+          #   shows only when a command fails.
+          args=(--ci --no-increment --no-git -VV)
           if [ "${{ github.event_name }}" != 'push' ]; then
             args+=(--dry-run)
             echo 'Rehearsal run — nothing will be tagged or published.'

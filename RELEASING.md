@@ -50,6 +50,11 @@ version is not already on npm and that `CHANGELOG.md` has a section for it;
 publishes to npm with provenance; and
 creates the GitHub Release with that section as its body.
 
+The Publish step logs `+ @gmisoftware/react-native-pay@<version>` when npm
+accepts the package. The version can take a few minutes more to show up on the
+registry: 0.1.0 appeared about 5 minutes after the workflow finished. Don't
+re-run the workflow or re-push the tag while you wait.
+
 The iOS podspec reads its version from `package.json`, so there is no second
 version to keep in sync.
 
