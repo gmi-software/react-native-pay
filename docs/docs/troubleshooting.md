@@ -113,27 +113,26 @@ adb logcat -s HybridPaymentHandler HybridGooglePayButton
 
 Payment errors don't depend on logs: they reach your app in `result.error`.
 
-## Nitro callback for onPress
+## Pay button `onPress` and `callback()`
 
-`ApplePayButton` and `GooglePayButton` are Nitro views. Nitro passes a function prop to native code only when it is wrapped with `callback()` from `react-native-nitro-modules`, so `onPress` must always be wrapped. A bare function does not reach the native button: tapping it does nothing, and TypeScript reports `Type '() => Promise<void>' is not assignable to type 'NitroViewWrappedCallback<...>'`.
+`ApplePayButton` and `GooglePayButton` take a plain function as `onPress`. Earlier versions required wrapping it with `callback()` from `react-native-nitro-modules`. That is no longer needed: remove the wrapper, and the `callback` import if nothing else uses it.
 
 ```tsx
 import { Platform } from 'react-native'
 import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 const handlePay = async () => {
   // Call startPayment() from usePaymentCheckout here
 }
 
 {Platform.OS === 'ios' ? (
-  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePay)} />
+  <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} />
 ) : (
-  <GooglePayButton buttonType="buy" theme="dark" onPress={callback(handlePay)} />
+  <GooglePayButton buttonType="buy" theme="dark" onPress={handlePay} />
 )}
 ```
 
-Use this pattern anywhere you pass handlers to `ApplePayButton` or `GooglePayButton`.
+A wrapped `onPress` still works, but TypeScript reports `Type 'NitroViewWrappedCallback<...>' is not assignable to type '() => void'`, and development builds log a warning.
 
 ## Build / native module issues
 

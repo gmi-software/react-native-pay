@@ -13,7 +13,6 @@ import {
   GooglePayButton,
   usePaymentCheckout,
 } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 const {
   isSupported,
@@ -51,7 +50,7 @@ const handlePayment = async () => {
   <ApplePayButton
     buttonType="buy"
     buttonStyle="black"
-    onPress={callback(handlePayment)}
+    onPress={handlePayment}
     style={{ width: '100%', height: 56 }}
   />
 ) : (
@@ -59,7 +58,7 @@ const handlePayment = async () => {
     buttonType="buy"
     theme="dark"
     radius={8}
-    onPress={callback(handlePayment)}
+    onPress={handlePayment}
     style={{ width: '100%', height: 56 }}
   />
 )}
@@ -71,7 +70,6 @@ const handlePayment = async () => {
 - **Status** — Check whether the device can make payments or only set up cards.
 - **Cart UI** — Add/clear items and display total.
 - **Result handling** — Success and error messages; reset and clear cart after success.
-- **Nitro `callback`** — Buttons use `callback(handlePayment)` (see [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress)).
 
 ## Run the example
 
@@ -102,10 +100,10 @@ Use the checkout screen in the example app as a reference for:
 2. Shows a loading state while `isCheckingStatus` is true.
 3. Renders “Quick Add” buttons that call `addItems` or `addItem`.
 4. Displays the cart (items + total) and a “Clear” action.
-5. Renders **ApplePayButton** on iOS and **GooglePayButton** on Android with `callback(handlePayment)`.
+5. Renders **ApplePayButton** on iOS and **GooglePayButton** on Android with `onPress={handlePayment}`.
 6. On successful payment, shows an alert and calls `reset()` and `clearItems()`.
 
-Copy these patterns into your app: config setup, cart handling, button usage, and native-safe `onPress` handlers.
+Copy these patterns into your app: config setup, cart handling, and button usage.
 
 ## Plugin config in the example
 

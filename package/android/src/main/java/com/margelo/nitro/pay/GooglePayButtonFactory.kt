@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.android.gms.wallet.button.ButtonConstants
 import com.google.android.gms.wallet.button.ButtonOptions
 import com.google.android.gms.wallet.button.PayButton
+import kotlin.math.roundToInt
 
 /**
  * Factory for creating and configuring Google Pay buttons
@@ -30,7 +31,7 @@ object GooglePayButtonFactory {
             .apply {
                 radius?.let { r ->
                     if (r >= 0) {
-                        setCornerRadius(r.toInt())
+                        setCornerRadius(cornerRadiusPx(r, context.resources.displayMetrics.density))
                     }
                 }
             }
@@ -43,6 +44,13 @@ object GooglePayButtonFactory {
         }
         
         return button
+    }
+    
+    /**
+     * Converts the React Native radius (dp) to the px that [ButtonOptions] takes
+     */
+    internal fun cornerRadiusPx(radiusDp: Double, density: Float): Int {
+        return (radiusDp * density).roundToInt()
     }
     
     /**

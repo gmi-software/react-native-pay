@@ -190,7 +190,6 @@ import {
   formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
-import { callback } from 'react-native-nitro-modules'
 
 function CheckoutScreen() {
   const {
@@ -286,7 +285,7 @@ function CheckoutScreen() {
           <ApplePayButton
             buttonType="buy"
             buttonStyle="black"
-            onPress={callback(handlePay)}
+            onPress={handlePay}
             style={{ width: '100%', height: 48 }}
           />
         ) : (
@@ -294,7 +293,7 @@ function CheckoutScreen() {
             buttonType="buy"
             theme="dark"
             radius={4}
-            onPress={callback(handlePay)}
+            onPress={handlePay}
             style={{ width: '100%', height: 48 }}
           />
         )
@@ -565,7 +564,7 @@ iOS only: opens Wallet so the user can add a card. Call it from an `ApplePayButt
 
 ### Button Components
 
-Both buttons are Nitro views, so `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`. A bare function does not reach the native button, and tapping it does nothing.
+Each button renders nothing on the other platform and, in development, logs a warning. `disabled` makes the button ignore taps, for example while a payment is in progress. It does not dim the button: Apple's guidelines ask not to make the Apple Pay button appear unavailable, and Google's do not allow changing the Google Pay button's color.
 
 #### `ApplePayButton` (iOS)
 
@@ -592,7 +591,8 @@ interface ApplePayButtonProps {
 
   buttonStyle: "white" | "whiteOutline" | "black";
 
-  onPress?: () => void; // wrap with callback() from react-native-nitro-modules
+  onPress?: () => void;
+  disabled?: boolean; // ignores taps while true
   style?: ViewStyle;
 }
 ```
@@ -601,7 +601,6 @@ interface ApplePayButtonProps {
 
 ```tsx
 import { ApplePayButton } from "@gmisoftware/react-native-pay";
-import { callback } from "react-native-nitro-modules";
 
 const handlePayment = async () => {
   // Call startPayment() from usePaymentCheckout here
@@ -610,7 +609,7 @@ const handlePayment = async () => {
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
-  onPress={callback(handlePayment)}
+  onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
 ```
@@ -642,7 +641,8 @@ interface GooglePayButtonProps {
   googlePayAllowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
   merchantCapabilities?: string[]; // as PaymentRequest.merchantCapabilities
 
-  onPress?: () => void; // wrap with callback() from react-native-nitro-modules
+  onPress?: () => void;
+  disabled?: boolean; // ignores taps while true
   style?: ViewStyle;
 }
 ```
@@ -651,7 +651,6 @@ interface GooglePayButtonProps {
 
 ```tsx
 import { GooglePayButton } from "@gmisoftware/react-native-pay";
-import { callback } from "react-native-nitro-modules";
 
 const handlePayment = async () => {
   // Call startPayment() from usePaymentCheckout here
@@ -661,7 +660,7 @@ const handlePayment = async () => {
   buttonType="buy"
   theme="dark"
   radius={8}
-  onPress={callback(handlePayment)}
+  onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
 ```
@@ -966,7 +965,6 @@ import {
   GooglePayButton,
 } from '@gmisoftware/react-native-pay'
 import { Platform } from 'react-native'
-import { callback } from 'react-native-nitro-modules'
 
 // 1. Check availability, against the environment you pay in
 const { isSupported } = await HybridPaymentHandler.payServiceStatus({
@@ -1007,7 +1005,7 @@ const handlePayment = async () => {
   }
 }
 
-// 4. Render the button. onPress must be wrapped with callback().
+// 4. Render the button.
 function PaymentButton() {
   if (!isSupported) return null
 
@@ -1015,13 +1013,13 @@ function PaymentButton() {
     <ApplePayButton
       buttonType="buy"
       buttonStyle="black"
-      onPress={callback(handlePayment)}
+      onPress={handlePayment}
     />
   ) : (
     <GooglePayButton
       buttonType="subscribe"
       theme="dark"
-      onPress={callback(handlePayment)}
+      onPress={handlePayment}
     />
   )
 }

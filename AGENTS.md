@@ -42,7 +42,7 @@ cd example && bun install
 - Keep PRs small and scoped to one objective.
 - If you change public APIs, update `README.md` and any types.
 - **Docs (`docs/`)**: When you add, change, or remove public API, setup steps, or user-facing behavior, create, update, or delete the relevant pages under `docs/docs/` so the Docusaurus docs stay in sync. Examples: new hook option → `docs/docs/api/use-payment-checkout.md`; plugin config change → `docs/docs/setup/expo-plugin.md`; new guide → add under `docs/docs/guides/` and reference in `docs/sidebars.ts`. All docs content is in English.
-- **Code snippets** in `README.md` and `docs/docs/` must compile (`bun run check:docs`): include their imports, and wrap pay button `onPress` handlers with `callback()`. Mark a snippet that cannot compile on its own (type listings, short fragments, server code) with `no-check` after the language, as in ` ```ts no-check `. Snippets that render `ApplePayButton` or `GooglePayButton` cannot be `no-check`.
+- **Code snippets** in `README.md` and `docs/docs/` must compile (`bun run check:docs`): include their imports. Mark a snippet that cannot compile on its own (type listings, short fragments, server code) with `no-check` after the language, as in ` ```ts no-check `. Snippets that render `ApplePayButton` or `GooglePayButton` cannot be `no-check`.
 - If you touch native code, validate both iOS and Android paths.
 - Avoid drive-by refactors and formatting-only changes.
 

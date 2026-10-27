@@ -19,6 +19,7 @@ export type GooglePayButtonTheme = 'dark' | 'light'
 export interface GooglePayButtonProps extends HybridViewProps {
   buttonType: GooglePayButtonType
   theme: GooglePayButtonTheme
+  /** Corner radius in dp, like other React Native sizes. */
   radius?: number
   /**
    * As `PaymentRequest.supportedNetworks`. Pass the same values as the

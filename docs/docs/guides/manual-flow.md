@@ -62,12 +62,11 @@ To charge the token before the Apple Pay sheet closes, pass `startPayment(paymen
 
 ## 4. Render the button
 
-Use the platform-specific button, and pass it `status.isSupported` from step 1 so it stays hidden when payments are unavailable. Its `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, or the tap does nothing:
+Use the platform-specific button, and pass it `status.isSupported` from step 1 so it stays hidden when payments are unavailable:
 
 ```tsx
 import { Platform } from 'react-native'
 import { ApplePayButton, GooglePayButton } from '@gmisoftware/react-native-pay'
-import { callback } from 'react-native-nitro-modules'
 
 function PaymentButton({
   isSupported,
@@ -82,13 +81,13 @@ function PaymentButton({
     <ApplePayButton
       buttonType="buy"
       buttonStyle="black"
-      onPress={callback(handlePayment)}
+      onPress={handlePayment}
     />
   ) : (
     <GooglePayButton
       buttonType="subscribe"
       theme="dark"
-      onPress={callback(handlePayment)}
+      onPress={handlePayment}
     />
   )
 }

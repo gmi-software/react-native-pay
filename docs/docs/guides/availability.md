@@ -29,7 +29,6 @@ In the example below, the checkout screen owns the hook and the cart, and `Walle
 ```tsx
 import { useEffect } from 'react'
 import { AppState, Button, Platform, View } from 'react-native'
-import { callback } from 'react-native-nitro-modules'
 import {
   ApplePayButton,
   GooglePayButton,
@@ -80,7 +79,7 @@ function WalletButton({ checkout }: { checkout: UsePaymentCheckoutReturn }) {
       <GooglePayButton
         buttonType="buy"
         theme="dark"
-        onPress={callback(startPayment)}
+        onPress={startPayment}
       />
     )
   }
@@ -89,13 +88,13 @@ function WalletButton({ checkout }: { checkout: UsePaymentCheckoutReturn }) {
     <ApplePayButton
       buttonType="buy"
       buttonStyle="black"
-      onPress={callback(startPayment)}
+      onPress={startPayment}
     />
   ) : (
     <ApplePayButton
       buttonType="setUp"
       buttonStyle="black"
-      onPress={callback(() => HybridPaymentHandler.openPaymentSetup())}
+      onPress={() => HybridPaymentHandler.openPaymentSetup()}
     />
   )
 }

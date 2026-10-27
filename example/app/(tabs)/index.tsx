@@ -17,7 +17,6 @@ import {
   HybridPaymentHandler,
   usePaymentCheckout,
 } from "@gmisoftware/react-native-pay";
-import { callback } from "react-native-nitro-modules";
 
 // Rehearses the release checklist:
 // https://gmi-software.github.io/react-native-pay/docs/guides/testing#release-checklist
@@ -307,16 +306,14 @@ export default function TabOneScreen() {
                   <ApplePayButton
                     buttonType="buy"
                     buttonStyle="black"
-                    onPress={callback(handlePayment)}
+                    onPress={handlePayment}
                     style={styles.payButton}
                   />
                 ) : (
                   <ApplePayButton
                     buttonType="setUp"
                     buttonStyle="black"
-                    onPress={callback(() =>
-                      HybridPaymentHandler.openPaymentSetup(),
-                    )}
+                    onPress={() => HybridPaymentHandler.openPaymentSetup()}
                     style={styles.payButton}
                   />
                 )
@@ -329,7 +326,7 @@ export default function TabOneScreen() {
                   supportedNetworks={paymentRequest.supportedNetworks}
                   googlePayAllowedAuthMethods={paymentRequest.googlePayAllowedAuthMethods}
                   merchantCapabilities={paymentRequest.merchantCapabilities}
-                  onPress={callback(handlePayment)}
+                  onPress={handlePayment}
                   style={styles.payButton}
                 />
               )}

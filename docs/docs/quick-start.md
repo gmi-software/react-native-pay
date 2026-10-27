@@ -53,7 +53,6 @@ import {
   formatAmount,
 } from '@gmisoftware/react-native-pay'
 import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
-import { callback } from 'react-native-nitro-modules'
 
 function CheckoutScreen() {
   const {
@@ -111,9 +110,9 @@ function CheckoutScreen() {
         <ActivityIndicator size="large" />
       ) : (
         Platform.OS === 'ios' ? (
-          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={callback(handlePay)} style={{ width: '100%', height: 48 }} />
+          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} style={{ width: '100%', height: 48 }} />
         ) : (
-          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={callback(handlePay)} style={{ width: '100%', height: 48 }} />
+          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={handlePay} style={{ width: '100%', height: 48 }} />
         )
       )}
     </View>
@@ -123,17 +122,13 @@ function CheckoutScreen() {
 
 If you are integrating with Przelewy24, follow the provider cookbook: [Przelewy24](/docs/integrations/przelewy24).
 
-## 5. Wrap `onPress` with `callback()`
-
-`ApplePayButton` and `GooglePayButton` are Nitro views, so their `onPress` must be wrapped with `callback()` from `react-native-nitro-modules`, as in the screen above. A bare function does not reach the native button, and tapping it does nothing. See [Troubleshooting: Nitro callback for onPress](/docs/troubleshooting#nitro-callback-for-onpress).
-
-## 6. Run and test
+## 5. Run and test
 
 - **iOS:** Real device with a card in Wallet; Simulator has limited support.
 - **Android:** Real device or emulator with Google Play Services; add a card in Google Pay.
 - For **Google Pay**, configure `googlePayMerchantId`, `googlePayEnvironment`, `googlePayGateway`, and `googlePayGatewayMerchantId` when you move to a real gateway (see [Android setup](/docs/setup/android-google-pay) and [API: usePaymentCheckout](/docs/api/use-payment-checkout)).
 
-## 7. Before you ship
+## 6. Before you ship
 
 - [ ] `react-native-nitro-modules` and `@gmisoftware/react-native-pay` installed.
 - [ ] Native config done (Expo plugin + prebuild, or bare iOS entitlements + Android manifest).
