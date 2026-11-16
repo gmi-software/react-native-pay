@@ -212,6 +212,21 @@ function CheckoutScreen() {
     merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
+    // Charge on your server while the sheet waits. The server looks up
+    // the order and charges its stored amount, not one the app sends.
+    onAuthorize: async (token) => {
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          orderId: 'order_123', // your order, also your idempotency key
+        }),
+      })
+      return response.ok
+        ? { status: 'success' }
+        : { status: 'failure', error: 'Payment failed' }
+    },
   })
 
   const handleAddCoffee = () => {
@@ -229,17 +244,10 @@ function CheckoutScreen() {
   const handlePay = async () => {
     const result = await startPayment()
 
-    if (result?.status === 'success' && result.token) {
-      // Send result.token to your server for processing
-      await fetch('https://api.yourserver.com/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: result.token,
-          orderId: 'order_123', // your order, also your idempotency key
-        }),
-      })
+    if (result?.status === 'success') {
+      // Your server charged the payment: show your confirmation here.
     }
+    // 'failed': `error` is set, including when your server declined.
     // 'cancelled': the user closed the sheet, and `error` stays null.
     // 'failed': `error` is set, and `result.code` says why.
   }
@@ -304,6 +312,8 @@ function CheckoutScreen() {
 
 export default CheckoutScreen
 ```
+
+`onAuthorize` keeps the payment sheet open until your server answers, so the sheet and `result.status` show the real outcome. Without it, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 

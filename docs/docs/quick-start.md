@@ -5,8 +5,8 @@ Get a minimal Apple Pay / Google Pay checkout running in your app.
 ## What this quick start covers
 
 - Native button rendering and payment-sheet trigger.
-- Getting back `PaymentResult` and `token`.
-- Forwarding the token to your backend.
+- Charging the token on your backend while the sheet waits (`onAuthorize`).
+- Getting back a `PaymentResult` that reflects your server's answer.
 
 This guide does **not** replace platform onboarding (Apple/Google) or gateway-specific backend implementation.
 
@@ -42,7 +42,7 @@ If you are using Expo, run `npx expo prebuild --clean` after plugin changes and 
 
 ## 4. Minimal checkout screen
 
-Use the hook and the platform-specific button. On press, call `startPayment()` and send the token to your server.
+Use the hook and the platform-specific button. Pass `onAuthorize` to send the token to your server while the payment sheet waits: the sheet shows success or failure from your server's answer, and `startPayment()` resolves with `status: 'success'` only when your server charged the payment.
 
 ```tsx
 import React from 'react'
@@ -70,21 +70,27 @@ function CheckoutScreen() {
     merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
+    // Charge on your server while the sheet waits. The server looks up
+    // the order and charges its stored amount, not one the app sends.
+    onAuthorize: async (token) => {
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, orderId: 'order_123' }), // your order
+      })
+      return response.ok
+        ? { status: 'success' }
+        : { status: 'failure', error: 'Payment failed' }
+    },
   })
 
   const handlePay = async () => {
     const result = await startPayment()
-    if (result?.status === 'success' && result.token) {
-      // Send result.token to your backend
-      await fetch('https://api.yourserver.com/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: result.token,
-          orderId: 'order_123', // your order
-        }),
-      })
+    if (result?.status === 'success') {
+      // Your server charged the payment: show your confirmation here.
     }
+    // 'failed': `error` is set, including when your server declined.
+    // 'cancelled': the user closed the sheet.
   }
 
   if (isCheckingStatus) {
@@ -119,6 +125,8 @@ function CheckoutScreen() {
   )
 }
 ```
+
+Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, and `startPayment()` resolves with `status: 'success'` before your server has charged anything. Don't tell the user the payment succeeded until your server answers. See [Server-side processing](/docs/guides/server-processing#charge-before-the-sheet-closes) for timeouts, retries and Android behavior.
 
 If you are integrating with Przelewy24, follow the provider cookbook: [Przelewy24](/docs/integrations/przelewy24).
 
