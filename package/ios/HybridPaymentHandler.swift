@@ -7,7 +7,7 @@ import NitroModules
 private enum ErrorMessage {
     static let paymentCancelled = "Payment cancelled by user"
     static let paymentInProgress = "A payment is already in progress"
-    static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured"
+    static let missingMerchantIdentifier = "No Apple Pay merchant identifier configured. Add one to the Info.plist key ReactNativePayApplePayMerchantIdentifiers (the Expo plugin does this), or pass applePayMerchantIdentifier."
     static let unableToPresent = "Unable to present payment authorization"
     static let unableToCreate = "Unable to create payment authorization"
     static let authorizationFailed = "Payment authorization failed"

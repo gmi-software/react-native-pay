@@ -85,7 +85,7 @@ Functional contract highlights:
    - JavaScript config does not require a merchant identifier field for the default Apple Pay path.
    - If `applePayMerchantIdentifier` is provided and not blank, native uses it as an explicit override.
    - If the override is omitted, native resolves the first non-empty value from the app entitlement `com.apple.developer.in-app-payments`.
-   - If neither source yields a merchant identifier, native returns `status='failed'`, `code='CONFIGURATION'` with error `"No Apple Pay merchant identifier configured"`.
+   - If neither source yields a merchant identifier, native returns `status='failed'`, `code='CONFIGURATION'` with an error starting `"No Apple Pay merchant identifier configured"` that names the Info.plist key and the override.
 8. On Android Google Pay production validation:
    - `googlePayMerchantId` is written into `merchantInfo.merchantId` only for `googlePayEnvironment='PRODUCTION'`.
    - In production, native validation requires non-blank `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.

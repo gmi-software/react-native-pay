@@ -57,41 +57,78 @@ Implement a backend endpoint that:
 
 ## Client implementation (React Native)
 
+The server prices the order, and the sheet shows that amount. The token is charged inside `onAuthorize`, so on iOS the Apple Pay sheet waits for the charge and shows its outcome:
+
 ```tsx
-import React from 'react'
+import React, {useState} from 'react'
 import {ActivityIndicator, Platform, View} from 'react-native'
 import {
   ApplePayButton,
   GooglePayButton,
-  usePaymentCheckout,
+  HybridPaymentHandler,
+  createPaymentRequest,
 } from '@gmisoftware/react-native-pay'
 
-export function CheckoutWithPrzelewy24() {
-  const {startPayment, isSupported, isProcessing} = usePaymentCheckout({
-    merchantName: 'Your Store',
-    countryCode: 'PL',
-    currencyCode: 'PLN',
-    googlePayMerchantId: 'your_google_pay_merchant_id',
-    googlePayEnvironment: 'TEST', // switch to PRODUCTION for live traffic
-    googlePayGateway: 'przelewy24',
-    googlePayGatewayMerchantId: 'your_przelewy24_gateway_merchant_id',
-  })
+const API_URL = 'https://api.yourserver.com/payments/przelewy24'
+
+export function CheckoutWithPrzelewy24({
+  cartId,
+  isSupported,
+}: {
+  cartId: string
+  isSupported: boolean // from HybridPaymentHandler.payServiceStatus()
+}) {
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const onPayPress = async () => {
-    const result = await startPayment()
-    if (result?.status !== 'success' || !result.token) return
+    setIsProcessing(true)
+    try {
+      // 1) Your server creates the order and computes its amount.
+      const orderResponse = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cartId}),
+      })
+      if (!orderResponse.ok) return
+      const order: {orderId: string; amount: string} = await orderResponse.json()
 
-    await fetch('https://api.yourserver.com/payments/przelewy24/wallet', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        platform: Platform.OS, // ios | android
-        amount: 49.99,
-        currency: 'PLN',
-        orderId: 'order_123',
-        token: result.token,
-      }),
-    })
+      // 2) The sheet shows the amount the server will charge.
+      const request = createPaymentRequest({
+        amount: order.amount,
+        label: 'Your Store',
+        merchantName: 'Your Store',
+        countryCode: 'PL',
+        currencyCode: 'PLN',
+        googlePayMerchantId: 'your_google_pay_merchant_id',
+        googlePayEnvironment: 'TEST', // switch to PRODUCTION for live traffic
+        googlePayGateway: 'przelewy24',
+        googlePayGatewayMerchantId: 'your_przelewy24_gateway_merchant_id',
+      })
+
+      // 3) Charge the token on your server while the sheet waits.
+      const result = await HybridPaymentHandler.startPayment(request, {
+        onAuthorize: async (token) => {
+          const response = await fetch(`${API_URL}/wallet`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              platform: Platform.OS, // ios | android
+              orderId: order.orderId,
+              token,
+            }),
+          })
+          if (!response.ok) {
+            const {error} = await response.json()
+            return {status: 'failure', error}
+          }
+          return {status: 'success'}
+        },
+      })
+      // result.status is 'success' only when your server reported the charge.
+      // Show the order confirmation from your server's order status.
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   if (!isSupported) return null
@@ -120,16 +157,17 @@ export function CheckoutWithPrzelewy24() {
 }
 ```
 
+The client's `PaymentResult` is not proof of payment: your server, and Przelewy24's notification to it, are the source of truth for the amount and the payment status. On Android, Google Pay closes its sheet before `onAuthorize` runs; see [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+
 ### What to forward to backend
 
 Forward at least:
 
 - `token.paymentData` (opaque payload; token format is platform/provider-dependent)
-- order/cart identifier, which your backend also uses for idempotency
-- amount and currency
+- order identifier, which your backend uses to look up the amount and currency, and for idempotency
 - optional platform marker (`ios` / `android`) to simplify provider mapping
 
-Do not parse or transform `paymentData` in the client beyond forwarding it.
+Don't send the amount from the client: the server takes it from the order. Do not parse or transform `paymentData` in the client beyond forwarding it.
 
 ## Backend mapping (conceptual example)
 

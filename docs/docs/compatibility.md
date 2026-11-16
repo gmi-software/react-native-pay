@@ -12,6 +12,12 @@ Supported versions and upgrade notes.
 
 Install the correct Nitro version first; the payment library depends on it.
 
+## Native requirements
+
+- **iOS** — the minimum iOS version your React Native version supports (`min_ios_version_supported`); visionOS 1.0+.
+- **Android** — compileSdk and targetSdk 36, NDK 29.0.14206865, minSdk 26. The app can override these through the `NitroPay_*` Gradle properties.
+- **Google Pay** — the library depends on `com.google.android.gms:play-services-wallet` 20.0.0.
+
 ## Recommended versions
 
 - **React Native** 0.70 or newer (0.86 with Expo SDK 57)

@@ -379,7 +379,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
         // The test bundle has no ReactNativePayApplePayMerchantIdentifiers entry to fall back to.
         assertBuildFails(
             paymentRequest(items: [item("Coffee", "4.99")], merchantIdentifier: " "),
-            with: "No Apple Pay merchant identifier configured"
+            with: "No Apple Pay merchant identifier configured. Add one to the Info.plist key ReactNativePayApplePayMerchantIdentifiers (the Expo plugin does this), or pass applePayMerchantIdentifier."
         )
     }
 }

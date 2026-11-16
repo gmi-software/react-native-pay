@@ -84,14 +84,6 @@ npx expo run:ios
 npx expo run:android
 ```
 
-Or from the root (if scripts are set up):
-
-```bash
-bun run ios
-# or
-bun run android
-```
-
 ## What to copy from the example
 
 Use the checkout screen in the example app as a reference for:
