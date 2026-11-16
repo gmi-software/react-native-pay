@@ -1,18 +1,19 @@
 # Server-side processing
 
-After a successful payment (`result.status === 'success'`), your app receives a **token**. Your backend must use this token with your payment gateway (Stripe, Braintree, etc.) to create the charge.
+When the user authorizes a payment, your app receives a **token**. Nothing has been charged yet: your backend must use this token with your payment gateway (Stripe, Braintree, etc.) to create the charge. Send it from [`onAuthorize`](#charge-before-the-sheet-closes), so the payment sheet shows your server's answer.
 
 ## What to send to the server
 
 From the client, send at least:
 
 - **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive.
-- **amount** (and currency) — So the server can validate and charge the correct amount.
-- Any **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
+- **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
+
+Don't send the amount to charge. The server looks up the order and charges the amount and currency it stored. If you also send the total the user saw, the server only compares it with the order and rejects a mismatch.
 
 Don't key idempotency on `PaymentResult.transactionId` or `token.transactionIdentifier`. `transactionId` is deprecated: the device generates a new one for every successful result, so a retry gets a new key. `transactionIdentifier` is missing on Android.
 
-Example:
+The simplest flow sends the token after `startPayment()` resolves. On iOS the sheet has already shown success by then, so don't tell the user the payment succeeded until your server answers, or use [`onAuthorize`](#charge-before-the-sheet-closes) instead:
 
 ```ts
 import { useEffect } from 'react'
@@ -21,7 +22,7 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 const order = { id: 'order_123', label: 'Premium plan', total: '49.99' } // your order
 
 function useOrderPayment() {
-  const { addItem, clearItems, startPayment, total } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment } = usePaymentCheckout({
     currencyCode: 'USD',
   })
 
@@ -39,12 +40,7 @@ function useOrderPayment() {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: result.token,
-          amount: total,
-          currency: 'USD',
-          orderId: order.id,
-        }),
+        body: JSON.stringify({ token: result.token, orderId: order.id }),
       })
       if (!response.ok) throw new Error('Payment processing failed')
     }
@@ -71,7 +67,7 @@ function useOrderPayment() {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, amount: order.total, currency: 'USD', orderId: order.id }),
+        body: JSON.stringify({ token, orderId: order.id }),
       })
       if (!response.ok) {
         const { error } = await response.json()
@@ -112,23 +108,30 @@ Your backend receives the token and calls your gateway SDK/API. The exact reques
 ```js
 // Backend (Node.js example)
 app.post('/process-payment', async (req, res) => {
-  const { token, amount, currency, orderId } = req.body
+  // Never read the amount to charge from the request body.
+  const { token, orderId } = req.body
 
   try {
-    // 1) Validate order/cart server-side (amount, currency, ownership, status)
+    // 1) Load the order server-side and check that it belongs to this user
+    //    and is still unpaid.
     // 2) Choose gateway flow based on platform/gateway config
     //    - iOS (Apple Pay): paymentData is Apple token payload (Base64 string)
     //    - Android (Google Pay): paymentData is Google tokenization payload
     // 3) Call gateway API with the exact fields required by that provider
     // 4) Use idempotency keys and persist payment state
+    const order = await orders.findForUser(orderId, req.user.id)
+    if (!order) return res.status(404).json({ error: 'Order not found' })
+    if (order.status === 'paid') return res.json({ success: true, chargeId: order.chargeId })
 
     const charge = await gateway.charge({
-      amountMinor: Math.round(amount * 100),
-      currency,
+      // Store totals in the currency's minor unit: 2 decimals for USD,
+      // 0 for JPY, 3 for KWD. Don't multiply a decimal amount by 100.
+      amountMinor: order.totalMinor,
+      currency: order.currency,
       tokenPayload: token.paymentData,
       token: token,
-      orderId,
-      idempotencyKey: `charge-${orderId}`,
+      orderId: order.id,
+      idempotencyKey: `charge-${order.id}`,
     })
 
     res.json({ success: true, chargeId: charge.id })
@@ -149,6 +152,6 @@ app.post('/process-payment', async (req, res) => {
 ## Security
 
 - Use **HTTPS** and authenticate the client (e.g. session or API key).
-- **Validate amount and currency** on the server; do not trust the client for the charged amount.
+- **Take the amount and currency from the server-side order**; never charge an amount the client sent.
 - **Do not log** raw token payloads; treat them like card data.
 - Prefer creating a **PaymentIntent** (or equivalent) on the server and confirming with the token, so the server controls the amount and idempotency.
