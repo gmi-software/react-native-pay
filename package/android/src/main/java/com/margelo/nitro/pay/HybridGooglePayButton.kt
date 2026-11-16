@@ -63,7 +63,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
                 )
             )
             if (payButton?.parent == container && config == buttonConfig) {
-                updateExistingButton()
+                PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button reused - props unchanged")
                 return
             }
             
@@ -73,16 +73,6 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
             PayLog.e(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Error setting up button", e)
             restoreExistingButton()
         }
-    }
-    
-    /**
-     * Updates the click listener on existing button
-     */
-    private fun updateExistingButton() {
-        payButton?.setOnClickListener {
-            onPress?.invoke()
-        }
-        PayLog.d(PaymentConstants.TAG_GOOGLE_PAY_BUTTON, "Button reused - props unchanged")
     }
     
     /**
@@ -100,9 +90,8 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
             config.buttonType,
             config.theme,
             config.radius,
-            config.cardParameters,
-            onPress
-        )
+            config.cardParameters
+        ) { onPress }
         
         // Update state
         payButton = newButton

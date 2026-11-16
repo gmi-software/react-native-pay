@@ -11,6 +11,7 @@ import {
   useDevWarning,
   usePayButtonPress,
 } from './usePayButtonPress'
+import { googlePayButtonConfigError } from './googlePayButtonConfig'
 
 const NativeGooglePayButton = getHostComponent<
   NativeGooglePayButtonProps,
@@ -36,6 +37,11 @@ export function GooglePayButton({
   useDevWarning(
     isWrongPlatform,
     `GooglePayButton is Android-only, so it renders nothing on ${Platform.OS}. Render ApplePayButton there.`
+  )
+  const configError = __DEV__ ? googlePayButtonConfigError(props) : null
+  useDevWarning(
+    !isWrongPlatform && configError !== null,
+    `GooglePayButton: ${configError}. Android keeps the button it showed before, with the default cards if it never had valid ones.`
   )
   if (isWrongPlatform) return null
   return <NativeGooglePayButton {...props} onPress={press} />

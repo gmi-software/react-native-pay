@@ -19,6 +19,14 @@ All notable changes to this project are documented in this file.
   new `PaymentHandlerMethods`. Code that used `HybridObject` members such as `name` or `dispose`,
   or typed it as `PaymentHandler`, can use the native object from the new `getPaymentHandler()`.
 
+### Fixed
+
+- **Android: a `GooglePayButton` with an invalid configuration ignored taps.** When
+  `supportedNetworks`, `googlePayAllowedAuthMethods` or `merchantCapabilities` was invalid, the
+  button built before the props arrived stayed visible without an `onPress`. Every Google Pay
+  button now calls the current `onPress`, and `GooglePayButton` warns about an invalid value in
+  development.
+
 ## 0.1.0 — 2026-10-27
 
 This release changes the public API: read **Changed** before upgrading from 0.0.x. The changes

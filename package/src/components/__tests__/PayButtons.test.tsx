@@ -226,6 +226,55 @@ describe('GooglePayButton', () => {
     expect(second).toHaveBeenCalledTimes(1)
   })
 
+  it.each([
+    [{ supportedNetworks: ['bogus'] }, 'Unknown payment network "bogus"'],
+    [{ supportedNetworks: [] }, 'supportedNetworks needs at least one network'],
+    [
+      { supportedNetworks: ['mada', 'mir'] },
+      'Google Pay offers none of these networks: mada, mir',
+    ],
+    [
+      { googlePayAllowedAuthMethods: ['PIN'] },
+      'Unknown Google Pay auth method "PIN"',
+    ],
+    [
+      { googlePayAllowedAuthMethods: [] },
+      'Google Pay needs at least one auth method',
+    ],
+    [
+      { merchantCapabilities: ['Prepaid'] },
+      'Unknown merchant capability "Prepaid"',
+    ],
+  ])('warns about the invalid configuration %p', (cardProps, message) => {
+    render(
+      <GooglePayButton
+        testID="pay"
+        buttonType="buy"
+        theme="dark"
+        onPress={jest.fn()}
+        {...cardProps}
+      />
+    )
+
+    expect(screen.getByTestId('pay')).toBeTruthy()
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0][0]).toContain(`GooglePayButton: ${message}`)
+  })
+
+  it('accepts the values Android accepts, ignoring case', () => {
+    render(
+      <GooglePayButton
+        buttonType="buy"
+        theme="dark"
+        supportedNetworks={['VISA', 'mada', 'Elo']}
+        googlePayAllowedAuthMethods={['pan_only']}
+        merchantCapabilities={['3DS', 'emv', 'credit']}
+      />
+    )
+
+    expect(warn).not.toHaveBeenCalled()
+  })
+
   it('renders nothing on iOS, with a warning', () => {
     jest.replaceProperty(Platform, 'OS', 'ios')
 
