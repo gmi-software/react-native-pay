@@ -66,7 +66,7 @@ const handlePayment = async () => {
 
 ## What’s in the full example
 
-- **Checkout flow** — Add items (e.g. “Coffee”, “Subscription”), see cart and total, then pay with Apple Pay or Google Pay.
+- **Checkout flow** — Add items (e.g. “Coffee”, “Coffee Beans” with delivery), see cart and total, then pay with Apple Pay or Google Pay.
 - **Status** — Check whether the device can make payments or only set up cards.
 - **Cart UI** — Add/clear items and display total.
 - **Result handling** — Success and error messages; reset and clear cart after success.

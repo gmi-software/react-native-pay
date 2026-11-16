@@ -110,12 +110,12 @@ export default function TabOneScreen() {
     ]);
   };
 
-  // Add subscription order
-  const handleAddSubscription = () => {
+  // Add coffee beans with delivery
+  const handleAddDelivery = () => {
     clearItems(); // Clear previous items
     addItems([
-      { label: "Premium Subscription", amount: 9.99 },
-      { label: "Tax", amount: 0.8 },
+      { label: "Coffee Beans", amount: 14.99 },
+      { label: "Delivery", amount: 4.99 },
     ]);
   };
 
@@ -131,7 +131,6 @@ export default function TabOneScreen() {
     const paymentResult = await startPayment();
 
     if (paymentResult?.status === "success") {
-      console.log("Payment authorized:", paymentResult.token);
       const card = paymentResult.token?.paymentMethod.displayName ?? "your card";
       Alert.alert(
         withServer ? "Payment Successful!" : "Authorized (no server)",
@@ -230,11 +229,11 @@ export default function TabOneScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.quickButton, styles.subscriptionButton]}
-          onPress={handleAddSubscription}
+          style={[styles.quickButton, styles.deliveryButton]}
+          onPress={handleAddDelivery}
         >
-          <Text style={styles.quickButtonText}>📱 Add Subscription</Text>
-          <Text style={styles.quickButtonPrice}>$10.79</Text>
+          <Text style={styles.quickButtonText}>🚚 Add Beans + Delivery</Text>
+          <Text style={styles.quickButtonPrice}>$19.98</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -441,7 +440,7 @@ const styles = StyleSheet.create({
   coffeeButton: {
     backgroundColor: "#8B4513",
   },
-  subscriptionButton: {
+  deliveryButton: {
     backgroundColor: "#007AFF",
   },
   customButton: {

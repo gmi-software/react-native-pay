@@ -41,6 +41,20 @@ The library does not process payments itself; it gives you the token and metadat
 - It does **not** replace your gateway SDK/backend payment flow.
 - It does **not** bypass Apple Developer / Google Pay onboarding and account setup.
 
+### What you can sell with Apple Pay and Google Pay
+
+Use Apple Pay and Google Pay only for **physical goods** and for **services used outside the app**, such as a delivery, a ride, a ticket or a donation to an approved nonprofit. Digital content and in-app features, such as subscriptions, premium content or unlocked features, must use the stores' own billing:
+
+- **App Store:** [App Review Guideline 3.1.1](https://developer.apple.com/app-store/review/guidelines/#in-app-purchase) requires In-App Purchase to unlock features, subscriptions or premium content. Under [3.1.3(e)](https://developer.apple.com/app-store/review/guidelines/#payments), physical goods and services used outside the app must use other payment methods, such as Apple Pay.
+- **Google Play:** the [Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738) requires Google Play Billing for digital goods and in-app features. The [Google Pay setup page](https://developers.google.com/pay/api/android/guides/setup) also sends apps that sell digital goods to Play Billing.
+
+An app that sells digital goods with this library can be rejected in App Review or removed from Google Play.
+
+Apps that use Apple Pay must also follow [App Review Guideline 4.9](https://developer.apple.com/app-store/review/guidelines/#apple-pay):
+
+- Show all material purchase information to the user before the sale.
+- For recurring payments, such as a monthly delivery, disclose at least the length of the renewal term and that it continues until cancelled, what is provided during each period, the charges, and how to cancel.
+
 ### Still required for production
 
 - Platform setup (Merchant ID, entitlements/capabilities, Google Pay API/project setup).
