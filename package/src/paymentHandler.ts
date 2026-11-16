@@ -1,7 +1,7 @@
-import { NitroModules } from 'react-native-nitro-modules'
 import type { PaymentHandler } from './specs/PaymentHandler.nitro'
 import type { PaymentRequest, PaymentResult } from './types'
 import { normalizePaymentRequest } from './utils/paymentRequest'
+import { requireNitro } from './nitro'
 
 /**
  * Error returned when `startPayment` is called while another payment is
@@ -20,20 +20,37 @@ export const PAYMENT_IN_PROGRESS_RESULT: Readonly<PaymentResult> = {
   error: PAYMENT_IN_PROGRESS_ERROR,
 }
 
+const NATIVE_MODULE_MISSING_ERROR =
+  'React Native Pay: the native PaymentHandler is not available. ' +
+  'Apple Pay and Google Pay need an iOS or Android build that includes ' +
+  '@gmisoftware/react-native-pay and react-native-nitro-modules: rebuild the ' +
+  'app after installing them (for Expo, `npx expo prebuild` and a development ' +
+  'build; Expo Go is not supported). Web has no native module. In Jest, mock ' +
+  'react-native-nitro-modules.'
+
 let paymentHandler: PaymentHandler | undefined
 
 /**
- * Returns the package-wide native `PaymentHandler` instance. Its
+ * Returns the package-wide native `PaymentHandler` instance, created on first
+ * use. Its
  * `startPayment` does not validate the request in JS: pass it through
  * `normalizePaymentRequest`, or use `HybridPaymentHandler`.
  *
  * The native in-progress guard lives on the instance, so the hook and the
  * exported `HybridPaymentHandler` must share one.
+ *
+ * @throws An `Error` naming the fix when the native module is missing.
  */
 export function getPaymentHandler(): PaymentHandler {
   if (paymentHandler === undefined) {
-    paymentHandler =
-      NitroModules.createHybridObject<PaymentHandler>('PaymentHandler')
+    try {
+      paymentHandler =
+        requireNitro().NitroModules.createHybridObject<PaymentHandler>(
+          'PaymentHandler'
+        )
+    } catch (cause) {
+      throw new Error(NATIVE_MODULE_MISSING_ERROR, { cause })
+    }
   }
   return paymentHandler
 }

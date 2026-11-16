@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { callback } from 'react-native-nitro-modules'
+import { requireNitro } from '../nitro'
 
 /** The props both pay buttons add to those of their native view. */
 export interface PayButtonPressProps {
@@ -54,7 +54,7 @@ export function usePayButtonPress(
   })
 
   const [press] = useState(() =>
-    callback(() => {
+    requireNitro().callback(() => {
       const { onPress: handler, disabled: isDisabled } = latest.current
       if (isDisabled) return
       if (isWrappedPressHandler(handler)) handler.f()
