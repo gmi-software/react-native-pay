@@ -1,7 +1,8 @@
-import { getPaymentHandler } from './paymentHandler'
-
-export const HybridPaymentHandler = getPaymentHandler()
-
+export {
+  validatingPaymentHandler as HybridPaymentHandler,
+  getPaymentHandler,
+  type PaymentHandlerMethods,
+} from './paymentHandler'
 export type { PaymentHandler } from './specs/PaymentHandler.nitro'
 
 export {

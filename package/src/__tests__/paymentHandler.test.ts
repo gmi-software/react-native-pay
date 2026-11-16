@@ -8,7 +8,7 @@ const DECLINED_RESULT = {
   error: 'Declined',
 }
 
-const mockInstances: object[] = []
+const mockInstances: Array<{ startPayment: jest.Mock }> = []
 const mockPresentations: Array<(result: any) => void> = []
 
 jest.mock('react-native-nitro-modules', () => ({
@@ -20,7 +20,7 @@ jest.mock('react-native-nitro-modules', () => ({
         payServiceStatus: () =>
           Promise.resolve({ isSupported: true, hasActiveCard: true }),
         isPaymentInProgress: () => inFlight,
-        startPayment: () => {
+        startPayment: jest.fn(() => {
           if (inFlight) {
             return Promise.resolve({
               status: 'failed',
@@ -36,7 +36,7 @@ jest.mock('react-native-nitro-modules', () => ({
               resolve(result)
             })
           })
-        },
+        }),
       }
       mockInstances.push(instance)
       return instance
@@ -45,10 +45,13 @@ jest.mock('react-native-nitro-modules', () => ({
   getHostComponent: () => 'HostComponent',
 }))
 
-// Required after the mock state above exists: importing the package creates
-// the handler immediately.
-const { HybridPaymentHandler, usePaymentCheckout, createPaymentRequest } =
-  require('../index') as typeof import('../index')
+// Required after the mock state above exists.
+const {
+  HybridPaymentHandler,
+  getPaymentHandler,
+  usePaymentCheckout,
+  createPaymentRequest,
+} = require('../index') as typeof import('../index')
 
 const settlePresentations = (result: any = { success: true }) =>
   mockPresentations.splice(0).forEach((settle) => settle(result))
@@ -92,8 +95,9 @@ describe('shared PaymentHandler instance', () => {
       expect(result.current.isCheckingStatus).toBe(false)
     })
 
+    expect(HybridPaymentHandler.isPaymentInProgress()).toBe(false)
     expect(mockInstances).toHaveLength(1)
-    expect(mockInstances[0]).toBe(HybridPaymentHandler)
+    expect(mockInstances[0]).toBe(getPaymentHandler())
   })
 
   it('rejects a direct call while the hook payment is in flight', async () => {
@@ -170,5 +174,123 @@ describe('shared PaymentHandler instance', () => {
 
     await expect(firstPayment).resolves.toEqual({ success: true })
     expect(first.result.current.result).toEqual({ success: true })
+  })
+})
+
+describe('request validation', () => {
+  const baseRequest = createPaymentRequest({ amount: 10, label: 'Order' })
+
+  // Each request fails normalizePaymentRequest, which the hook runs too.
+  const invalidRequests: Array<[string, typeof baseRequest]> = [
+    [
+      '0.1 + 0.2',
+      {
+        ...baseRequest,
+        paymentItems: [{ label: 'Order', amount: 0.1 + 0.2, type: 'final' }],
+      },
+    ],
+    [
+      "'19.999' USD",
+      {
+        ...baseRequest,
+        paymentItems: [{ label: 'Order', amount: '19.999', type: 'final' }],
+      },
+    ],
+    [
+      "'1.5' JPY",
+      {
+        ...baseRequest,
+        currencyCode: 'JPY',
+        paymentItems: [{ label: 'Order', amount: '1.5', type: 'final' }],
+      },
+    ],
+    ["currency 'usd'", { ...baseRequest, currencyCode: 'usd' }],
+    ["country 'USA'", { ...baseRequest, countryCode: 'USA' }],
+  ]
+
+  const nativeStartPayment = () => {
+    getPaymentHandler()
+    return mockInstances[0]!.startPayment
+  }
+
+  beforeEach(() => nativeStartPayment().mockClear())
+
+  it.each(invalidRequests)(
+    'HybridPaymentHandler resolves %s with CONFIGURATION without calling native',
+    async (_, request) => {
+      const result = await HybridPaymentHandler.startPayment(request)
+
+      expect(result).toEqual({
+        status: 'failed',
+        code: 'CONFIGURATION',
+        success: false,
+        error: expect.any(String),
+      })
+      expect(nativeStartPayment()).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each(invalidRequests)(
+    'usePaymentCheckout rejects %s without calling native',
+    async (_, request) => {
+      const { currencyCode, countryCode, paymentItems } = request
+      const { result } = renderHook(() =>
+        usePaymentCheckout({ currencyCode, countryCode })
+      )
+      act(() => {
+        result.current.addItem('Order', paymentItems[0]!.amount)
+      })
+
+      let hookResult: any
+      await act(async () => {
+        hookResult = await result.current.startPayment()
+      })
+
+      expect(hookResult).toBeNull()
+      expect(result.current.error).toBeInstanceOf(Error)
+      expect(nativeStartPayment()).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each(invalidRequests)(
+    'createPaymentRequest throws for %s',
+    (_, { currencyCode, countryCode, paymentItems }) => {
+      expect(() =>
+        createPaymentRequest({
+          amount: paymentItems[0]!.amount,
+          label: 'Order',
+          currencyCode,
+          countryCode,
+        })
+      ).toThrow()
+    }
+  )
+
+  it('passes a normalized request and the options to native', async () => {
+    const onAuthorize = async () => ({ status: 'success' as const })
+    const payment = HybridPaymentHandler.startPayment(
+      {
+        ...baseRequest,
+        paymentItems: [{ label: 'Order', amount: 19.9, type: 'final' }],
+      },
+      { onAuthorize }
+    )
+    settlePresentations()
+
+    await expect(payment).resolves.toEqual({ success: true })
+    expect(nativeStartPayment()).toHaveBeenCalledWith(
+      expect.objectContaining({
+        paymentItems: [{ label: 'Order', amount: '19.90', type: 'final' }],
+      }),
+      { onAuthorize }
+    )
+  })
+
+  it('calls native without options when none are given', async () => {
+    const payment = HybridPaymentHandler.startPayment(baseRequest)
+    settlePresentations()
+    await payment
+
+    expect(nativeStartPayment().mock.calls[0]).toHaveLength(1)
   })
 })

@@ -35,22 +35,20 @@ Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMetho
 
 Starts the native payment flow with the given request. Returns a promise that resolves with the payment result.
 
-Pass the request through `normalizePaymentRequest` (or build it with `createPaymentRequest`) so amounts are validated before the sheet opens. See [`PaymentAmount`](/docs/api/types#paymentamount).
+`startPayment` validates the request with [`normalizePaymentRequest`](/docs/api/utils#normalizepaymentrequestrequest) before it calls native code, as `usePaymentCheckout` does. An invalid amount (see [`PaymentAmount`](/docs/api/types#paymentamount)), a negative total, or a `currencyCode` or `countryCode` that isn't an upper-case ISO code resolves with `{ status: 'failed', code: 'CONFIGURATION', success: false, error }`, and the sheet doesn't open. Call `normalizePaymentRequest` yourself if you want the error thrown earlier.
 
 ```ts
-import { HybridPaymentHandler, normalizePaymentRequest } from '@gmisoftware/react-native-pay'
+import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
-const result = await HybridPaymentHandler.startPayment(
-  normalizePaymentRequest({
-    merchantName: 'Your Store',
-    countryCode: 'US',
-    currencyCode: 'USD',
-    merchantCapabilities: ['3DS'],
-    supportedNetworks: ['visa', 'mastercard', 'amex'],
-    paymentItems: [{ label: 'Coffee Subscription', amount: '29.99', type: 'final' }],
-    googlePayMerchantId: 'your_google_pay_merchant_id',
-  })
-)
+const result = await HybridPaymentHandler.startPayment({
+  merchantName: 'Your Store',
+  countryCode: 'US',
+  currencyCode: 'USD',
+  merchantCapabilities: ['3DS'],
+  supportedNetworks: ['visa', 'mastercard', 'amex'],
+  paymentItems: [{ label: 'Coffee Subscription', amount: '29.99', type: 'final' }],
+  googlePayMerchantId: 'your_google_pay_merchant_id',
+})
 // result: PaymentResult
 ```
 
@@ -118,6 +116,18 @@ iOS only. Opens Wallet (Settings on iPad) so the user can add a card. Call it fr
 import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
 HybridPaymentHandler.openPaymentSetup()
+```
+
+---
+
+### Raw native handler
+
+`HybridPaymentHandler` is a plain object that delegates to the package's single native `PaymentHandler`; it isn't a Nitro `HybridObject`. `getPaymentHandler()` returns that native object. Its `startPayment` skips the JS validation above, so pass it a request from `normalizePaymentRequest`. Both share one in-progress guard.
+
+```ts
+import { getPaymentHandler } from '@gmisoftware/react-native-pay'
+
+const native = getPaymentHandler()
 ```
 
 ## When to use

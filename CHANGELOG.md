@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Changed
+
+- **`HybridPaymentHandler.startPayment` validates the request**, as `usePaymentCheckout` and
+  `createPaymentRequest` do. A request that fails `normalizePaymentRequest` resolves with
+  `{ status: 'failed', code: 'CONFIGURATION', success: false, error }` without reaching native
+  code. Before, iOS accepted float artefacts such as `0.1 + 0.2` and extra decimal places, while
+  Android rejected them. Amounts are sent to native code as normalized decimal strings.
+- **`normalizePaymentRequest` checks `currencyCode` and `countryCode`.** They must be upper-case
+  ISO codes (`'USD'`, `'US'`); `'usd'` or `'USA'` now fail validation instead of reaching native
+  code.
+- **`HybridPaymentHandler` is no longer a Nitro `HybridObject`.** It is a plain object with
+  `payServiceStatus`, `startPayment`, `isPaymentInProgress` and `openPaymentSetup`, typed as the
+  new `PaymentHandlerMethods`. Code that used `HybridObject` members such as `name` or `dispose`,
+  or typed it as `PaymentHandler`, can use the native object from the new `getPaymentHandler()`.
+
 ## 0.1.0 — 2026-10-27
 
 This release changes the public API: read **Changed** before upgrading from 0.0.x. The changes

@@ -487,23 +487,20 @@ Android asks the `TEST` environment unless you pass `googlePayEnvironment`, and 
 
 ##### `startPayment(request: PaymentRequest, options?: StartPaymentOptions): Promise<PaymentResult>`
 
-Start a payment request.
+Start a payment request. The request is validated with [`normalizePaymentRequest`](#normalizepaymentrequestrequest) first: an invalid amount or code resolves with `code: 'CONFIGURATION'` before the sheet opens.
 
 ```typescript
-import { HybridPaymentHandler, normalizePaymentRequest } from "@gmisoftware/react-native-pay";
+import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 
-const result = await HybridPaymentHandler.startPayment(
-  // Validates amounts before the sheet opens; see normalizePaymentRequest
-  normalizePaymentRequest({
-    merchantName: "Your Store",
-    countryCode: "US",
-    currencyCode: "USD",
-    merchantCapabilities: ["3DS"],
-    supportedNetworks: ["visa", "mastercard", "amex"],
-    paymentItems: [{ label: "Coffee Subscription", amount: "29.99", type: "final" }],
-    googlePayMerchantId: "your_google_pay_merchant_id",
-  })
-);
+const result = await HybridPaymentHandler.startPayment({
+  merchantName: "Your Store",
+  countryCode: "US",
+  currencyCode: "USD",
+  merchantCapabilities: ["3DS"],
+  supportedNetworks: ["visa", "mastercard", "amex"],
+  paymentItems: [{ label: "Coffee Subscription", amount: "29.99", type: "final" }],
+  googlePayMerchantId: "your_google_pay_merchant_id",
+});
 ```
 
 On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled with `merchantName` ("Pay Your Store"). The library adds that total for you, so don't add your own "Total" item.
@@ -694,7 +691,7 @@ Throws if the amount is invalid for the currency (see [Amounts](#amounts)).
 
 #### `normalizePaymentRequest(request)`
 
-Validate every amount in a request you built yourself and convert it to an exact decimal string. `createPaymentRequest` and `usePaymentCheckout` call it for you.
+Validate a request you built yourself and convert every amount to an exact decimal string. `currencyCode` must be an upper-case ISO 4217 code (`"USD"`) and `countryCode` an upper-case ISO 3166-1 alpha-2 code (`"US"`). `createPaymentRequest`, `usePaymentCheckout` and `HybridPaymentHandler.startPayment` call it for you; call it yourself to get the error before you start the payment.
 
 ```typescript no-check
 import { normalizePaymentRequest } from "@gmisoftware/react-native-pay";

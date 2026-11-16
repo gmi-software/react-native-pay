@@ -39,9 +39,9 @@ Use with `HybridPaymentHandler.startPayment(request)` for a manual flow.
 
 ## normalizePaymentRequest(request)
 
-Validates every amount in `paymentItems` and `shippingMethods` and returns a copy in which each amount is a decimal string with the currency's number of decimal places. See [`PaymentAmount`](./types.md#paymentamount) for the rules.
+Validates every amount in `paymentItems` and `shippingMethods` and returns a copy in which each amount is a decimal string with the currency's number of decimal places. See [`PaymentAmount`](./types.md#paymentamount) for the rules. It also checks that `currencyCode` is an upper-case ISO 4217 code (`'USD'`) and `countryCode` an upper-case ISO 3166-1 alpha-2 code (`'US'`); `'usd'` and `'USA'` throw.
 
-Call it before passing a request you built yourself to `HybridPaymentHandler.startPayment`. `createPaymentRequest` and `usePaymentCheckout` already call it.
+`createPaymentRequest`, `usePaymentCheckout` and `HybridPaymentHandler.startPayment` already call it. Call it yourself to get the error thrown before the payment starts, or before passing a request to the raw handler from `getPaymentHandler()`.
 
 ```ts
 import { HybridPaymentHandler, normalizePaymentRequest } from '@gmisoftware/react-native-pay'
@@ -62,6 +62,9 @@ await HybridPaymentHandler.startPayment(request)
 
 normalizePaymentRequest({ ...request, paymentItems: [{ label: 'Fee', amount: 1.005, type: 'final' }] })
 // throws: Amount for "Fee" has more than 2 decimal places, which USD allows, got 1.005
+
+normalizePaymentRequest({ ...request, currencyCode: 'usd' })
+// throws: currencyCode must be an upper-case code like "USD", got "usd"
 ```
 
 ---
