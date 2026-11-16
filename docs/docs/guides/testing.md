@@ -135,5 +135,5 @@ In your own app, use your server against your gateway's test mode, and your gate
 Then check the release configuration:
 
 - [ ] **iOS:** the Merchant ID in your plugin config is the one whose Payment Processing Certificate is installed in your gateway, and your server uses the gateway's live keys.
-- [ ] **Android:** `googlePayEnvironment` is `'PRODUCTION'`, since an omitted value means `TEST`. `googlePayMerchantId` is your Console merchant ID, the gateway values are your live ones, Google has approved the app, and the build is signed with your release key.
+- [ ] **Android:** `googlePayEnvironment` is `'PRODUCTION'`, since an omitted value means `TEST`. A release build that omits it logs `googlePayEnvironment is not set` once per app run. `googlePayMerchantId` is your Console merchant ID, the gateway values are your live ones, Google has approved the app, and the build is signed with your release key.
 - [ ] **Both:** `merchantName` is the business name you want on the sheet.
