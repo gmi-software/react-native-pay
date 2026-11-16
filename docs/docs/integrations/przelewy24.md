@@ -85,7 +85,9 @@ export function CheckoutWithPrzelewy24({
     setIsProcessing(true)
     setError(null)
     try {
-      // 1) Your server creates the order and computes its amount.
+      // 1) Your server creates the order and computes its amount. For a cart
+      // that already has an order, it returns that order, so a retry after a
+      // lost response reuses the same order and idempotency key.
       const orderResponse = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -95,7 +97,12 @@ export function CheckoutWithPrzelewy24({
         setError('Could not create the order. Please try again.')
         return
       }
-      const order: {orderId: string; amount: string} = await orderResponse.json()
+      const order: {orderId: string; amount: string; status: 'pending' | 'paid'} =
+        await orderResponse.json()
+      if (order.status === 'paid') {
+        // An earlier attempt was charged: show the confirmation, don't charge again.
+        return
+      }
 
       // 2) The sheet shows the amount the server will charge.
       const request = createPaymentRequest({
@@ -187,13 +194,19 @@ Don't send the amount from the client: the server takes it from the order. Do no
 
 Provider field mapping must remain server-side. Keep this as an internal adapter and follow Przelewy24 docs for exact request schemas.
 
+Retries must not charge twice. The client creates the order on every press, and a press can follow a charge whose response never arrived. So:
+
+- `/orders` returns the cart's existing order, with its status, instead of creating another one.
+- `/wallet` keys idempotency on the order ID and doesn't charge an order that is already paid.
+
 ```ts no-check
 app.post('/payments/przelewy24/wallet', async (req, res) => {
   const {platform, token, orderId} = req.body
 
   // 1) Look up the order: the amount and currency come from it, never from the request.
-  const order = await orders.findPayable(orderId, req.user.id)
+  const order = await orders.findForUser(orderId, req.user.id)
   if (!order) return res.status(404).json({error: 'Order not found'})
+  if (order.status === 'paid') return res.json({success: true, providerPaymentId: order.providerPaymentId})
 
   // 2) Branch mapping by wallet platform.
   // 3) Build Przelewy24 request with required signatures/merchant fields.
