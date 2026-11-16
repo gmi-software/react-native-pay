@@ -61,7 +61,7 @@ The server prices the order, and the sheet shows that amount. The token is charg
 
 ```tsx
 import React, {useState} from 'react'
-import {ActivityIndicator, Platform, View} from 'react-native'
+import {ActivityIndicator, Platform, Text, View} from 'react-native'
 import {
   ApplePayButton,
   GooglePayButton,
@@ -79,9 +79,11 @@ export function CheckoutWithPrzelewy24({
   isSupported: boolean // from HybridPaymentHandler.payServiceStatus()
 }) {
   const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const onPayPress = async () => {
     setIsProcessing(true)
+    setError(null)
     try {
       // 1) Your server creates the order and computes its amount.
       const orderResponse = await fetch(`${API_URL}/orders`, {
@@ -89,7 +91,10 @@ export function CheckoutWithPrzelewy24({
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({cartId}),
       })
-      if (!orderResponse.ok) return
+      if (!orderResponse.ok) {
+        setError('Could not create the order. Please try again.')
+        return
+      }
       const order: {orderId: string; amount: string} = await orderResponse.json()
 
       // 2) The sheet shows the amount the server will charge.
@@ -126,6 +131,14 @@ export function CheckoutWithPrzelewy24({
       })
       // result.status is 'success' only when your server reported the charge.
       // Show the order confirmation from your server's order status.
+      if (result.status === 'failed') {
+        // Includes a charge your server declined. On Android the Google Pay
+        // sheet has already closed, so this is the only place the payer sees it.
+        setError(result.error ?? 'The payment failed. Please try again.')
+      }
+      // 'cancelled': the payer closed the sheet, so show nothing.
+    } catch {
+      setError('Could not reach the server. Please try again.')
     } finally {
       setIsProcessing(false)
     }
@@ -136,6 +149,7 @@ export function CheckoutWithPrzelewy24({
 
   return (
     <View>
+      {error ? <Text>{error}</Text> : null}
       {Platform.OS === 'ios' ? (
         <ApplePayButton
           buttonType="buy"
@@ -175,20 +189,23 @@ Provider field mapping must remain server-side. Keep this as an internal adapter
 
 ```ts no-check
 app.post('/payments/przelewy24/wallet', async (req, res) => {
-  const {platform, token, amount, currency, orderId} = req.body
+  const {platform, token, orderId} = req.body
 
-  // 1) Validate amount/currency/order ownership server-side.
+  // 1) Look up the order: the amount and currency come from it, never from the request.
+  const order = await orders.findPayable(orderId, req.user.id)
+  if (!order) return res.status(404).json({error: 'Order not found'})
+
   // 2) Branch mapping by wallet platform.
   // 3) Build Przelewy24 request with required signatures/merchant fields.
   // 4) Persist payment status and return result.
 
   const p24Result = await przelewy24Client.createWalletPayment({
     wallet: platform === 'ios' ? 'APPLE_PAY' : 'GOOGLE_PAY',
-    amountMinor: Math.round(amount * 100),
-    currency,
-    orderId,
+    amountMinor: order.amountMinor,
+    currency: order.currency,
+    orderId: order.id,
     // Not token.transactionIdentifier: it is missing on Android.
-    idempotencyKey: `wallet-${orderId}`,
+    idempotencyKey: `wallet-${order.id}`,
     walletTokenPayload: token?.paymentData,
     rawToken: token,
   })
