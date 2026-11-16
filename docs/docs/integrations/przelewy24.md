@@ -80,6 +80,7 @@ export function CheckoutWithPrzelewy24({
 }) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isPaid, setIsPaid] = useState(false)
 
   const onPayPress = async () => {
     setIsProcessing(true)
@@ -97,10 +98,15 @@ export function CheckoutWithPrzelewy24({
         setError('Could not create the order. Please try again.')
         return
       }
-      const order: {orderId: string; amount: string; status: 'pending' | 'paid'} =
-        await orderResponse.json()
+      const order: {
+        orderId: string
+        amount: string
+        currency: string
+        status: 'pending' | 'paid'
+      } = await orderResponse.json()
       if (order.status === 'paid') {
         // An earlier attempt was charged: show the confirmation, don't charge again.
+        setIsPaid(true)
         return
       }
 
@@ -110,7 +116,7 @@ export function CheckoutWithPrzelewy24({
         label: 'Your Store',
         merchantName: 'Your Store',
         countryCode: 'PL',
-        currencyCode: 'PLN',
+        currencyCode: order.currency, // the currency the server charges
         googlePayMerchantId: 'your_google_pay_merchant_id',
         googlePayEnvironment: 'TEST', // switch to PRODUCTION for live traffic
         googlePayGateway: 'przelewy24',
@@ -138,7 +144,9 @@ export function CheckoutWithPrzelewy24({
       })
       // result.status is 'success' only when your server reported the charge.
       // Show the order confirmation from your server's order status.
-      if (result.status === 'failed') {
+      if (result.status === 'success') {
+        setIsPaid(true)
+      } else if (result.status === 'failed') {
         // Includes a charge your server declined. On Android the Google Pay
         // sheet has already closed, so this is the only place the payer sees it.
         setError(result.error ?? 'The payment failed. Please try again.')
@@ -151,6 +159,7 @@ export function CheckoutWithPrzelewy24({
     }
   }
 
+  if (isPaid) return <Text>Payment received. Thank you!</Text>
   if (!isSupported) return null
   if (isProcessing) return <ActivityIndicator />
 
