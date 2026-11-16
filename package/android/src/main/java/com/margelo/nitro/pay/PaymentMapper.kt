@@ -193,7 +193,7 @@ object PaymentMapper {
 
     /**
      * The result of a Google Pay error, from a failed `loadPaymentData` task or the
-     * sheet's `RESULT_ERROR`
+     * sheet's error result
      */
     fun walletErrorResult(statusCode: Int?, statusMessage: String?): PaymentResult {
         val message = statusMessage ?: "Unknown error"

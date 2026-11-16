@@ -7,17 +7,18 @@ import android.os.Looper
 import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
-import com.google.android.gms.wallet.AutoResolveHelper
 import com.google.android.gms.wallet.IsReadyToPayRequest
 import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import com.google.android.gms.wallet.PaymentsClient
 import com.google.android.gms.wallet.Wallet
 import com.google.android.gms.wallet.WalletConstants
+import com.google.android.gms.wallet.contract.TaskResultContracts
 import com.margelo.nitro.core.Promise
 import com.margelo.nitro.NitroModules
 import java.util.concurrent.TimeUnit
@@ -204,28 +205,18 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     }
     
     private fun handleSheetResult(resultCode: Int, data: Intent?) {
-        when (resultCode) {
-            Activity.RESULT_OK -> {
-                data?.let { 
-                    PaymentData.getFromIntent(it)?.let { paymentData ->
-                        handlePaymentSuccess(paymentData)
-                    }
-                } ?: handlePaymentError(PaymentErrorCode.PROVIDER_ERROR, "No payment data received")
-            }
-            Activity.RESULT_CANCELED -> {
+        // Reads the result as Google's Activity Result contract does: the payment
+        // data, a cancel, or the error status Google Pay put in the intent.
+        val result = TaskResultContracts.GetPaymentDataResult().parseResult(resultCode, data)
+        val paymentData = result.result
+        when {
+            paymentData != null -> handlePaymentSuccess(paymentData)
+            result.status.statusCode == CommonStatusCodes.CANCELED -> {
                 // Also returned when the user dismisses Google's sign-in prompt.
                 PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_CANCELLED)
                 handlePaymentError(PaymentErrorCode.CANCELLED, PaymentConstants.ERROR_PAYMENT_CANCELLED)
             }
-            AutoResolveHelper.RESULT_ERROR -> {
-                handleWalletError(data?.let { AutoResolveHelper.getStatusFromIntent(it) })
-            }
-            else -> {
-                handlePaymentError(
-                    PaymentErrorCode.UNKNOWN,
-                    "Payment failed with result code: $resultCode"
-                )
-            }
+            else -> handleWalletError(result.status)
         }
     }
     

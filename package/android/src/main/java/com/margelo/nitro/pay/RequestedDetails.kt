@@ -7,8 +7,8 @@ package com.margelo.nitro.pay
  * is requested with the shipping address, or else with the billing address.
  *
  * Google Pay only offers a choice of shipping options through its payment
- * data callbacks (play-services-wallet 20), so the first shipping method is
- * the one charged.
+ * data callbacks, which the library doesn't use yet, so the first shipping
+ * method is the one charged.
  */
 internal data class RequestedDetails(
     val billingContact: Boolean = false,
