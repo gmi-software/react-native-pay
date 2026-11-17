@@ -70,6 +70,18 @@ namespace margelo::nitro::pay { struct PaymentMethod; }
 namespace margelo::nitro::pay { enum class PaymentNetwork; }
 // Forward declaration of `PaymentResult` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentResult; }
+// Forward declaration of `PaymentSheetAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetAddress; }
+// Forward declaration of `PaymentSheetCard` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetCard; }
+// Forward declaration of `PaymentSheetErrorCode` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentSheetErrorCode; }
+// Forward declaration of `PaymentSheetError` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetError; }
+// Forward declaration of `PaymentSheetSelection` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetSelection; }
+// Forward declaration of `PaymentSheetUpdate` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetUpdate; }
 // Forward declaration of `PaymentStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentStatus; }
 // Forward declaration of `PaymentTokenContext` to properly resolve imports.
@@ -125,6 +137,12 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
 #include "PaymentResult.hpp"
+#include "PaymentSheetAddress.hpp"
+#include "PaymentSheetCard.hpp"
+#include "PaymentSheetError.hpp"
+#include "PaymentSheetErrorCode.hpp"
+#include "PaymentSheetSelection.hpp"
+#include "PaymentSheetUpdate.hpp"
 #include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
 #include "PaymentTokenContext.hpp"
@@ -844,6 +862,286 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<std::vector<PaymentItem>>
+  /**
+   * Specialized version of `std::optional<std::vector<PaymentItem>>`.
+   */
+  using std__optional_std__vector_PaymentItem__ = std::optional<std::vector<PaymentItem>>;
+  inline std::optional<std::vector<PaymentItem>> create_std__optional_std__vector_PaymentItem__(const std::vector<PaymentItem>& value) noexcept {
+    return std::optional<std::vector<PaymentItem>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_PaymentItem__(const std::optional<std::vector<PaymentItem>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<PaymentItem> get_std__optional_std__vector_PaymentItem__(const std::optional<std::vector<PaymentItem>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PaymentSheetError>
+  /**
+   * Specialized version of `std::optional<PaymentSheetError>`.
+   */
+  using std__optional_PaymentSheetError_ = std::optional<PaymentSheetError>;
+  inline std::optional<PaymentSheetError> create_std__optional_PaymentSheetError_(const PaymentSheetError& value) noexcept {
+    return std::optional<PaymentSheetError>(value);
+  }
+  inline bool has_value_std__optional_PaymentSheetError_(const std::optional<PaymentSheetError>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentSheetError get_std__optional_PaymentSheetError_(const std::optional<PaymentSheetError>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<PaymentSheetUpdate>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<PaymentSheetUpdate>>`.
+   */
+  using std__shared_ptr_Promise_PaymentSheetUpdate__ = std::shared_ptr<Promise<PaymentSheetUpdate>>;
+  inline std::shared_ptr<Promise<PaymentSheetUpdate>> create_std__shared_ptr_Promise_PaymentSheetUpdate__() noexcept {
+    return Promise<PaymentSheetUpdate>::create();
+  }
+  inline PromiseHolder<PaymentSheetUpdate> wrap_std__shared_ptr_Promise_PaymentSheetUpdate__(std::shared_ptr<Promise<PaymentSheetUpdate>> promise) noexcept {
+    return PromiseHolder<PaymentSheetUpdate>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const PaymentSheetUpdate& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const PaymentSheetUpdate&)>`.
+   */
+  using Func_void_PaymentSheetUpdate = std::function<void(const PaymentSheetUpdate& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const PaymentSheetUpdate& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_PaymentSheetUpdate_Wrapper final {
+  public:
+    explicit Func_void_PaymentSheetUpdate_Wrapper(std::function<void(const PaymentSheetUpdate& /* result */)>&& func): _function(std::make_unique<std::function<void(const PaymentSheetUpdate& /* result */)>>(std::move(func))) {}
+    inline void call(PaymentSheetUpdate result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const PaymentSheetUpdate& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_PaymentSheetUpdate create_Func_void_PaymentSheetUpdate(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_PaymentSheetUpdate_Wrapper wrap_Func_void_PaymentSheetUpdate(Func_void_PaymentSheetUpdate value) noexcept {
+    return Func_void_PaymentSheetUpdate_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<PaymentSheetAddress>
+  /**
+   * Specialized version of `std::optional<PaymentSheetAddress>`.
+   */
+  using std__optional_PaymentSheetAddress_ = std::optional<PaymentSheetAddress>;
+  inline std::optional<PaymentSheetAddress> create_std__optional_PaymentSheetAddress_(const PaymentSheetAddress& value) noexcept {
+    return std::optional<PaymentSheetAddress>(value);
+  }
+  inline bool has_value_std__optional_PaymentSheetAddress_(const std::optional<PaymentSheetAddress>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentSheetAddress get_std__optional_PaymentSheetAddress_(const std::optional<PaymentSheetAddress>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PaymentSheetCard>
+  /**
+   * Specialized version of `std::optional<PaymentSheetCard>`.
+   */
+  using std__optional_PaymentSheetCard_ = std::optional<PaymentSheetCard>;
+  inline std::optional<PaymentSheetCard> create_std__optional_PaymentSheetCard_(const PaymentSheetCard& value) noexcept {
+    return std::optional<PaymentSheetCard>(value);
+  }
+  inline bool has_value_std__optional_PaymentSheetCard_(const std::optional<PaymentSheetCard>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentSheetCard get_std__optional_PaymentSheetCard_(const std::optional<PaymentSheetCard>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>
+  /**
+   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress&, const PaymentSheetSelection&)>`.
+   */
+  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>;
+  /**
+   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& / * address * /, const PaymentSheetSelection& / * selection * /)>`, this can be used from Swift.
+   */
+  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_Wrapper final {
+  public:
+    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>(std::move(func))) {}
+    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> call(PaymentSheetAddress address, PaymentSheetSelection selection) const noexcept {
+      auto __result = _function->operator()(address, selection);
+      return __result;
+    }
+  private:
+    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection value) noexcept {
+    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
+   */
+  using std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____ = std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>;
+  inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> create_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____() noexcept {
+    return Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>::create();
+  }
+  inline PromiseHolder<std::shared_ptr<Promise<PaymentSheetUpdate>>> wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> promise) noexcept {
+    return PromiseHolder<std::shared_ptr<Promise<PaymentSheetUpdate>>>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>&)>`.
+   */
+  using Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ = std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__shared_ptr_Promise_PaymentSheetUpdate___Wrapper final {
+  public:
+    explicit Func_void_std__shared_ptr_Promise_PaymentSheetUpdate___Wrapper(std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>&& func): _function(std::make_unique<std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>>(std::move(func))) {}
+    inline void call(std::shared_ptr<Promise<PaymentSheetUpdate>> result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__shared_ptr_Promise_PaymentSheetUpdate___Wrapper wrap_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ value) noexcept {
+    return Func_void_std__shared_ptr_Promise_PaymentSheetUpdate___Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>
+  /**
+   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& / * address * /, const PaymentSheetSelection& / * selection * /)>>`.
+   */
+  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>;
+  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>& value) noexcept {
+    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>
+  /**
+   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod&, const PaymentSheetSelection&)>`.
+   */
+  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>;
+  /**
+   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& / * method * /, const PaymentSheetSelection& / * selection * /)>`, this can be used from Swift.
+   */
+  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_Wrapper final {
+  public:
+    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>(std::move(func))) {}
+    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> call(ShippingMethod method, PaymentSheetSelection selection) const noexcept {
+      auto __result = _function->operator()(method, selection);
+      return __result;
+    }
+  private:
+    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection value) noexcept {
+    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>
+  /**
+   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& / * method * /, const PaymentSheetSelection& / * selection * /)>>`.
+   */
+  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>;
+  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>& value) noexcept {
+    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>
+  /**
+   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard&, const PaymentSheetSelection&)>`.
+   */
+  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>;
+  /**
+   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& / * card * /, const PaymentSheetSelection& / * selection * /)>`, this can be used from Swift.
+   */
+  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_Wrapper final {
+  public:
+    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>(std::move(func))) {}
+    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> call(PaymentSheetCard card, PaymentSheetSelection selection) const noexcept {
+      auto __result = _function->operator()(card, selection);
+      return __result;
+    }
+  private:
+    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection value) noexcept {
+    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>
+  /**
+   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& / * card * /, const PaymentSheetSelection& / * selection * /)>>`.
+   */
+  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>;
+  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>& value) noexcept {
+    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>
+  /**
+   * Specialized version of `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string&, const PaymentSheetSelection&)>`.
+   */
+  using Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection = std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>;
+  /**
+   * Wrapper class for a `std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& / * couponCode * /, const PaymentSheetSelection& / * selection * /)>`, this can be used from Swift.
+   */
+  class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_Wrapper final {
+  public:
+    explicit Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_Wrapper(std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>&& func): _function(std::make_unique<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>(std::move(func))) {}
+    inline std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> call(std::string couponCode, PaymentSheetSelection selection) const noexcept {
+      auto __result = _function->operator()(couponCode, selection);
+      return __result;
+    }
+  private:
+    std::unique_ptr<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_Wrapper wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection value) noexcept {
+    return Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>
+  /**
+   * Specialized version of `std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& / * couponCode * /, const PaymentSheetSelection& / * selection * /)>>`.
+   */
+  using std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______ = std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>;
+  inline std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>> create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>& value) noexcept {
+    return std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)> get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______(const std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>>& optional) noexcept {
     return optional.value();
   }
   

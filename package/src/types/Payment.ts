@@ -399,11 +399,19 @@ export interface PaymentRequest {
    * cryptogram for each of them, which your server reads after decrypting
    * it. The amounts must add up to exactly the total, so list yourself too
    * for any share you keep, and all `shippingMethods` must cost the same.
+   * A `PaymentSheetUpdate` must keep the total, or the sheet keeps its items.
    * Not together with `recurring`, `deferred` or `automaticReload`. iOS
    * only: Android removes it without checking these rules. Below iOS 16, the
    * payment fails with `'NOT_AVAILABLE'`.
    */
   applePayMultiTokenContexts?: PaymentTokenContext[]
+  /**
+   * A coupon code already applied, shown in the sheet's coupon field.
+   * `paymentItems` must already include its discount. Needs
+   * `StartPaymentOptions.onCouponCodeChange`, or the payment fails with
+   * `'CONFIGURATION'`. iOS only; Android ignores it.
+   */
+  couponCode?: string
   // Google Pay specific configuration (Android only)
   googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment
@@ -433,10 +441,17 @@ export interface PaymentDetails {
   /** As the payer entered it. Requested with `PaymentRequest.phoneNumberRequired`. */
   phoneNumber?: string
   /**
-   * The selected entry of `PaymentRequest.shippingMethods`, as you sent it.
+   * The selected shipping method, as you sent it in
+   * `PaymentRequest.shippingMethods` or a later `PaymentSheetUpdate`.
    * On Android, always the first one.
    */
   shippingMethod?: ShippingMethod
+  /**
+   * The last coupon code `onCouponCodeChange` accepted without an error, or
+   * `PaymentRequest.couponCode`. Apple Pay doesn't put it in the token, so
+   * charge the discount for this code. iOS only.
+   */
+  couponCode?: string
 }
 
 /**
@@ -507,6 +522,140 @@ export interface StartPaymentOptions {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>
+  /**
+   * Called when the payer picks a shipping address in the sheet, including
+   * the one it opens with, so you can update the cart: tax or delivery by
+   * region, or an address you don't deliver to. Needs
+   * `PaymentRequest.shippingContactRequired`.
+   * The address is redacted until the payer authorizes; the full one comes in
+   * `onAuthorize`. iOS only for now; Android ignores it (#72), so check the
+   * address in `onAuthorize` there.
+   * See `PaymentSheetUpdate` for the rules all sheet callbacks share.
+   */
+  onShippingAddressChange?: (
+    address: PaymentSheetAddress,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  /**
+   * Called when the payer picks another shipping method. Without it, the
+   * sheet adds the method's amount to the current items itself. On iOS an
+   * `error` is not shown: Apple Pay has none for this change. iOS only for
+   * now; Android ignores it (#72).
+   */
+  onShippingMethodChange?: (
+    method: ShippingMethod,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  /**
+   * Called when the payer picks a card, including the one the sheet opens
+   * with: for example a surcharge for credit cards. iOS only for now; Android
+   * ignores it (#72).
+   */
+  onPaymentMethodChange?: (
+    card: PaymentSheetCard,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  /**
+   * Shows a coupon field in the sheet and is called when the payer enters or
+   * changes a code; an empty field is `''`. Return `couponCodeInvalid` or
+   * `couponCodeExpired` to refuse it. The code accepted last is
+   * `PaymentDetails.couponCode`. iOS only; Google Pay has no coupon field.
+   */
+  onCouponCodeChange?: (
+    couponCode: string,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+}
+
+/**
+ * Why the sheet refuses the payer's choice. The payer can't pay until they
+ * change it.
+ *
+ * - `'shippingAddressInvalid'`: the address is wrong, for example a postal
+ *   code that doesn't match the city.
+ * - `'shippingAddressUnserviceable'`: a valid address you don't deliver to.
+ * - `'couponCodeInvalid'`, `'couponCodeExpired'`: from `onCouponCodeChange`.
+ * - `'other'`: anything else.
+ */
+export type PaymentSheetErrorCode =
+  | 'shippingAddressInvalid'
+  | 'shippingAddressUnserviceable'
+  | 'couponCodeInvalid'
+  | 'couponCodeExpired'
+  | 'other'
+
+export interface PaymentSheetError {
+  code: PaymentSheetErrorCode
+  /** Shown to the payer. */
+  message: string
+}
+
+/**
+ * What a sheet callback changes. A field you leave out stays as it is.
+ *
+ * As in `PaymentRequest`, return the payment items only: the library adds the
+ * selected shipping method, later charges and the total. Amounts follow the
+ * same rules as the request.
+ *
+ * Every sheet callback must settle within 25 seconds, as `onAuthorize`. If it
+ * rejects, times out or returns something invalid, the sheet keeps its
+ * current items without an error. A rejection or an invalid update is logged
+ * in development.
+ */
+export interface PaymentSheetUpdate {
+  /** The new cart, replacing the current one. */
+  paymentItems?: PaymentItem[]
+  /**
+   * The new shipping methods. The selected one stays selected while it is in
+   * the list; otherwise the first one is selected. Must not be empty.
+   */
+  shippingMethods?: ShippingMethod[]
+  error?: PaymentSheetError
+}
+
+/**
+ * A shipping address before the payer authorizes. Apple Pay and Google Pay
+ * leave out the street, the name, the email and the phone, and for some
+ * countries, such as the UK and Canada, part of the postal code.
+ */
+export interface PaymentSheetAddress {
+  /** ISO 3166-1 alpha-2, such as `'US'`. */
+  countryCode: string
+  /** A state or province, such as `'CA'`. */
+  administrativeArea?: string
+  /** A city. */
+  locality?: string
+  postalCode?: string
+}
+
+/** The card the payer picked in the sheet. */
+export interface PaymentSheetCard {
+  /** `'unknown'` for a network this library cannot name. */
+  network?: PaymentNetwork
+  type: PaymentMethodType
+  /**
+   * Describes the card to the payer, for example `'Visa 1234'`. Don't parse
+   * it. iOS only.
+   */
+  displayName?: string
+}
+
+/**
+ * What the payer has chosen in the sheet so far, passed to every sheet
+ * callback, so each one can compute the whole cart: a coupon stays applied
+ * when the address changes. Includes the change the callback is called for.
+ */
+export interface PaymentSheetSelection {
+  /** Set once the sheet has reported one. */
+  shippingAddress?: PaymentSheetAddress
+  shippingMethod?: ShippingMethod
+  /** Set once the sheet has reported one. */
+  card?: PaymentSheetCard
+  /**
+   * The last code accepted without an error, or `PaymentRequest.couponCode`.
+   * In `onCouponCodeChange`, the code being checked. iOS only.
+   */
+  couponCode?: string
 }
 
 /**

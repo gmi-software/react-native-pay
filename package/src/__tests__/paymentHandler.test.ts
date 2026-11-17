@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../paymentHandler'
+import type { PaymentSheetSelection, StartPaymentOptions } from '../types'
 
 const DECLINED_RESULT = {
   status: 'failed',
@@ -267,7 +268,7 @@ describe('request validation', () => {
   )
 
   it('passes a normalized request and the options to native', async () => {
-    const onAuthorize = async () => ({ status: 'success' as const })
+    const onAuthorize = jest.fn(async () => ({ status: 'success' as const }))
     const payment = HybridPaymentHandler.startPayment(
       {
         ...baseRequest,
@@ -282,8 +283,85 @@ describe('request validation', () => {
       expect.objectContaining({
         paymentItems: [{ label: 'Order', amount: '19.90', type: 'final' }],
       }),
-      { onAuthorize }
+      { onAuthorize: expect.any(Function) }
     )
+    const options = nativeStartPayment().mock.calls[0]![1]
+    await expect(options.onAuthorize('token', {})).resolves.toEqual({
+      status: 'success',
+    })
+    expect(onAuthorize).toHaveBeenCalledWith('token', {})
+  })
+
+  describe('sheet callbacks', () => {
+    // The options native code got for a payment started with `options`.
+    const nativeOptions = (options: StartPaymentOptions) => {
+      HybridPaymentHandler.startPayment(baseRequest, options)
+      settlePresentations()
+      return nativeStartPayment().mock.calls[0]![1] as StartPaymentOptions
+    }
+    const selection: PaymentSheetSelection = { couponCode: 'SAVE10' }
+
+    let warn: jest.SpyInstance
+    beforeEach(() => {
+      warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+    afterEach(() => warn.mockRestore())
+
+    it('passes the value and selection, and normalizes the update', async () => {
+      const onCouponCodeChange = jest.fn(async () => ({
+        paymentItems: [
+          { label: 'Order', amount: 10, type: 'final' as const },
+          { label: 'SAVE10', amount: -1, type: 'final' as const },
+        ],
+      }))
+      const options = nativeOptions({ onCouponCodeChange })
+
+      await expect(
+        options.onCouponCodeChange!('SAVE10', selection)
+      ).resolves.toEqual({
+        paymentItems: [
+          { label: 'Order', amount: '10.00', type: 'final' },
+          { label: 'SAVE10', amount: '-1.00', type: 'final' },
+        ],
+      })
+      expect(onCouponCodeChange).toHaveBeenCalledWith('SAVE10', selection)
+      expect(warn).not.toHaveBeenCalled()
+    })
+
+    it('rejects an update it cannot use and says why in development', async () => {
+      const options = nativeOptions({
+        onShippingAddressChange: async () => ({
+          paymentItems: [{ label: 'Refund', amount: -5, type: 'final' }],
+        }),
+      })
+
+      await expect(
+        options.onShippingAddressChange!({ countryCode: 'US' }, selection)
+      ).rejects.toThrow('Payment total must not be negative')
+      expect(warn).toHaveBeenCalledWith(
+        '[react-native-pay] onShippingAddressChange failed, so the payment sheet keeps its items: Payment total must not be negative, got -5.00'
+      )
+    })
+
+    it('turns a synchronous throw into a rejection', async () => {
+      const options = nativeOptions({
+        onPaymentMethodChange: () => {
+          throw new Error('offline')
+        },
+      })
+
+      await expect(
+        options.onPaymentMethodChange!({ type: 'credit' }, selection)
+      ).rejects.toThrow('offline')
+    })
+
+    it('leaves out the callbacks that are not set', async () => {
+      const options = nativeOptions({
+        onShippingMethodChange: async () => ({}),
+      })
+
+      expect(Object.keys(options)).toEqual(['onShippingMethodChange'])
+    })
   })
 
   it('calls native without options when none are given', async () => {

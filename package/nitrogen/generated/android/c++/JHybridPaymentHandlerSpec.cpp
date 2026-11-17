@@ -83,6 +83,18 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentAuthorizationStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
+// Forward declaration of `PaymentSheetUpdate` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetUpdate; }
+// Forward declaration of `PaymentSheetAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetAddress; }
+// Forward declaration of `PaymentSheetSelection` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetSelection; }
+// Forward declaration of `PaymentSheetError` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetError; }
+// Forward declaration of `PaymentSheetErrorCode` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentSheetErrorCode; }
+// Forward declaration of `PaymentSheetCard` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetCard; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -172,6 +184,22 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentAuthorizationStatus.hpp"
 #include "JPaymentAuthorizationStatus.hpp"
 #include "JPaymentDetails.hpp"
+#include "PaymentSheetUpdate.hpp"
+#include "PaymentSheetAddress.hpp"
+#include "PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection.hpp"
+#include "JPaymentSheetUpdate.hpp"
+#include "PaymentSheetError.hpp"
+#include "JPaymentSheetError.hpp"
+#include "PaymentSheetErrorCode.hpp"
+#include "JPaymentSheetErrorCode.hpp"
+#include "JPaymentSheetAddress.hpp"
+#include "JPaymentSheetSelection.hpp"
+#include "PaymentSheetCard.hpp"
+#include "JPaymentSheetCard.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection.hpp"
 
 namespace margelo::nitro::pay {
 

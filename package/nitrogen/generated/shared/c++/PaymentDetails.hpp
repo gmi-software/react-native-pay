@@ -50,10 +50,11 @@ namespace margelo::nitro::pay {
     std::optional<std::string> emailAddress     SWIFT_PRIVATE;
     std::optional<std::string> phoneNumber     SWIFT_PRIVATE;
     std::optional<ShippingMethod> shippingMethod     SWIFT_PRIVATE;
+    std::optional<std::string> couponCode     SWIFT_PRIVATE;
 
   public:
     PaymentDetails() = default;
-    explicit PaymentDetails(std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod): billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod) {}
+    explicit PaymentDetails(std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod, std::optional<std::string> couponCode): billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod), couponCode(couponCode) {}
 
   public:
     friend bool operator==(const PaymentDetails& lhs, const PaymentDetails& rhs) = default;
@@ -73,7 +74,8 @@ namespace margelo::nitro {
         JSIConverter<std::optional<margelo::nitro::pay::PaymentContact>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingContact"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailAddress"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber"))),
-        JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod")))
+        JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "couponCode")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PaymentDetails& arg) {
@@ -83,6 +85,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "emailAddress"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.emailAddress));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.phoneNumber));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod"), JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::toJSI(runtime, arg.shippingMethod));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "couponCode"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.couponCode));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -98,6 +101,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailAddress")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "couponCode")))) return false;
       return true;
     }
   };

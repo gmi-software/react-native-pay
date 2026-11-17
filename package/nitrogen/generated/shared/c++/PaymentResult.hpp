@@ -64,10 +64,11 @@ namespace margelo::nitro::pay {
     std::optional<std::string> emailAddress     SWIFT_PRIVATE;
     std::optional<std::string> phoneNumber     SWIFT_PRIVATE;
     std::optional<ShippingMethod> shippingMethod     SWIFT_PRIVATE;
+    std::optional<std::string> couponCode     SWIFT_PRIVATE;
 
   public:
     PaymentResult() = default;
-    explicit PaymentResult(PaymentStatus status, std::optional<PaymentErrorCode> code, bool success, std::optional<PaymentToken> token, std::optional<std::string> error, std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod): status(status), code(code), success(success), token(token), error(error), billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod) {}
+    explicit PaymentResult(PaymentStatus status, std::optional<PaymentErrorCode> code, bool success, std::optional<PaymentToken> token, std::optional<std::string> error, std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod, std::optional<std::string> couponCode): status(status), code(code), success(success), token(token), error(error), billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod), couponCode(couponCode) {}
 
   public:
     friend bool operator==(const PaymentResult& lhs, const PaymentResult& rhs) = default;
@@ -92,7 +93,8 @@ namespace margelo::nitro {
         JSIConverter<std::optional<margelo::nitro::pay::PaymentContact>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingContact"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailAddress"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber"))),
-        JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod")))
+        JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "couponCode")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PaymentResult& arg) {
@@ -107,6 +109,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "emailAddress"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.emailAddress));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.phoneNumber));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod"), JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::toJSI(runtime, arg.shippingMethod));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "couponCode"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.couponCode));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -127,6 +130,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "emailAddress")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "phoneNumber")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::ShippingMethod>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "shippingMethod")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "couponCode")))) return false;
       return true;
     }
   };

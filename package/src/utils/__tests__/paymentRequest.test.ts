@@ -1,5 +1,8 @@
-import type { PaymentRequest } from '../../types'
-import { normalizePaymentRequest } from '../paymentRequest'
+import type { PaymentRequest, PaymentSheetUpdate } from '../../types'
+import {
+  normalizePaymentRequest,
+  normalizePaymentSheetUpdate,
+} from '../paymentRequest'
 
 const request = (
   paymentItems: PaymentRequest['paymentItems'],
@@ -150,5 +153,156 @@ describe('normalizePaymentRequest', () => {
     normalizePaymentRequest(input)
 
     expect(input.paymentItems[0]?.amount).toBe(10)
+  })
+})
+
+const USD_REQUEST = request([{ label: 'Kit', amount: '10.00', type: 'final' }])
+
+describe('normalizePaymentSheetUpdate', () => {
+  it('normalizes the items and shipping methods it has', () => {
+    expect(
+      normalizePaymentSheetUpdate(
+        {
+          paymentItems: [
+            { label: 'Kit', amount: 10, type: 'final' },
+            { label: 'SAVE10', amount: '-1', type: 'final' },
+          ],
+          shippingMethods: [
+            { identifier: 'express', label: 'Express', amount: 7.5 },
+          ],
+          error: { code: 'couponCodeExpired', message: 'Expired' },
+        },
+        USD_REQUEST
+      )
+    ).toEqual({
+      paymentItems: [
+        { label: 'Kit', amount: '10.00', type: 'final' },
+        { label: 'SAVE10', amount: '-1.00', type: 'final' },
+      ],
+      shippingMethods: [
+        { identifier: 'express', label: 'Express', amount: '7.50' },
+      ],
+      error: { code: 'couponCodeExpired', message: 'Expired' },
+    })
+  })
+
+  it('keeps an empty update empty', () => {
+    expect(normalizePaymentSheetUpdate({}, USD_REQUEST)).toEqual({})
+  })
+
+  it.each([
+    ['not an object', undefined, 'must resolve with an object, got undefined'],
+    [
+      'a negative total',
+      { paymentItems: [{ label: 'Refund', amount: -5, type: 'final' }] },
+      'Payment total must not be negative, got -5.00',
+    ],
+    [
+      'an amount the currency does not allow',
+      { paymentItems: [{ label: 'Kit', amount: '10.001', type: 'final' }] },
+      'Amount for "Kit" has more than 2 decimal places',
+    ],
+    ['no shipping methods', { shippingMethods: [] }, 'must not be empty'],
+    [
+      'an unknown error code',
+      { error: { code: 'nope', message: 'Nope' } },
+      'error.code must be one of shippingAddressInvalid, shippingAddressUnserviceable, couponCodeInvalid, couponCodeExpired, other, got "nope"',
+    ],
+    [
+      'an error without a message',
+      { error: { code: 'other', message: ' ' } },
+      'error.message must be a message for the payer',
+    ],
+    [
+      'an unknown item kind',
+      {
+        paymentItems: [
+          { label: 'Kit', amount: 10, type: 'final', kind: 'coupon' },
+        ],
+      },
+      'kind for "Kit" must be one of',
+    ],
+  ])('rejects %s', (_, update, message) => {
+    expect(() =>
+      normalizePaymentSheetUpdate(update as PaymentSheetUpdate, USD_REQUEST)
+    ).toThrow(message)
+  })
+
+  describe('with applePayMultiTokenContexts', () => {
+    // As normalizePaymentRequest returns it on iOS: 10.00 + 5.00 shipping.
+    const multiMerchant: PaymentRequest = {
+      ...USD_REQUEST,
+      shippingMethods: [
+        { identifier: 'standard', label: 'Standard', amount: '5.00' },
+        { identifier: 'pickup', label: 'Pickup', amount: '5.00' },
+      ],
+      applePayMultiTokenContexts: [
+        {
+          merchantIdentifier: 'merchant.com.example',
+          externalIdentifier: 'shop',
+          merchantName: 'Shop',
+          amount: '15.00',
+        },
+      ],
+    }
+
+    it('accepts items and methods that keep the total', () => {
+      expect(
+        normalizePaymentSheetUpdate(
+          {
+            paymentItems: [
+              { label: 'Kit', amount: 12, type: 'final' },
+              { label: 'SAVE2', amount: -2, type: 'final', kind: 'discount' },
+            ],
+            shippingMethods: [
+              { identifier: 'courier', label: 'Courier', amount: 5 },
+            ],
+          },
+          multiMerchant
+        )
+      ).toMatchObject({
+        paymentItems: [{ amount: '12.00' }, { amount: '-2.00' }],
+      })
+    })
+
+    it('rejects items that change the total', () => {
+      expect(() =>
+        normalizePaymentSheetUpdate(
+          {
+            paymentItems: [
+              { label: 'Kit', amount: 10, type: 'final' },
+              { label: 'SAVE2', amount: -2, type: 'final' },
+            ],
+          },
+          multiMerchant
+        )
+      ).toThrow(
+        "With applePayMultiTokenContexts, paymentItems must still add up to 10.00, got 8.00: the total can't change in the sheet"
+      )
+    })
+
+    it('rejects a shipping method with another price', () => {
+      expect(() =>
+        normalizePaymentSheetUpdate(
+          {
+            shippingMethods: [
+              { identifier: 'express', label: 'Express', amount: 9 },
+            ],
+          },
+          multiMerchant
+        )
+      ).toThrow('every shipping method must cost 5.00')
+    })
+
+    it('accepts an error alone', () => {
+      expect(
+        normalizePaymentSheetUpdate(
+          { error: { code: 'couponCodeInvalid', message: 'Unknown code' } },
+          multiMerchant
+        )
+      ).toEqual({
+        error: { code: 'couponCodeInvalid', message: 'Unknown code' },
+      })
+    })
   })
 })

@@ -123,5 +123,5 @@ async function payWithShipping() {
 ## Not supported yet
 
 - **Choosing a shipping method on Android:** Google Pay only offers shipping options through its payment data callbacks, which the library doesn't use yet. Until it does, Android charges the first method.
-- **Prices or shipping methods that depend on the address:** while the sheet is open, the total only changes when the payer picks another shipping method on iOS.
-- **Limiting shipping countries:** check the country on your server and resolve `onAuthorize` with `'failure'`.
+- **Prices or shipping methods that depend on the address on Android:** on iOS, `onShippingAddressChange` updates the cart while the sheet is open (see [Update the cart in the sheet](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet)). Android ignores it until Google Pay's payment data callbacks are supported.
+- **Limiting shipping countries on Android:** on iOS, return a `shippingAddressUnserviceable` error from `onShippingAddressChange`. On Android, check the country on your server and resolve `onAuthorize` with `'failure'`.

@@ -65,7 +65,8 @@ object PaymentMapper {
                 shippingContact = details.shippingContact,
                 emailAddress = details.emailAddress,
                 phoneNumber = details.phoneNumber,
-                shippingMethod = details.shippingMethod
+                shippingMethod = details.shippingMethod,
+                couponCode = details.couponCode
             )
         } catch (e: JSONException) {
             createErrorResult(
@@ -94,7 +95,8 @@ object PaymentMapper {
             shippingContact = shippingAddress?.takeIf { requested.shippingContact }?.let(::mapContact),
             emailAddress = paymentData.takeIf { requested.email }?.optNonEmpty("email"),
             phoneNumber = phoneAddress?.takeIf { requested.phoneNumber }?.optNonEmpty("phoneNumber"),
-            shippingMethod = requested.shippingMethod
+            shippingMethod = requested.shippingMethod,
+            couponCode = null
         )
     }
     
@@ -138,7 +140,8 @@ object PaymentMapper {
             shippingContact = result.shippingContact,
             emailAddress = result.emailAddress,
             phoneNumber = result.phoneNumber,
-            shippingMethod = result.shippingMethod
+            shippingMethod = result.shippingMethod,
+            couponCode = result.couponCode
         )
     }
     
@@ -184,7 +187,8 @@ object PaymentMapper {
             shippingContact = null,
             emailAddress = null,
             phoneNumber = null,
-            shippingMethod = null
+            shippingMethod = null,
+            couponCode = null
         )
     }
 
