@@ -9,6 +9,7 @@
  */
 
 import type { PaymentAmount, PaymentItem, PaymentRequest } from '../types'
+import { warnIfGooglePayEnvironmentOmitted } from './googlePayEnvironment'
 
 /**
  * ISO 4217 currencies whose minor unit is not two digits.
@@ -199,13 +200,15 @@ function checkCode(
  *
  * `currencyCode` must be an ISO 4217 code (`'USD'`) and `countryCode` an
  * ISO 3166-1 alpha-2 code (`'US'`), both upper case. Line items may be
- * negative (discounts), but the total may not.
+ * negative (discounts), but the total may not. An Android release build
+ * warns once if `googlePayEnvironment` is omitted.
  *
  * @throws Error if a code or an amount is invalid, or the total is negative.
  */
 export function normalizePaymentRequest(
   request: PaymentRequest
 ): PaymentRequest {
+  warnIfGooglePayEnvironmentOmitted(request.googlePayEnvironment)
   const { currencyCode } = request
   checkCode('currencyCode', currencyCode, CURRENCY_CODE_PATTERN, 'USD')
   checkCode('countryCode', request.countryCode, COUNTRY_CODE_PATTERN, 'US')

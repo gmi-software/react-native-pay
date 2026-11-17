@@ -74,6 +74,8 @@ interface PaymentRequest {
 
 On iOS, `applePayMerchantIdentifier` is optional. Without it, iOS uses the first Merchant ID in the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, which the [Expo plugin](/docs/setup/expo-plugin) writes from `merchantIdentifier` (in a bare app, add it yourself: see [Bare React Native](/docs/setup/bare-react-native)).
 
+Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an Android release build logs a warning once per app run from `normalizePaymentRequest`, which `usePaymentCheckout`, `HybridPaymentHandler.startPayment` and `createPaymentRequest` run before a payment. `payServiceStatus`, and the raw handler from `getPaymentHandler()`, log nothing.
+
 `merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
 
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.

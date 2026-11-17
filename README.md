@@ -322,6 +322,8 @@ const checkout = usePaymentCheckout({
 });
 ```
 
+Without `googlePayEnvironment`, Google Pay runs in `TEST`, in release builds too, and a release build logs a warning once per app run when a payment starts (not on the availability check). Set `'PRODUCTION'` for live payments.
+
 Without `merchantName`, the Google Pay sheet shows your app's label. If any cart item is `pending`, the total is sent as an estimate (`ESTIMATED` on Google Pay, `.pending` on Apple Pay).
 
 #### Supported Payment Gateways

@@ -45,6 +45,8 @@ usePaymentCheckout({
 
 If you omit `merchantName`, the Google Pay sheet shows your app's label (`android:label` in the manifest).
 
+If you omit `googlePayEnvironment`, Google Pay runs in `TEST`, in release builds too. A release build that omits it logs a warning once per app run when a payment starts, through `usePaymentCheckout`, `HybridPaymentHandler.startPayment` or `createPaymentRequest`. An availability check, and the raw handler from `getPaymentHandler()`, log nothing. Set `'PRODUCTION'` for live payments, or `'TEST'` to keep the test environment without the warning.
+
 Supported gateways include: `stripe`, `braintree`, `square`, `adyen`, `authorizenet`, `checkoutltd`. See [Google Pay Gateway Tokens](https://developers.google.com/pay/api/android/reference/request-objects#gateway) for the full list and exact identifiers.
 
 ## 4. Prebuild and run

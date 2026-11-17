@@ -31,6 +31,8 @@ Both options are optional. Listed without options (`"plugins": ["@gmisoftware/re
 | `merchantIdentifier` | `string` or `string[]` | Apple Pay Merchant ID(s). If omitted, Apple Pay entitlements are not added. Each ID should start with `merchant.`; prebuild warns when one does not. |
 | `enableGooglePay` | `boolean` | `true` adds the Google Pay metadata (`com.google.android.gms.wallet.api.enabled`) to the Android manifest. `false` removes it. If omitted, the manifest is left as it is, so an entry added by another plugin (Stripe, for example) stays. |
 
+The plugin doesn't set the Google Pay environment. Pass `googlePayEnvironment` in app code; see [Android (Google Pay)](/docs/setup/android-google-pay#3-gateway-configuration-in-app-code).
+
 ## Examples
 
 **iOS only (Apple Pay):**
