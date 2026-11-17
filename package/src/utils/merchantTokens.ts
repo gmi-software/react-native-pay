@@ -22,6 +22,8 @@ import { amountSign, normalizeAmount, normalizeItem } from './amounts'
 
 const MAX_LABEL_LENGTH = 100
 const MAX_BILLING_AGREEMENT_LENGTH = 300
+// Google Pay's recurrencePeriodCount is a 32-bit integer.
+const MAX_INTERVAL_COUNT = 2_147_483_647
 
 // A Record, so adding a unit to the type fails to compile until it is listed.
 const INTERVAL_UNITS: string[] = Object.keys({
@@ -111,10 +113,14 @@ function normalizeRecurringItem(
   }
   if (
     item.intervalCount !== undefined &&
-    !(Number.isInteger(item.intervalCount) && item.intervalCount > 0)
+    !(
+      Number.isInteger(item.intervalCount) &&
+      item.intervalCount > 0 &&
+      item.intervalCount <= MAX_INTERVAL_COUNT
+    )
   ) {
     fail(
-      `${field}.intervalCount must be a positive integer, got ${item.intervalCount}`
+      `${field}.intervalCount must be a positive integer up to ${MAX_INTERVAL_COUNT}, got ${item.intervalCount}`
     )
   }
   const start =
@@ -160,6 +166,16 @@ function normalizeRecurring(
   ) {
     fail(
       'recurring.regularBilling.startDate must not be before recurring.trialBilling.endDate'
+    )
+  }
+  // Without its own start, the regular phase starts when the trial ends.
+  if (
+    regularBilling.startDate === undefined &&
+    regularBilling.endDate !== undefined &&
+    regularBilling.endDate.getTime() <= trialBilling.endDate.getTime()
+  ) {
+    fail(
+      'recurring.regularBilling.endDate must be after recurring.trialBilling.endDate, when the regular phase starts'
     )
   }
   return { ...recurring, regularBilling, trialBilling }

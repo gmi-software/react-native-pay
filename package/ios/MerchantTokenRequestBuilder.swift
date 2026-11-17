@@ -12,6 +12,10 @@ private enum ErrorMessage {
         return "\(field) must be an https URL, got \"\(url)\""
     }
 
+    static func invalidIntervalCount(_ label: String, _ count: Double) -> String {
+        return "intervalCount for \"\(label)\" must be a positive integer, got \(count)"
+    }
+
     static func unknownTimeZone(_ identifier: String) -> String {
         return "Unknown time zone \"\(identifier)\". Use an IANA name such as \"Europe/Warsaw\""
     }
@@ -92,7 +96,12 @@ enum MerchantTokenRequestBuilder {
             amount: try item.amount.decimalNumber(for: item.label)
         )
         pkItem.intervalUnit = PassKitTypeMapper.convert(item.intervalUnit)
-        pkItem.intervalCount = Int(item.intervalCount ?? 1)
+        let count = item.intervalCount ?? 1
+        // Int(_:) would trap on a value too large for Int.
+        guard let intervalCount = Int(exactly: count), intervalCount > 0 else {
+            throw PaymentFailure.configuration(ErrorMessage.invalidIntervalCount(item.label, count))
+        }
+        pkItem.intervalCount = intervalCount
         pkItem.startDate = item.startDate ?? defaultStartDate
         pkItem.endDate = item.endDate
         return pkItem

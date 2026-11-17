@@ -9,7 +9,8 @@ All notable changes to this project are documented in this file.
 - **iOS: subscriptions and later payments.** `PaymentRequest` takes `recurring`,
   `deferred` or `automaticReload`, mapped to PassKit's `PKRecurringPaymentRequest`,
   `PKDeferredPaymentRequest` and `PKAutomaticReloadPaymentRequest`. The sheet shows the schedule
-  and the payment returns a merchant token. `paymentItems` stay what is charged today, and the
+  and the payment asks for a merchant token (Apple Pay returns a device token when the card's
+  network has none). `paymentItems` stay what is charged today, and the
   later charges are added to the sheet outside the total. `normalizePaymentRequest` checks them
   against the stricter of Apple Pay's and Google Pay's rules. Below iOS 16 (16.4 for `deferred`)
   the payment fails with `code: 'NOT_AVAILABLE'`. Android support follows in #86. See the

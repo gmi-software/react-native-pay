@@ -8,7 +8,9 @@ Charge the payer again later, without them: a subscription, a hotel booking char
 | `deferred` | One charge on a later date | iOS 16.4 | $240.00 on the day of arrival |
 | `automaticReload` | Top-ups when a balance runs low | iOS 16 | $25.00 whenever the balance drops below $5.00 |
 
-The sheet shows the schedule and your management URL, and the payment returns a **merchant token** instead of a one-off token. Your payment provider charges it later, and it keeps working when the payer replaces their device. Since iOS 26, the payer also sees it in Wallet under Preauthorized Payments.
+The sheet shows the schedule and your management URL, and the payment asks Apple Pay for a **merchant token** instead of a device token. Your payment provider can charge a merchant token later, and it is not tied to the payer's device. Since iOS 26, the payer also sees the payment in Wallet under Preauthorized Payments.
+
+A merchant token is not guaranteed: when the card's network doesn't offer merchant tokens, Apple Pay returns a device token, as for a one-off payment. Ask your payment provider how it tells the two apart and which one it can charge later.
 
 :::caution Android
 Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)). Until it lands, Android ignores these fields.
@@ -60,7 +62,8 @@ export async function subscribe() {
   })
 
   if (result.status === 'success') {
-    // Send result.token to your server, which stores the merchant token.
+    // Send result.token to your server; your payment provider tells it
+    // whether this is a merchant token it can charge later.
   }
 }
 ```
@@ -125,15 +128,20 @@ export async function enableTopUp() {
 
 ## Rules
 
-`normalizePaymentRequest` checks these before the sheet opens. `HybridPaymentHandler.startPayment` and `createPaymentRequest` run it, and a request that breaks a rule fails with `code: 'CONFIGURATION'`. The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both:
+`normalizePaymentRequest` checks these before the sheet opens. How a broken rule surfaces depends on what you call:
+
+- `HybridPaymentHandler.startPayment` resolves with `status: 'failed'` and `code: 'CONFIGURATION'`, and the sheet doesn't open.
+- `normalizePaymentRequest` and `createPaymentRequest` throw an `Error`. Call them in a `try`/`catch`.
+
+The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both:
 
 - Set at most one of `recurring`, `deferred` and `automaticReload`.
 - `description` must not be empty.
 - `managementUrl` and `tokenNotificationUrl` must be `https` URLs without query, fragment or trailing slash. Wallet shows the management URL to every payer, so don't put account IDs in it.
 - `billingAgreement` has at most 300 characters, each `label` at most 100.
 - Dates must be valid and in the future. Build the request when the payer taps, not when the screen loads.
-- A `startDate` must be before its `endDate`. A trial needs an `endDate`, and `regularBilling` can't start before it.
-- `intervalCount` must be a positive integer.
+- A `startDate` must be before its `endDate`. A trial needs an `endDate`. `regularBilling` can't start before the trial ends, and without its own `startDate` it must end after the trial does.
+- `intervalCount` must be a positive integer, at most 2,147,483,647.
 - Amounts follow the currency's decimal places. The regular, deferred and reload amounts must be positive. A trial may be free (`0`), and `thresholdAmount` may be `0`.
 
 On iOS older than 16 (16.4 for `deferred`), the payment fails with `code: 'NOT_AVAILABLE'` and no sheet. Offer another way to pay.
@@ -142,7 +150,7 @@ On iOS older than 16 (16.4 for `deferred`), the payment fails with `code: 'NOT_A
 
 A merchant token only helps if your payment provider can charge it later:
 
-- **Check that your provider supports Apple Pay merchant tokens.** Send it the token as for any Apple Pay payment. It returns a reusable payment method or a token ID, and you charge that on the schedule you showed.
+- **Check that your provider supports Apple Pay merchant tokens.** Send it the token as for any Apple Pay payment. It returns a reusable payment method or a token ID, and you charge that on the schedule you showed. If the payment returned a device token instead, ask your provider whether it can still charge it later.
 - **Charge what you showed.** The amounts, dates and interval in the sheet are what the payer agreed to. Charge a different amount or earlier, and the payer may dispute it.
 - **Handle token notifications.** With `tokenNotificationUrl`, Apple tells your server when the payer deletes the merchant token or it changes, for example after a card replacement. Stop charging a deleted token.
 - **Let the payer cancel.** `managementUrl` must lead to a page where they can change or cancel the plan.

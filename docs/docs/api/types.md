@@ -92,7 +92,7 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 
 `shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` takes [`ShippingMethod`](#shippingmethod) values; the selected one is added to the total. The first is selected by default on iOS and is always the one charged on Android.
 
-`recurring`, `deferred` and `automaticReload` set up charges after today and return a merchant token: see [Recurring and later payments](#recurring-and-later-payments). `paymentItems` stay what the payer pays now, which may be nothing.
+`recurring`, `deferred` and `automaticReload` set up charges after today and ask for a merchant token, which Apple Pay returns when the card's network offers one: see [Recurring and later payments](#recurring-and-later-payments). `paymentItems` stay what the payer pays now, which may be nothing.
 
 ---
 

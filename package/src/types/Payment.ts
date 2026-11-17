@@ -221,8 +221,10 @@ export interface AutomaticReloadBillingItem {
 
 /**
  * Fields shared by the recurring, deferred and automatic reload requests.
- * The payment returns a merchant token, which your payment provider can
- * charge later without the payer.
+ * The payment asks for a merchant token, which your payment provider can
+ * charge later without the payer. Apple Pay returns a device token instead
+ * when the card's network has no merchant tokens, so check with your
+ * provider which one you got.
  */
 export interface MerchantTokenPaymentRequest {
   /** What the payer agrees to, for example `'Premium membership'`. iOS only. */

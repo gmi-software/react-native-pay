@@ -184,20 +184,40 @@ describe('normalizePaymentRequest with merchant tokens', () => {
       )
     })
 
-    it.each([0, 1.5, -2])('rejects the interval count %s', (intervalCount) => {
-      expectInvalid(
-        {
-          recurring: recurring({
-            regularBilling: {
-              label: 'Monthly',
-              amount: 9.99,
-              intervalUnit: 'month',
-              intervalCount,
-            },
-          }),
-        },
-        'recurring.regularBilling.intervalCount must be a positive integer'
-      )
+    it.each([0, 1.5, -2, 2_147_483_648, 1e20])(
+      'rejects the interval count %s',
+      (intervalCount) => {
+        expectInvalid(
+          {
+            recurring: recurring({
+              regularBilling: {
+                label: 'Monthly',
+                amount: 9.99,
+                intervalUnit: 'month',
+                intervalCount,
+              },
+            }),
+          },
+          'recurring.regularBilling.intervalCount must be a positive integer'
+        )
+      }
+    )
+
+    it('accepts the largest interval count', () => {
+      expect(() =>
+        normalizePaymentRequest(
+          request({
+            recurring: recurring({
+              regularBilling: {
+                label: 'Monthly',
+                amount: 9.99,
+                intervalUnit: 'day',
+                intervalCount: 2_147_483_647,
+              },
+            }),
+          })
+        )
+      ).not.toThrow()
     })
 
     it('limits a label to 100 characters', () => {
@@ -285,6 +305,28 @@ describe('normalizePaymentRequest with merchant tokens', () => {
           }),
         },
         'Amount for "Trial" must not be negative'
+      )
+    })
+
+    it('ends the regular phase after it starts, at the end of the trial', () => {
+      expectInvalid(
+        {
+          recurring: recurring({
+            trialBilling: {
+              label: 'Trial',
+              amount: 0,
+              intervalUnit: 'day',
+              endDate: daysFromNow(7),
+            },
+            regularBilling: {
+              label: 'Monthly',
+              amount: 9.99,
+              intervalUnit: 'month',
+              endDate: daysFromNow(5),
+            },
+          }),
+        },
+        'recurring.regularBilling.endDate must be after recurring.trialBilling.endDate, when the regular phase starts'
       )
     })
 

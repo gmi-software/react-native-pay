@@ -423,6 +423,18 @@ final class PaymentRequestBuilderTests: XCTestCase {
         )
     }
 
+    /// Below iOS 16 (16.4 for deferred) PassKit has no such request, so the
+    /// builder fails with NOT_AVAILABLE before it checks anything else.
+    private func assertNotAvailable(
+        _ request: PaymentRequest,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertThrowsError(try PaymentRequestBuilder.build(from: request), file: file, line: line) { error in
+            XCTAssertEqual((error as? PaymentFailure)?.code, .notAvailable, file: file, line: line)
+        }
+    }
+
     private func automaticReload() -> AutomaticReloadPaymentRequest {
         return AutomaticReloadPaymentRequest(
             automaticReloadBilling: AutomaticReloadBillingItem(
@@ -435,11 +447,10 @@ final class PaymentRequestBuilderTests: XCTestCase {
         )
     }
 
-    @available(iOS 16.4, *)
     func testBuildsARecurringRequestThatStartsAfterTheTrial() throws {
-        let request = try PaymentRequestBuilder.build(from: paymentRequest(
-            items: [], merchantName: "Shop", recurring: recurring()
-        ))
+        let input = paymentRequest(items: [], merchantName: "Shop", recurring: recurring())
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
+        let request = try PaymentRequestBuilder.build(from: input)
 
         let recurring = try XCTUnwrap(request.recurringPaymentRequest)
         XCTAssertEqual(recurring.paymentDescription, "Premium membership")
@@ -455,25 +466,25 @@ final class PaymentRequestBuilderTests: XCTestCase {
         XCTAssertEqual(trial.intervalCount, 7)
         XCTAssertEqual(trial.endDate, trialEnd)
         XCTAssertEqual(summary(request.paymentSummaryItems), ["Trial 0", "Monthly 9.99", "Shop 0"])
-        XCTAssertNil(request.deferredPaymentRequest)
         XCTAssertNil(request.automaticReloadPaymentRequest)
+        if #available(iOS 16.4, *) {
+            XCTAssertNil(request.deferredPaymentRequest)
+        }
     }
 
-    @available(iOS 16.4, *)
     func testKeepsTheRegularStartDateWhenGiven() throws {
         let start = trialEnd.addingTimeInterval(86_400)
-        let request = try PaymentRequestBuilder.build(from: paymentRequest(
-            items: [], recurring: recurring(regular: monthly(startDate: start))
-        ))
+        let input = paymentRequest(items: [], recurring: recurring(regular: monthly(startDate: start)))
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
+        let request = try PaymentRequestBuilder.build(from: input)
 
         XCTAssertEqual(request.recurringPaymentRequest?.regularBilling.startDate, start)
     }
 
-    @available(iOS 16.4, *)
     func testBuildsADeferredRequest() throws {
-        let request = try PaymentRequestBuilder.build(from: paymentRequest(
-            items: [item("Deposit", "20.00")], merchantName: "Hotel", deferred: deferred()
-        ))
+        let input = paymentRequest(items: [item("Deposit", "20.00")], merchantName: "Hotel", deferred: deferred())
+        guard #available(iOS 16.4, *) else { return assertNotAvailable(input) }
+        let request = try PaymentRequestBuilder.build(from: input)
 
         let deferred = try XCTUnwrap(request.deferredPaymentRequest)
         XCTAssertEqual(deferred.paymentDescription, "Hotel booking")
@@ -486,17 +497,20 @@ final class PaymentRequestBuilderTests: XCTestCase {
     }
 
     func testRejectsAnUnknownFreeCancellationTimeZone() {
+        let input = paymentRequest(items: [], deferred: deferred(timeZone: "Mars/Olympus"))
+        guard #available(iOS 16.4, *) else { return assertNotAvailable(input) }
         assertBuildFails(
-            paymentRequest(items: [], deferred: deferred(timeZone: "Mars/Olympus")),
+            input,
             with: "Unknown time zone \"Mars/Olympus\". Use an IANA name such as \"Europe/Warsaw\""
         )
     }
 
-    @available(iOS 16.4, *)
     func testBuildsAnAutomaticReloadRequest() throws {
-        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+        let input = paymentRequest(
             items: [item("Initial load", "25.00")], merchantName: "Cafe", automaticReload: automaticReload()
-        ))
+        )
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
+        let request = try PaymentRequestBuilder.build(from: input)
 
         let reload = try XCTUnwrap(request.automaticReloadPaymentRequest)
         XCTAssertEqual(reload.paymentDescription, "Card top-up")
@@ -513,10 +527,19 @@ final class PaymentRequestBuilderTests: XCTestCase {
     }
 
     func testRejectsANonHttpsManagementUrl() {
-        assertBuildFails(
-            paymentRequest(items: [], recurring: recurring(managementUrl: "http://example.com/account")),
-            with: "managementUrl must be an https URL, got \"http://example.com/account\""
+        let input = paymentRequest(items: [], recurring: recurring(managementUrl: "http://example.com/account"))
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
+        assertBuildFails(input, with: "managementUrl must be an https URL, got \"http://example.com/account\"")
+    }
+
+    func testRejectsAnIntervalCountTooLargeForInt() {
+        let regular = RecurringBillingItem(
+            label: "Monthly", amount: .second("9.99"), intervalUnit: .month,
+            intervalCount: 1e20, startDate: nil, endDate: nil
         )
+        let input = paymentRequest(items: [], recurring: recurring(regular: regular))
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
+        assertBuildFails(input, with: "intervalCount for \"Monthly\" must be a positive integer, got 1e+20")
     }
 
     func testSummaryKeepsTheLaterChargesWhenTheShippingMethodChanges() throws {
@@ -526,6 +549,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
             shippingMethods: shippingMethods,
             recurring: recurring()
         )
+        guard #available(iOS 16.0, *) else { return assertNotAvailable(request) }
         // As the delegate rebuilds it when the payer picks another method.
         let items = try PaymentRequestBuilder.buildSummaryItems(
             for: request,
