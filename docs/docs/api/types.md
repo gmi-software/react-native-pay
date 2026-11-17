@@ -63,6 +63,10 @@ interface PaymentRequest {
   shippingContactRequired?: boolean // → PaymentResult.shippingContact
   emailRequired?: boolean           // → PaymentResult.emailAddress
   phoneNumberRequired?: boolean     // → PaymentResult.phoneNumber
+  // At most one: charges after today (see below)
+  recurring?: RecurringPaymentRequest
+  deferred?: DeferredPaymentRequest
+  automaticReload?: AutomaticReloadPaymentRequest
   // Google Pay (Android)
   googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
@@ -87,6 +91,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `billingContactRequired`, `shippingContactRequired`, `emailRequired` and `phoneNumberRequired` ask the payer for contact details, which come back in the result as [`PaymentDetails`](#paymentdetails). On Android, a phone number is collected with an address. See [Shipping and contact details](/docs/guides/contact-details).
 
 `shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` takes [`ShippingMethod`](#shippingmethod) values; the selected one is added to the total. The first is selected by default on iOS and is always the one charged on Android.
+
+`recurring`, `deferred` and `automaticReload` set up charges after today and ask for a merchant token, which Apple Pay returns when the card's network offers one: see [Recurring and later payments](#recurring-and-later-payments). `paymentItems` stay what the payer pays now, which may be nothing.
 
 ---
 
@@ -365,6 +371,64 @@ interface PaymentDetails {
   shippingMethod?: ShippingMethod  // the selected entry of shippingMethods
 }
 ```
+
+---
+
+## Recurring and later payments
+
+Set at most one of these on `PaymentRequest`. Use them with `HybridPaymentHandler.startPayment`; see [Subscriptions and later payments](/docs/guides/merchant-tokens) for examples and the validation rules. Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)); until then Android ignores them.
+
+```ts no-check
+// Shared by all three
+interface MerchantTokenPaymentRequest {
+  description: string           // what the payer agrees to; iOS only
+  managementUrl: string         // https, no query, fragment or trailing slash
+  billingAgreement?: string     // at most 300 characters
+  tokenNotificationUrl?: string // where Apple tells your server the token changed
+}
+
+interface RecurringPaymentRequest extends MerchantTokenPaymentRequest {
+  regularBilling: RecurringBillingItem
+  trialBilling?: RecurringBillingItem // needs an endDate
+}
+
+interface DeferredPaymentRequest extends MerchantTokenPaymentRequest {
+  deferredBilling: DeferredBillingItem
+  freeCancellation?: FreeCancellation // iOS only
+}
+
+interface AutomaticReloadPaymentRequest extends MerchantTokenPaymentRequest {
+  automaticReloadBilling: AutomaticReloadBillingItem
+}
+
+interface RecurringBillingItem {
+  label: string                       // at most 100 characters
+  amount: PaymentAmount               // positive; a trial may be 0
+  intervalUnit: RecurringIntervalUnit // 'day' | 'month' | 'year'
+  intervalCount?: number              // positive integer, default 1
+  startDate?: Date                    // default: now, or the end of the trial
+  endDate?: Date                      // default: no end
+}
+
+interface DeferredBillingItem {
+  label: string
+  amount: PaymentAmount // positive
+  date: Date            // when it is charged
+}
+
+interface AutomaticReloadBillingItem {
+  label: string
+  amount: PaymentAmount          // charged on each reload; positive
+  thresholdAmount: PaymentAmount // balance that triggers a reload; not negative
+}
+
+interface FreeCancellation {
+  date: Date
+  timeZone: string // IANA name, e.g. 'Europe/Warsaw'
+}
+```
+
+There is no `'week'` unit, because Apple Pay refuses it: use `intervalUnit: 'day'` with `intervalCount: 7`. Amounts are fixed; a price that depends on usage is not supported yet. Dates must be in the future. On iOS the sheet lists the later charges as their own lines, outside the total. Apple Pay needs iOS 16 for `recurring` and `automaticReload` and iOS 16.4 for `deferred`; on older versions the payment fails with `code: 'NOT_AVAILABLE'`.
 
 ---
 

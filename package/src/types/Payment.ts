@@ -166,6 +166,120 @@ export interface PaymentToken {
   // tokenizationData.token, as is (gateway token JSON or encrypted payload).
   paymentData: string
 }
+
+/**
+ * How often a recurring payment repeats, with
+ * `RecurringBillingItem.intervalCount`. No `'week'`: Apple Pay refuses it, so
+ * use `'day'` with `intervalCount: 7`.
+ */
+export type RecurringIntervalUnit = 'day' | 'month' | 'year'
+
+/**
+ * One phase of a recurring payment: what the payer is charged, and how often.
+ * Dates must be in the future.
+ */
+export interface RecurringBillingItem {
+  /** For example `'Premium Monthly'`. At most 100 characters. */
+  label: string
+  /** Charged every interval. Must be positive, except for a free trial (`0`). */
+  amount: PaymentAmount
+  intervalUnit: RecurringIntervalUnit
+  /** A positive integer: `7` with `'day'` is every week. Defaults to 1. */
+  intervalCount?: number
+  /** First charge. Omit to start right away, or right after the trial. */
+  startDate?: Date
+  /** Last charge. Omit for no end. Required for a trial. */
+  endDate?: Date
+}
+
+/**
+ * Charged later, on one date: a hotel booking or a pre-order.
+ * @see DeferredPaymentRequest
+ */
+export interface DeferredBillingItem {
+  /** For example `'Hotel Booking'`. At most 100 characters. */
+  label: string
+  /** Must be positive. */
+  amount: PaymentAmount
+  /** When the amount is charged. Must be in the future. */
+  date: Date
+}
+
+/**
+ * Charged whenever a stored balance falls below a threshold: a transit card
+ * or a gift card.
+ * @see AutomaticReloadPaymentRequest
+ */
+export interface AutomaticReloadBillingItem {
+  /** For example `'Coffee Card Top-Up'`. At most 100 characters. */
+  label: string
+  /** Charged on each reload. Must be positive. */
+  amount: PaymentAmount
+  /** The balance that triggers a reload. Must not be negative. */
+  thresholdAmount: PaymentAmount
+}
+
+/**
+ * Fields shared by the recurring, deferred and automatic reload requests.
+ * The payment asks for a merchant token, which your payment provider can
+ * charge later without the payer. Apple Pay returns a device token instead
+ * when the card's network has no merchant tokens, so check with your
+ * provider which one you got.
+ */
+export interface MerchantTokenPaymentRequest {
+  /** What the payer agrees to, for example `'Premium membership'`. iOS only. */
+  description: string
+  /**
+   * Where the payer can change or cancel it. An `https:` URL without query,
+   * fragment or trailing slash, as Google Pay requires.
+   */
+  managementUrl: string
+  /** The terms the payer agrees to. At most 300 characters. */
+  billingAgreement?: string
+  /**
+   * Where Apple or Google tell your server that the merchant token changed.
+   * Same rules as `managementUrl`.
+   */
+  tokenNotificationUrl?: string
+}
+
+/** A subscription. Apple Pay needs iOS 16. */
+export interface RecurringPaymentRequest extends MerchantTokenPaymentRequest {
+  regularBilling: RecurringBillingItem
+  /**
+   * A cheaper first phase. Needs an `endDate`; `regularBilling` starts then
+   * unless it has its own `startDate`.
+   */
+  trialBilling?: RecurringBillingItem
+}
+
+/** A payment charged later, on one date. Apple Pay needs iOS 16.4. */
+export interface DeferredPaymentRequest extends MerchantTokenPaymentRequest {
+  deferredBilling: DeferredBillingItem
+  /** iOS only; Android ignores it. */
+  freeCancellation?: FreeCancellation
+}
+
+/**
+ * Until when the payer can cancel a deferred payment for free.
+ * @see DeferredPaymentRequest.freeCancellation
+ */
+export interface FreeCancellation {
+  /** Must be in the future. */
+  date: Date
+  /**
+   * The IANA time zone of the place being paid for, such as
+   * `'Europe/Warsaw'` for a hotel there. The sheet shows `date` in it.
+   */
+  timeZone: string
+}
+
+/** A balance topped up automatically. Apple Pay needs iOS 16. */
+export interface AutomaticReloadPaymentRequest
+  extends MerchantTokenPaymentRequest {
+  automaticReloadBilling: AutomaticReloadBillingItem
+}
+
 export interface PaymentRequest {
   // Optional Apple Pay override for apps with multiple configured merchant IDs.
   // When omitted, iOS reads the first ID in the Info.plist key
@@ -222,6 +336,16 @@ export interface PaymentRequest {
    * when `billingContactRequired` is off.
    */
   phoneNumberRequired?: boolean
+  /**
+   * Charge again later: a subscription, a payment on a later date, or a
+   * balance top-up. Set at most one. `paymentItems` stay what the payer pays
+   * today, which may be nothing; the library adds the later charges to the
+   * sheet. On iOS versions without support, the payment fails with
+   * `'NOT_AVAILABLE'`.
+   */
+  recurring?: RecurringPaymentRequest
+  deferred?: DeferredPaymentRequest
+  automaticReload?: AutomaticReloadPaymentRequest
   // Google Pay specific configuration (Android only)
   googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment

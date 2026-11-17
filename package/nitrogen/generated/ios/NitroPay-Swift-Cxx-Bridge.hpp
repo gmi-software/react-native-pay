@@ -8,6 +8,10 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `AutomaticReloadBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
+// Forward declaration of `AutomaticReloadPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
 // Forward declaration of `CNContactType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class CNContactType; }
 // Forward declaration of `CNContact` to properly resolve imports.
@@ -22,6 +26,12 @@ namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 namespace margelo::nitro::pay { struct CNPhoneNumber; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `DeferredBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredBillingItem; }
+// Forward declaration of `DeferredPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
+// Forward declaration of `FreeCancellation` to properly resolve imports.
+namespace margelo::nitro::pay { struct FreeCancellation; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
@@ -62,6 +72,12 @@ namespace margelo::nitro::pay { struct PaymentResult; }
 namespace margelo::nitro::pay { enum class PaymentStatus; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `RecurringBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringBillingItem; }
+// Forward declaration of `RecurringIntervalUnit` to properly resolve imports.
+namespace margelo::nitro::pay { enum class RecurringIntervalUnit; }
+// Forward declaration of `RecurringPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringPaymentRequest; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
 namespace margelo::nitro::pay { struct ShippingMethod; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
@@ -74,6 +90,8 @@ namespace NitroPay { class HybridApplePayButtonSpec_cxx; }
 namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 
 // Include C++ defined types
+#include "AutomaticReloadBillingItem.hpp"
+#include "AutomaticReloadPaymentRequest.hpp"
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledEmailAddress.hpp"
@@ -81,6 +99,9 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
+#include "DeferredBillingItem.hpp"
+#include "DeferredPaymentRequest.hpp"
+#include "FreeCancellation.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
@@ -101,11 +122,15 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentResult.hpp"
 #include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
+#include "RecurringBillingItem.hpp"
+#include "RecurringIntervalUnit.hpp"
+#include "RecurringPaymentRequest.hpp"
 #include "ShippingMethod.hpp"
 #include "StartPaymentOptions.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
 #include <NitroModules/Result.hpp>
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -561,6 +586,111 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<ShippingMethod> get_std__optional_std__vector_ShippingMethod__(const std::optional<std::vector<ShippingMethod>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<double>
+  /**
+   * Specialized version of `std::optional<double>`.
+   */
+  using std__optional_double_ = std::optional<double>;
+  inline std::optional<double> create_std__optional_double_(const double& value) noexcept {
+    return std::optional<double>(value);
+  }
+  inline bool has_value_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline double get_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<std::chrono::system_clock::time_point>
+  /**
+   * Specialized version of `std::optional<std::chrono::system_clock::time_point>`.
+   */
+  using std__optional_std__chrono__system_clock__time_point_ = std::optional<std::chrono::system_clock::time_point>;
+  inline std::optional<std::chrono::system_clock::time_point> create_std__optional_std__chrono__system_clock__time_point_(const std::chrono::system_clock::time_point& value) noexcept {
+    return std::optional<std::chrono::system_clock::time_point>(value);
+  }
+  inline bool has_value_std__optional_std__chrono__system_clock__time_point_(const std::optional<std::chrono::system_clock::time_point>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::chrono::system_clock::time_point get_std__optional_std__chrono__system_clock__time_point_(const std::optional<std::chrono::system_clock::time_point>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<RecurringBillingItem>
+  /**
+   * Specialized version of `std::optional<RecurringBillingItem>`.
+   */
+  using std__optional_RecurringBillingItem_ = std::optional<RecurringBillingItem>;
+  inline std::optional<RecurringBillingItem> create_std__optional_RecurringBillingItem_(const RecurringBillingItem& value) noexcept {
+    return std::optional<RecurringBillingItem>(value);
+  }
+  inline bool has_value_std__optional_RecurringBillingItem_(const std::optional<RecurringBillingItem>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline RecurringBillingItem get_std__optional_RecurringBillingItem_(const std::optional<RecurringBillingItem>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<RecurringPaymentRequest>
+  /**
+   * Specialized version of `std::optional<RecurringPaymentRequest>`.
+   */
+  using std__optional_RecurringPaymentRequest_ = std::optional<RecurringPaymentRequest>;
+  inline std::optional<RecurringPaymentRequest> create_std__optional_RecurringPaymentRequest_(const RecurringPaymentRequest& value) noexcept {
+    return std::optional<RecurringPaymentRequest>(value);
+  }
+  inline bool has_value_std__optional_RecurringPaymentRequest_(const std::optional<RecurringPaymentRequest>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline RecurringPaymentRequest get_std__optional_RecurringPaymentRequest_(const std::optional<RecurringPaymentRequest>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<FreeCancellation>
+  /**
+   * Specialized version of `std::optional<FreeCancellation>`.
+   */
+  using std__optional_FreeCancellation_ = std::optional<FreeCancellation>;
+  inline std::optional<FreeCancellation> create_std__optional_FreeCancellation_(const FreeCancellation& value) noexcept {
+    return std::optional<FreeCancellation>(value);
+  }
+  inline bool has_value_std__optional_FreeCancellation_(const std::optional<FreeCancellation>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline FreeCancellation get_std__optional_FreeCancellation_(const std::optional<FreeCancellation>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<DeferredPaymentRequest>
+  /**
+   * Specialized version of `std::optional<DeferredPaymentRequest>`.
+   */
+  using std__optional_DeferredPaymentRequest_ = std::optional<DeferredPaymentRequest>;
+  inline std::optional<DeferredPaymentRequest> create_std__optional_DeferredPaymentRequest_(const DeferredPaymentRequest& value) noexcept {
+    return std::optional<DeferredPaymentRequest>(value);
+  }
+  inline bool has_value_std__optional_DeferredPaymentRequest_(const std::optional<DeferredPaymentRequest>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline DeferredPaymentRequest get_std__optional_DeferredPaymentRequest_(const std::optional<DeferredPaymentRequest>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<AutomaticReloadPaymentRequest>
+  /**
+   * Specialized version of `std::optional<AutomaticReloadPaymentRequest>`.
+   */
+  using std__optional_AutomaticReloadPaymentRequest_ = std::optional<AutomaticReloadPaymentRequest>;
+  inline std::optional<AutomaticReloadPaymentRequest> create_std__optional_AutomaticReloadPaymentRequest_(const AutomaticReloadPaymentRequest& value) noexcept {
+    return std::optional<AutomaticReloadPaymentRequest>(value);
+  }
+  inline bool has_value_std__optional_AutomaticReloadPaymentRequest_(const std::optional<AutomaticReloadPaymentRequest>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AutomaticReloadPaymentRequest get_std__optional_AutomaticReloadPaymentRequest_(const std::optional<AutomaticReloadPaymentRequest>& optional) noexcept {
     return optional.value();
   }
   

@@ -14,10 +14,6 @@ private enum ErrorMessage {
     static let authorizationTimedOut = "Payment authorization timed out"
     static let negativeTotal = "Payment total must not be negative"
 
-    static func invalidAmount(_ label: String) -> String {
-        return "Amount for \"\(label)\" must be a finite number or a decimal string like \"19.99\""
-    }
-
     static func unknownMerchantCapability(_ capability: String) -> String {
         return "Unknown merchant capability \"\(capability)\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
     }
@@ -96,6 +92,7 @@ struct PaymentRequestBuilder {
         paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
+        try MerchantTokenRequestBuilder.configure(paymentRequest, from: request)
         let shippingMethods = try buildShippingMethods(request.shippingMethods ?? [])
         if !shippingMethods.isEmpty {
             paymentRequest.shippingMethods = shippingMethods
@@ -103,7 +100,8 @@ struct PaymentRequestBuilder {
         // PassKit selects the first method when the sheet opens.
         paymentRequest.paymentSummaryItems = try buildSummaryItems(
             for: request,
-            selectedShippingMethodIdentifier: shippingMethods.first?.identifier
+            selectedShippingMethodIdentifier: shippingMethods.first?.identifier,
+            laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         )
         paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = try buildSupportedNetworks(request.supportedNetworks)
@@ -159,9 +157,7 @@ struct PaymentRequestBuilder {
     }
 
     private static func shippingMethodAmount(_ method: ShippingMethod) throws -> NSDecimalNumber {
-        guard let amount = method.amount.decimalNumber else {
-            throw PaymentFailure.configuration(ErrorMessage.invalidAmount(method.label))
-        }
+        let amount = try method.amount.decimalNumber(for: method.label)
         guard amount.decimalValue >= Decimal.zero else {
             throw PaymentFailure.configuration(ErrorMessage.negativeShippingMethodAmount(method.label))
         }
@@ -169,17 +165,14 @@ struct PaymentRequestBuilder {
     }
 
     /// The payment items, then the selected shipping method as its own line,
-    /// then the total. Internal so the delegate and the unit tests can rebuild it.
+    /// then `laterCharges`, then the total of what is charged now. Internal
+    /// so the delegate and the unit tests can rebuild it.
     static func buildSummaryItems(
         for request: PaymentRequest,
-        selectedShippingMethodIdentifier: String?
+        selectedShippingMethodIdentifier: String?,
+        laterCharges: [PKPaymentSummaryItem]
     ) throws -> [PKPaymentSummaryItem] {
-        let amounts = try request.paymentItems.map { item -> NSDecimalNumber in
-            guard let amount = item.amount.decimalNumber else {
-                throw PaymentFailure.configuration(ErrorMessage.invalidAmount(item.label))
-            }
-            return amount
-        }
+        let amounts = try request.paymentItems.map { try $0.amount.decimalNumber(for: $0.label) }
 
         // Checked without shipping: methods are never negative, so then every
         // method the payer can pick keeps the total valid.
@@ -204,6 +197,9 @@ struct PaymentRequestBuilder {
             lineItems.append(shippingItem)
             totalAmount += amount.decimalValue
         }
+
+        // Shown, not charged now, so they stay out of the total.
+        lineItems += laterCharges
 
         // PassKit shows the last item as the grand total ("Pay <label>"), so
         // always append one labelled with the merchant, even for a single item.
@@ -527,7 +523,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
         // current items if rebuilding fails. PassKit waits for the completion.
         if let items = try? PaymentRequestBuilder.buildSummaryItems(
             for: request,
-            selectedShippingMethodIdentifier: shippingMethod.identifier
+            selectedShippingMethodIdentifier: shippingMethod.identifier,
+            laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         ) {
             summaryItems = items
         }

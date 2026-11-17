@@ -59,6 +59,15 @@ data class PaymentRequest(
   val phoneNumberRequired: Boolean?,
   @DoNotStrip
   @Keep
+  val recurring: RecurringPaymentRequest?,
+  @DoNotStrip
+  @Keep
+  val deferred: DeferredPaymentRequest?,
+  @DoNotStrip
+  @Keep
+  val automaticReload: AutomaticReloadPaymentRequest?,
+  @DoNotStrip
+  @Keep
   val googlePayMerchantId: String?,
   @DoNotStrip
   @Keep
@@ -91,6 +100,9 @@ data class PaymentRequest(
       && Objects.deepEquals(this.shippingContactRequired, other.shippingContactRequired)
       && Objects.deepEquals(this.emailRequired, other.emailRequired)
       && Objects.deepEquals(this.phoneNumberRequired, other.phoneNumberRequired)
+      && Objects.deepEquals(this.recurring, other.recurring)
+      && Objects.deepEquals(this.deferred, other.deferred)
+      && Objects.deepEquals(this.automaticReload, other.automaticReload)
       && Objects.deepEquals(this.googlePayMerchantId, other.googlePayMerchantId)
       && Objects.deepEquals(this.googlePayEnvironment, other.googlePayEnvironment)
       && Objects.deepEquals(this.googlePayGateway, other.googlePayGateway)
@@ -113,6 +125,9 @@ data class PaymentRequest(
       shippingContactRequired,
       emailRequired,
       phoneNumberRequired,
+      recurring,
+      deferred,
+      automaticReload,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
@@ -129,8 +144,8 @@ data class PaymentRequest(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: Array<String>?): PaymentRequest {
-      return PaymentRequest(applePayMerchantIdentifier, merchantName, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, googlePayAllowedAuthMethods)
+    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: Array<String>?): PaymentRequest {
+      return PaymentRequest(applePayMerchantIdentifier, merchantName, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, recurring, deferred, automaticReload, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, googlePayAllowedAuthMethods)
     }
   }
 }

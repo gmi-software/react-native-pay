@@ -25,4 +25,14 @@ extension PaymentAmount {
         let decimal = NSDecimalNumber(string: text, locale: Self.posixLocale)
         return decimal == NSDecimalNumber.notANumber ? nil : decimal
     }
+
+    /// `decimalNumber`, or a configuration failure that names the item.
+    func decimalNumber(for label: String) throws -> NSDecimalNumber {
+        guard let decimal = decimalNumber else {
+            throw PaymentFailure.configuration(
+                "Amount for \"\(label)\" must be a finite number or a decimal string like \"19.99\""
+            )
+        }
+        return decimal
+    }
 }

@@ -291,7 +291,8 @@ class PaymentMapperTest {
             currencyCode = "USD", paymentItems = emptyArray(), merchantCapabilities = emptyArray(),
             supportedNetworks = emptyArray(), shippingType = null, shippingMethods = methods,
             billingContactRequired = null, shippingContactRequired = null, emailRequired = null,
-            phoneNumberRequired = null, googlePayMerchantId = null, googlePayEnvironment = null,
+            phoneNumberRequired = null, recurring = null, deferred = null, automaticReload = null,
+            googlePayMerchantId = null, googlePayEnvironment = null,
             googlePayGateway = null, googlePayGatewayMerchantId = null,
             googlePayAllowedAuthMethods = null
         )

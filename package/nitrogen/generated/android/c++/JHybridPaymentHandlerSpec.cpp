@@ -55,6 +55,22 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
+// Forward declaration of `RecurringPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringPaymentRequest; }
+// Forward declaration of `RecurringBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringBillingItem; }
+// Forward declaration of `RecurringIntervalUnit` to properly resolve imports.
+namespace margelo::nitro::pay { enum class RecurringIntervalUnit; }
+// Forward declaration of `DeferredPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
+// Forward declaration of `DeferredBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredBillingItem; }
+// Forward declaration of `FreeCancellation` to properly resolve imports.
+namespace margelo::nitro::pay { struct FreeCancellation; }
+// Forward declaration of `AutomaticReloadPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
+// Forward declaration of `AutomaticReloadBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -119,6 +135,24 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JPaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "JPaymentItemType.hpp"
+#include "RecurringPaymentRequest.hpp"
+#include "JRecurringPaymentRequest.hpp"
+#include "RecurringBillingItem.hpp"
+#include "JRecurringBillingItem.hpp"
+#include "RecurringIntervalUnit.hpp"
+#include "JRecurringIntervalUnit.hpp"
+#include <chrono>
+#include <NitroModules/JInstant.hpp>
+#include "DeferredPaymentRequest.hpp"
+#include "JDeferredPaymentRequest.hpp"
+#include "DeferredBillingItem.hpp"
+#include "JDeferredBillingItem.hpp"
+#include "FreeCancellation.hpp"
+#include "JFreeCancellation.hpp"
+#include "AutomaticReloadPaymentRequest.hpp"
+#include "JAutomaticReloadPaymentRequest.hpp"
+#include "AutomaticReloadBillingItem.hpp"
+#include "JAutomaticReloadBillingItem.hpp"
 #include "StartPaymentOptions.hpp"
 #include "JStartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"

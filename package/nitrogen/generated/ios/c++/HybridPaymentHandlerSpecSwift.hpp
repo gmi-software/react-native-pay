@@ -60,6 +60,22 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
+// Forward declaration of `RecurringPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringPaymentRequest; }
+// Forward declaration of `RecurringBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringBillingItem; }
+// Forward declaration of `RecurringIntervalUnit` to properly resolve imports.
+namespace margelo::nitro::pay { enum class RecurringIntervalUnit; }
+// Forward declaration of `DeferredPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
+// Forward declaration of `DeferredBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredBillingItem; }
+// Forward declaration of `FreeCancellation` to properly resolve imports.
+namespace margelo::nitro::pay { struct FreeCancellation; }
+// Forward declaration of `AutomaticReloadPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
+// Forward declaration of `AutomaticReloadBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -98,6 +114,15 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentRequest.hpp"
 #include "PaymentItem.hpp"
 #include "PaymentItemType.hpp"
+#include "RecurringPaymentRequest.hpp"
+#include "RecurringBillingItem.hpp"
+#include "RecurringIntervalUnit.hpp"
+#include <chrono>
+#include "DeferredPaymentRequest.hpp"
+#include "DeferredBillingItem.hpp"
+#include "FreeCancellation.hpp"
+#include "AutomaticReloadPaymentRequest.hpp"
+#include "AutomaticReloadBillingItem.hpp"
 #include "StartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentDetails.hpp"

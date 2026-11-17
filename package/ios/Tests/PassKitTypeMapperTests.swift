@@ -67,6 +67,12 @@ final class PassKitTypeMapperTests: XCTestCase {
         XCTAssertEqual(PassKitTypeMapper.convert(PKPaymentMethodType.store), .store)
     }
 
+    func testConvertsRecurringIntervalUnits() {
+        XCTAssertEqual(PassKitTypeMapper.convert(RecurringIntervalUnit.day), .day)
+        XCTAssertEqual(PassKitTypeMapper.convert(RecurringIntervalUnit.month), .month)
+        XCTAssertEqual(PassKitTypeMapper.convert(RecurringIntervalUnit.year), .year)
+    }
+
     func testConvertsContacts() {
         let address = CNMutablePostalAddress()
         address.street = "1 Infinite Loop"
