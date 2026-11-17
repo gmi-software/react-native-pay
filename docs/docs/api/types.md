@@ -52,8 +52,8 @@ Full request passed to the native layer (or to `HybridPaymentHandler.startPaymen
 interface PaymentRequest {
   applePayMerchantIdentifier?: string
   merchantName?: string
-  countryCode: string
-  currencyCode: string
+  countryCode: string              // ISO 3166-1 alpha-2, upper case: 'US'
+  currencyCode: string             // ISO 4217, upper case: 'USD'
   paymentItems: PaymentItem[]
   merchantCapabilities: string[]
   supportedNetworks: string[]

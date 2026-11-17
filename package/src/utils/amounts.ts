@@ -175,20 +175,40 @@ function normalizeItems<Item extends Pick<PaymentItem, 'label' | 'amount'>>(
   }))
 }
 
+const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
+const COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/
+
+function checkCode(
+  field: string,
+  value: unknown,
+  pattern: RegExp,
+  example: string
+) {
+  if (typeof value !== 'string' || !pattern.test(value)) {
+    throw new Error(
+      `${field} must be an upper-case code like "${example}", got ${describeAmount(value)}`
+    )
+  }
+}
+
 /**
- * Validates every amount in a payment request and returns a copy whose
- * amounts are exact decimal strings. Call it before passing a hand-built
- * request to `HybridPaymentHandler.startPayment`; `createPaymentRequest` and
- * `usePaymentCheckout` already do.
+ * Validates a payment request and returns a copy whose amounts are exact
+ * decimal strings. `createPaymentRequest`, `usePaymentCheckout` and
+ * `HybridPaymentHandler.startPayment` all call it; call it yourself to get the
+ * error before the payment starts.
  *
- * Line items may be negative (discounts), but the total may not.
+ * `currencyCode` must be an ISO 4217 code (`'USD'`) and `countryCode` an
+ * ISO 3166-1 alpha-2 code (`'US'`), both upper case. Line items may be
+ * negative (discounts), but the total may not.
  *
- * @throws Error if an amount is invalid or the total is negative.
+ * @throws Error if a code or an amount is invalid, or the total is negative.
  */
 export function normalizePaymentRequest(
   request: PaymentRequest
 ): PaymentRequest {
   const { currencyCode } = request
+  checkCode('currencyCode', currencyCode, CURRENCY_CODE_PATTERN, 'USD')
+  checkCode('countryCode', request.countryCode, COUNTRY_CODE_PATTERN, 'US')
   const paymentItems = normalizeItems(request.paymentItems, currencyCode)
 
   const total = sum(

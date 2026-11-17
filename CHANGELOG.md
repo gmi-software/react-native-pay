@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **`HybridPaymentHandler.startPayment` validates the request**, as `usePaymentCheckout` and
+  `createPaymentRequest` do. A request that fails `normalizePaymentRequest` resolves with
+  `{ status: 'failed', code: 'CONFIGURATION', success: false, error }` without reaching native
+  code. Before, iOS accepted float artefacts such as `0.1 + 0.2` and extra decimal places, while
+  Android rejected them. Amounts are sent to native code as normalized decimal strings.
+- **`normalizePaymentRequest` checks `currencyCode` and `countryCode`.** They must be upper-case
+  ISO codes (`'USD'`, `'US'`); `'usd'` or `'USA'` now fail validation instead of reaching native
+  code.
+- **`HybridPaymentHandler` is no longer a Nitro `HybridObject`.** It is a plain object with
+  `payServiceStatus`, `startPayment`, `isPaymentInProgress` and `openPaymentSetup`, typed as the
+  new `PaymentHandlerMethods`. Code that used `HybridObject` members such as `name` or `dispose`,
+  or typed it as `PaymentHandler`, can use the native object from the new `getPaymentHandler()`.
 - **Android: the library depends on `play-services-wallet` 20.0.0** (was 19.3.0), and no longer
   uses the deprecated `AutoResolveHelper`. The Google Pay sheet's result is read with Google's
   `TaskResultContracts.GetPaymentDataResult`. A sheet result code Google Pay doesn't document now
@@ -13,6 +25,14 @@ All notable changes to this project are documented in this file.
 - **iOS: the missing merchant ID error says how to fix it.** It still starts with "No Apple Pay
   merchant identifier configured", and now names the Info.plist key
   `ReactNativePayApplePayMerchantIdentifiers` and the `applePayMerchantIdentifier` override.
+
+### Fixed
+
+- **Android: a `GooglePayButton` with an invalid configuration ignored taps.** When
+  `supportedNetworks`, `googlePayAllowedAuthMethods` or `merchantCapabilities` was invalid, the
+  button built before the props arrived stayed visible without an `onPress`. Every Google Pay
+  button now calls the current `onPress`, and `GooglePayButton` warns about an invalid value in
+  development.
 
 ### Docs
 

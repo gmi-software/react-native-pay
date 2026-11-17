@@ -1,6 +1,7 @@
 package com.margelo.nitro.pay
 
 import android.content.Context
+import android.view.View
 import com.google.android.gms.wallet.button.ButtonConstants
 import com.google.android.gms.wallet.button.ButtonOptions
 import com.google.android.gms.wallet.button.PayButton
@@ -12,7 +13,8 @@ import kotlin.math.roundToInt
 object GooglePayButtonFactory {
     
     /**
-     * Creates a configured PayButton that shows the cards in [cardParameters]
+     * Creates a configured PayButton that shows the cards in [cardParameters].
+     * A tap calls the handler [onPress] returns at that moment.
      */
     internal fun createButton(
         context: Context,
@@ -20,7 +22,7 @@ object GooglePayButtonFactory {
         theme: GooglePayButtonTheme,
         radius: Double?,
         cardParameters: GooglePayCardParameters,
-        onPress: (() -> Unit)?
+        onPress: () -> (() -> Unit)?
     ): PayButton {
         val allowedPaymentMethods = GooglePayRequestBuilder.createAllowedPaymentMethods(cardParameters)
         
@@ -39,11 +41,17 @@ object GooglePayButtonFactory {
         
         val button = PayButton(context)
         button.initialize(buttonOptions)
-        button.setOnClickListener {
-            onPress?.invoke()
-        }
+        button.setOnClickListener(pressListener(onPress))
         
         return button
+    }
+    
+    /**
+     * Reads the handler at tap time, so a button kept after a failed update
+     * still calls the current `onPress`
+     */
+    internal fun pressListener(onPress: () -> (() -> Unit)?): View.OnClickListener {
+        return View.OnClickListener { onPress()?.invoke() }
     }
     
     /**

@@ -126,6 +126,36 @@ describe('normalizePaymentRequest', () => {
     ).toThrow('Payment total must not be negative, got -0.01')
   })
 
+  it.each(['usd', 'US', 'USDD', ''])(
+    'rejects the currency code %p',
+    (currencyCode) => {
+      expect(() =>
+        normalizePaymentRequest(
+          request(
+            [{ label: 'Product', amount: 10, type: 'final' }],
+            currencyCode
+          )
+        )
+      ).toThrow(
+        `currencyCode must be an upper-case code like "USD", got "${currencyCode}"`
+      )
+    }
+  )
+
+  it.each(['USA', 'us', 'U', ''])(
+    'rejects the country code %p',
+    (countryCode) => {
+      expect(() =>
+        normalizePaymentRequest({
+          ...request([{ label: 'Product', amount: 10, type: 'final' }]),
+          countryCode,
+        })
+      ).toThrow(
+        `countryCode must be an upper-case code like "US", got "${countryCode}"`
+      )
+    }
+  )
+
   it('normalizes shipping methods', () => {
     const normalized = normalizePaymentRequest({
       ...request([{ label: 'Product', amount: 10, type: 'final' }]),
