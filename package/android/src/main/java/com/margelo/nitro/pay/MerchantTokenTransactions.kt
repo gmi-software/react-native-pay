@@ -12,6 +12,10 @@ import java.time.format.DateTimeFormatter
  * object, so these replace `transactionInfo`, and the payment items become
  * what is charged now. The JS side validates the rest; this only rejects what
  * can't be sent, with the same rules as iOS.
+ *
+ * A recurring request sends only `immediateTotalPrice`: Google Pay forbids
+ * regular charges in its `immediateDisplayItems`, and the payment items can't
+ * tell a setup fee from a first period paid today.
  */
 internal object MerchantTokenTransactions {
 
@@ -34,20 +38,27 @@ internal object MerchantTokenTransactions {
             "Set at most one of recurring, deferred and automaticReload"
         }
 
-        fun base(managementUrl: String, billingAgreement: String?, tokenNotificationUrl: String?) =
-            JSONObject().apply {
-                put("currencyCode", request.currencyCode)
-                put("countryCode", request.countryCode)
-                put("managementUrl", managementUrl)
-                billingAgreement?.let { put("billingAgreement", it) }
-                tokenNotificationUrl?.let { put("tokenUpdateUrl", it) }
-                put("immediateTotalPrice", immediateTotalPrice)
-                immediateDisplayItems?.let { put("immediateDisplayItems", it) }
-            }
+        fun base(
+            managementUrl: String,
+            billingAgreement: String?,
+            tokenNotificationUrl: String?,
+            displayItems: JSONArray? = immediateDisplayItems
+        ) = JSONObject().apply {
+            put("currencyCode", request.currencyCode)
+            put("countryCode", request.countryCode)
+            put("managementUrl", managementUrl)
+            billingAgreement?.let { put("billingAgreement", it) }
+            tokenNotificationUrl?.let { put("tokenUpdateUrl", it) }
+            put("immediateTotalPrice", immediateTotalPrice)
+            displayItems?.let { put("immediateDisplayItems", it) }
+        }
 
         return when {
             recurring != null -> "recurringTransactionInfo" to base(
-                recurring.managementUrl, recurring.billingAgreement, recurring.tokenNotificationUrl
+                recurring.managementUrl,
+                recurring.billingAgreement,
+                recurring.tokenNotificationUrl,
+                displayItems = null
             ).apply { putRecurrence(recurring) }
 
             deferred != null -> "deferredTransactionInfo" to base(

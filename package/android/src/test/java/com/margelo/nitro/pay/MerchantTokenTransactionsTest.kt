@@ -231,20 +231,35 @@ class MerchantTokenTransactionsTest {
         val shipping = arrayOf(ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), null))
         val info = build(
             items = arrayOf(item("Starter kit", "10.00")),
-            recurring = recurring(),
+            automaticReload = automaticReload,
             shippingMethods = shipping
-        ).getJSONObject("recurringTransactionInfo")
+        ).getJSONObject("automaticReloadTransactionInfo")
 
         assertEquals("14.50", info.getString("immediateTotalPrice"))
         val lines = info.getJSONArray("immediateDisplayItems").objects()
         assertEquals(listOf("Starter kit", "Standard"), lines.map { it.getString("label") })
     }
 
+    // Google Pay forbids regular charges in immediateDisplayItems, and a first
+    // period paid today is a payment item like any other.
+    @Test
+    fun recurring_chargesItemsNowWithoutListingThem() {
+        val shipping = arrayOf(ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), null))
+        val info = build(
+            items = arrayOf(item("Monthly", "9.99")),
+            recurring = recurring(),
+            shippingMethods = shipping
+        ).getJSONObject("recurringTransactionInfo")
+
+        assertEquals("14.49", info.getString("immediateTotalPrice"))
+        assertFalse(info.has("immediateDisplayItems"))
+    }
+
     @Test
     fun pendingItem_staysPendingInTheItemsChargedNow() {
         val items = arrayOf(item("Kit", "10.00"), item("Tax", "0.80", PaymentItemType.PENDING))
-        val lines = build(items = items, recurring = recurring())
-            .getJSONObject("recurringTransactionInfo")
+        val lines = build(items = items, deferred = deferred)
+            .getJSONObject("deferredTransactionInfo")
             .getJSONArray("immediateDisplayItems")
             .objects()
 

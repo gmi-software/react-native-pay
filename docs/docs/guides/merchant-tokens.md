@@ -22,11 +22,13 @@ So the total can be zero: a free trial, or a booking without a deposit. When the
 
 ## On Android
 
-Google Pay calls these Merchant Initiated Transactions. The request sends `recurringTransactionInfo`, `deferredTransactionInfo` or `automaticReloadTransactionInfo` in place of the usual `transactionInfo`, and `paymentItems` with the first shipping method become its `immediateDisplayItems` and `immediateTotalPrice`.
+Google Pay calls these Merchant Initiated Transactions. The request sends `recurringTransactionInfo`, `deferredTransactionInfo` or `automaticReloadTransactionInfo` in place of the usual `transactionInfo`, and `paymentItems` with the first shipping method become its `immediateTotalPrice` and `immediateDisplayItems`.
+
+- A `recurring` request sends only `immediateTotalPrice`. Google Pay doesn't allow regular charges in `immediateDisplayItems`, and a first period paid today is a payment item like a setup fee, so the sheet shows the amount due today without its lines.
 
 - A free trial becomes an introductory period that ends on its `endDate`. Google Pay doesn't show the trial's interval, only its end. A paid trial is its own billing phase before `regularBilling`.
 - `description` and `freeCancellation` are iOS only.
-- A `pending` payment item stays pending in the sheet, but these requests have no estimated total on Android.
+- With `deferred` or `automaticReload`, a `pending` payment item stays pending in the sheet, but these requests have no estimated total on Android.
 - Google's guide mentions an early access program for Merchant Initiated Transactions. Check in the [Google Pay & Wallet Console](https://pay.google.com/business/console) and with your gateway that your account can use them in `PRODUCTION`, and test the sheet in `TEST` first.
 
 ## Subscription
@@ -138,7 +140,7 @@ export async function enableTopUp() {
 - `HybridPaymentHandler.startPayment` resolves with `status: 'failed'` and `code: 'CONFIGURATION'`, and the sheet doesn't open.
 - `normalizePaymentRequest` and `createPaymentRequest` throw an `Error`. Call them in a `try`/`catch`.
 
-The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both:
+The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both, with one exception below:
 
 - Set at most one of `recurring`, `deferred` and `automaticReload`.
 - `description` must not be empty.
@@ -148,6 +150,8 @@ The rules are the stricter of Apple Pay's and Google Pay's, so a request that pa
 - A `startDate` must be before its `endDate`. A trial needs an `endDate`. `regularBilling` can't start before the trial ends, and without its own `startDate` it must end after the trial does.
 - `intervalCount` must be a positive integer, at most 2,147,483,647.
 - Amounts follow the currency's decimal places. The regular, deferred and reload amounts must be positive. A trial may be free (`0`), and `thresholdAmount` may be `0`.
+
+One Google Pay limit isn't checked here: it accepts at most two decimal places, so on Android an amount such as `'1.234'` KWD fails with `code: 'CONFIGURATION'`, as it does in a one-off payment. See [`PaymentAmount`](/docs/api/types#paymentamount).
 
 On iOS older than 16 (16.4 for `deferred`), the payment fails with `code: 'NOT_AVAILABLE'` and no sheet. Offer another way to pay.
 

@@ -3,7 +3,9 @@
  * requests.
  *
  * The rules are the stricter of Apple Pay's and Google Pay's, so a request
- * that passes works on both platforms.
+ * that passes works on both platforms. The exception is Google Pay's limit of
+ * two decimal places, which Android enforces for every payment, so a
+ * three-decimal amount such as `'1.234'` KWD passes here and fails on Android.
  *
  * @module merchantTokens
  */
