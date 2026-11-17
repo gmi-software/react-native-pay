@@ -10,52 +10,6 @@ import org.junit.Test
 
 class GooglePayRequestBuilderTest {
 
-    private fun item(label: String, amount: Double, type: PaymentItemType) =
-        PaymentItem(label = label, amount = PaymentAmount.create(amount), type = type)
-
-    private fun item(label: String, amount: String, type: PaymentItemType = PaymentItemType.FINAL) =
-        PaymentItem(label = label, amount = PaymentAmount.create(amount), type = type)
-
-    private fun paymentRequest(
-        items: Array<PaymentItem>,
-        currencyCode: String = "USD",
-        merchantName: String? = null,
-        environment: GooglePayEnvironment? = null,
-        googlePayMerchantId: String? = null,
-        googlePayGateway: String? = null,
-        googlePayGatewayMerchantId: String? = null,
-        billingContactRequired: Boolean? = null,
-        shippingContactRequired: Boolean? = null,
-        emailRequired: Boolean? = null,
-        phoneNumberRequired: Boolean? = null,
-        shippingMethods: Array<ShippingMethod>? = null,
-        supportedNetworks: Array<String> = arrayOf("visa"),
-        googlePayAllowedAuthMethods: Array<String>? = null,
-        merchantCapabilities: Array<String> = arrayOf("3DS")
-    ) = PaymentRequest(
-        applePayMerchantIdentifier = null,
-        merchantName = merchantName,
-        countryCode = "US",
-        currencyCode = currencyCode,
-        paymentItems = items,
-        merchantCapabilities = merchantCapabilities,
-        supportedNetworks = supportedNetworks,
-        shippingType = null,
-        shippingMethods = shippingMethods,
-        billingContactRequired = billingContactRequired,
-        shippingContactRequired = shippingContactRequired,
-        emailRequired = emailRequired,
-        phoneNumberRequired = phoneNumberRequired,
-        recurring = null,
-        deferred = null,
-        automaticReload = null,
-        googlePayMerchantId = googlePayMerchantId,
-        googlePayEnvironment = environment,
-        googlePayGateway = googlePayGateway,
-        googlePayGatewayMerchantId = googlePayGatewayMerchantId,
-        googlePayAllowedAuthMethods = googlePayAllowedAuthMethods
-    )
-
     private fun build(
         request: PaymentRequest,
         environment: Int = WalletConstants.ENVIRONMENT_TEST,
@@ -66,10 +20,8 @@ class GooglePayRequestBuilderTest {
         fallbackMerchantName
     )
 
-    private fun JSONObject.displayItems(): List<JSONObject> {
-        val items = getJSONObject("transactionInfo").getJSONArray("displayItems")
-        return (0 until items.length()).map { items.getJSONObject(it) }
-    }
+    private fun JSONObject.displayItems(): List<JSONObject> =
+        getJSONObject("transactionInfo").getJSONArray("displayItems").objects()
 
     private fun JSONObject.totalPriceStatus(): String =
         getJSONObject("transactionInfo").getString("totalPriceStatus")
@@ -434,10 +386,7 @@ class GooglePayRequestBuilderTest {
 
     // Card networks and auth methods
 
-    private fun JSONObject.strings(key: String): List<String> {
-        val array = getJSONArray(key)
-        return (0 until array.length()).map { array.getString(it) }
-    }
+    private fun JSONObject.strings(key: String): List<String> = getJSONArray(key).strings()
 
     private fun cardParametersOf(
         networks: Array<String>?,

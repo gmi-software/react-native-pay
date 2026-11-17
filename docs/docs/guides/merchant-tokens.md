@@ -2,19 +2,15 @@
 
 Charge the payer again later, without them: a subscription, a hotel booking charged on arrival, or a balance topped up when it runs low. Set one of these fields on the `PaymentRequest`:
 
-| Field | For | Apple Pay | Example |
-| --- | --- | --- | --- |
-| `recurring` | Subscriptions | iOS 16 | $9.99 a month after a free trial |
-| `deferred` | One charge on a later date | iOS 16.4 | $240.00 on the day of arrival |
-| `automaticReload` | Top-ups when a balance runs low | iOS 16 | $25.00 whenever the balance drops below $5.00 |
+| Field | For | Apple Pay | Google Pay | Example |
+| --- | --- | --- | --- | --- |
+| `recurring` | Subscriptions | iOS 16 | `recurringTransactionInfo` | $9.99 a month after a free trial |
+| `deferred` | One charge on a later date | iOS 16.4 | `deferredTransactionInfo` | $240.00 on the day of arrival |
+| `automaticReload` | Top-ups when a balance runs low | iOS 16 | `automaticReloadTransactionInfo` | $25.00 whenever the balance drops below $5.00 |
 
 The sheet shows the schedule and your management URL, and the payment asks Apple Pay for a **merchant token** instead of a device token. Your payment provider can charge a merchant token later, and it is not tied to the payer's device. Since iOS 26, the payer also sees the payment in Wallet under Preauthorized Payments.
 
 A merchant token is not guaranteed: when the card's network doesn't offer merchant tokens, Apple Pay returns a device token, as for a one-off payment. Ask your payment provider how it tells the two apart and which one it can charge later.
-
-:::caution Android
-Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)). Until it lands, Android ignores these fields.
-:::
 
 These requests need `HybridPaymentHandler.startPayment`. `usePaymentCheckout` does not take them.
 
@@ -23,6 +19,17 @@ These requests need `HybridPaymentHandler.startPayment`. `usePaymentCheckout` do
 `paymentItems` are what the payer pays **now**. The later charges come from `recurring`, `deferred` or `automaticReload`, and the library adds them to the sheet as their own lines, outside the total.
 
 So the total can be zero: a free trial, or a booking without a deposit. When the first period is charged right away, put it in both places: in `paymentItems` for today, and in `regularBilling` for the schedule.
+
+## On Android
+
+Google Pay calls these Merchant Initiated Transactions. The request sends `recurringTransactionInfo`, `deferredTransactionInfo` or `automaticReloadTransactionInfo` in place of the usual `transactionInfo`, and `paymentItems` with the first shipping method become its `immediateTotalPrice` and `immediateDisplayItems`.
+
+- A `recurring` request sends only `immediateTotalPrice`. Google Pay doesn't allow regular charges in `immediateDisplayItems`, and a first period paid today is a payment item like a setup fee, so the sheet shows the amount due today without its lines.
+
+- A free trial becomes an introductory period that ends on its `endDate`. Google Pay doesn't show the trial's interval, only its end. A paid trial is its own billing phase before `regularBilling`.
+- `description` and `freeCancellation` are iOS only.
+- With `deferred` or `automaticReload`, a `pending` payment item stays pending in the sheet, but these requests have no estimated total on Android.
+- Google's guide mentions an early access program for Merchant Initiated Transactions. Check in the [Google Pay & Wallet Console](https://pay.google.com/business/console) and with your gateway that your account can use them in `PRODUCTION`, and test the sheet in `TEST` first.
 
 ## Subscription
 
@@ -133,7 +140,7 @@ export async function enableTopUp() {
 - `HybridPaymentHandler.startPayment` resolves with `status: 'failed'` and `code: 'CONFIGURATION'`, and the sheet doesn't open.
 - `normalizePaymentRequest` and `createPaymentRequest` throw an `Error`. Call them in a `try`/`catch`.
 
-The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both:
+The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both, with one exception below:
 
 - Set at most one of `recurring`, `deferred` and `automaticReload`.
 - `description` must not be empty.
@@ -144,6 +151,8 @@ The rules are the stricter of Apple Pay's and Google Pay's, so a request that pa
 - `intervalCount` must be a positive integer, at most 2,147,483,647.
 - Amounts follow the currency's decimal places. The regular, deferred and reload amounts must be positive. A trial may be free (`0`), and `thresholdAmount` may be `0`.
 
+One Google Pay limit isn't checked here: it accepts at most two decimal places, so on Android an amount such as `'1.234'` KWD fails with `code: 'CONFIGURATION'`, as it does in a one-off payment. See [`PaymentAmount`](/docs/api/types#paymentamount).
+
 On iOS older than 16 (16.4 for `deferred`), the payment fails with `code: 'NOT_AVAILABLE'` and no sheet. Offer another way to pay.
 
 ## On your server
@@ -152,7 +161,7 @@ A merchant token only helps if your payment provider can charge it later:
 
 - **Check that your provider supports Apple Pay merchant tokens.** Send it the token as for any Apple Pay payment. It returns a reusable payment method or a token ID, and you charge that on the schedule you showed. If the payment returned a device token instead, ask your provider whether it can still charge it later.
 - **Charge what you showed.** The amounts, dates and interval in the sheet are what the payer agreed to. Charge a different amount or earlier, and the payer may dispute it.
-- **Handle token notifications.** With `tokenNotificationUrl`, Apple tells your server when the payer deletes the merchant token or it changes, for example after a card replacement. Stop charging a deleted token.
+- **Handle token notifications.** With `tokenNotificationUrl`, Apple, and Google as `tokenUpdateUrl`, tell that URL when the payer deletes the token or it changes, for example after a card replacement. Stop charging a deleted token.
 - **Let the payer cancel.** `managementUrl` must lead to a page where they can change or cancel the plan.
 
 See [Server-side processing](/docs/guides/server-processing) for charging the token itself.

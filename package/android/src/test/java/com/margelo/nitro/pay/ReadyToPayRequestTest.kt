@@ -11,10 +11,8 @@ class ReadyToPayRequestTest {
     private fun JSONObject.cardParameters(): JSONObject =
         getJSONArray("allowedPaymentMethods").getJSONObject(0).getJSONObject("parameters")
 
-    private fun JSONObject.allowedCardNetworks(): List<String> {
-        val networks = cardParameters().getJSONArray("allowedCardNetworks")
-        return (0 until networks.length()).map { networks.getString(it) }
-    }
+    private fun JSONObject.allowedCardNetworks(): List<String> =
+        cardParameters().getJSONArray("allowedCardNetworks").strings()
 
     @Test
     fun isReadyToPayRequest_checksTheGivenNetworksForAnExistingCard() {

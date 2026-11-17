@@ -111,7 +111,7 @@ export default function MerchantTokensScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.intro}>
         Payments charged again later. The payer gets a merchant token instead
-        of a one-off card token. Android support is coming in #86.
+        of a one-off card token.
       </Text>
       {DEMOS.map((demo) => (
         <View key={demo.title} style={styles.section}>

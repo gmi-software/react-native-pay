@@ -879,7 +879,7 @@ Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `pho
 
 ### Subscriptions and later payments
 
-`recurring`, `deferred` and `automaticReload` (with `HybridPaymentHandler`) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment asks for a merchant token your payment provider can charge later. When the card's network has no merchant tokens, Apple Pay returns a device token instead, so check with your provider. `paymentItems` stay what the payer pays today, which may be nothing. Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)). See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
+`recurring`, `deferred` and `automaticReload` (with `HybridPaymentHandler`) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment asks for a merchant token your payment provider can charge later. When the card's network has no merchant tokens, Apple Pay returns a device token instead, so check with your provider. `paymentItems` stay what the payer pays today, which may be nothing. Android sends them to Google Pay as Merchant Initiated Transactions. See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
 
 ### Contact Types
 

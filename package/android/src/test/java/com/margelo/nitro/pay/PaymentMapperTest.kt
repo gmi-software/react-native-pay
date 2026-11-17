@@ -286,16 +286,7 @@ class PaymentMapperTest {
 
     @Test
     fun requestedDetails_chargesTheFirstShippingMethod() {
-        fun request(methods: Array<ShippingMethod>?) = PaymentRequest(
-            applePayMerchantIdentifier = null, merchantName = null, countryCode = "US",
-            currencyCode = "USD", paymentItems = emptyArray(), merchantCapabilities = emptyArray(),
-            supportedNetworks = emptyArray(), shippingType = null, shippingMethods = methods,
-            billingContactRequired = null, shippingContactRequired = null, emailRequired = null,
-            phoneNumberRequired = null, recurring = null, deferred = null, automaticReload = null,
-            googlePayMerchantId = null, googlePayEnvironment = null,
-            googlePayGateway = null, googlePayGatewayMerchantId = null,
-            googlePayAllowedAuthMethods = null
-        )
+        fun request(methods: Array<ShippingMethod>?) = paymentRequest(shippingMethods = methods)
         val standard = ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), null)
         val express = ShippingMethod("express", "Express", PaymentAmount.create("9.00"), null)
 
