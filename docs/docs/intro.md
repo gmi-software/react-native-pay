@@ -41,6 +41,20 @@ The library does not process payments itself; it gives you the token and metadat
 - It does **not** replace your gateway SDK/backend payment flow.
 - It does **not** bypass Apple Developer / Google Pay onboarding and account setup.
 
+### What you can sell with Apple Pay and Google Pay
+
+Use Apple Pay and Google Pay only for **physical goods** and for **services used outside the app**, such as a delivery, a ride, a ticket or a donation to an approved nonprofit. On iOS, real-time person-to-person services are also allowed (see 3.1.3(d) below). Digital content and in-app features, such as subscriptions to digital content, premium content or unlocked features, must as a rule use the stores' own billing, with the exceptions below. A subscription to physical goods, such as a monthly delivery, may use Apple Pay and Google Pay.
+
+- **App Store:** [App Review Guideline 3.1.1](https://developer.apple.com/app-store/review/guidelines/#in-app-purchase) requires In-App Purchase to unlock features, subscriptions or premium content. Under [3.1.3(e)](https://developer.apple.com/app-store/review/guidelines/#payments), physical goods and services used outside the app must use other payment methods, such as Apple Pay. Under [3.1.3(d)](https://developer.apple.com/app-store/review/guidelines/#payments), real-time person-to-person services between two people, such as tutoring or a medical consultation, may also use other payment methods; one-to-few and one-to-many real-time services must use In-App Purchase.
+- **Google Play:** the [Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738) requires Google Play Billing for digital goods and in-app features. In some regions, such as the [United States](https://support.google.com/googleplay/android-developer/answer/16497028) and the European Economic Area, developers enrolled in one of Google's alternative billing programs may offer another billing system to users there; the Payments policy lists the programs. Google Pay is not such a system: the [Google Pay setup page](https://developers.google.com/pay/api/android/guides/setup) limits it to physical goods and services and sends apps that sell digital goods to Play Billing.
+
+An app that sells digital goods with this library can be rejected in App Review or removed from Google Play.
+
+Apps that use Apple Pay must also follow [App Review Guideline 4.9](https://developer.apple.com/app-store/review/guidelines/#apple-pay):
+
+- Show all material purchase information to the user before the sale.
+- For recurring payments, such as a monthly delivery, disclose at least the length of the renewal term and that it continues until cancelled, what is provided during each period, the charges, and how to cancel.
+
 ### Still required for production
 
 - Platform setup (Merchant ID, entitlements/capabilities, Google Pay API/project setup).

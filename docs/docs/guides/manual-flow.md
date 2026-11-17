@@ -27,7 +27,7 @@ import { createPaymentRequest, HybridPaymentHandler } from '@gmisoftware/react-n
 
 const paymentRequest = createPaymentRequest({
   amount: 99.99,
-  label: 'Premium Subscription',
+  label: 'Espresso Machine',
   merchantName: 'Your Store',
   countryCode: 'US',
   currencyCode: 'USD',
@@ -85,7 +85,7 @@ function PaymentButton({
     />
   ) : (
     <GooglePayButton
-      buttonType="subscribe"
+      buttonType="buy"
       theme="dark"
       onPress={handlePayment}
     />
@@ -95,7 +95,7 @@ function PaymentButton({
 
 ## When to use this
 
-- One-off or fixed-amount payments (e.g. subscription, tip).
+- One-off or fixed-amount payments (e.g. a single product, a tip).
 - You already have a cart elsewhere and only need to build a `PaymentRequest` once.
 - You want to avoid the hook’s internal state.
 

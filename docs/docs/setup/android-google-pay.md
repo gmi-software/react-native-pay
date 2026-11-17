@@ -74,6 +74,31 @@ The payment survives a recreated Activity, for example after a configuration cha
 
 To reproduce a process death, open the sheet, press Home, run `adb shell am kill <your.package.name>`, reopen the app from Recents, and close the sheet.
 
+## Card authentication and 3-D Secure
+
+By default, Google Pay accepts both kinds of card ([`googlePayAllowedAuthMethods`](/docs/api/types#googlepayauthmethod)):
+
+- `'CRYPTOGRAM_3DS'` cards are tokenized on the device. The token holds a 3-D Secure cryptogram.
+- `'PAN_ONLY'` cards are saved to the payer's Google account. The token holds the card number and no cryptogram, so the payment is not authenticated.
+
+Google requires you to trigger 3-D Secure (step-up authentication) for `PAN_ONLY` payments under the same rules as any other card payment. This matters most where Strong Customer Authentication applies, such as the EEA. Your gateway runs the 3-D Secure step after your backend receives the token; see your gateway's Google Pay guide. See Google's [Android tutorial](https://developers.google.com/pay/api/android/guides/tutorial) and [integration checklist](https://developers.google.com/pay/api/android/guides/test-and-deploy/integration-checklist).
+
+If your gateway cannot run 3-D Secure for Google Pay, accept only device tokens:
+
+```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+usePaymentCheckout({
+  googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+})
+```
+
+Google can also report whether it has already verified the card and the cardholder ([`assuranceDetailsRequired`](https://developers.google.com/pay/api/android/reference/response-objects#assurance-details-specifications)), so you can skip the step-up when both checks pass. This library does not request it yet.
+
+## The `donate` button
+
+`GooglePayButton` with `buttonType="donate"` is only for nonprofits that Google has validated. See the [Google Pay brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines). Get Google's approval before you collect donations with Google Pay.
+
 ## Troubleshooting
 
 - **Button not showing:** Ensure `enableGooglePay: true` is set, prebuild was run, and Google Play Services is available.

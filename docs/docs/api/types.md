@@ -274,7 +274,7 @@ How Google Pay may authenticate the card, used in `googlePayAllowedAuthMethods` 
 type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 ```
 
-- `'PAN_ONLY'` — Cards saved to the payer's Google account. The token holds the card number.
+- `'PAN_ONLY'` — Cards saved to the payer's Google account. The token holds the card number and no 3-D Secure cryptogram, so Google requires you to run 3-D Secure (step-up authentication) for these payments as for any other card payment. See [Card authentication and 3-D Secure](/docs/setup/android-google-pay#card-authentication-and-3-d-secure).
 - `'CRYPTOGRAM_3DS'` — Cards tokenized on the device. The token holds a 3-D Secure cryptogram. Google Pay does not offer `jcb` or `discover` with it.
 
 The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Customer Authentication requires device tokens. Android matches the values ignoring case, and any other value fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown Google Pay auth method "<value>". Use "PAN_ONLY" or "CRYPTOGRAM_3DS"`. They are separate from `merchantCapabilities`: every Apple Pay card is a device token, so iOS has nothing like `'PAN_ONLY'`.

@@ -64,6 +64,8 @@ The button can show the payer's card, so give it the same `supportedNetworks`, `
 **GooglePayButtonType:**  
 `'buy'` | `'book'` | `'checkout'` | `'donate'` | `'order'` | `'pay'` | `'subscribe'` | `'plain'`
 
+`'donate'` is only for nonprofits that Google has validated. See [The `donate` button](/docs/setup/android-google-pay#the-donate-button).
+
 ### Example
 
 ```tsx
