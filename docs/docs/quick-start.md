@@ -42,17 +42,17 @@ If you are using Expo, run `npx expo prebuild --clean` after plugin changes and 
 
 ## 4. Minimal checkout screen
 
-Use the hook and the platform-specific button. Pass `onAuthorize` to send the token to your server while the payment sheet waits: the sheet shows success or failure from your server's answer, and `startPayment()` resolves with `status: 'success'` only when your server charged the payment.
+Use the hook and the platform-specific button. When the user taps pay, your server creates the order for the cart on screen and prices it. Pass `onAuthorize` to charge the token on your server: `startPayment()` resolves with `status: 'success'` only when your server charged the payment. On iOS the Apple Pay sheet waits for your server and shows its answer; on Android, Google Pay closes its sheet before `onAuthorize` runs.
 
 ```tsx
-import React from 'react'
+import React, { useRef } from 'react'
 import {
   usePaymentCheckout,
   ApplePayButton,
   GooglePayButton,
   formatAmount,
 } from '@gmisoftware/react-native-pay'
-import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
+import { Alert, Platform, View, Text, Button, ActivityIndicator } from 'react-native'
 
 function CheckoutScreen() {
   const {
@@ -70,13 +70,13 @@ function CheckoutScreen() {
     merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
-    // Charge on your server while the sheet waits. The server looks up
-    // the order and charges its stored amount, not one the app sends.
+    // Charge on your server. The server charges the order's stored amount,
+    // not one the app sends, and keys idempotency on the order ID.
     onAuthorize: async (token) => {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, orderId: 'order_123' }), // your order
+        body: JSON.stringify({ token, orderId: orderId.current }),
       })
       return response.ok
         ? { status: 'success' }
@@ -84,7 +84,29 @@ function CheckoutScreen() {
     },
   })
 
+  // The server order for the cart on screen, created when the user taps pay.
+  const orderId = useRef<string | null>(null)
+
   const handlePay = async () => {
+    // Your server creates an order from the cart and prices it from its own
+    // catalog. Send what the user picked (use your product IDs), not prices.
+    const orderResponse = await fetch('https://api.yourserver.com/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items.map((item) => item.label) }),
+    })
+    if (!orderResponse.ok) {
+      Alert.alert('Could not create the order. Please try again.')
+      return
+    }
+    const order: { id: string; total: string } = await orderResponse.json()
+    // The sheet shows this cart, so it must match what the server charges.
+    if (order.total !== formatAmount(total, 'USD')) {
+      Alert.alert('Prices have changed. Please review your cart.')
+      return
+    }
+    orderId.current = order.id
+
     const result = await startPayment()
     if (result?.status === 'success') {
       // Your server charged the payment: show your confirmation here.
