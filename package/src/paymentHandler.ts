@@ -1,7 +1,7 @@
 import { NitroModules } from 'react-native-nitro-modules'
 import type { PaymentHandler } from './specs/PaymentHandler.nitro'
 import type { PaymentRequest, PaymentResult } from './types'
-import { normalizePaymentRequest } from './utils/amounts'
+import { normalizePaymentRequest } from './utils/paymentRequest'
 
 /**
  * Error returned when `startPayment` is called while another payment is

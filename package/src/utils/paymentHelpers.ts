@@ -25,7 +25,8 @@ import type {
   PaymentRequest,
   PaymentNetwork,
 } from '../types'
-import { normalizePaymentRequest, roundAmount, sumAmounts } from './amounts'
+import { roundAmount, sumAmounts } from './amounts'
+import { normalizePaymentRequest } from './paymentRequest'
 
 /**
  * Payment networks supported by both Apple Pay and Google Pay

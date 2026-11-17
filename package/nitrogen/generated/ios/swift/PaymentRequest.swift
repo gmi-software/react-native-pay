@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: [String]?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: [String]?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -88,6 +88,24 @@ public extension PaymentRequest {
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = phoneNumberRequired {
         return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_RecurringPaymentRequest_ in
+      if let __unwrappedValue = recurring {
+        return bridge.create_std__optional_RecurringPaymentRequest_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_DeferredPaymentRequest_ in
+      if let __unwrappedValue = deferred {
+        return bridge.create_std__optional_DeferredPaymentRequest_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_AutomaticReloadPaymentRequest_ in
+      if let __unwrappedValue = automaticReload {
+        return bridge.create_std__optional_AutomaticReloadPaymentRequest_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -249,6 +267,21 @@ public extension PaymentRequest {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var recurring: RecurringPaymentRequest? {
+    return self.__recurring.value
+  }
+  
+  @inline(__always)
+  var deferred: DeferredPaymentRequest? {
+    return self.__deferred.value
+  }
+  
+  @inline(__always)
+  var automaticReload: AutomaticReloadPaymentRequest? {
+    return self.__automaticReload.value
   }
   
   @inline(__always)

@@ -755,6 +755,10 @@ interface PaymentRequest {
   shippingContactRequired?: boolean; // → PaymentResult.shippingContact
   emailRequired?: boolean; // → PaymentResult.emailAddress
   phoneNumberRequired?: boolean; // → PaymentResult.phoneNumber
+  // At most one: charges after today, returning a merchant token
+  recurring?: RecurringPaymentRequest; // subscriptions, iOS 16+
+  deferred?: DeferredPaymentRequest; // one later charge, iOS 16.4+
+  automaticReload?: AutomaticReloadPaymentRequest; // top-ups, iOS 16+
   // Google Pay specific
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
@@ -872,6 +876,10 @@ Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `pho
 `shippingMethods` (with `HybridPaymentHandler`) lets the payer pick a delivery option; the selected method is added to the total and returned as `shippingMethod`. The first one is selected by default on iOS. Google Pay cannot offer a choice yet, so Android charges the first method. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
 
 `shippingType` (`"shipping"`, `"delivery"`, `"storePickup"` or `"servicePickup"`) only changes Apple Pay's labels. An unknown value fails the payment on iOS.
+
+### Subscriptions and later payments
+
+`recurring`, `deferred` and `automaticReload` (with `HybridPaymentHandler`) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment returns a merchant token your payment provider can charge later. `paymentItems` stay what the payer pays today, which may be nothing. Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)). See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
 
 ### Contact Types
 

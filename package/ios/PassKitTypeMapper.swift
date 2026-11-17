@@ -26,6 +26,14 @@ enum PassKitTypeMapper {
     }
     
     
+    static func convert(_ unit: RecurringIntervalUnit) -> NSCalendar.Unit {
+        switch unit {
+        case .day: return .day
+        case .month: return .month
+        case .year: return .year
+        }
+    }
+
     static func convertContactType(_ type: Contacts.CNContactType) -> CNContactType {
         switch type {
         case .person: return .person

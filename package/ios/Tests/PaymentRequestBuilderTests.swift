@@ -28,7 +28,10 @@ final class PaymentRequestBuilderTests: XCTestCase {
         billingContactRequired: Bool? = nil,
         shippingContactRequired: Bool? = nil,
         emailRequired: Bool? = nil,
-        phoneNumberRequired: Bool? = nil
+        phoneNumberRequired: Bool? = nil,
+        recurring: RecurringPaymentRequest? = nil,
+        deferred: DeferredPaymentRequest? = nil,
+        automaticReload: AutomaticReloadPaymentRequest? = nil
     ) -> PaymentRequest {
         return PaymentRequest(
             applePayMerchantIdentifier: merchantIdentifier,
@@ -44,6 +47,9 @@ final class PaymentRequestBuilderTests: XCTestCase {
             shippingContactRequired: shippingContactRequired,
             emailRequired: emailRequired,
             phoneNumberRequired: phoneNumberRequired,
+            recurring: recurring,
+            deferred: deferred,
+            automaticReload: automaticReload,
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,
@@ -232,7 +238,8 @@ final class PaymentRequestBuilderTests: XCTestCase {
                 merchantName: "Coffee Shop",
                 shippingMethods: shippingMethods
             ),
-            selectedShippingMethodIdentifier: "express"
+            selectedShippingMethodIdentifier: "express",
+            laterCharges: []
         )
 
         XCTAssertEqual(summary(items), ["Coffee 18", "Tax 1.44", "Express 7.5", "Coffee Shop 26.94"])
@@ -250,7 +257,8 @@ final class PaymentRequestBuilderTests: XCTestCase {
         for identifier in [nil, "unknown"] {
             let items = try PaymentRequestBuilder.buildSummaryItems(
                 for: request,
-                selectedShippingMethodIdentifier: identifier
+                selectedShippingMethodIdentifier: identifier,
+                laterCharges: []
             )
             XCTAssertEqual(summary(items), ["Coffee 18", "Coffee Shop 18"])
         }
@@ -373,6 +381,160 @@ final class PaymentRequestBuilderTests: XCTestCase {
             paymentRequest(items: [item("Coffee", "4.99"), item("Discount", "-5.00")]),
             with: "Payment total must not be negative"
         )
+    }
+
+    // MARK: - Recurring, deferred and automatic reload
+
+    private let trialEnd = Date(timeIntervalSince1970: 2_000_000_000)
+    private let managementUrl = "https://example.com/account"
+
+    private func monthly(startDate: Date? = nil) -> RecurringBillingItem {
+        return RecurringBillingItem(
+            label: "Monthly", amount: .second("9.99"), intervalUnit: .month,
+            intervalCount: nil, startDate: startDate, endDate: nil
+        )
+    }
+
+    private func recurring(regular: RecurringBillingItem? = nil, managementUrl: String? = nil) -> RecurringPaymentRequest {
+        let trial = RecurringBillingItem(
+            label: "Trial", amount: .second("0.00"), intervalUnit: .day,
+            intervalCount: 7, startDate: nil, endDate: trialEnd
+        )
+        return RecurringPaymentRequest(
+            regularBilling: regular ?? monthly(),
+            trialBilling: trial,
+            description: "Premium membership",
+            managementUrl: managementUrl ?? self.managementUrl,
+            billingAgreement: "Renews monthly",
+            tokenNotificationUrl: "https://example.com/tokens"
+        )
+    }
+
+    private func deferred(timeZone: String = "Europe/Warsaw") -> DeferredPaymentRequest {
+        return DeferredPaymentRequest(
+            deferredBilling: DeferredBillingItem(
+                label: "Hotel", amount: .second("240.00"), date: trialEnd
+            ),
+            freeCancellation: FreeCancellation(date: trialEnd.addingTimeInterval(-86_400), timeZone: timeZone),
+            description: "Hotel booking",
+            managementUrl: managementUrl,
+            billingAgreement: nil,
+            tokenNotificationUrl: nil
+        )
+    }
+
+    private func automaticReload() -> AutomaticReloadPaymentRequest {
+        return AutomaticReloadPaymentRequest(
+            automaticReloadBilling: AutomaticReloadBillingItem(
+                label: "Top-up", amount: .second("25.00"), thresholdAmount: .second("5.00")
+            ),
+            description: "Card top-up",
+            managementUrl: managementUrl,
+            billingAgreement: nil,
+            tokenNotificationUrl: nil
+        )
+    }
+
+    @available(iOS 16.4, *)
+    func testBuildsARecurringRequestThatStartsAfterTheTrial() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [], merchantName: "Shop", recurring: recurring()
+        ))
+
+        let recurring = try XCTUnwrap(request.recurringPaymentRequest)
+        XCTAssertEqual(recurring.paymentDescription, "Premium membership")
+        XCTAssertEqual(recurring.managementURL, URL(string: managementUrl))
+        XCTAssertEqual(recurring.billingAgreement, "Renews monthly")
+        XCTAssertEqual(recurring.tokenNotificationURL, URL(string: "https://example.com/tokens"))
+        XCTAssertEqual(recurring.regularBilling.intervalUnit, .month)
+        XCTAssertEqual(recurring.regularBilling.intervalCount, 1)
+        XCTAssertEqual(recurring.regularBilling.startDate, trialEnd)
+        XCTAssertNil(recurring.regularBilling.endDate)
+        let trial = try XCTUnwrap(recurring.trialBilling)
+        XCTAssertEqual(trial.intervalUnit, .day)
+        XCTAssertEqual(trial.intervalCount, 7)
+        XCTAssertEqual(trial.endDate, trialEnd)
+        XCTAssertEqual(summary(request.paymentSummaryItems), ["Trial 0", "Monthly 9.99", "Shop 0"])
+        XCTAssertNil(request.deferredPaymentRequest)
+        XCTAssertNil(request.automaticReloadPaymentRequest)
+    }
+
+    @available(iOS 16.4, *)
+    func testKeepsTheRegularStartDateWhenGiven() throws {
+        let start = trialEnd.addingTimeInterval(86_400)
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [], recurring: recurring(regular: monthly(startDate: start))
+        ))
+
+        XCTAssertEqual(request.recurringPaymentRequest?.regularBilling.startDate, start)
+    }
+
+    @available(iOS 16.4, *)
+    func testBuildsADeferredRequest() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Deposit", "20.00")], merchantName: "Hotel", deferred: deferred()
+        ))
+
+        let deferred = try XCTUnwrap(request.deferredPaymentRequest)
+        XCTAssertEqual(deferred.paymentDescription, "Hotel booking")
+        XCTAssertEqual(deferred.deferredBilling.deferredDate, trialEnd)
+        XCTAssertEqual(deferred.freeCancellationDate, trialEnd.addingTimeInterval(-86_400))
+        XCTAssertEqual(deferred.freeCancellationDateTimeZone, TimeZone(identifier: "Europe/Warsaw"))
+        XCTAssertNil(deferred.billingAgreement)
+        XCTAssertNil(deferred.tokenNotificationURL)
+        XCTAssertEqual(summary(request.paymentSummaryItems), ["Deposit 20", "Hotel 240", "Hotel 20"])
+    }
+
+    func testRejectsAnUnknownFreeCancellationTimeZone() {
+        assertBuildFails(
+            paymentRequest(items: [], deferred: deferred(timeZone: "Mars/Olympus")),
+            with: "Unknown time zone \"Mars/Olympus\". Use an IANA name such as \"Europe/Warsaw\""
+        )
+    }
+
+    @available(iOS 16.4, *)
+    func testBuildsAnAutomaticReloadRequest() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Initial load", "25.00")], merchantName: "Cafe", automaticReload: automaticReload()
+        ))
+
+        let reload = try XCTUnwrap(request.automaticReloadPaymentRequest)
+        XCTAssertEqual(reload.paymentDescription, "Card top-up")
+        XCTAssertEqual(reload.automaticReloadBilling.amount, NSDecimalNumber(string: "25.00"))
+        XCTAssertEqual(reload.automaticReloadBilling.thresholdAmount, NSDecimalNumber(string: "5.00"))
+        XCTAssertEqual(summary(request.paymentSummaryItems), ["Initial load 25", "Top-up 25", "Cafe 25"])
+    }
+
+    func testRejectsMoreThanOneMerchantTokenRequest() {
+        assertBuildFails(
+            paymentRequest(items: [], recurring: recurring(), automaticReload: automaticReload()),
+            with: "Set at most one of recurring, deferred and automaticReload"
+        )
+    }
+
+    func testRejectsANonHttpsManagementUrl() {
+        assertBuildFails(
+            paymentRequest(items: [], recurring: recurring(managementUrl: "http://example.com/account")),
+            with: "managementUrl must be an https URL, got \"http://example.com/account\""
+        )
+    }
+
+    func testSummaryKeepsTheLaterChargesWhenTheShippingMethodChanges() throws {
+        let request = paymentRequest(
+            items: [item("Starter kit", "10.00")],
+            merchantName: "Shop",
+            shippingMethods: shippingMethods,
+            recurring: recurring()
+        )
+        // As the delegate rebuilds it when the payer picks another method.
+        let items = try PaymentRequestBuilder.buildSummaryItems(
+            for: request,
+            selectedShippingMethodIdentifier: "express",
+            laterCharges: MerchantTokenRequestBuilder.laterCharges(of: PaymentRequestBuilder.build(from: request))
+        )
+
+        XCTAssertEqual(summary(items), ["Starter kit 10", "Express 7.5", "Trial 0", "Monthly 9.99", "Shop 17.5"])
+        XCTAssertTrue(items[3] is PKRecurringPaymentSummaryItem)
     }
 
     func testRequiresMerchantIdentifier() {

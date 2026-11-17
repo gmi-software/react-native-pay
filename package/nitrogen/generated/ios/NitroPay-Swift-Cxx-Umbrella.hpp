@@ -12,6 +12,10 @@
 namespace margelo::nitro::pay { enum class ApplePayButtonStyle; }
 // Forward declaration of `ApplePayButtonType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class ApplePayButtonType; }
+// Forward declaration of `AutomaticReloadBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
+// Forward declaration of `AutomaticReloadPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
 // Forward declaration of `CNContactType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class CNContactType; }
 // Forward declaration of `CNContact` to properly resolve imports.
@@ -26,6 +30,12 @@ namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 namespace margelo::nitro::pay { struct CNPhoneNumber; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `DeferredBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredBillingItem; }
+// Forward declaration of `DeferredPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
+// Forward declaration of `FreeCancellation` to properly resolve imports.
+namespace margelo::nitro::pay { struct FreeCancellation; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
@@ -68,6 +78,12 @@ namespace margelo::nitro::pay { struct PaymentResult; }
 namespace margelo::nitro::pay { enum class PaymentStatus; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
+// Forward declaration of `RecurringBillingItem` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringBillingItem; }
+// Forward declaration of `RecurringIntervalUnit` to properly resolve imports.
+namespace margelo::nitro::pay { enum class RecurringIntervalUnit; }
+// Forward declaration of `RecurringPaymentRequest` to properly resolve imports.
+namespace margelo::nitro::pay { struct RecurringPaymentRequest; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
 namespace margelo::nitro::pay { struct ShippingMethod; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
@@ -76,6 +92,8 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Include C++ defined types
 #include "ApplePayButtonStyle.hpp"
 #include "ApplePayButtonType.hpp"
+#include "AutomaticReloadBillingItem.hpp"
+#include "AutomaticReloadPaymentRequest.hpp"
 #include "CNContact.hpp"
 #include "CNContactType.hpp"
 #include "CNLabeledEmailAddress.hpp"
@@ -83,6 +101,9 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
+#include "DeferredBillingItem.hpp"
+#include "DeferredPaymentRequest.hpp"
+#include "FreeCancellation.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
@@ -104,10 +125,14 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PaymentResult.hpp"
 #include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
+#include "RecurringBillingItem.hpp"
+#include "RecurringIntervalUnit.hpp"
+#include "RecurringPaymentRequest.hpp"
 #include "ShippingMethod.hpp"
 #include "StartPaymentOptions.hpp"
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <memory>

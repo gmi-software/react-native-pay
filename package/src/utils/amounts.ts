@@ -8,8 +8,7 @@
  * @module amounts
  */
 
-import type { PaymentAmount, PaymentItem, PaymentRequest } from '../types'
-import { warnIfGooglePayEnvironmentOmitted } from './googlePayEnvironment'
+import type { PaymentAmount, PaymentItem } from '../types'
 
 /**
  * ISO 4217 currencies whose minor unit is not two digits.
@@ -124,6 +123,14 @@ function describeAmount(amount: unknown): string {
   return typeof amount === 'string' ? `"${amount}"` : String(amount)
 }
 
+function parseValidDecimal(amount: PaymentAmount): ExactDecimal {
+  const value = parseDecimal(amount)
+  if (value === null) {
+    throw new Error(`Invalid amount ${describeAmount(amount)}`)
+  }
+  return value
+}
+
 /**
  * Validates an amount and returns it as a decimal string with exactly as many
  * decimal places as the currency allows.
@@ -166,70 +173,45 @@ export function normalizeAmount(
   return formatDecimal(value.units / divisor, minorUnits)
 }
 
-function normalizeItems<Item extends Pick<PaymentItem, 'label' | 'amount'>>(
-  items: Item[],
-  currencyCode: string
-): Item[] {
-  return items.map((item) => ({
+/**
+ * Returns a copy of the item with its amount normalized to the currency.
+ *
+ * @throws Error as `normalizeAmount`, naming the item's label.
+ */
+export function normalizeItem<
+  Item extends Pick<PaymentItem, 'label' | 'amount'>,
+>(item: Item, currencyCode: string): Item {
+  return {
     ...item,
     amount: normalizeAmount(item.amount, currencyCode, item.label),
-  }))
+  }
 }
 
-const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
-const COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/
-
-function checkCode(
-  field: string,
-  value: unknown,
-  pattern: RegExp,
-  example: string
-) {
-  if (typeof value !== 'string' || !pattern.test(value)) {
-    throw new Error(
-      `${field} must be an upper-case code like "${example}", got ${describeAmount(value)}`
-    )
-  }
+export function normalizeItems<
+  Item extends Pick<PaymentItem, 'label' | 'amount'>,
+>(items: Item[], currencyCode: string): Item[] {
+  return items.map((item) => normalizeItem(item, currencyCode))
 }
 
 /**
- * Validates a payment request and returns a copy whose amounts are exact
- * decimal strings. `createPaymentRequest`, `usePaymentCheckout` and
- * `HybridPaymentHandler.startPayment` all call it; call it yourself to get the
- * error before the payment starts.
+ * Sums valid amounts exactly, as a decimal string with the most decimal
+ * places of any of them.
  *
- * `currencyCode` must be an ISO 4217 code (`'USD'`) and `countryCode` an
- * ISO 3166-1 alpha-2 code (`'US'`), both upper case. Line items may be
- * negative (discounts), but the total may not. An Android release build
- * warns once if `googlePayEnvironment` is omitted.
- *
- * @throws Error if a code or an amount is invalid, or the total is negative.
+ * @throws Error if an amount is invalid.
  */
-export function normalizePaymentRequest(
-  request: PaymentRequest
-): PaymentRequest {
-  warnIfGooglePayEnvironmentOmitted(request.googlePayEnvironment)
-  const { currencyCode } = request
-  checkCode('currencyCode', currencyCode, CURRENCY_CODE_PATTERN, 'USD')
-  checkCode('countryCode', request.countryCode, COUNTRY_CODE_PATTERN, 'US')
-  const paymentItems = normalizeItems(request.paymentItems, currencyCode)
+export function sumExactly(amounts: PaymentAmount[]): string {
+  const total = sum(amounts.map(parseValidDecimal))
+  return formatDecimal(total.units, total.scale)
+}
 
-  const total = sum(
-    paymentItems.map((item) => parseDecimal(item.amount) as ExactDecimal)
-  )
-  if (total.units < ZERO) {
-    throw new Error(
-      `Payment total must not be negative, got ${formatDecimal(total.units, total.scale)}`
-    )
-  }
-
-  return {
-    ...request,
-    paymentItems,
-    ...(request.shippingMethods && {
-      shippingMethods: normalizeItems(request.shippingMethods, currencyCode),
-    }),
-  }
+/**
+ * The sign of a valid amount: -1, 0 or 1.
+ *
+ * @throws Error if the amount is invalid.
+ */
+export function amountSign(amount: PaymentAmount): -1 | 0 | 1 {
+  const { units } = parseValidDecimal(amount)
+  return units < ZERO ? -1 : units > ZERO ? 1 : 0
 }
 
 /**
