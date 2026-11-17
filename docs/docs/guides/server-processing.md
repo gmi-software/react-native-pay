@@ -108,8 +108,9 @@ Your backend receives the token and calls your gateway SDK/API. The exact reques
 ```js
 // Backend (Node.js example)
 app.post('/process-payment', async (req, res) => {
-  // Never read the amount to charge from the request body.
-  const { token, orderId } = req.body
+  // Never read the amount to charge from the request body. `total` is only
+  // the amount the sheet showed, to compare with the order.
+  const { token, orderId, total } = req.body
 
   try {
     // 1) Load the order server-side and check that it belongs to this user
@@ -122,6 +123,11 @@ app.post('/process-payment', async (req, res) => {
     const order = await orders.findForUser(orderId, req.user.id)
     if (!order) return res.status(404).json({ error: 'Order not found' })
     if (order.status === 'paid') return res.json({ success: true, chargeId: order.chargeId })
+    // The order changed after the app showed it: don't charge an amount the
+    // user didn't see. `order.total` is the decimal string, such as '49.99'.
+    if (total !== undefined && total !== order.total) {
+      return res.status(409).json({ error: 'The order total has changed' })
+    }
 
     const charge = await gateway.charge({
       // Store totals in the currency's minor unit: 2 decimals for USD,
@@ -134,6 +140,11 @@ app.post('/process-payment', async (req, res) => {
       idempotencyKey: `charge-${order.id}`,
     })
 
+    // Report success only for a completed charge. A decline or a pending
+    // charge must not show success in the app. Use your gateway's status value.
+    if (charge.status !== 'succeeded') {
+      return res.status(402).json({ error: 'The payment was not completed' })
+    }
     res.json({ success: true, chargeId: charge.id })
   } catch (err) {
     res.status(500).json({ error: err.message })

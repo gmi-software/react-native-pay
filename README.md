@@ -192,7 +192,8 @@ import {
 import { Platform, View, Text, ActivityIndicator } from 'react-native'
 
 // An order your server created and priced, for example when the user opened
-// checkout. Use your own type.
+// checkout. Use your own type. Render the screen with `key={order.id}`, so a
+// new order starts with an empty cart instead of the previous order's lines.
 type Order = {
   id: string
   lines: { label: string; amount: string }[]
@@ -225,7 +226,9 @@ function CheckoutScreen({ order }: { order: Order }) {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, orderId: order.id }),
+        // `total` is what the sheet showed: the server rejects the charge
+        // if the order no longer matches it.
+        body: JSON.stringify({ token, orderId: order.id, total: formatAmount(total, 'USD') }),
       })
       return response.ok
         ? { status: 'success' }
