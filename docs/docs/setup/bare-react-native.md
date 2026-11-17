@@ -54,7 +54,7 @@ In `android/app/src/main/AndroidManifest.xml`, inside `<application>`:
 In app code, pass Google Pay config in `usePaymentCheckout` (or `PaymentRequest`):
 
 - `googlePayMerchantId`
-- `googlePayEnvironment` (`TEST` for sandbox, `PRODUCTION` for live). Omitted, it is `TEST`. A release build logs a warning when a payment starts through `usePaymentCheckout`, `createPaymentRequest` or `normalizePaymentRequest`, but not for a request passed straight to `HybridPaymentHandler.startPayment`.
+- `googlePayEnvironment` (`TEST` for sandbox, `PRODUCTION` for live). Omitted, it is `TEST`. A release build logs a warning once per app run when a payment starts, but not on an availability check.
 - `googlePayGateway`
 - `googlePayGatewayMerchantId`
 
