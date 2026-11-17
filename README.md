@@ -182,27 +182,34 @@ For apps supporting both platforms:
 The easiest way to integrate payments - one hook handles everything:
 
 ```tsx
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   usePaymentCheckout,
   ApplePayButton,
   GooglePayButton,
   formatAmount,
 } from '@gmisoftware/react-native-pay'
-import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
+import { Platform, View, Text, ActivityIndicator } from 'react-native'
 
-function CheckoutScreen() {
+// An order your server created and priced, for example when the user opened
+// checkout. Use your own type. Render the screen with `key={order.id}`, so a
+// new order starts with an empty cart instead of the previous order's lines.
+type Order = {
+  id: string
+  lines: { label: string; amount: string }[]
+}
+
+function CheckoutScreen({ order }: { order: Order }) {
   const {
     // Payment availability
     isSupported,
     isCheckingStatus,
 
-    // Cart management
+    // Cart
     items,
     total,
-    addItem,
     addItems,
-    removeItem,
+    clearItems,
 
     // Payment processing
     startPayment,
@@ -212,36 +219,38 @@ function CheckoutScreen() {
     merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
+    // Charge on your server. It charges the order's stored amount, not one
+    // the app sends, and keys idempotency on the order ID, so a retry after
+    // a timeout can't charge twice.
+    onAuthorize: async (token) => {
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // `total` is what the sheet showed: the server rejects the charge
+        // if the order no longer matches it.
+        body: JSON.stringify({ token, orderId: order.id, total: formatAmount(total, 'USD') }),
+      })
+      return response.ok
+        ? { status: 'success' }
+        : { status: 'failure', error: 'Payment failed' }
+    },
   })
 
-  const handleAddCoffee = () => {
-    addItem('Coffee', 4.99)
-  }
-
-  const handleAddFullOrder = () => {
-    addItems([
-      { label: 'Coffee', amount: 4.99 },
-      { label: 'Sandwich', amount: 8.99 },
-      { label: 'Tax', amount: 1.20, type: 'final' }
-    ])
-  }
+  // The sheet shows the lines your server priced. startPayment() returns
+  // null for an empty cart, so fill it before the user taps pay.
+  useEffect(() => {
+    addItems(order.lines)
+    return clearItems
+  }, [order, addItems, clearItems])
 
   const handlePay = async () => {
     const result = await startPayment()
-
-    if (result?.status === 'success' && result.token) {
-      // Send result.token to your server for processing
-      await fetch('https://api.yourserver.com/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: result.token,
-          orderId: 'order_123', // your order, also your idempotency key
-        }),
-      })
+    if (result?.status === 'success') {
+      // Your server charged the payment: show your confirmation here.
     }
+    // 'failed': `error` is set, including when your server declined or
+    // could not be reached.
     // 'cancelled': the user closed the sheet, and `error` stays null.
-    // 'failed': `error` is set, and `result.code` says why.
   }
 
   if (isCheckingStatus) {
@@ -249,53 +258,23 @@ function CheckoutScreen() {
   }
 
   if (!isSupported) {
-    return (
-      <View>
-        <Text>Apple Pay or Google Pay is not available on this device</Text>
-      </View>
-    )
+    return <View><Text>Apple Pay / Google Pay is not available</Text></View>
   }
 
   return (
     <View style={{ padding: 20 }}>
-      <Button title="Add Coffee ($4.99)" onPress={handleAddCoffee} />
-      <Button title="Add Full Order" onPress={handleAddFullOrder} />
-
       {items.map((item, index) => (
-        <View key={index} style={{ flexDirection: 'row', padding: 10 }}>
-          <Text>{item.label}: ${formatAmount(item.amount)}</Text>
-          <Button title="Remove" onPress={() => removeItem(index)} />
-        </View>
+        <Text key={index}>{item.label}: ${formatAmount(item.amount)}</Text>
       ))}
-
-      <Text style={{ fontSize: 20, marginVertical: 10 }}>
-        Total: ${total.toFixed(2)}
-      </Text>
-
-      {error && (
-        <Text style={{ color: 'red', marginVertical: 10 }}>
-          Error: {error.message}
-        </Text>
-      )}
-
+      <Text style={{ fontSize: 20, marginVertical: 10 }}>Total: ${total.toFixed(2)}</Text>
+      {error && <Text style={{ color: 'red' }}>Error: {error.message}</Text>}
       {isProcessing ? (
         <ActivityIndicator size="large" />
       ) : (
         Platform.OS === 'ios' ? (
-          <ApplePayButton
-            buttonType="buy"
-            buttonStyle="black"
-            onPress={handlePay}
-            style={{ width: '100%', height: 48 }}
-          />
+          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} style={{ width: '100%', height: 48 }} />
         ) : (
-          <GooglePayButton
-            buttonType="buy"
-            theme="dark"
-            radius={4}
-            onPress={handlePay}
-            style={{ width: '100%', height: 48 }}
-          />
+          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={handlePay} style={{ width: '100%', height: 48 }} />
         )
       )}
     </View>
@@ -304,6 +283,8 @@ function CheckoutScreen() {
 
 export default CheckoutScreen
 ```
+
+`result.status` is `'success'` only when your server charged the order. On iOS, `onAuthorize` keeps the Apple Pay sheet open until your server answers, so the sheet shows the real outcome. On Android, Google Pay closes its sheet before `onAuthorize` runs; the callback still decides the `PaymentResult`, with the same timeout. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 

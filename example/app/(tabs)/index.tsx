@@ -27,6 +27,9 @@ export default function TabOneScreen() {
   const paymentServiceName = Platform.OS === "ios" ? "Apple Pay" : "Google Pay";
   const [simulatedServer, setSimulatedServer] =
     useState<SimulatedServerMode>("off");
+  // The mode the last payment ran with. In "off" mode nothing charged the
+  // token, so the screen must not call the payment successful.
+  const [paidWithServer, setPaidWithServer] = useState(false);
 
   // Initialize checkout hook
   const {
@@ -123,13 +126,18 @@ export default function TabOneScreen() {
 
   // Process payment
   const handlePayment = async () => {
+    const withServer = simulatedServer !== "off";
+    setPaidWithServer(withServer);
     const paymentResult = await startPayment();
 
     if (paymentResult?.status === "success") {
-      console.log("Payment successful:", paymentResult.token);
+      console.log("Payment authorized:", paymentResult.token);
+      const card = paymentResult.token?.paymentMethod.displayName ?? "your card";
       Alert.alert(
-        "Payment Successful!",
-        `Paid with ${paymentResult.token?.paymentMethod.displayName ?? "your card"}`,
+        withServer ? "Payment Successful!" : "Authorized (no server)",
+        withServer
+          ? `Charged ${card} on the simulated server`
+          : `Got a token for ${card}. Nothing charged it: send it to your server.`,
         [
           {
             text: "OK",
@@ -283,9 +291,12 @@ export default function TabOneScreen() {
 
       {result?.status === "success" && (
         <View style={styles.successBox}>
-          <Text style={styles.successTitle}>✅ Payment Successful!</Text>
+          <Text style={styles.successTitle}>
+            {paidWithServer ? "✅ Payment Successful!" : "Authorized (no server)"}
+          </Text>
           <Text style={styles.successMessage}>
-            Paid with {result.token?.paymentMethod.displayName ?? "your card"}
+            {paidWithServer ? "Charged " : "Token for "}
+            {result.token?.paymentMethod.displayName ?? "your card"}
           </Text>
         </View>
       )}

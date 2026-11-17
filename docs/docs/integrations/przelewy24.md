@@ -51,8 +51,8 @@ Implement a backend endpoint that:
 1. App displays wallet button (`ApplePayButton` on iOS, `GooglePayButton` on Android).
 2. User confirms payment in the native sheet.
 3. App receives `PaymentResult` (`status`, `token`).
-4. App sends token + amount/currency/order data to backend over HTTPS.
-5. Backend calls Przelewy24 with platform-appropriate payload mapping.
+4. App sends the token and order ID to backend over HTTPS.
+5. Backend looks up the order and calls Przelewy24 with its stored amount and platform-appropriate payload mapping.
 6. Backend verifies final status and returns checkout result to the app.
 
 ## Client implementation (React Native)
@@ -223,6 +223,7 @@ app.post('/payments/przelewy24/wallet', async (req, res) => {
 
   const p24Result = await przelewy24Client.createWalletPayment({
     wallet: platform === 'ios' ? 'APPLE_PAY' : 'GOOGLE_PAY',
+    // Stored in the currency's minor unit (grosze for PLN), not multiplied here.
     amountMinor: order.amountMinor,
     currency: order.currency,
     orderId: order.id,
@@ -240,7 +241,7 @@ app.post('/payments/przelewy24/wallet', async (req, res) => {
 
 - Always use HTTPS between app and backend.
 - Never log raw token payloads.
-- Validate amount/currency/order ownership server-side.
+- Take amount and currency from the server-side order, never from the request; check order ownership.
 - Use idempotency keys based on your order ID, not on `transactionId` or `token.transactionIdentifier`.
 - Treat provider callbacks/webhooks and verification as the source of final payment state.
 
