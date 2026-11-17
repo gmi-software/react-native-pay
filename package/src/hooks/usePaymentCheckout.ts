@@ -77,7 +77,9 @@ export interface UsePaymentCheckoutConfig {
 
   /**
    * Optional Apple Pay Merchant ID override.
-   * When omitted, iOS reads the Merchant ID from the app entitlements.
+   * When omitted, iOS reads the first Merchant ID in the app's
+   * Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, which the
+   * Expo plugin writes.
    */
   applePayMerchantIdentifier?: string
 

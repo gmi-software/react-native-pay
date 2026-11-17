@@ -182,27 +182,34 @@ For apps supporting both platforms:
 The easiest way to integrate payments - one hook handles everything:
 
 ```tsx
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   usePaymentCheckout,
   ApplePayButton,
   GooglePayButton,
   formatAmount,
 } from '@gmisoftware/react-native-pay'
-import { Platform, View, Text, Button, ActivityIndicator } from 'react-native'
+import { Platform, View, Text, ActivityIndicator } from 'react-native'
 
-function CheckoutScreen() {
+// An order your server created and priced, for example when the user opened
+// checkout. Use your own type. Render the screen with `key={order.id}`, so a
+// new order starts with an empty cart instead of the previous order's lines.
+type Order = {
+  id: string
+  lines: { label: string; amount: string }[]
+}
+
+function CheckoutScreen({ order }: { order: Order }) {
   const {
     // Payment availability
     isSupported,
     isCheckingStatus,
 
-    // Cart management
+    // Cart
     items,
     total,
-    addItem,
     addItems,
-    removeItem,
+    clearItems,
 
     // Payment processing
     startPayment,
@@ -212,36 +219,38 @@ function CheckoutScreen() {
     merchantName: 'Your Store',
     currencyCode: 'USD',
     countryCode: 'US',
+    // Charge on your server. It charges the order's stored amount, not one
+    // the app sends, and keys idempotency on the order ID, so a retry after
+    // a timeout can't charge twice.
+    onAuthorize: async (token) => {
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // `total` is what the sheet showed: the server rejects the charge
+        // if the order no longer matches it.
+        body: JSON.stringify({ token, orderId: order.id, total: formatAmount(total, 'USD') }),
+      })
+      return response.ok
+        ? { status: 'success' }
+        : { status: 'failure', error: 'Payment failed' }
+    },
   })
 
-  const handleAddCoffee = () => {
-    addItem('Coffee', 4.99)
-  }
-
-  const handleAddFullOrder = () => {
-    addItems([
-      { label: 'Coffee', amount: 4.99 },
-      { label: 'Sandwich', amount: 8.99 },
-      { label: 'Tax', amount: 1.20, type: 'final' }
-    ])
-  }
+  // The sheet shows the lines your server priced. startPayment() returns
+  // null for an empty cart, so fill it before the user taps pay.
+  useEffect(() => {
+    addItems(order.lines)
+    return clearItems
+  }, [order, addItems, clearItems])
 
   const handlePay = async () => {
     const result = await startPayment()
-
-    if (result?.status === 'success' && result.token) {
-      // Send result.token to your server for processing
-      await fetch('https://api.yourserver.com/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: result.token,
-          orderId: 'order_123', // your order, also your idempotency key
-        }),
-      })
+    if (result?.status === 'success') {
+      // Your server charged the payment: show your confirmation here.
     }
+    // 'failed': `error` is set, including when your server declined or
+    // could not be reached.
     // 'cancelled': the user closed the sheet, and `error` stays null.
-    // 'failed': `error` is set, and `result.code` says why.
   }
 
   if (isCheckingStatus) {
@@ -249,53 +258,23 @@ function CheckoutScreen() {
   }
 
   if (!isSupported) {
-    return (
-      <View>
-        <Text>Apple Pay or Google Pay is not available on this device</Text>
-      </View>
-    )
+    return <View><Text>Apple Pay / Google Pay is not available</Text></View>
   }
 
   return (
     <View style={{ padding: 20 }}>
-      <Button title="Add Coffee ($4.99)" onPress={handleAddCoffee} />
-      <Button title="Add Full Order" onPress={handleAddFullOrder} />
-
       {items.map((item, index) => (
-        <View key={index} style={{ flexDirection: 'row', padding: 10 }}>
-          <Text>{item.label}: ${formatAmount(item.amount)}</Text>
-          <Button title="Remove" onPress={() => removeItem(index)} />
-        </View>
+        <Text key={index}>{item.label}: ${formatAmount(item.amount)}</Text>
       ))}
-
-      <Text style={{ fontSize: 20, marginVertical: 10 }}>
-        Total: ${total.toFixed(2)}
-      </Text>
-
-      {error && (
-        <Text style={{ color: 'red', marginVertical: 10 }}>
-          Error: {error.message}
-        </Text>
-      )}
-
+      <Text style={{ fontSize: 20, marginVertical: 10 }}>Total: ${total.toFixed(2)}</Text>
+      {error && <Text style={{ color: 'red' }}>Error: {error.message}</Text>}
       {isProcessing ? (
         <ActivityIndicator size="large" />
       ) : (
         Platform.OS === 'ios' ? (
-          <ApplePayButton
-            buttonType="buy"
-            buttonStyle="black"
-            onPress={handlePay}
-            style={{ width: '100%', height: 48 }}
-          />
+          <ApplePayButton buttonType="buy" buttonStyle="black" onPress={handlePay} style={{ width: '100%', height: 48 }} />
         ) : (
-          <GooglePayButton
-            buttonType="buy"
-            theme="dark"
-            radius={4}
-            onPress={handlePay}
-            style={{ width: '100%', height: 48 }}
-          />
+          <GooglePayButton buttonType="buy" theme="dark" radius={4} onPress={handlePay} style={{ width: '100%', height: 48 }} />
         )
       )}
     </View>
@@ -304,6 +283,8 @@ function CheckoutScreen() {
 
 export default CheckoutScreen
 ```
+
+`result.status` is `'success'` only when your server charged the order. On iOS, `onAuthorize` keeps the Apple Pay sheet open until your server answers, so the sheet shows the real outcome. On Android, Google Pay closes its sheet before `onAuthorize` runs; the callback still decides the `PaymentResult`, with the same timeout. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 
@@ -537,7 +518,7 @@ interface PaymentResult extends PaymentDetails {
 interface PaymentToken {
   paymentMethod: PaymentMethod;
   transactionIdentifier?: string; // Apple's ID on iOS, missing on Android
-  paymentData: string; // Base64 encoded
+  paymentData: string; // iOS: base64 of Apple's payment data. Android: Google Pay's token as is
 }
 ```
 
@@ -802,7 +783,7 @@ interface PaymentResult extends PaymentDetails {
 interface PaymentToken {
   paymentMethod: PaymentMethod;
   transactionIdentifier?: string; // Apple's ID on iOS, missing on Android
-  paymentData: string; // Base64 encoded
+  paymentData: string; // iOS: base64 of Apple's payment data. Android: Google Pay's token as is
 }
 
 // Payment Method
@@ -1037,11 +1018,15 @@ const handleAddToCart = (product: { name: string; price: number }) => {
   checkout.addItem(product.name, product.price);
 };
 
-// Update quantity
-const handleUpdateQuantity = (index: number, quantity: number) => {
-  const item = checkout.items[index];
+// Update quantity: compute from the unit price, not the current amount
+const handleUpdateQuantity = (
+  index: number,
+  product: { name: string; price: number },
+  quantity: number
+) => {
   checkout.updateItem(index, {
-    amount: formatAmount(Number(item.amount) * quantity),
+    label: `${product.name} × ${quantity}`,
+    amount: formatAmount(product.price * quantity),
   });
 };
 
@@ -1059,34 +1044,7 @@ const handleClearCart = () => {
 
 ### Custom Payment Buttons
 
-Create your own styled buttons:
-
-```tsx
-import { Platform, Pressable, Text } from 'react-native'
-
-function CustomPayButton({ onPress }: { onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        backgroundColor: '#000',
-        padding: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-      }}
-    >
-      <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-        {Platform.OS === 'ios' ? '  Pay' : 'G Pay'}
-      </Text>
-    </Pressable>
-  )
-}
-
-// Use it with your handler, for example one that calls startPayment()
-const handlePayment = async () => {}
-
-<CustomPayButton onPress={handlePayment} />
-```
+Apple and Google require their own buttons to start a payment: don't draw your own "Apple Pay" or "G Pay" button. Use `ApplePayButton` and `GooglePayButton`, and pick the label and look with their `buttonType`, `buttonStyle`, `theme` and `radius` props. See Apple's [Apple Pay guidelines](https://developer.apple.com/design/human-interface-guidelines/apple-pay) and Google's [brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines).
 
 ### Charging Before the Sheet Closes
 
@@ -1136,33 +1094,40 @@ function useOrderPayment() {
 
 After receiving the payment token, process it on your server:
 
-#### Node.js + Stripe Example
+#### Node.js example
+
+The server looks up the amount from the order, never from the request, and keys idempotency on the order ID, so a retry can't charge twice. The token format depends on the platform and your gateway, so `chargeWithGateway` stands for your gateway's API:
 
 ```javascript
 // Backend API endpoint
 app.post("/process-payment", async (req, res) => {
-  const { token } = req.body;
+  const { token, orderId } = req.body;
 
   try {
-    // For Apple Pay
-    if (token.paymentData) {
-      const charge = await stripe.charges.create({
-        amount: 2999, // $29.99
-        currency: "usd",
-        source: token.paymentData, // Apple Pay token
-        description: "Payment from React Native Pay",
-      });
+    // The order, its amount and currency come from your database.
+    const order = await orders.findPayable(orderId, req.user.id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    // For Google Pay
-    // The token format depends on your gateway
+    const charge = await chargeWithGateway({
+      amount: order.amountMinor,
+      currency: order.currency,
+      // iOS: base64 of Apple's PKPaymentToken JSON.
+      // Android: Google Pay's tokenizationData.token for your gateway.
+      paymentData: token.paymentData,
+      idempotencyKey: `charge-${order.id}`,
+    });
 
+    await orders.markPaid(order.id, charge.id);
     res.json({ success: true, chargeId: charge.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 ```
+
+The app's `PaymentResult` is not proof of payment: your server is the source of truth for the amount and the charge. For Stripe, follow its [Apple Pay](https://docs.stripe.com/apple-pay) and [Google Pay](https://docs.stripe.com/google-pay) guides to turn the token into a payment; see also [Server processing](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 
@@ -1222,7 +1187,7 @@ app.post("/process-payment", async (req, res) => {
 ### Design Principles
 
 1. **Platform Abstraction** - Single API for both iOS and Android
-2. **Type Safety** - Full TypeScript coverage with runtime validation
+2. **Type Safety** - Full TypeScript coverage; payment amounts are checked at runtime
 3. **Performance** - Built with Nitro Modules for native speed
 4. **Developer Experience** - Simple hooks API with sensible defaults
 5. **Production Focused** - Designed around backend-controlled payment flows
@@ -1235,27 +1200,24 @@ app.post("/process-payment", async (req, res) => {
 
 #### Apple Pay button not showing
 
-- Verify merchant ID is correctly configured in Apple Developer Portal
-- Check that entitlements are properly set in your Xcode project
-- Ensure you've run `npx expo prebuild --clean`
-- Test on a real device (Simulator requires additional setup)
+`ApplePayButton` renders on iOS whatever the Apple Pay setup. If it's missing, your app hid it: check what `isSupported` and `hasActiveCard` returned.
 
-#### "Cannot make payments" error
+#### The payment fails with `CONFIGURATION`
 
+- Verify merchant ID is correctly configured in Apple Developer Portal and matches exactly
+- "No Apple Pay merchant identifier configured": set `merchantIdentifier` in the Expo plugin and run `npx expo prebuild --clean`, or add the Info.plist key `ReactNativePayApplePayMerchantIdentifiers` in a bare app
 - Add a card to Apple Wallet on your test device
-- Verify your merchant ID matches exactly
-- Check that Apple Pay is enabled in Settings > Wallet & Apple Pay
 
 ### Android Issues
 
 #### Google Pay button not showing
 
-- Verify Google Pay is enabled in your AndroidManifest.xml
-- Check that `enableGooglePay: true` is set in your plugin config
-- Ensure Google Play Services is installed on the device
-- Test with a real device (Emulator needs Google Play Services)
+`GooglePayButton` renders on Android whatever the Google Pay setup. If it's missing, your app hid it: check what `isSupported` and `hasActiveCard` returned.
 
-#### "Google Pay unavailable" error
+#### `isSupported` or `hasActiveCard` is `false` on Android
+
+- Check that `enableGooglePay: true` is set in your plugin config
+- Ensure Google Play Services is installed on the device (an emulator needs a Play image)
 
 - Add a card to Google Pay on your test device
 - For testing, use `googlePayEnvironment: 'TEST'`
@@ -1270,7 +1232,7 @@ app.post("/process-payment", async (req, res) => {
 rm -rf node_modules
 rm -rf ios/Pods ios/build
 rm -rf android/build android/app/build
-npm install
+bun install
 cd ios && pod install
 ```
 
@@ -1279,8 +1241,8 @@ cd ios && pod install
 ```bash
 # Regenerate types
 cd package
-npm run typescript
-npm run specs
+bun run typecheck
+bun run specs
 ```
 
 ---
@@ -1298,7 +1260,7 @@ Run the example:
 
 ```bash
 cd example
-npm install
+bun install
 npx expo prebuild
 npx expo run:ios
 npx expo run:android
@@ -1318,12 +1280,11 @@ git clone https://github.com/gmi-software/react-native-pay.git
 cd react-native-pay
 
 # Install dependencies
-npm install
-cd package && npm install
+bun install
+cd package && bun install
 
 # Generate Nitro bindings
-cd package
-npm run specs
+bun run specs
 ```
 
 ### Code Style
@@ -1354,7 +1315,6 @@ npm run specs
 - [x] Shipping address collection
 - [ ] Multi-currency support
 - [ ] Payment request validation
-- [ ] Automated testing suite
 - [ ] Detailed transaction logging
 - [ ] Web support (via Payment Request API)
 

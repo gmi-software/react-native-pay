@@ -37,7 +37,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v22.13 or higher, as Expo SDK 57 requires)
 - bun
 - React Native development environment
 - For iOS: Xcode and CocoaPods

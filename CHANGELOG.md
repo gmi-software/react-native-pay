@@ -18,6 +18,13 @@ All notable changes to this project are documented in this file.
   `payServiceStatus`, `startPayment`, `isPaymentInProgress` and `openPaymentSetup`, typed as the
   new `PaymentHandlerMethods`. Code that used `HybridObject` members such as `name` or `dispose`,
   or typed it as `PaymentHandler`, can use the native object from the new `getPaymentHandler()`.
+- **Android: the library depends on `play-services-wallet` 20.0.0** (was 19.3.0), and no longer
+  uses the deprecated `AutoResolveHelper`. The Google Pay sheet's result is read with Google's
+  `TaskResultContracts.GetPaymentDataResult`. A sheet result code Google Pay doesn't document now
+  fails with `code: 'PROVIDER_ERROR'` instead of `'UNKNOWN'`.
+- **iOS: the missing merchant ID error says how to fix it.** It still starts with "No Apple Pay
+  merchant identifier configured", and now names the Info.plist key
+  `ReactNativePayApplePayMerchantIdentifiers` and the `applePayMerchantIdentifier` override.
 
 ### Fixed
 
@@ -26,6 +33,14 @@ All notable changes to this project are documented in this file.
   button built before the props arrived stayed visible without an `onPress`. Every Google Pay
   button now calls the current `onPress`, and `GooglePayButton` warns about an invalid value in
   development.
+
+### Docs
+
+- The README backend sample no longer reads `charge` out of scope, and takes the amount from the
+  order on the server. The Przelewy24 client gets the amount from the server and charges in
+  `onAuthorize`.
+- The docs say iOS reads the merchant ID from the Info.plist key the Expo plugin writes, not from the
+  entitlements, and correct the token encoding, troubleshooting, compatibility and contributing pages.
 
 ## 0.1.0 — 2026-10-27
 

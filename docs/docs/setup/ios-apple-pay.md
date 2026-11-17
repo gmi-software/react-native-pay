@@ -16,7 +16,7 @@ In `app.json` (or `app.config.js`), add the plugin with your Merchant ID:
 }
 ```
 
-The runtime API reads this Merchant ID from the native app entitlements automatically. You only need `applePayMerchantIdentifier` in code if you want to override the configured value at runtime.
+The plugin also writes the Merchant ID to the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, and the runtime API reads the first ID from there. You only need `applePayMerchantIdentifier` in code if you want to override it at runtime. Without either, the payment fails with `code: 'CONFIGURATION'` and an error starting "No Apple Pay merchant identifier configured".
 
 ## 2. Apple Developer setup
 
@@ -71,5 +71,6 @@ npx expo run:ios
 
 ## Troubleshooting
 
-- **Button not showing / “Cannot make payments”:** Ensure Merchant ID matches exactly, entitlements are present after prebuild, and the device has Wallet & Apple Pay set up with a valid card.
+- **Button not showing:** `ApplePayButton` renders on iOS whatever the setup, so check the availability result your app hides it on.
+- **Payment fails with `CONFIGURATION`:** Ensure the Merchant ID matches exactly and is in the app after `npx expo prebuild --clean`.
 - See [Troubleshooting](/docs/troubleshooting#ios-apple-pay) for more.

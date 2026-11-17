@@ -84,7 +84,7 @@ const result = await HybridPaymentHandler.startPayment(request, {
 
 See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes) for the timeout and Android behavior.
 
-On iOS, the merchant ID is resolved from the app entitlements by default. Use `applePayMerchantIdentifier` only when you need to override the configured value at runtime.
+On iOS, the merchant ID defaults to the first Merchant ID in the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, which the [Expo plugin](/docs/setup/expo-plugin) writes from `merchantIdentifier` (in a bare app, add it yourself: see [Bare React Native](/docs/setup/bare-react-native)). Use `applePayMerchantIdentifier` only when you need to override it at runtime.
 
 On iOS, the Apple Pay sheet lists your `paymentItems` and then a total labelled with `merchantName` ("Pay Your Store"). The library adds that total for you, so don't add your own "Total" item. Without `merchantName`, the total uses your app's display name.
 

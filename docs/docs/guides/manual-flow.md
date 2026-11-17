@@ -38,7 +38,7 @@ const paymentRequest = createPaymentRequest({
 })
 ```
 
-`createPaymentRequest` throws if the amount is invalid (see [`PaymentAmount`](/docs/api/types#paymentamount)). For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest` to `startPayment`, which applies the same checks with `normalizePaymentRequest` and resolves an invalid request with `code: 'CONFIGURATION'`. On iOS, the Merchant ID is read from the app entitlements unless you explicitly pass `applePayMerchantIdentifier`.
+`createPaymentRequest` throws if the amount is invalid (see [`PaymentAmount`](/docs/api/types#paymentamount)). For multiple line items, build `paymentItems` yourself and pass the full `PaymentRequest` to `startPayment`, which applies the same checks with `normalizePaymentRequest` and resolves an invalid request with `code: 'CONFIGURATION'`. On iOS, the Merchant ID is read from the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, which the Expo plugin writes, unless you pass `applePayMerchantIdentifier`.
 
 ## 3. Handle the button press
 

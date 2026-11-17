@@ -84,14 +84,6 @@ npx expo run:ios
 npx expo run:android
 ```
 
-Or from the root (if scripts are set up):
-
-```bash
-bun run ios
-# or
-bun run android
-```
-
 ## What to copy from the example
 
 Use the checkout screen in the example app as a reference for:
@@ -101,7 +93,7 @@ Use the checkout screen in the example app as a reference for:
 3. Renders “Quick Add” buttons that call `addItems` or `addItem`.
 4. Displays the cart (items + total) and a “Clear” action.
 5. Renders **ApplePayButton** on iOS and **GooglePayButton** on Android with `onPress={handlePayment}`.
-6. On successful payment, shows an alert and calls `reset()` and `clearItems()`.
+6. On success, shows an alert and calls `reset()` and `clearItems()`. The **Simulated Server** toggle stands in for your backend's `onAuthorize`: in `off` mode no server charges the token, so the screen reports "Authorized (no server)", never a successful payment.
 
 Copy these patterns into your app: config setup, cart handling, and button usage.
 
