@@ -85,7 +85,7 @@ function PaymentButton({
     />
   ) : (
     <GooglePayButton
-      buttonType="subscribe"
+      buttonType="buy"
       theme="dark"
       onPress={handlePayment}
     />

@@ -19,7 +19,7 @@ This package presents native payment sheets and returns tokens. Your backend and
 
 </div>
 
-> **What you can sell:** use Apple Pay and Google Pay only for physical goods and for services used outside the app. Digital content, subscriptions and in-app features must use In-App Purchase on iOS ([App Review Guideline 3.1.1](https://developer.apple.com/app-store/review/guidelines/#in-app-purchase), [3.1.3(e)](https://developer.apple.com/app-store/review/guidelines/#payments)) and Google Play Billing on Android ([Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738)). Apple Pay apps must also show all material purchase information before the sale and, for recurring payments, disclose the renewal term, what is provided, the charges and how to cancel ([Guideline 4.9](https://developer.apple.com/app-store/review/guidelines/#apple-pay)). See [What you can sell](https://gmi-software.github.io/react-native-pay/docs/intro#what-you-can-sell-with-apple-pay-and-google-pay).
+> **What you can sell:** use Apple Pay and Google Pay only for physical goods and for services used outside the app. Digital content, subscriptions to digital content and in-app features must use In-App Purchase on iOS ([App Review Guideline 3.1.1](https://developer.apple.com/app-store/review/guidelines/#in-app-purchase), [3.1.3(e)](https://developer.apple.com/app-store/review/guidelines/#payments); real-time person-to-person services are an exception under [3.1.3(d)](https://developer.apple.com/app-store/review/guidelines/#payments)) and Google Play Billing on Android ([Payments policy](https://support.google.com/googleplay/android-developer/answer/9858738)). Apple Pay apps must also show all material purchase information before the sale and, for recurring payments, disclose the renewal term, what is provided, the charges and how to cancel ([Guideline 4.9](https://developer.apple.com/app-store/review/guidelines/#apple-pay)). See [What you can sell](https://gmi-software.github.io/react-native-pay/docs/intro#what-you-can-sell-with-apple-pay-and-google-pay).
 
 ---
 
@@ -1000,7 +1000,7 @@ function PaymentButton() {
     />
   ) : (
     <GooglePayButton
-      buttonType="subscribe"
+      buttonType="buy"
       theme="dark"
       onPress={handlePayment}
     />

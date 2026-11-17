@@ -93,11 +93,11 @@ usePaymentCheckout({
 })
 ```
 
-Google can also report whether it has already verified the card and the cardholder ([`assuranceDetailsRequired`](https://developers.google.com/pay/api/android/reference/request-objects#assurance-details-specifications)), so you can skip the step-up when both checks pass. This library does not request it yet.
+Google can also report whether it has already verified the card and the cardholder ([`assuranceDetailsRequired`](https://developers.google.com/pay/api/android/reference/response-objects#assurance-details-specifications)), so you can skip the step-up when both checks pass. This library does not request it yet.
 
 ## The `donate` button
 
-`GooglePayButton` with `buttonType="donate"` is only for nonprofits that Google has validated. See the [Google Pay brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines). Use another button type until Google approves your organization.
+`GooglePayButton` with `buttonType="donate"` is only for nonprofits that Google has validated. See the [Google Pay brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines). Get Google's approval before you collect donations with Google Pay.
 
 ## Troubleshooting
 
