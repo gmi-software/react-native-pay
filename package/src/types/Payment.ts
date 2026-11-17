@@ -162,11 +162,14 @@ export interface PaymentToken {
   // Apple's transaction identifier on iOS. Missing on Android: Google Pay
   // doesn't return one.
   transactionIdentifier?: string
-  paymentData: string // Base64 encoded Data from PKPaymentToken
+  // iOS: base64 of the PKPaymentToken payment data. Android: Google Pay's
+  // tokenizationData.token, as is (gateway token JSON or encrypted payload).
+  paymentData: string
 }
 export interface PaymentRequest {
   // Optional Apple Pay override for apps with multiple configured merchant IDs.
-  // When omitted, iOS resolves the first configured entitlement automatically.
+  // When omitted, iOS reads the first ID in the Info.plist key
+  // `ReactNativePayApplePayMerchantIdentifiers`, which the Expo plugin writes.
   applePayMerchantIdentifier?: string
   // Business name shown to the payer. iOS labels the Apple Pay total with it
   // ("Pay <merchantName>"); both platforms fall back to the app's name.

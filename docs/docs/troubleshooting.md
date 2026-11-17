@@ -28,7 +28,7 @@ ending in `folly::dynamic::get<bool>()` / `BaseViewProps`. Linking the library i
 enough; no pay button needs to be on screen.
 
 Cause: `NitroPay.podspec` defined `FOLLY_NO_CONFIG`, mismatching React Native core's
-folly config. **Fixed after 0.0.16** — upgrade, then rebuild:
+folly config. **Fixed in 0.0.17** — upgrade, then rebuild:
 
 ```bash
 npx expo prebuild --clean
@@ -36,12 +36,13 @@ npx expo prebuild --clean
 
 ### Apple Pay button not showing
 
+`ApplePayButton` renders on iOS whatever the Apple Pay setup, and renders nothing on Android. If it's missing on iOS, your app hid it: check what `isSupported` and `hasActiveCard` returned (see [Check availability](/docs/guides/availability)). On a device without Wallet set up, `isSupported` can be `true` while `hasActiveCard` is `false`.
+
+### The Apple Pay sheet doesn't open or the payment fails
+
 - **Merchant ID mismatch:** The Expo plugin `merchantIdentifier` must exactly match your Apple Developer Merchant ID.
-- **Missing entitlement/capability:** Confirm "Apple Pay Payment Processing" is enabled in Xcode and linked to the same Merchant ID.
-- **Wrong device context:** Prefer a real iPhone with Wallet configured.
-
-### "Cannot make payments" or payment sheet fails
-
+- **Missing capability:** Confirm "Apple Pay Payment Processing" is enabled in Xcode and linked to the same Merchant ID.
+- **No merchant ID in the app:** `code: 'CONFIGURATION'` with an error starting "No Apple Pay merchant identifier configured" means neither `applePayMerchantIdentifier` nor the Info.plist key `ReactNativePayApplePayMerchantIdentifiers` is set. The Expo plugin writes the key; in a bare app, see [Bare React Native](/docs/setup/bare-react-native).
 - Add a valid card in **Settings -> Wallet & Apple Pay**.
 - Confirm the App ID has Apple Pay enabled and linked to your Merchant ID.
 - For production, ensure your Payment Processing Certificate is created and installed in your gateway.
@@ -50,7 +51,7 @@ npx expo prebuild --clean
 
 `startPayment` resolves with `status: 'cancelled'` whenever the sheet closes before the user authorizes. PassKit doesn't tell the app why the sheet closed, so a sheet that closes by itself, or barely appears, reports the same cancel. One reported cause is a merchant ID that Apple Pay isn't set up for:
 
-- The merchant ID in the request, or the first one in your app's entitlements, must be listed under the **Apple Pay Payment Processing** capability in Xcode and in your App ID.
+- The merchant ID in the request, or the first one in the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, must be listed under the **Apple Pay Payment Processing** capability in Xcode and in your App ID.
 - Rebuild after changing the Expo plugin's `merchantIdentifier`: `npx expo prebuild --clean`.
 
 See [Apple Pay button not showing](#apple-pay-button-not-showing) for the full checklist.
@@ -74,11 +75,12 @@ Use only supported Apple button values:
 
 ### Google Pay button not showing
 
+`GooglePayButton` renders on Android whatever the Google Pay setup, and renders nothing on iOS. If it's missing on Android, your app hid it: check what `isSupported` and `hasActiveCard` returned (see [Check availability](/docs/guides/availability)).
+
+### `isSupported` or `hasActiveCard` is `false` on Android
+
 - Set `enableGooglePay: true` in your Expo plugin config.
 - Ensure Google Play Services is available (real device or Play-enabled emulator).
-- Render only the Android button on Android (`Platform.OS === 'android'`).
-
-### "Google Pay unavailable"
 
 - Add at least one card in Google Pay on the device.
 - Use `googlePayEnvironment: 'TEST'` for test flows.

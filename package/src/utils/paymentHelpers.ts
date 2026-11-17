@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { createPaymentRequest, calculateTotal } from 'react-native-pay'
+ * import { createPaymentRequest, calculateTotal } from '@gmisoftware/react-native-pay'
  *
  * const request = createPaymentRequest({
  *   amount: 29.99,
