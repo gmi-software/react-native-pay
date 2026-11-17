@@ -4,7 +4,6 @@ import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 /**
  * Builder for Google Pay API request objects
@@ -65,7 +64,8 @@ object GooglePayRequestBuilder {
             put("allowedPaymentMethods", JSONArray().apply {
                 put(createCardPaymentMethod(request, environment, requested, cardParameters))
             })
-            put("transactionInfo", createTransactionInfo(request, requested.shippingMethod))
+            val (transactionKey, transaction) = createTransaction(request, requested.shippingMethod)
+            put(transactionKey, transaction)
             if (requested.email) {
                 put("emailRequired", true)
             }
@@ -201,22 +201,31 @@ object GooglePayRequestBuilder {
     }
     
     /**
-     * Creates transaction info. The shipping method is charged as its own line.
+     * The transaction object and its key: `transactionInfo`, or the
+     * recurring, deferred or automatic reload object that replaces it. The
+     * shipping method is charged as its own line.
      */
-    private fun createTransactionInfo(
+    private fun createTransaction(
         request: PaymentRequest,
         shippingMethod: ShippingMethod?
-    ): JSONObject {
+    ): Pair<String, JSONObject> {
         // Checked without shipping, like on iOS, where the payer can pick any method.
         val itemsTotal = PaymentAmounts.total(request.paymentItems)
         require(itemsTotal.signum() >= 0) {
             "Payment total must not be negative, got ${itemsTotal.toPlainString()}"
         }
         val shippingAmount = shippingMethod?.let { PaymentAmounts.parse(it) } ?: BigDecimal.ZERO
-        val totalAmount = itemsTotal.add(shippingAmount)
+        val totalPrice = PaymentAmounts.formatPrice(itemsTotal.add(shippingAmount))
+        val displayItems = if (request.paymentItems.isNotEmpty() || shippingMethod != null) {
+            createDisplayItems(request.paymentItems, shippingMethod)
+        } else {
+            null
+        }
+
+        MerchantTokenTransactions.create(request, totalPrice, displayItems)?.let { return it }
+
         val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
-        
-        return JSONObject().apply {
+        return "transactionInfo" to JSONObject().apply {
             put(
                 "totalPriceStatus",
                 if (hasPendingItems)
@@ -224,15 +233,11 @@ object GooglePayRequestBuilder {
                 else
                     PaymentConstants.TOTAL_PRICE_STATUS_FINAL
             )
-            put("totalPrice", formatPrice(totalAmount))
+            put("totalPrice", totalPrice)
             put("totalPriceLabel", PaymentConstants.TOTAL_PRICE_LABEL_DEFAULT)
             put("currencyCode", request.currencyCode)
             put("countryCode", request.countryCode)
-            
-            // Add display items if present
-            if (request.paymentItems.isNotEmpty() || shippingMethod != null) {
-                put("displayItems", createDisplayItems(request.paymentItems, shippingMethod))
-            }
+            displayItems?.let { put("displayItems", it) }
         }
     }
     
@@ -248,7 +253,7 @@ object GooglePayRequestBuilder {
                 put(JSONObject().apply {
                     put("label", item.label)
                     put("type", PaymentConstants.LINE_ITEM_TYPE)
-                    put("price", formatPrice(PaymentAmounts.parse(item)))
+                    put("price", PaymentAmounts.googlePayPrice(item))
                     put(
                         "status",
                         if (item.type == PaymentItemType.PENDING)
@@ -262,26 +267,10 @@ object GooglePayRequestBuilder {
                 put(JSONObject().apply {
                     put("label", method.label)
                     put("type", PaymentConstants.LINE_ITEM_TYPE)
-                    put("price", formatPrice(PaymentAmounts.parse(method)))
+                    put("price", PaymentAmounts.googlePayPrice(method))
                     put("status", PaymentConstants.DISPLAY_ITEM_STATUS_FINAL)
                 })
             }
-        }
-    }
-
-    /**
-     * Google Pay accepts whole amounts or exactly two decimal places
-     * (`^[0-9]+(\.[0-9][0-9])?$` for the total).
-     */
-    private fun formatPrice(amount: BigDecimal): String {
-        val scale = if (amount.scale() <= 0) 0 else 2
-        return try {
-            amount.setScale(scale, RoundingMode.UNNECESSARY).toPlainString()
-        } catch (e: ArithmeticException) {
-            throw IllegalArgumentException(
-                "Google Pay accepts at most two decimal places, got ${amount.toPlainString()}",
-                e
-            )
         }
     }
 }

@@ -376,7 +376,7 @@ interface PaymentDetails {
 
 ## Recurring and later payments
 
-Set at most one of these on `PaymentRequest`. Use them with `HybridPaymentHandler.startPayment`; see [Subscriptions and later payments](/docs/guides/merchant-tokens) for examples and the validation rules. Android support is in progress ([#86](https://github.com/gmi-software/react-native-pay/issues/86)); until then Android ignores them.
+Set at most one of these on `PaymentRequest`. Use them with `HybridPaymentHandler.startPayment`; see [Subscriptions and later payments](/docs/guides/merchant-tokens) for examples and the validation rules. On Android they become Google Pay's Merchant Initiated Transactions; see [On Android](/docs/guides/merchant-tokens#on-android).
 
 ```ts no-check
 // Shared by all three
