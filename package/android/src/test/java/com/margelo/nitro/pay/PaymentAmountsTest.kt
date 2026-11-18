@@ -9,10 +9,10 @@ import java.math.BigDecimal
 class PaymentAmountsTest {
 
     private fun item(amount: Double) =
-        PaymentItem("Item", PaymentAmount.create(amount), PaymentItemType.FINAL)
+        PaymentItem("Item", PaymentAmount.create(amount), PaymentItemType.FINAL, null)
 
     private fun item(amount: String) =
-        PaymentItem("Item", PaymentAmount.create(amount), PaymentItemType.FINAL)
+        PaymentItem("Item", PaymentAmount.create(amount), PaymentItemType.FINAL, null)
 
     @Test
     fun parse_readsStringsExactly() {

@@ -25,13 +25,14 @@ Google Pay accepts at most two decimal places, so on Android a three-decimal amo
 
 ## PaymentItem
 
-A single line item (label, amount, type).
+A single line item (label, amount, type, and an optional kind).
 
 ```ts no-check
 interface PaymentItem {
   label: string
   amount: PaymentAmount // number | string
   type: 'final' | 'pending'
+  kind?: 'subtotal' | 'tax' | 'discount' // Android only
 }
 ```
 
@@ -40,7 +41,19 @@ interface PaymentItem {
 - **final** — Confirmed amount (e.g. product price, tax).
 - **pending** — Estimate (e.g. shipping that may change).
 
-If any item is `pending`, the total is an estimate too: Google Pay receives `totalPriceStatus: 'ESTIMATED'` and Apple Pay marks the total summary item as `.pending`. Every item is sent to Google Pay as a `LINE_ITEM` display item, with `status` set to `FINAL` or `PENDING`.
+If any item is `pending`, the total is an estimate too: Google Pay receives `totalPriceStatus: 'ESTIMATED'` and Apple Pay marks the total summary item as `.pending`. Each item is sent to Google Pay as a display item with `status` set to `FINAL` or `PENDING`.
+
+`kind` is exported as `PaymentItemKind`. Google Pay receives it as the display item's type: `'subtotal'` as `SUBTOTAL`, `'tax'` as `TAX` and `'discount'` as `DISCOUNT`. An item without `kind` is a `LINE_ITEM`, and the selected [shipping method](#shippingmethod) is a `SHIPPING_OPTION`. Give a discount a negative amount: `kind` only changes how Google Pay labels the line, not how it is added to the total. iOS ignores `kind`. Any other value throws before the payment starts.
+
+```ts
+import type { PaymentItem } from '@gmisoftware/react-native-pay'
+
+const items: PaymentItem[] = [
+  { label: 'Coffee beans', amount: '18.00', type: 'final' },
+  { label: 'Coupon', amount: '-3.00', type: 'final', kind: 'discount' },
+  { label: 'VAT', amount: '3.45', type: 'final', kind: 'tax' },
+]
+```
 
 ---
 
@@ -52,6 +65,7 @@ Full request passed to the native layer (or to `HybridPaymentHandler.startPaymen
 interface PaymentRequest {
   applePayMerchantIdentifier?: string
   merchantName?: string
+  totalLabel?: string              // Google Pay total label, default 'Total'
   countryCode: string              // ISO 3166-1 alpha-2, upper case: 'US'
   currencyCode: string             // ISO 4217, upper case: 'USD'
   paymentItems: PaymentItem[]
@@ -81,6 +95,8 @@ On iOS, `applePayMerchantIdentifier` is optional. Without it, iOS uses the first
 Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an Android release build logs a warning once per app run from `normalizePaymentRequest`, which `usePaymentCheckout`, `HybridPaymentHandler.startPayment` and `createPaymentRequest` run before a payment. `payServiceStatus`, and the raw handler from `getPaymentHandler()`, log nothing.
 
 `merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
+
+`totalLabel` labels the total in the Google Pay sheet, for example `'Razem'` for a Polish sheet. It defaults to `'Total'` and must not be blank. Android only: iOS labels the total with `merchantName`. Google Pay shows no total label for `recurring`, `deferred` and `automaticReload` payments, so it has no effect on them.
 
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
 

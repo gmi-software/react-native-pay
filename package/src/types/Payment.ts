@@ -7,6 +7,13 @@ import type { CNContact, PaymentContact } from './Contact'
 
 export type PaymentItemType = 'final' | 'pending'
 
+/**
+ * What a payment item is, for Google Pay's sheet. Android only; iOS shows
+ * every item the same way. Give a discount a negative amount.
+ * @see PaymentItem.kind
+ */
+export type PaymentItemKind = 'subtotal' | 'tax' | 'discount'
+
 export type PaymentMethodType =
   | 'unknown'
   | 'debit'
@@ -124,6 +131,11 @@ export interface PaymentItem {
   label: string
   amount: PaymentAmount
   type: PaymentItemType
+  /**
+   * Sent to Google Pay as the display item's type (`SUBTOTAL`, `TAX` or
+   * `DISCOUNT`). Omit it for a regular line (`LINE_ITEM`). Android only.
+   */
+  kind?: PaymentItemKind
 }
 
 /**
@@ -288,6 +300,13 @@ export interface PaymentRequest {
   // Business name shown to the payer. iOS labels the Apple Pay total with it
   // ("Pay <merchantName>"); both platforms fall back to the app's name.
   merchantName?: string
+  /**
+   * Labels the total in the Google Pay sheet, for example `'Razem'`.
+   * Defaults to `'Total'`. Android only: iOS labels the total with
+   * `merchantName`. Google Pay shows no total label for `recurring`,
+   * `deferred` and `automaticReload` payments, so it has no effect there.
+   */
+  totalLabel?: string
   countryCode: string
   currencyCode: string
   paymentItems: PaymentItem[]

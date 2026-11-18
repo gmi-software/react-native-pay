@@ -86,6 +86,39 @@ class GooglePayRequestBuilderTest {
     }
 
     @Test
+    fun itemKinds_mapToGooglePayDisplayItemTypes() {
+        val json = build(
+            paymentRequest(
+                arrayOf(
+                    item("Coffee", "10.00"),
+                    item("Subtotal", "10.00", kind = PaymentItemKind.SUBTOTAL),
+                    item("Coupon", "-2.00", kind = PaymentItemKind.DISCOUNT),
+                    item("VAT", "1.84", kind = PaymentItemKind.TAX)
+                )
+            )
+        )
+
+        assertEquals(
+            listOf("LINE_ITEM", "SUBTOTAL", "DISCOUNT", "TAX"),
+            json.displayItems().map { it.getString("type") }
+        )
+    }
+
+    @Test
+    fun totalLabel_defaultsToTotal() {
+        val json = build(paymentRequest(arrayOf(item("Coffee", 4.99))))
+
+        assertEquals("Total", json.getJSONObject("transactionInfo").getString("totalPriceLabel"))
+    }
+
+    @Test
+    fun totalLabel_usesTheRequestValue() {
+        val json = build(paymentRequest(arrayOf(item("Kawa", 4.99)), totalLabel = "Razem"))
+
+        assertEquals("Razem", json.getJSONObject("transactionInfo").getString("totalPriceLabel"))
+    }
+
+    @Test
     fun displayItemTypeIsNeverAStatusValue() {
         val json = build(
             paymentRequest(arrayOf(item("Shipping", 5.0, PaymentItemType.PENDING)))
@@ -321,13 +354,13 @@ class GooglePayRequestBuilderTest {
     )
 
     @Test
-    fun shippingMethods_chargeTheFirstMethodAsALineItem() {
+    fun shippingMethods_chargeTheFirstMethodAsAShippingOption() {
         val json = build(paymentRequest(arrayOf(item("Beans", "18.00")), shippingMethods = shippingMethods))
 
         val items = json.displayItems()
         assertEquals(listOf("Beans", "Standard"), items.map { it.getString("label") })
         assertEquals(listOf("18.00", "4.50"), items.map { it.getString("price") })
-        assertEquals(listOf("LINE_ITEM", "LINE_ITEM"), items.map { it.getString("type") })
+        assertEquals(listOf("LINE_ITEM", "SHIPPING_OPTION"), items.map { it.getString("type") })
         assertEquals("FINAL", items[1].getString("status"))
         assertEquals("22.50", json.totalPrice())
         assertEquals("FINAL", json.totalPriceStatus())

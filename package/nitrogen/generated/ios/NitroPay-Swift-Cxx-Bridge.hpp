@@ -56,6 +56,8 @@ namespace margelo::nitro::pay { struct PaymentContact; }
 namespace margelo::nitro::pay { struct PaymentDetails; }
 // Forward declaration of `PaymentErrorCode` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentErrorCode; }
+// Forward declaration of `PaymentItemKind` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentItemKind; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
 // Forward declaration of `PaymentItem` to properly resolve imports.
@@ -115,6 +117,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentDetails.hpp"
 #include "PaymentErrorCode.hpp"
 #include "PaymentItem.hpp"
+#include "PaymentItemKind.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentMethodType.hpp"
@@ -550,6 +553,21 @@ namespace margelo::nitro::pay::bridge::swift {
   Func_void_PaymentResult create_Func_void_PaymentResult(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_PaymentResult_Wrapper wrap_Func_void_PaymentResult(Func_void_PaymentResult value) noexcept {
     return Func_void_PaymentResult_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<PaymentItemKind>
+  /**
+   * Specialized version of `std::optional<PaymentItemKind>`.
+   */
+  using std__optional_PaymentItemKind_ = std::optional<PaymentItemKind>;
+  inline std::optional<PaymentItemKind> create_std__optional_PaymentItemKind_(const PaymentItemKind& value) noexcept {
+    return std::optional<PaymentItemKind>(value);
+  }
+  inline bool has_value_std__optional_PaymentItemKind_(const std::optional<PaymentItemKind>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PaymentItemKind get_std__optional_PaymentItemKind_(const std::optional<PaymentItemKind>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::vector<PaymentItem>

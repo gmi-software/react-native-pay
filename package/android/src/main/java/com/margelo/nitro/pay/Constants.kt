@@ -32,6 +32,10 @@ object PaymentConstants {
     const val TOTAL_PRICE_STATUS_ESTIMATED = "ESTIMATED"
     const val TOTAL_PRICE_LABEL_DEFAULT = "Total"
     const val LINE_ITEM_TYPE = "LINE_ITEM"
+    const val SUBTOTAL_TYPE = "SUBTOTAL"
+    const val TAX_TYPE = "TAX"
+    const val DISCOUNT_TYPE = "DISCOUNT"
+    const val SHIPPING_OPTION_TYPE = "SHIPPING_OPTION"
     const val DISPLAY_ITEM_STATUS_FINAL = "FINAL"
     const val DISPLAY_ITEM_STATUS_PENDING = "PENDING"
     

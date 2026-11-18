@@ -30,10 +30,14 @@
 
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
+// Forward declaration of `PaymentItemKind` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentItemKind; }
 
 #include <string>
 #include <variant>
 #include "PaymentItemType.hpp"
+#include "PaymentItemKind.hpp"
+#include <optional>
 
 namespace margelo::nitro::pay {
 
@@ -45,10 +49,11 @@ namespace margelo::nitro::pay {
     std::string label     SWIFT_PRIVATE;
     std::variant<double, std::string> amount     SWIFT_PRIVATE;
     PaymentItemType type     SWIFT_PRIVATE;
+    std::optional<PaymentItemKind> kind     SWIFT_PRIVATE;
 
   public:
     PaymentItem() = default;
-    explicit PaymentItem(std::string label, std::variant<double, std::string> amount, PaymentItemType type): label(label), amount(amount), type(type) {}
+    explicit PaymentItem(std::string label, std::variant<double, std::string> amount, PaymentItemType type, std::optional<PaymentItemKind> kind): label(label), amount(amount), type(type), kind(kind) {}
 
   public:
     friend bool operator==(const PaymentItem& lhs, const PaymentItem& rhs) = default;
@@ -66,7 +71,8 @@ namespace margelo::nitro {
       return margelo::nitro::pay::PaymentItem(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "label"))),
         JSIConverter<std::variant<double, std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "amount"))),
-        JSIConverter<margelo::nitro::pay::PaymentItemType>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type")))
+        JSIConverter<margelo::nitro::pay::PaymentItemType>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type"))),
+        JSIConverter<std::optional<margelo::nitro::pay::PaymentItemKind>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "kind")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PaymentItem& arg) {
@@ -74,6 +80,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "label"), JSIConverter<std::string>::toJSI(runtime, arg.label));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "amount"), JSIConverter<std::variant<double, std::string>>::toJSI(runtime, arg.amount));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "type"), JSIConverter<margelo::nitro::pay::PaymentItemType>::toJSI(runtime, arg.type));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "kind"), JSIConverter<std::optional<margelo::nitro::pay::PaymentItemKind>>::toJSI(runtime, arg.kind));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -87,6 +94,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "label")))) return false;
       if (!JSIConverter<std::variant<double, std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "amount")))) return false;
       if (!JSIConverter<margelo::nitro::pay::PaymentItemType>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::pay::PaymentItemKind>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "kind")))) return false;
       return true;
     }
   };

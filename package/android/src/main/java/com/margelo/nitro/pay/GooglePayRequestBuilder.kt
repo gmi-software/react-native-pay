@@ -234,7 +234,7 @@ object GooglePayRequestBuilder {
                     PaymentConstants.TOTAL_PRICE_STATUS_FINAL
             )
             put("totalPrice", totalPrice)
-            put("totalPriceLabel", PaymentConstants.TOTAL_PRICE_LABEL_DEFAULT)
+            put("totalPriceLabel", request.totalLabel ?: PaymentConstants.TOTAL_PRICE_LABEL_DEFAULT)
             put("currencyCode", request.currencyCode)
             put("countryCode", request.countryCode)
             displayItems?.let { put("displayItems", it) }
@@ -252,7 +252,7 @@ object GooglePayRequestBuilder {
             items.forEach { item ->
                 put(JSONObject().apply {
                     put("label", item.label)
-                    put("type", PaymentConstants.LINE_ITEM_TYPE)
+                    put("type", displayItemType(item.kind))
                     put("price", PaymentAmounts.googlePayPrice(item))
                     put(
                         "status",
@@ -266,11 +266,18 @@ object GooglePayRequestBuilder {
             shippingMethod?.let { method ->
                 put(JSONObject().apply {
                     put("label", method.label)
-                    put("type", PaymentConstants.LINE_ITEM_TYPE)
+                    put("type", PaymentConstants.SHIPPING_OPTION_TYPE)
                     put("price", PaymentAmounts.googlePayPrice(method))
                     put("status", PaymentConstants.DISPLAY_ITEM_STATUS_FINAL)
                 })
             }
         }
+    }
+
+    private fun displayItemType(kind: PaymentItemKind?): String = when (kind) {
+        PaymentItemKind.SUBTOTAL -> PaymentConstants.SUBTOTAL_TYPE
+        PaymentItemKind.TAX -> PaymentConstants.TAX_TYPE
+        PaymentItemKind.DISCOUNT -> PaymentConstants.DISCOUNT_TYPE
+        null -> PaymentConstants.LINE_ITEM_TYPE
     }
 }
