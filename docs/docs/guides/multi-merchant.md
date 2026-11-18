@@ -78,11 +78,11 @@ The total is `paymentItems` plus the selected shipping method. Since the payer c
 
 ## On your server
 
-Verify and decrypt `token.paymentData` as for a one-off payment, following every step of Apple's [Payment token format reference](https://developer.apple.com/documentation/passkit/payment-token-format-reference): check the signature and its certificate chain before you trust anything you decrypt. Or let a payment provider that does this handle the token. In a multi-merchant payment, the decrypted data has an `authenticationResponses` list, with one entry per context:
+On iOS, `token.paymentData` is the base64 of Apple's payment token JSON: decode and parse it, then verify and decrypt it as for a one-off payment, following every step of Apple's [Payment token format reference](https://developer.apple.com/documentation/passkit/payment-token-format-reference): check the signature and its certificate chain before you trust anything you decrypt. Or let a payment provider that does this handle the token. In a multi-merchant payment, the decrypted data has an `authenticationResponses` list, with one entry per context:
 
 | Key | Value |
 | --- | --- |
-| `merchantIdentifier` | The context's `merchantIdentifier` |
+| `merchantIdentifier` | "The submerchant identifier as provided by the coordinator merchant", in Apple's words: the context's `merchantIdentifier`. Confirm with your provider or a test token before you route on it. |
 | `authenticationData` | The card network's cryptogram for this merchant |
 | `transactionAmount` | The amount the payer authorized for this merchant |
 
@@ -90,4 +90,4 @@ Match each entry to its merchant by `merchantIdentifier`, and charge each mercha
 
 Ask your payment provider whether it supports Apple Pay multi-merchant payments and how it expects the token: many decrypt it for you and charge each merchant through their own accounts. The [server-side processing](/docs/guides/server-processing) guide applies as for any payment: look up the order and its amounts on the server.
 
-A provider that splits the payment in one operation can key idempotency on your order ID. If your server charges each merchant itself, one charge can succeed while another fails or times out. Then record each charge on its own, with an idempotency key per order and merchant (for example `order_123:hotel`), so a retry finishes the missing charges without repeating the ones that went through.
+A provider that splits the payment in one operation can key idempotency on your order ID. If your server charges each merchant itself, one charge can succeed while another fails or times out. Then record each charge on its own, with an idempotency key per order and merchant (for example `order_123:hotel`), so a retry finishes the missing charges without repeating the ones that went through. When a charge's outcome is unknown, such as after a timeout or a server error, look it up with your provider before retrying, and retry with the same key within the provider's idempotency window.

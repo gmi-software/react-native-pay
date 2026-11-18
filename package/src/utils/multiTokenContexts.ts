@@ -102,9 +102,9 @@ export function normalizeMultiTokenContexts(
     )
   }
 
-  // Array.from visits the holes of a sparse array, which map skips.
-  const normalized = Array.from(contexts, (context) =>
-    normalizeContext(context, currencyCode)
+  // By index, so the holes of a sparse array, which map skips, fail too.
+  const normalized = Array.from({ length: contexts.length }, (_, index) =>
+    normalizeContext(contexts[index], currencyCode)
   )
   const total = sumExactly([paymentItemsTotal, shippingAmount])
   const sum = sumExactly(normalized.map((context) => context.amount))
