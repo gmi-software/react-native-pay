@@ -264,7 +264,6 @@ describe('usePaymentCheckout integration', () => {
       expect(result.current.error).toBeInstanceOf(PaymentError)
       expect(result.current.error?.message).toContain(message)
       expect(result.current.error).toHaveProperty('code', 'CONFIGURATION')
-      // The validation error, kept for debugging.
       expect(result.current.error?.cause).toBeInstanceOf(Error)
       expect(result.current.isProcessing).toBe(false)
       expect(mockStartPayment).not.toHaveBeenCalled()
