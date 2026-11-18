@@ -139,7 +139,7 @@ describe('usePaymentCheckout integration', () => {
   })
 
   it('handles successful payments', async () => {
-    const nativeSuccess = { success: true, transactionId: 'tx_123' }
+    const nativeSuccess = { status: 'success', success: true }
     mockStartPayment.mockResolvedValueOnce(nativeSuccess)
     const { result } = renderCheckout()
 
@@ -775,7 +775,7 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.error).toBeNull()
     expect(result.current.result).toBeNull()
 
-    const nativeSuccess = { success: true, transactionId: 'tx_1' }
+    const nativeSuccess = { status: 'success', success: true }
     await act(async () => {
       native.resolve(nativeSuccess)
       await first

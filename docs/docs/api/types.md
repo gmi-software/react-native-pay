@@ -105,7 +105,6 @@ interface PaymentResult extends PaymentDetails {
   status: PaymentStatus     // 'success' | 'cancelled' | 'failed'
   code?: PaymentErrorCode   // set when status isn't 'success'
   success: boolean          // status === 'success'
-  transactionId?: string    // deprecated
   token?: PaymentToken
   error?: string            // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
@@ -126,7 +125,6 @@ type PaymentErrorCode =
 - **status** — `'cancelled'` means the user closed the sheet before authorizing. It is not an error: `usePaymentCheckout` leaves `error` as `null` for it.
 - **code** — Why the payment didn't succeed. `'CANCELLED'` for a cancel, one of the others for a failure. See [Error codes](/docs/payment-flow#error-codes) for what each one means and which native cases produce it.
 - **success** — Kept for compatibility. Use `status` to tell a cancel from a failure.
-- **transactionId** — Deprecated. A random ID the device generates for each successful result; it doesn't come from Apple, Google or your gateway. Don't use it as an idempotency key: use your order ID.
 - **token** — Set on success. Send it to your backend to complete the charge with your gateway, unless `onAuthorize` already did.
 - **Contact details and shipping method** — A successful result also holds the ones the request asked for; see [PaymentDetails](#paymentdetails).
 - **error** — A message for logs, such as `'Payment cancelled by user'`. Don't match on it; use `code`.

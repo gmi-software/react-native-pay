@@ -39,6 +39,20 @@ All notable changes to this project are documented in this file.
   merchant identifier configured", and now names the Info.plist key
   `ReactNativePayApplePayMerchantIdentifiers` and the `applePayMerchantIdentifier` override.
 
+### Removed
+
+- **`PaymentResult.transactionId`.** Deprecated in 0.1.0. It was a random ID generated on the
+  device for each successful result, not an identifier from Apple, Google or your gateway, so it
+  changed on every attempt and couldn't serve as an idempotency key.
+
+### Migration
+
+1. Stop reading `result.transactionId`. To key idempotency or match a payment to an order, use
+   your order ID. To find the charge, use the ID your gateway returns when your server charges the
+   token.
+2. If you logged it or sent it to your server, drop it. On iOS, `result.token.transactionIdentifier`
+   is Apple's identifier for the payment; it is missing on Android.
+
 ### Fixed
 
 - **Android: a `GooglePayButton` with an invalid configuration ignored taps.** When

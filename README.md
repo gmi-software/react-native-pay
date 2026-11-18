@@ -514,7 +514,6 @@ interface PaymentResult extends PaymentDetails {
   status: "success" | "cancelled" | "failed";
   code?: PaymentErrorCode; // Why it didn't succeed, see below
   success: boolean; // status === "success"
-  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
   error?: string; // Message for logs, also set on a cancel
 }
@@ -782,7 +781,6 @@ interface PaymentResult extends PaymentDetails {
   status: PaymentStatus;
   code?: PaymentErrorCode; // Set when status isn't "success"
   success: boolean; // status === "success"
-  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
   error?: string; // Message for logs, also set on a cancel
 }

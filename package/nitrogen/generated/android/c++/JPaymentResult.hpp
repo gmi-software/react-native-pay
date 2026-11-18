@@ -75,8 +75,6 @@ namespace margelo::nitro::pay {
       jni::local_ref<JPaymentErrorCode> code = this->getFieldValue(fieldCode);
       static const auto fieldSuccess = clazz->getField<jboolean>("success");
       jboolean success = this->getFieldValue(fieldSuccess);
-      static const auto fieldTransactionId = clazz->getField<jni::JString>("transactionId");
-      jni::local_ref<jni::JString> transactionId = this->getFieldValue(fieldTransactionId);
       static const auto fieldToken = clazz->getField<JPaymentToken>("token");
       jni::local_ref<JPaymentToken> token = this->getFieldValue(fieldToken);
       static const auto fieldError = clazz->getField<jni::JString>("error");
@@ -95,7 +93,6 @@ namespace margelo::nitro::pay {
         status->toCpp(),
         code != nullptr ? std::make_optional(code->toCpp()) : std::nullopt,
         static_cast<bool>(success),
-        transactionId != nullptr ? std::make_optional(transactionId->toStdString()) : std::nullopt,
         token != nullptr ? std::make_optional(token->toCpp()) : std::nullopt,
         error != nullptr ? std::make_optional(error->toStdString()) : std::nullopt,
         billingContact != nullptr ? std::make_optional(billingContact->toCpp()) : std::nullopt,
@@ -112,7 +109,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentResult::javaobject> fromCpp(const PaymentResult& value) {
-      using JSignature = JPaymentResult(jni::alias_ref<JPaymentStatus>, jni::alias_ref<JPaymentErrorCode>, jboolean, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentToken>, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JShippingMethod>);
+      using JSignature = JPaymentResult(jni::alias_ref<JPaymentStatus>, jni::alias_ref<JPaymentErrorCode>, jboolean, jni::alias_ref<JPaymentToken>, jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JShippingMethod>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -120,7 +117,6 @@ namespace margelo::nitro::pay {
         JPaymentStatus::fromCpp(value.status),
         value.code.has_value() ? JPaymentErrorCode::fromCpp(value.code.value()) : nullptr,
         value.success,
-        value.transactionId.has_value() ? jni::make_jstring(value.transactionId.value()) : nullptr,
         value.token.has_value() ? JPaymentToken::fromCpp(value.token.value()) : nullptr,
         value.error.has_value() ? jni::make_jstring(value.error.value()) : nullptr,
         value.billingContact.has_value() ? JPaymentContact::fromCpp(value.billingContact.value()) : nullptr,

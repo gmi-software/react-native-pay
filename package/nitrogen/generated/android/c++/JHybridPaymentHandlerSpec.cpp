@@ -91,11 +91,11 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentErrorCode.hpp"
 #include <optional>
 #include "JPaymentErrorCode.hpp"
-#include <string>
 #include "PaymentToken.hpp"
 #include "JPaymentToken.hpp"
 #include "PaymentMethod.hpp"
 #include "JPaymentMethod.hpp"
+#include <string>
 #include "PaymentNetwork.hpp"
 #include "JPaymentNetwork.hpp"
 #include "PaymentMethodType.hpp"

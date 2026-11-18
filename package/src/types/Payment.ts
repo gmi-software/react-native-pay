@@ -413,12 +413,6 @@ export interface PaymentResult extends PaymentDetails {
   code?: PaymentErrorCode
   // `status === 'success'`. Kept for compatibility.
   success: boolean
-  /**
-   * @deprecated A random ID generated on the device for each successful
-   * result. It doesn't come from Apple, Google or your gateway and changes on
-   * every attempt, so don't use it as an idempotency key: use your order ID.
-   */
-  transactionId?: string
   token?: PaymentToken
   // A message for logs. Also set when `status` is `'cancelled'`.
   error?: string
