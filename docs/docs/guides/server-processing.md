@@ -11,7 +11,7 @@ From the client, send at least:
 
 Don't send the amount to charge. The server looks up the order and charges the amount and currency it stored. If you also send the total the user saw, the server only compares it with the order and rejects a mismatch.
 
-Don't key idempotency on `PaymentResult.transactionId` or `token.transactionIdentifier`. `transactionId` is deprecated: the device generates a new one for every successful result, so a retry gets a new key. `transactionIdentifier` is missing on Android.
+Don't key idempotency on `token.transactionIdentifier`: it is missing on Android.
 
 The simplest flow sends the token after `startPayment()` resolves. On iOS the sheet has already shown success by then, so don't tell the user the payment succeeded until your server answers, or use [`onAuthorize`](#charge-before-the-sheet-closes) instead:
 

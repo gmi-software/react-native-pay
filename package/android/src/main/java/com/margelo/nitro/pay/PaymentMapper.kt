@@ -5,7 +5,6 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.WalletConstants
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.UUID
 
 /**
  * Mapper for converting between Google Pay and app payment types
@@ -60,7 +59,6 @@ object PaymentMapper {
                 status = PaymentStatus.SUCCESS,
                 code = null,
                 success = true,
-                transactionId = UUID.randomUUID().toString(),
                 token = paymentToken,
                 error = null,
                 billingContact = details.billingContact,
@@ -180,7 +178,6 @@ object PaymentMapper {
             status = if (code == PaymentErrorCode.CANCELLED) PaymentStatus.CANCELLED else PaymentStatus.FAILED,
             code = code,
             success = false,
-            transactionId = null,
             token = null,
             error = errorMessage,
             billingContact = null,

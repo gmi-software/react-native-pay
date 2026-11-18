@@ -5,7 +5,6 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.WalletConstants
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -20,7 +19,6 @@ class PaymentMapperTest {
         status = PaymentStatus.SUCCESS,
         code = null,
         success = true,
-        transactionId = "transaction",
         token = null,
         error = null,
         billingContact = null,
@@ -87,7 +85,6 @@ class PaymentMapperTest {
         assertNull(result.code)
         assertTrue(result.success)
         assertNull(result.error)
-        assertNotNull(result.transactionId)
         val token = result.token!!
         assertEquals("gateway-token", token.paymentData)
         // Google Pay returns no transaction identifier; don't invent one.
@@ -428,7 +425,6 @@ class PaymentMapperTest {
         )
 
         assertFalse(result.success)
-        assertNull(result.transactionId)
         assertNull(result.token)
         assertEquals(PaymentErrorCode.PROVIDER_ERROR, result.code)
         assertEquals(PaymentConstants.ERROR_AUTHORIZATION_FAILED, result.error)
@@ -458,8 +454,7 @@ class PaymentMapperTest {
                 assertEquals(code, result.code)
                 assertFalse(result.success)
                 assertNull(result.token)
-                assertNull(result.transactionId)
-            }
+                    }
     }
 
     @Test

@@ -242,7 +242,7 @@ app.post('/payments/przelewy24/wallet', async (req, res) => {
 - Always use HTTPS between app and backend.
 - Never log raw token payloads.
 - Take amount and currency from the server-side order, never from the request; check order ownership.
-- Use idempotency keys based on your order ID, not on `transactionId` or `token.transactionIdentifier`.
+- Use idempotency keys based on your order ID, not on `token.transactionIdentifier`.
 - Treat provider callbacks/webhooks and verification as the source of final payment state.
 
 ## Notes

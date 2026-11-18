@@ -117,7 +117,7 @@ Always send the **entire token object** (or exactly the fields your gateway asks
 Your backend should:
 
 - Validate order ownership, amount, and currency from server-side order data.
-- Use an idempotency key derived from your order ID to prevent duplicate charges. Don't use `PaymentResult.transactionId`: the device generates a new one for every result.
+- Use an idempotency key derived from your order ID to prevent duplicate charges.
 - Call gateway APIs with the provider-specific token mapping.
 - Persist both wallet result and gateway result for audit/debug.
 - Return a final, app-friendly checkout status.

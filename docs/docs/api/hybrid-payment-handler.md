@@ -59,7 +59,6 @@ interface PaymentResult extends PaymentDetails {
   status: 'success' | 'cancelled' | 'failed'
   code?: PaymentErrorCode // set when status isn't 'success'
   success: boolean        // status === 'success'
-  transactionId?: string  // deprecated
   token?: PaymentToken
   error?: string          // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
