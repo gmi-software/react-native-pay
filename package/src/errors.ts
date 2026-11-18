@@ -2,13 +2,13 @@ import type { PaymentErrorCode } from './types'
 
 /**
  * The `error` that `usePaymentCheckout` sets when a payment fails or can't
- * start. `code` uses the same values as `PaymentResult.code`, so you can
- * branch on it when `startPayment` returned `null`.
+ * start. `code` uses the same values as `PaymentResult.code`.
  *
- * - `'CONFIGURATION'`: the cart is empty or the request is invalid, such as
- *   an invalid amount. `cause` holds the validation error.
- * - `'UNKNOWN'`: the native call threw. `cause` holds what it threw.
- * - Any other code: copied from a failed `PaymentResult`.
+ * - `'CONFIGURATION'`: the cart is empty, with no `cause`, or the request is
+ *   invalid, such as an invalid amount, with the validation error as `cause`.
+ * - `'UNKNOWN'`: the native call threw, with what it threw as `cause`.
+ * - Any other code: copied from a failed `PaymentResult`. A failed result
+ *   without a code gives `'UNKNOWN'`.
  */
 export class PaymentError extends Error {
   readonly code: PaymentErrorCode

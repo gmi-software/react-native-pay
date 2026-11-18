@@ -8,12 +8,12 @@ All notable changes to this project are documented in this file.
 
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
-  invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed
-  `PaymentResult`. A caller can tell why `startPayment` returned `null` from `error.code`.
-  `startPayment` still returns `null` in these cases, and `message` is unchanged
-  ([#65](https://github.com/gmi-software/react-native-pay/issues/65)). When native code or validation
-  throws, `error` is no longer the thrown object but wraps it as `error.cause`, and `String(error)`
-  starts with `PaymentError:` instead of `Error:`.
+  invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it
+  has none) for a failed `PaymentResult`. `startPayment` still returns `null` for an empty cart, an
+  invalid request or a throw, and still returns a failed `PaymentResult` as it is. `message` is
+  unchanged. `error` keeps its `Error | null` type: narrow it with `error instanceof PaymentError`
+  before reading `code`, from the render after the update
+  ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
 
 - **Subscriptions and later payments.** `PaymentRequest` takes `recurring`, `deferred` or
   `automaticReload`, mapped to PassKit's `PKRecurringPaymentRequest`, `PKDeferredPaymentRequest`
@@ -27,6 +27,11 @@ All notable changes to this project are documented in this file.
   [guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
 
 ### Changed
+
+- **`usePaymentCheckout` wraps a thrown error.** When native code, the request validation or the
+  in-progress check throws, `error` is a `PaymentError` that holds the thrown value as
+  `error.cause`, not the thrown value itself, and `String(error)` starts with `PaymentError:`. Read
+  the original from `error.cause`; `error.message` is unchanged.
 
 - **`HybridPaymentHandler.startPayment` validates the request**, as `usePaymentCheckout` and
   `createPaymentRequest` do. A request that fails `normalizePaymentRequest` resolves with

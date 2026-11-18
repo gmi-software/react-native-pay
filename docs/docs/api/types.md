@@ -145,10 +145,10 @@ class PaymentError extends Error {
 }
 ```
 
-- **code** — The same values as [`PaymentResult.code`](#paymentresult): `'CONFIGURATION'` for an empty cart or an invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed `PaymentResult`. A cancel and `'IN_PROGRESS'` don't set `error`.
-- **cause** — The validation error or the value native code threw.
+- **code** — The same values as [`PaymentResult.code`](#paymentresult): `'CONFIGURATION'` for an empty cart or an invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed `PaymentResult` (`'UNKNOWN'` if it has none). A cancel and `'IN_PROGRESS'` don't set `error`.
+- **cause** — The validation error or the value native code threw. An empty cart and a failed `PaymentResult` have no `cause`.
 
-Branch on `code` when `startPayment()` returns `null`:
+`error` is React state, so read it from the hook in the render after `startPayment()` settles, not from the value an event handler captured. The hook types it as `Error | null`; narrow it with `instanceof PaymentError` to read `code`:
 
 ```tsx
 import { Text } from 'react-native'
