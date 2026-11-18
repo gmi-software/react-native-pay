@@ -72,7 +72,7 @@ interface UsePaymentCheckoutReturn {
   startPayment: () => Promise<PaymentResult | null>
   isProcessing: boolean
   result: PaymentResult | null   // last result; check result.status
-  error: Error | null            // null after a cancel
+  error: Error | null            // a PaymentError with a `code`; null after a cancel
 
   // Utilities
   reset: () => void
