@@ -215,6 +215,20 @@ export function amountSign(amount: PaymentAmount): -1 | 0 | 1 {
 }
 
 /**
+ * Compares two valid amounts exactly: -1 if `a` is less than `b`, 0 if they
+ * are equal, 1 if it is greater.
+ *
+ * @throws Error if an amount is invalid.
+ */
+export function compareAmounts(a: PaymentAmount, b: PaymentAmount): -1 | 0 | 1 {
+  const left = parseValidDecimal(a)
+  const right = parseValidDecimal(b)
+  const scale = Math.max(left.scale, right.scale)
+  const difference = rescale(left, scale) - rescale(right, scale)
+  return difference < ZERO ? -1 : difference > ZERO ? 1 : 0
+}
+
+/**
  * Sums amounts exactly. Returns `NaN` if any amount is invalid.
  */
 export function sumAmounts(amounts: PaymentAmount[]): number {

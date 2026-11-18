@@ -76,6 +76,8 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentStatus; }
+// Forward declaration of `PaymentTokenContext` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentTokenContext; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
 // Forward declaration of `RecurringBillingItem` to properly resolve imports.
@@ -125,6 +127,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PaymentResult.hpp"
 #include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
+#include "PaymentTokenContext.hpp"
 #include "RecurringBillingItem.hpp"
 #include "RecurringIntervalUnit.hpp"
 #include "RecurringPaymentRequest.hpp"

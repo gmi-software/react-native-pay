@@ -76,6 +76,8 @@ namespace margelo::nitro::pay { struct FreeCancellation; }
 namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
 // Forward declaration of `AutomaticReloadBillingItem` to properly resolve imports.
 namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
+// Forward declaration of `PaymentTokenContext` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentTokenContext; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
 // Forward declaration of `PaymentAuthorizationResult` to properly resolve imports.
@@ -123,6 +125,7 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "FreeCancellation.hpp"
 #include "AutomaticReloadPaymentRequest.hpp"
 #include "AutomaticReloadBillingItem.hpp"
+#include "PaymentTokenContext.hpp"
 #include "StartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"
 #include "PaymentDetails.hpp"

@@ -8,6 +8,7 @@ import type { PaymentRequest } from '../types'
 import { amountSign, normalizeItems, sumExactly } from './amounts'
 import { warnIfGooglePayEnvironmentOmitted } from './googlePayEnvironment'
 import { normalizeMerchantTokens } from './merchantTokens'
+import { normalizeMultiTokenContexts } from './multiTokenContexts'
 
 const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/
 const COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/
@@ -41,8 +42,13 @@ function checkCode(
  * in the future, `https` URLs without query or trailing slash, labels of at
  * most 100 characters.
  *
- * @throws Error if a code or an amount is invalid, the total is negative, or
- *   a recurring, deferred or automatic reload request is invalid.
+ * `applePayMultiTokenContexts` amounts must add up to exactly the total, and
+ * shipping methods must then all cost the same. On Android the field is
+ * removed without being checked.
+ *
+ * @throws Error if a code or an amount is invalid, the total is negative,
+ *   a recurring, deferred or automatic reload request is invalid, or
+ *   `applePayMultiTokenContexts` is invalid.
  */
 export function normalizePaymentRequest(
   request: PaymentRequest
@@ -58,7 +64,7 @@ export function normalizePaymentRequest(
     throw new Error(`Payment total must not be negative, got ${total}`)
   }
 
-  return {
+  const { applePayMultiTokenContexts, ...normalized } = {
     ...request,
     paymentItems,
     ...(request.shippingMethods && {
@@ -66,4 +72,12 @@ export function normalizePaymentRequest(
     }),
     ...normalizeMerchantTokens(request, currencyCode),
   }
+  const contexts = normalizeMultiTokenContexts(
+    { ...normalized, applePayMultiTokenContexts },
+    currencyCode,
+    total
+  )
+  return contexts === undefined
+    ? normalized
+    : { ...normalized, applePayMultiTokenContexts: contexts }
 }

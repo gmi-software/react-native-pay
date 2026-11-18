@@ -16,6 +16,14 @@ All notable changes to this project are documented in this file.
   of Apple Pay's and Google Pay's rules. Below iOS 16 (16.4 for `deferred`) the payment fails with
   `code: 'NOT_AVAILABLE'`. See the
   [guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
+- **Payments to several merchants (iOS).** `PaymentRequest.applePayMultiTokenContexts` maps to
+  PassKit's `multiTokenContexts`: one sheet pays several merchants, such as a marketplace order or
+  a trip with a flight and a hotel. The result keeps its single `token`; each merchant's
+  cryptogram is in its encrypted payment data, under `authenticationResponses`. The amounts must
+  add up to exactly the total (PassKit refuses less, although Apple's documentation allows it),
+  all shipping methods must cost the same, and the field can't be combined with `recurring`,
+  `deferred` or `automaticReload`. Below iOS 16 the payment fails with `code: 'NOT_AVAILABLE'`; Android ignores
+  it. See the [guide](https://gmi-software.github.io/react-native-pay/docs/guides/multi-merchant).
 
 ### Changed
 

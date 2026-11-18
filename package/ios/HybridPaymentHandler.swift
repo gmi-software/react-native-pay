@@ -103,6 +103,7 @@ struct PaymentRequestBuilder {
             selectedShippingMethodIdentifier: shippingMethods.first?.identifier,
             laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         )
+        try MultiTokenRequestBuilder.configure(paymentRequest, from: request)
         paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = try buildSupportedNetworks(request.supportedNetworks)
         

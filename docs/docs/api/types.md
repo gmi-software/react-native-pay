@@ -67,6 +67,7 @@ interface PaymentRequest {
   recurring?: RecurringPaymentRequest
   deferred?: DeferredPaymentRequest
   automaticReload?: AutomaticReloadPaymentRequest
+  applePayMultiTokenContexts?: PaymentTokenContext[] // several merchants, iOS 16+
   // Google Pay (Android)
   googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
@@ -93,6 +94,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `shippingType` takes a [`ShippingType`](#shippingtype) value. `shippingMethods` takes [`ShippingMethod`](#shippingmethod) values; the selected one is added to the total. The first is selected by default on iOS and is always the one charged on Android.
 
 `recurring`, `deferred` and `automaticReload` set up charges after today and ask for a merchant token, which Apple Pay returns when the card's network offers one: see [Recurring and later payments](#recurring-and-later-payments). `paymentItems` stay what the payer pays now, which may be nothing.
+
+`applePayMultiTokenContexts` pays several merchants with one sheet: see [Several merchants](#several-merchants). iOS only.
 
 ---
 
@@ -429,6 +432,24 @@ interface FreeCancellation {
 ```
 
 There is no `'week'` unit, because Apple Pay refuses it: use `intervalUnit: 'day'` with `intervalCount: 7`. Amounts are fixed; a price that depends on usage is not supported yet. Dates must be in the future. On iOS the sheet lists the later charges as their own lines, outside the total. Apple Pay needs iOS 16 for `recurring` and `automaticReload` and iOS 16.4 for `deferred`; on older versions the payment fails with `code: 'NOT_AVAILABLE'`.
+
+---
+
+## Several merchants
+
+`PaymentRequest.applePayMultiTokenContexts` takes one context per merchant, mapped to PassKit's `PKPaymentTokenContext`. See [Paying several merchants](/docs/guides/multi-merchant) for an example and the server side.
+
+```ts no-check
+interface PaymentTokenContext {
+  merchantIdentifier: string // the merchant's Apple Pay merchant ID, or yours
+  externalIdentifier: string // your stable ID for the merchant
+  merchantName: string       // shown in the sheet's summary
+  merchantDomain?: string    // e.g. 'hotel.example.com'
+  amount: PaymentAmount      // positive
+}
+```
+
+The amounts must add up to exactly the total, `paymentItems` plus the shipping method, so list yourself too for any share you keep; all `shippingMethods` must then cost the same. The field can't be combined with `recurring`, `deferred` or `automaticReload`. Apple Pay needs iOS 16; on older versions the payment fails with `code: 'NOT_AVAILABLE'`. Android removes it without checking these rules. The result still holds one `PaymentToken`: each merchant's cryptogram is in its encrypted payment data, under `authenticationResponses`.
 
 ---
 

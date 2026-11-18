@@ -42,6 +42,7 @@ const sidebars: SidebarsConfig = {
         'guides/dynamic-cart',
         'guides/contact-details',
         'guides/merchant-tokens',
+        'guides/multi-merchant',
         'guides/testing',
       ],
     },
