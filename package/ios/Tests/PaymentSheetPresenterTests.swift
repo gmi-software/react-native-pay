@@ -128,6 +128,7 @@ final class RefusedPaymentSheetTests: XCTestCase {
             recurring: nil,
             deferred: nil,
             automaticReload: nil,
+            applePayMultiTokenContexts: nil,
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,

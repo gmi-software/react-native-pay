@@ -292,6 +292,35 @@ export interface AutomaticReloadPaymentRequest
   automaticReloadBilling: AutomaticReloadBillingItem
 }
 
+/**
+ * One merchant in a payment shared by several merchants, such as a
+ * marketplace order or a trip with a flight and a hotel. Apple Pay needs
+ * iOS 16.
+ * @see PaymentRequest.applePayMultiTokenContexts
+ */
+export interface PaymentTokenContext {
+  /**
+   * The merchant's Apple Pay merchant identifier, if it has one. Otherwise,
+   * and for your own share, your own. Your server finds this merchant's
+   * cryptogram in the token by it.
+   */
+  merchantIdentifier: string
+  /**
+   * Your own stable ID for the merchant. Use the same one every time you
+   * request a payment for the same merchant.
+   */
+  externalIdentifier: string
+  /** Shown to the payer. */
+  merchantName: string
+  /** The merchant's top-level domain, for example `'hotel.example.com'`. */
+  merchantDomain?: string
+  /**
+   * What this merchant may charge, in the request's currency. Must be
+   * positive.
+   */
+  amount: PaymentAmount
+}
+
 export interface PaymentRequest {
   // Optional Apple Pay override for apps with multiple configured merchant IDs.
   // When omitted, iOS reads the first ID in the Info.plist key
@@ -365,6 +394,16 @@ export interface PaymentRequest {
   recurring?: RecurringPaymentRequest
   deferred?: DeferredPaymentRequest
   automaticReload?: AutomaticReloadPaymentRequest
+  /**
+   * Pay several merchants with one sheet. The payment token holds a
+   * cryptogram for each of them, which your server reads after decrypting
+   * it. The amounts must add up to exactly the total, so list yourself too
+   * for any share you keep, and all `shippingMethods` must cost the same.
+   * Not together with `recurring`, `deferred` or `automaticReload`. iOS
+   * only: Android removes it without checking these rules. Below iOS 16, the
+   * payment fails with `'NOT_AVAILABLE'`.
+   */
+  applePayMultiTokenContexts?: PaymentTokenContext[]
   // Google Pay specific configuration (Android only)
   googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment

@@ -72,6 +72,8 @@ namespace margelo::nitro::pay { enum class PaymentNetwork; }
 namespace margelo::nitro::pay { struct PaymentResult; }
 // Forward declaration of `PaymentStatus` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentStatus; }
+// Forward declaration of `PaymentTokenContext` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentTokenContext; }
 // Forward declaration of `PaymentToken` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentToken; }
 // Forward declaration of `RecurringBillingItem` to properly resolve imports.
@@ -125,6 +127,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "PaymentResult.hpp"
 #include "PaymentStatus.hpp"
 #include "PaymentToken.hpp"
+#include "PaymentTokenContext.hpp"
 #include "RecurringBillingItem.hpp"
 #include "RecurringIntervalUnit.hpp"
 #include "RecurringPaymentRequest.hpp"
@@ -709,6 +712,32 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline AutomaticReloadPaymentRequest get_std__optional_AutomaticReloadPaymentRequest_(const std::optional<AutomaticReloadPaymentRequest>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::vector<PaymentTokenContext>
+  /**
+   * Specialized version of `std::vector<PaymentTokenContext>`.
+   */
+  using std__vector_PaymentTokenContext_ = std::vector<PaymentTokenContext>;
+  inline std::vector<PaymentTokenContext> create_std__vector_PaymentTokenContext_(size_t size) noexcept {
+    std::vector<PaymentTokenContext> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::optional<std::vector<PaymentTokenContext>>
+  /**
+   * Specialized version of `std::optional<std::vector<PaymentTokenContext>>`.
+   */
+  using std__optional_std__vector_PaymentTokenContext__ = std::optional<std::vector<PaymentTokenContext>>;
+  inline std::optional<std::vector<PaymentTokenContext>> create_std__optional_std__vector_PaymentTokenContext__(const std::vector<PaymentTokenContext>& value) noexcept {
+    return std::optional<std::vector<PaymentTokenContext>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_PaymentTokenContext__(const std::optional<std::vector<PaymentTokenContext>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<PaymentTokenContext> get_std__optional_std__vector_PaymentTokenContext__(const std::optional<std::vector<PaymentTokenContext>>& optional) noexcept {
     return optional.value();
   }
   

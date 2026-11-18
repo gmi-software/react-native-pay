@@ -92,6 +92,9 @@ struct PaymentRequestBuilder {
         paymentRequest.merchantIdentifier = merchantIdentifier
         paymentRequest.countryCode = request.countryCode
         paymentRequest.currencyCode = request.currencyCode
+        // Before the merchant token builder, whose iOS version check would
+        // otherwise hide the conflict behind NOT_AVAILABLE.
+        try MultiTokenRequestBuilder.checkCompatibility(request)
         try MerchantTokenRequestBuilder.configure(paymentRequest, from: request)
         let shippingMethods = try buildShippingMethods(request.shippingMethods ?? [])
         if !shippingMethods.isEmpty {
@@ -103,6 +106,7 @@ struct PaymentRequestBuilder {
             selectedShippingMethodIdentifier: shippingMethods.first?.identifier,
             laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         )
+        try MultiTokenRequestBuilder.configure(paymentRequest, from: request)
         paymentRequest.merchantCapabilities = try buildMerchantCapabilities(request.merchantCapabilities)
         paymentRequest.supportedNetworks = try buildSupportedNetworks(request.supportedNetworks)
         

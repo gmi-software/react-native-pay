@@ -761,6 +761,7 @@ interface PaymentRequest {
   recurring?: RecurringPaymentRequest; // subscriptions, iOS 16+
   deferred?: DeferredPaymentRequest; // one later charge, iOS 16.4+
   automaticReload?: AutomaticReloadPaymentRequest; // top-ups, iOS 16+
+  applePayMultiTokenContexts?: PaymentTokenContext[]; // several merchants, iOS 16+
   // Google Pay specific
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
@@ -881,6 +882,10 @@ Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `pho
 ### Subscriptions and later payments
 
 `recurring`, `deferred` and `automaticReload` (with `HybridPaymentHandler`) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment asks for a merchant token your payment provider can charge later. When the card's network has no merchant tokens, Apple Pay returns a device token instead, so check with your provider. `paymentItems` stay what the payer pays today, which may be nothing. Android sends them to Google Pay as Merchant Initiated Transactions. See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
+
+### Several merchants (iOS)
+
+`applePayMultiTokenContexts` (with `HybridPaymentHandler`) pays several merchants with one Apple Pay sheet, such as a marketplace order or a trip with a flight and a hotel. Each context names a merchant and its amount; the amounts must add up to exactly the total, so list yourself too for any share you keep. The result still holds one `token`: your server finds each merchant's cryptogram in its encrypted payment data. iOS 16+; Android ignores it. See the [multi-merchant guide](https://gmi-software.github.io/react-native-pay/docs/guides/multi-merchant).
 
 ### Contact Types
 

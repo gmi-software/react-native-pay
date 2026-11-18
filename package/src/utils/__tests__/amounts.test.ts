@@ -1,4 +1,8 @@
-import { getCurrencyMinorUnits, normalizeAmount } from '../amounts'
+import {
+  compareAmounts,
+  getCurrencyMinorUnits,
+  normalizeAmount,
+} from '../amounts'
 
 describe('getCurrencyMinorUnits', () => {
   it('follows ISO 4217 and defaults to 2', () => {
@@ -67,5 +71,18 @@ describe('normalizeAmount', () => {
     expect(() => normalizeAmount(1.005, 'USD', 'Coffee')).toThrow(
       'Amount for "Coffee" has more than 2 decimal places, which USD allows, got 1.005'
     )
+  })
+})
+
+describe('compareAmounts', () => {
+  it('compares exactly across scales and types', () => {
+    expect(compareAmounts('10.00', 10)).toBe(0)
+    expect(compareAmounts('450.01', '450')).toBe(1)
+    expect(compareAmounts(0.1, '0.10000000000000001')).toBe(-1)
+    expect(compareAmounts('-1', 0)).toBe(-1)
+  })
+
+  it('throws for an invalid amount', () => {
+    expect(() => compareAmounts('1,00', 1)).toThrow('Invalid amount "1,00"')
   })
 })

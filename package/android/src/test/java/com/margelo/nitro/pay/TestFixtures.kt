@@ -54,6 +54,7 @@ internal fun paymentRequest(
     recurring = recurring,
     deferred = deferred,
     automaticReload = automaticReload,
+    applePayMultiTokenContexts = null,
     googlePayMerchantId = googlePayMerchantId,
     googlePayEnvironment = environment,
     googlePayGateway = googlePayGateway,
