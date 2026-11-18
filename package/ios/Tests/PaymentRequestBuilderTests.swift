@@ -565,13 +565,17 @@ final class PaymentRequestBuilderTests: XCTestCase {
 
     // MARK: - Multi-token contexts
 
-    private func context(_ name: String, _ amount: String, merchantIdentifier: String? = nil) -> PaymentTokenContext {
-        let identifier = "merchant.com.example.\(name.lowercased())"
+    private func context(
+        _ name: String,
+        _ amount: String,
+        merchantIdentifier: String? = nil,
+        merchantDomain: String? = nil
+    ) -> PaymentTokenContext {
         return PaymentTokenContext(
-            merchantIdentifier: merchantIdentifier ?? identifier,
-            externalIdentifier: identifier,
+            merchantIdentifier: merchantIdentifier ?? "merchant.com.example.\(name.lowercased())",
+            externalIdentifier: "seller-\(name.lowercased())",
             merchantName: name,
-            merchantDomain: "\(name.lowercased()).example.com",
+            merchantDomain: merchantDomain ?? "\(name.lowercased()).example.com",
             amount: .second(amount)
         )
     }
@@ -587,7 +591,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
 
         let contexts = request.multiTokenContexts
         XCTAssertEqual(contexts.map(\.merchantIdentifier), ["merchant.com.example.airline", "merchant.com.example.hotel"])
-        XCTAssertEqual(contexts.map(\.externalIdentifier), ["merchant.com.example.airline", "merchant.com.example.hotel"])
+        XCTAssertEqual(contexts.map(\.externalIdentifier), ["seller-airline", "seller-hotel"])
         XCTAssertEqual(contexts.map(\.merchantName), ["Airline", "Hotel"])
         XCTAssertEqual(contexts.map(\.merchantDomain), ["airline.example.com", "hotel.example.com"])
         XCTAssertEqual(contexts.map(\.amount), [NSDecimalNumber(string: "150"), NSDecimalNumber(string: "300")])
@@ -657,17 +661,28 @@ final class PaymentRequestBuilderTests: XCTestCase {
         assertBuildFails(input, with: "applePayMultiTokenContexts merchantIdentifier must not be empty")
     }
 
-    func testRejectsMultiTokenContextsWithAMerchantTokenRequest() {
+    func testRejectsAMultiTokenContextWithABlankMerchantDomain() {
         let input = paymentRequest(
-            items: [item("Starter kit", "10.00")],
-            recurring: recurring(),
-            multiTokenContexts: [context("Maker", "10.00")]
+            items: [item("Flight", "150.00")],
+            multiTokenContexts: [context("Airline", "150.00", merchantDomain: " ")]
         )
         guard #available(iOS 16.0, *) else { return assertNotAvailable(input) }
-        assertBuildFails(
-            input,
-            with: "applePayMultiTokenContexts can't be combined with recurring, deferred or automaticReload"
-        )
+        assertBuildFails(input, with: "applePayMultiTokenContexts merchantDomain must not be empty")
+    }
+
+    func testRejectsMultiTokenContextsWithAMerchantTokenRequest() {
+        // CONFIGURATION on every iOS version, before the merchant token
+        // builder's own version check (iOS 16.4 for deferred).
+        for input in [
+            paymentRequest(items: [], recurring: recurring(), multiTokenContexts: [context("Maker", "10.00")]),
+            paymentRequest(items: [], deferred: deferred(), multiTokenContexts: [context("Maker", "10.00")]),
+            paymentRequest(items: [], automaticReload: automaticReload(), multiTokenContexts: [context("Maker", "10.00")]),
+        ] {
+            assertBuildFails(
+                input,
+                with: "applePayMultiTokenContexts can't be combined with recurring, deferred or automaticReload"
+            )
+        }
     }
 
     func testRequiresMerchantIdentifier() {

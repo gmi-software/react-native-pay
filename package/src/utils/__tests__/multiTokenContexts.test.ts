@@ -67,6 +67,24 @@ describe('normalizePaymentRequest with applePayMultiTokenContexts', () => {
     ).not.toHaveProperty('applePayMultiTokenContexts')
   })
 
+  it('rejects a list that is not an array, or has an entry that is not an object', () => {
+    expectInvalid(
+      { applePayMultiTokenContexts: '' as unknown as PaymentTokenContext[] },
+      'applePayMultiTokenContexts must be an array'
+    )
+    // eslint-disable-next-line no-sparse-arrays
+    const sparse = [context('Hotel', 450), ,] as PaymentTokenContext[]
+    for (const contexts of [
+      sparse,
+      [context('Hotel', 450), null as unknown as PaymentTokenContext],
+    ]) {
+      expectInvalid(
+        { applePayMultiTokenContexts: contexts },
+        'applePayMultiTokenContexts entries must be objects'
+      )
+    }
+  })
+
   it('removes the contexts on Android without checking them', () => {
     jest.replaceProperty(Platform, 'OS', 'android')
     const result = normalizePaymentRequest(

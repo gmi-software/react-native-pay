@@ -24,9 +24,12 @@ function checkText(field: string, value: unknown) {
 }
 
 function normalizeContext(
-  context: PaymentTokenContext,
+  context: PaymentTokenContext | undefined,
   currencyCode: string
 ): PaymentTokenContext {
+  if (typeof context !== 'object' || context === null) {
+    fail('applePayMultiTokenContexts entries must be objects')
+  }
   checkText('merchantIdentifier', context.merchantIdentifier)
   checkText('externalIdentifier', context.externalIdentifier)
   checkText('merchantName', context.merchantName)
@@ -66,11 +69,13 @@ export function normalizeMultiTokenContexts(
   paymentItemsTotal: string
 ): PaymentTokenContext[] | undefined {
   const contexts = request.applePayMultiTokenContexts
-  if (
-    Platform.OS !== 'ios' ||
-    contexts === undefined ||
-    contexts.length === 0
-  ) {
+  if (Platform.OS !== 'ios' || contexts === undefined) {
+    return undefined
+  }
+  if (!Array.isArray(contexts)) {
+    fail('applePayMultiTokenContexts must be an array')
+  }
+  if (contexts.length === 0) {
     return undefined
   }
   if (
@@ -97,7 +102,8 @@ export function normalizeMultiTokenContexts(
     )
   }
 
-  const normalized = contexts.map((context) =>
+  // Array.from visits the holes of a sparse array, which map skips.
+  const normalized = Array.from(contexts, (context) =>
     normalizeContext(context, currencyCode)
   )
   const total = sumExactly([paymentItemsTotal, shippingAmount])

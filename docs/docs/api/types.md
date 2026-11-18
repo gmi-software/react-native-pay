@@ -449,7 +449,7 @@ interface PaymentTokenContext {
 }
 ```
 
-The amounts must add up to exactly the total, `paymentItems` plus the shipping method, so list yourself too for any share you keep; all `shippingMethods` must then cost the same. The field can't be combined with `recurring`, `deferred` or `automaticReload`. Apple Pay needs iOS 16; on older versions the payment fails with `code: 'NOT_AVAILABLE'`. Android removes it without checking these rules. The result still holds one `PaymentToken`: each merchant's cryptogram is in its encrypted payment data, under `authenticationResponses`.
+The amounts must add up to exactly the total, `paymentItems` plus the shipping method, so list yourself too for any share you keep; all `shippingMethods` must then cost the same. The field can't be combined with `recurring`, `deferred` or `automaticReload`; such a request fails with `code: 'CONFIGURATION'` on every iOS version. Without them, Apple Pay needs iOS 16; on older versions the payment fails with `code: 'NOT_AVAILABLE'`. Android removes it without checking these rules. The result still holds one `PaymentToken`: each merchant's cryptogram is in its encrypted payment data, under `authenticationResponses`.
 
 ---
 

@@ -58,7 +58,7 @@ The payer sees one total and authorizes it once. Apple describes a summary that 
 
 | Field | Meaning |
 | --- | --- |
-| `merchantIdentifier` | The merchant's own Apple Pay merchant identifier, if it has one. Otherwise, and for your own share, use yours. |
+| `merchantIdentifier` | The merchant's own Apple Pay merchant identifier, if it has one. Otherwise, and for your own share, use yours. Your server tells the merchants apart by it, so see [On your server](#on-your-server) before giving several contexts the same one. |
 | `externalIdentifier` | Your stable ID for the merchant. Use the same one every time you request a payment for that merchant. |
 | `merchantName` | Shown to the payer. |
 | `merchantDomain` | Optional. The merchant's top-level domain. |
@@ -66,7 +66,7 @@ The payer sees one total and authorizes it once. Apple describes a summary that 
 
 ## The amounts must add up to the total
 
-The contexts must add up to **exactly** the total, so list yourself too for any share you keep, such as the booking fee above. Apple's documentation says they may add up to less, but PassKit refuses such a request with "The sum of all payment token context amounts must be equal to the PKPaymentRequest total" (seen on iOS 26.5), and the sheet doesn't open. An exact total also meets the documented rule, so it works on any iOS version.
+The contexts must add up to **exactly** the total, so list yourself too for any share you keep, such as the booking fee above. Apple's documentation says they may add up to less, but PassKit refuses such a request with "The sum of all payment token context amounts must be equal to the PKPaymentRequest total" (seen on iOS 26.5), and the sheet doesn't open. So the library requires an exact total.
 
 The total is `paymentItems` plus the selected shipping method. Since the payer can pick another method in the sheet, every entry of `shippingMethods` must cost the same; the library can't tell which merchant a different shipping price belongs to.
 
@@ -78,7 +78,7 @@ The total is `paymentItems` plus the selected shipping method. Since the payer c
 
 ## On your server
 
-Decrypt `token.paymentData` as for a one-off payment (see Apple's [Payment token format reference](https://developer.apple.com/documentation/passkit/payment-token-format-reference)), or let your payment provider do it. In a multi-merchant payment, the decrypted data has an `authenticationResponses` list, with one entry per context:
+Verify and decrypt `token.paymentData` as for a one-off payment, following every step of Apple's [Payment token format reference](https://developer.apple.com/documentation/passkit/payment-token-format-reference): check the signature and its certificate chain before you trust anything you decrypt. Or let a payment provider that does this handle the token. In a multi-merchant payment, the decrypted data has an `authenticationResponses` list, with one entry per context:
 
 | Key | Value |
 | --- | --- |
@@ -86,6 +86,8 @@ Decrypt `token.paymentData` as for a one-off payment (see Apple's [Payment token
 | `authenticationData` | The card network's cryptogram for this merchant |
 | `transactionAmount` | The amount the payer authorized for this merchant |
 
-Match each entry to its merchant by `merchantIdentifier`, and charge each merchant's share with its own cryptogram, for no more than its `transactionAmount`.
+Match each entry to its merchant by `merchantIdentifier`, and charge each merchant's share with its own cryptogram, for no more than its `transactionAmount`. Check the match against the contexts you stored with the order: exactly one entry per context, each with that context's amount. Entries can only be told apart by `merchantIdentifier` and amount, so when several contexts share an identifier (sellers without their own, listed under yours) and an amount, don't guess: refuse the payment, or ask your payment provider how it routes such entries.
 
-Ask your payment provider whether it supports Apple Pay multi-merchant payments and how it expects the token: many decrypt it for you and charge each merchant through their own accounts. The [server-side processing](/docs/guides/server-processing) guide applies as for any payment: look up the order and its amounts on the server, and key idempotency on your order ID.
+Ask your payment provider whether it supports Apple Pay multi-merchant payments and how it expects the token: many decrypt it for you and charge each merchant through their own accounts. The [server-side processing](/docs/guides/server-processing) guide applies as for any payment: look up the order and its amounts on the server.
+
+A provider that splits the payment in one operation can key idempotency on your order ID. If your server charges each merchant itself, one charge can succeed while another fails or times out. Then record each charge on its own, with an idempotency key per order and merchant (for example `order_123:hotel`), so a retry finishes the missing charges without repeating the ones that went through.

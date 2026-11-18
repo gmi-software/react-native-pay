@@ -39,9 +39,7 @@ enum MultiTokenRequestBuilder {
         guard let contexts = request.applePayMultiTokenContexts, !contexts.isEmpty else {
             return
         }
-        guard request.recurring == nil, request.deferred == nil, request.automaticReload == nil else {
-            throw PaymentFailure.configuration(ErrorMessage.withMerchantTokenRequest)
-        }
+        try checkCompatibility(request)
         guard #available(iOS 16.0, *) else {
             throw PaymentFailure(code: .notAvailable, message: ErrorMessage.needsNewerIOS)
         }
@@ -63,11 +61,23 @@ enum MultiTokenRequestBuilder {
         paymentRequest.multiTokenContexts = pkContexts
     }
 
+    /// Fails when the request also sets `recurring`, `deferred` or
+    /// `automaticReload`, which PassKit doesn't allow with contexts.
+    static func checkCompatibility(_ request: PaymentRequest) throws {
+        guard request.applePayMultiTokenContexts?.isEmpty == false else { return }
+        guard request.recurring == nil, request.deferred == nil, request.automaticReload == nil else {
+            throw PaymentFailure.configuration(ErrorMessage.withMerchantTokenRequest)
+        }
+    }
+
     @available(iOS 16.0, *)
     private static func buildContext(_ context: PaymentTokenContext) throws -> PKPaymentTokenContext {
         try checkNotEmpty("merchantIdentifier", context.merchantIdentifier)
         try checkNotEmpty("externalIdentifier", context.externalIdentifier)
         try checkNotEmpty("merchantName", context.merchantName)
+        if let merchantDomain = context.merchantDomain {
+            try checkNotEmpty("merchantDomain", merchantDomain)
+        }
         let amount = try context.amount.decimalNumber(for: context.merchantName)
         guard amount.decimalValue > Decimal.zero else {
             throw PaymentFailure.configuration(ErrorMessage.notPositive(context.merchantName))
