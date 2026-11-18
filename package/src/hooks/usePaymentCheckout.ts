@@ -15,6 +15,7 @@ import type {
   PaymentRequest,
   PaymentResult,
   PaymentItem,
+  PaymentItemKind,
   PayServiceStatus,
   GooglePayAuthMethod,
   GooglePayEnvironment,
@@ -48,6 +49,13 @@ export interface UsePaymentCheckoutConfig {
    * Android uses the app's label.
    */
   merchantName?: string
+
+  /**
+   * Labels the total in the Google Pay sheet. Defaults to `'Total'`.
+   * Android only: iOS labels the total with `merchantName`. See
+   * `PaymentRequest.totalLabel`.
+   */
+  totalLabel?: string
 
   /**
    * ISO 3166-1 alpha-2 country code for the transaction.
@@ -184,6 +192,7 @@ export interface UsePaymentCheckoutReturn {
       label: string
       amount: PaymentAmount
       type?: 'final' | 'pending'
+      kind?: PaymentItemKind
     }>
   ) => void
   removeItem: (index: number) => void
@@ -316,6 +325,7 @@ export function usePaymentCheckout(
   const paymentRequest = useMemo<PaymentRequest>(() => {
     const {
       merchantName,
+      totalLabel,
       countryCode = 'US',
       currencyCode = 'USD',
       supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
@@ -341,6 +351,7 @@ export function usePaymentCheckout(
         items.length > 0 ? items : [createPaymentItem('Total', 0, 'final')],
       applePayMerchantIdentifier,
       merchantName,
+      totalLabel,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
@@ -411,11 +422,13 @@ export function usePaymentCheckout(
         label: string
         amount: PaymentAmount
         type?: 'final' | 'pending'
+        kind?: PaymentItemKind
       }>
     ) => {
-      const newItems = itemsToAdd.map((item) =>
-        createPaymentItem(item.label, item.amount, item.type || 'final')
-      )
+      const newItems = itemsToAdd.map(({ kind, ...item }) => ({
+        ...createPaymentItem(item.label, item.amount, item.type || 'final'),
+        ...(kind !== undefined && { kind }),
+      }))
       setItems((prev) => [...prev, ...newItems])
     },
     []

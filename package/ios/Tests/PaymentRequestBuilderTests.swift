@@ -5,7 +5,7 @@ import XCTest
 final class PaymentRequestBuilderTests: XCTestCase {
 
     private func item(_ label: String, _ amount: String, _ type: PaymentItemType = .final) -> PaymentItem {
-        return PaymentItem(label: label, amount: .second(amount), type: type)
+        return PaymentItem(label: label, amount: .second(amount), type: type, kind: nil)
     }
 
     private func method(
@@ -36,6 +36,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
         return PaymentRequest(
             applePayMerchantIdentifier: merchantIdentifier,
             merchantName: merchantName,
+            totalLabel: nil,
             countryCode: "US",
             currencyCode: "USD",
             paymentItems: items,
@@ -332,7 +333,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
     func testAppendsAnExactTotalLabelledWithTheMerchant() throws {
         let request = try PaymentRequestBuilder.build(from: paymentRequest(
             items: [
-                PaymentItem(label: "Coffee", amount: .first(4.99), type: .final),
+                PaymentItem(label: "Coffee", amount: .first(4.99), type: .final, kind: nil),
                 item("Tip", "0.50"),
                 item("Discount", "-1.00"),
             ],

@@ -352,6 +352,7 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 ```typescript no-check
 interface UsePaymentCheckoutConfig {
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
+  totalLabel?: string; // Google Pay total label. Default: 'Total'. Android only
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
   supportedNetworks?: string[]; // PaymentNetwork names. Default: ['visa', 'mastercard', 'amex', 'discover']
@@ -738,12 +739,14 @@ interface PaymentItem {
   label: string;
   amount: PaymentAmount;
   type: "final" | "pending";
+  kind?: "subtotal" | "tax" | "discount"; // Google Pay display item type. Android only
 }
 
 // Payment Request
 interface PaymentRequest {
   applePayMerchantIdentifier?: string;
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
+  totalLabel?: string; // Google Pay total label. Default: "Total". Android only
   countryCode: string;
   currencyCode: string;
   paymentItems: PaymentItem[];

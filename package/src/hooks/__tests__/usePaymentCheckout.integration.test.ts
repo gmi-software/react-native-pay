@@ -412,6 +412,32 @@ describe('usePaymentCheckout integration', () => {
     )
   })
 
+  it('sends the total label and item kinds', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() =>
+      usePaymentCheckout({ totalLabel: 'Razem' })
+    )
+
+    act(() => {
+      result.current.addItems([
+        { label: 'Coffee', amount: 10 },
+        { label: 'VAT', amount: 2.3, kind: 'tax' },
+      ])
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const [request] = mockStartPayment.mock.calls[0]
+    expect(request.totalLabel).toBe('Razem')
+    expect(request.paymentItems).toEqual([
+      { label: 'Coffee', amount: '10.00', type: 'final' },
+      { label: 'VAT', amount: '2.30', type: 'final', kind: 'tax' },
+    ])
+  })
+
   describe('identity across re-renders', () => {
     // These tests end synchronously: a status check settling after them would
     // update the hook outside act.
@@ -463,6 +489,7 @@ describe('usePaymentCheckout integration', () => {
       ]
     } = {
       merchantName: ['Store A', 'Store B'],
+      totalLabel: ['Total', 'Razem'],
       countryCode: ['US', 'PL'],
       currencyCode: ['USD', 'EUR'],
       supportedNetworks: [['visa', 'amex'], ['visa']],

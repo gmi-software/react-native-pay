@@ -238,6 +238,18 @@ class MerchantTokenTransactionsTest {
         assertEquals("14.50", info.getString("immediateTotalPrice"))
         val lines = info.getJSONArray("immediateDisplayItems").objects()
         assertEquals(listOf("Starter kit", "Standard"), lines.map { it.getString("label") })
+        assertEquals(listOf("LINE_ITEM", "SHIPPING_OPTION"), lines.map { it.getString("type") })
+    }
+
+    @Test
+    fun itemKinds_reachTheItemsChargedNow() {
+        val items = arrayOf(item("Kit", "10.00"), item("VAT", "2.30", kind = PaymentItemKind.TAX))
+        val lines = build(items = items, deferred = deferred)
+            .getJSONObject("deferredTransactionInfo")
+            .getJSONArray("immediateDisplayItems")
+            .objects()
+
+        assertEquals(listOf("LINE_ITEM", "TAX"), lines.map { it.getString("type") })
     }
 
     // Google Pay forbids regular charges in immediateDisplayItems, and a first

@@ -17,6 +17,7 @@ Source of truth for these types: [`package/src/hooks/usePaymentCheckout.ts`](htt
 ```ts no-check
 interface UsePaymentCheckoutConfig {
   merchantName?: string          // business name shown on the sheet
+  totalLabel?: string            // Google Pay total label, default: 'Total'
   countryCode?: string           // default: 'US'
   currencyCode?: string         // default: 'USD'
   supportedNetworks?: string[]  // default: ['visa', 'mastercard', 'amex', 'discover']
@@ -42,6 +43,7 @@ interface UsePaymentCheckoutConfig {
 ```
 
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
+- **totalLabel** — Android only. The label of the total in the Google Pay sheet, such as `'Razem'`. Defaults to `'Total'`. iOS labels the total with `merchantName`. See [PaymentRequest](/docs/api/types#paymentrequest).
 - **supportedNetworks** — The card networks the payer can choose, as [PaymentNetwork](/docs/api/types#paymentnetwork) names. Both platforms honour it. A network the platform does not offer is left out, and an unknown name fails the payment. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only).
 - **googlePayAllowedAuthMethods** — Android only. Which Google Pay cards to accept: `'PAN_ONLY'` (saved to the Google account), `'CRYPTOGRAM_3DS'` (tokenized on the device), or both, the default. See [GooglePayAuthMethod](/docs/api/types#googlepayauthmethod).
 - **merchantCapabilities** — The card types to accept and, on iOS, the payment protocols. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given. On Android only `'Debit'` without `'Credit'` has an effect: it leaves credit cards out. Google Pay cannot leave debit cards out, so `['3DS', 'Credit']` accepts every card type on Android. An unknown value fails the payment on both platforms. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only). See [MerchantCapability](/docs/api/types#merchantcapability).
@@ -63,7 +65,7 @@ interface UsePaymentCheckoutReturn {
   items: PaymentItem[]
   total: number
   addItem: (label: string, amount: PaymentAmount, type?: 'final' | 'pending') => void
-  addItems: (items: Array<{ label: string; amount: PaymentAmount; type?: 'final' | 'pending' }>) => void
+  addItems: (items: Array<{ label: string; amount: PaymentAmount; type?: 'final' | 'pending'; kind?: PaymentItemKind }>) => void
   removeItem: (index: number) => void
   updateItem: (index: number, updates: Partial<PaymentItem>) => void
   clearItems: () => void
@@ -132,7 +134,7 @@ addItem('Product', 29.99)
 addItems([
   { label: 'Product', amount: 29.99 },
   { label: 'Shipping', amount: '5.00' },
-  { label: 'Tax', amount: 2.8, type: 'final' },
+  { label: 'Tax', amount: 2.8, type: 'final', kind: 'tax' }, // TAX line on Google Pay
 ])
 
 const result = await startPayment()
