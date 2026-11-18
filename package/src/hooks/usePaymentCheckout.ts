@@ -425,9 +425,9 @@ export function usePaymentCheckout(
         kind?: PaymentItemKind
       }>
     ) => {
-      const newItems = itemsToAdd.map(({ kind, ...item }) => ({
+      const newItems = itemsToAdd.map((item) => ({
         ...createPaymentItem(item.label, item.amount, item.type || 'final'),
-        ...(kind !== undefined && { kind }),
+        ...(item.kind && { kind: item.kind }),
       }))
       setItems((prev) => [...prev, ...newItems])
     },
