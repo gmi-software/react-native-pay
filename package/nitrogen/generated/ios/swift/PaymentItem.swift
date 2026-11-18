@@ -18,7 +18,7 @@ public extension PaymentItem {
   /**
    * Create a new instance of `PaymentItem`.
    */
-  init(label: String, amount: PaymentAmount, type: PaymentItemType) {
+  init(label: String, amount: PaymentAmount, type: PaymentItemType, kind: PaymentItemKind?) {
     self.init(std.string(label), { () -> bridge.std__variant_double__std__string_ in
       switch amount {
         case .first(let __value):
@@ -26,7 +26,13 @@ public extension PaymentItem {
         case .second(let __value):
           return bridge.create_std__variant_double__std__string_(std.string(__value))
       }
-    }().variant, type)
+    }().variant, type, { () -> bridge.std__optional_PaymentItemKind_ in
+      if let __unwrappedValue = kind {
+        return bridge.create_std__optional_PaymentItemKind_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }())
   }
 
   @inline(__always)
@@ -54,5 +60,10 @@ public extension PaymentItem {
   @inline(__always)
   var type: PaymentItemType {
     return self.__type
+  }
+  
+  @inline(__always)
+  var kind: PaymentItemKind? {
+    return self.__kind.value
   }
 }

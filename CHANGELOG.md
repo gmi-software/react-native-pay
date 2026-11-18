@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
+  `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
+  invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it
+  has none) for a failed `PaymentResult`. `startPayment` still returns `null` for an empty cart, an
+  invalid request or a throw, and still returns a failed `PaymentResult` as it is. `message` is
+  unchanged. `error` keeps its `Error | null` type: narrow it with `error instanceof PaymentError`
+  before reading `code`, from the render after the update
+  ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
+
 - **Subscriptions and later payments.** `PaymentRequest` takes `recurring`, `deferred` or
   `automaticReload`, mapped to PassKit's `PKRecurringPaymentRequest`, `PKDeferredPaymentRequest`
   and `PKAutomaticReloadPaymentRequest` on iOS, and to Google Pay's `recurringTransactionInfo`,
@@ -27,6 +36,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **`usePaymentCheckout` wraps a thrown error.** When native code, the request validation or the
+  in-progress check throws, `error` is a `PaymentError` that holds the thrown value as
+  `error.cause`, not the thrown value itself, and `String(error)` starts with `PaymentError:`. Read
+  the original from `error.cause`; `error.message` is unchanged.
+
 - **`HybridPaymentHandler.startPayment` validates the request**, as `usePaymentCheckout` and
   `createPaymentRequest` do. A request that fails `normalizePaymentRequest` resolves with
   `{ status: 'failed', code: 'CONFIGURATION', success: false, error }` without reaching native
@@ -46,6 +60,20 @@ All notable changes to this project are documented in this file.
 - **iOS: the missing merchant ID error says how to fix it.** It still starts with "No Apple Pay
   merchant identifier configured", and now names the Info.plist key
   `ReactNativePayApplePayMerchantIdentifiers` and the `applePayMerchantIdentifier` override.
+
+### Removed
+
+- **`PaymentResult.transactionId`.** Deprecated in 0.1.0. It was a random ID generated on the
+  device for each successful result, not an identifier from Apple, Google or your gateway, so it
+  changed on every attempt and couldn't serve as an idempotency key.
+
+### Migration
+
+1. Stop reading `result.transactionId`. To key idempotency or match a payment to an order, use
+   your order ID. To find the charge, use the ID your gateway returns when your server charges the
+   token.
+2. If you logged it or sent it to your server, drop it. On iOS, `result.token.transactionIdentifier`
+   is Apple's identifier for the payment; it is missing on Android.
 
 ### Fixed
 

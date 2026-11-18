@@ -352,6 +352,7 @@ The all-in-one hook for handling payments. Manages availability checking, cart s
 ```typescript no-check
 interface UsePaymentCheckoutConfig {
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
+  totalLabel?: string; // Google Pay total label. Default: 'Total'. Android only
   countryCode?: string; // Default: 'US'
   currencyCode?: string; // Default: 'USD'
   supportedNetworks?: string[]; // PaymentNetwork names. Default: ['visa', 'mastercard', 'amex', 'discover']
@@ -399,7 +400,7 @@ interface UsePaymentCheckoutReturn {
   startPayment: () => Promise<PaymentResult | null>;
   isProcessing: boolean; // Payment in progress?
   result: PaymentResult | null; // Last payment result; check result.status
-  error: Error | null; // Last error; null after a cancel
+  error: Error | null; // Last error, a PaymentError with a `code`; null after a cancel
 
   // Utilities
   reset: () => void; // Reset payment state
@@ -514,7 +515,6 @@ interface PaymentResult extends PaymentDetails {
   status: "success" | "cancelled" | "failed";
   code?: PaymentErrorCode; // Why it didn't succeed, see below
   success: boolean; // status === "success"
-  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
   error?: string; // Message for logs, also set on a cancel
 }
@@ -738,12 +738,14 @@ interface PaymentItem {
   label: string;
   amount: PaymentAmount;
   type: "final" | "pending";
+  kind?: "subtotal" | "tax" | "discount"; // Google Pay display item type. Android only
 }
 
 // Payment Request
 interface PaymentRequest {
   applePayMerchantIdentifier?: string;
   merchantName?: string; // "Pay <merchantName>" on Apple Pay; defaults to the app name
+  totalLabel?: string; // Google Pay total label. Default: "Total". Android only
   countryCode: string;
   currencyCode: string;
   paymentItems: PaymentItem[];
@@ -783,7 +785,6 @@ interface PaymentResult extends PaymentDetails {
   status: PaymentStatus;
   code?: PaymentErrorCode; // Set when status isn't "success"
   success: boolean; // status === "success"
-  transactionId?: string; // Deprecated: random, generated on the device
   token?: PaymentToken;
   error?: string; // Message for logs, also set on a cancel
 }

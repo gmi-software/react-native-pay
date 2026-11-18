@@ -29,9 +29,6 @@ data class PaymentResult(
   val success: Boolean,
   @DoNotStrip
   @Keep
-  val transactionId: String?,
-  @DoNotStrip
-  @Keep
   val token: PaymentToken?,
   @DoNotStrip
   @Keep
@@ -60,7 +57,6 @@ data class PaymentResult(
     return Objects.deepEquals(this.status, other.status)
       && Objects.deepEquals(this.code, other.code)
       && Objects.deepEquals(this.success, other.success)
-      && Objects.deepEquals(this.transactionId, other.transactionId)
       && Objects.deepEquals(this.token, other.token)
       && Objects.deepEquals(this.error, other.error)
       && Objects.deepEquals(this.billingContact, other.billingContact)
@@ -75,7 +71,6 @@ data class PaymentResult(
       status,
       code,
       success,
-      transactionId,
       token,
       error,
       billingContact,
@@ -94,8 +89,8 @@ data class PaymentResult(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(status: PaymentStatus, code: PaymentErrorCode?, success: Boolean, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?): PaymentResult {
-      return PaymentResult(status, code, success, transactionId, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod)
+    private fun fromCpp(status: PaymentStatus, code: PaymentErrorCode?, success: Boolean, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?): PaymentResult {
+      return PaymentResult(status, code, success, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod)
     }
   }
 }

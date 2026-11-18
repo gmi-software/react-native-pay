@@ -19,6 +19,7 @@ import {
   type UsePaymentCheckoutConfig,
 } from '../usePaymentCheckout'
 import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../../paymentHandler'
+import { PaymentError } from '../../errors'
 
 const CANCELLED_RESULT = {
   status: 'cancelled',
@@ -134,12 +135,16 @@ describe('usePaymentCheckout integration', () => {
     })
 
     expect(paymentResult).toBeNull()
-    expect(result.current.error?.message).toBe('Cart is empty')
+    expect(result.current.error).toBeInstanceOf(PaymentError)
+    expect(result.current.error).toMatchObject({
+      message: 'Cart is empty',
+      code: 'CONFIGURATION',
+    })
     expect(mockStartPayment).not.toHaveBeenCalled()
   })
 
   it('handles successful payments', async () => {
-    const nativeSuccess = { success: true, transactionId: 'tx_123' }
+    const nativeSuccess = { status: 'success', success: true }
     mockStartPayment.mockResolvedValueOnce(nativeSuccess)
     const { result } = renderCheckout()
 
@@ -256,7 +261,10 @@ describe('usePaymentCheckout integration', () => {
       })
 
       expect(paymentResult).toBeNull()
+      expect(result.current.error).toBeInstanceOf(PaymentError)
       expect(result.current.error?.message).toContain(message)
+      expect(result.current.error).toHaveProperty('code', 'CONFIGURATION')
+      expect(result.current.error?.cause).toBeInstanceOf(Error)
       expect(result.current.isProcessing).toBe(false)
       expect(mockStartPayment).not.toHaveBeenCalled()
     }
@@ -329,8 +337,33 @@ describe('usePaymentCheckout integration', () => {
       await result.current.startPayment()
     })
 
-    expect(result.current.error?.message).toBe('Declined by issuer')
+    expect(result.current.error).toBeInstanceOf(PaymentError)
+    expect(result.current.error).toMatchObject({
+      message: 'Declined by issuer',
+      code: 'PROVIDER_ERROR',
+    })
     expect(result.current.result).toEqual(declined)
+  })
+
+  it('uses UNKNOWN when a failed native result has no code', async () => {
+    mockStartPayment.mockResolvedValueOnce({
+      status: 'failed',
+      success: false,
+    })
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 9.99)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    expect(result.current.error).toMatchObject({
+      message: 'Payment failed',
+      code: 'UNKNOWN',
+    })
   })
 
   it('does not treat a cancel as an error', async () => {
@@ -412,6 +445,32 @@ describe('usePaymentCheckout integration', () => {
     )
   })
 
+  it('sends the total label and item kinds', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() =>
+      usePaymentCheckout({ totalLabel: 'Razem' })
+    )
+
+    act(() => {
+      result.current.addItems([
+        { label: 'Coffee', amount: 10 },
+        { label: 'VAT', amount: 2.3, kind: 'tax' },
+      ])
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const [request] = mockStartPayment.mock.calls[0]
+    expect(request.totalLabel).toBe('Razem')
+    expect(request.paymentItems).toEqual([
+      { label: 'Coffee', amount: '10.00', type: 'final' },
+      { label: 'VAT', amount: '2.30', type: 'final', kind: 'tax' },
+    ])
+  })
+
   describe('identity across re-renders', () => {
     // These tests end synchronously: a status check settling after them would
     // update the hook outside act.
@@ -463,6 +522,7 @@ describe('usePaymentCheckout integration', () => {
       ]
     } = {
       merchantName: ['Store A', 'Store B'],
+      totalLabel: ['Total', 'Razem'],
       countryCode: ['US', 'PL'],
       currencyCode: ['USD', 'EUR'],
       supportedNetworks: [['visa', 'amex'], ['visa']],
@@ -723,7 +783,36 @@ describe('usePaymentCheckout integration', () => {
     })
 
     expect(paymentResult).toBeNull()
-    expect(result.current.error?.message).toBe('Payment processing failed')
+    expect(result.current.error).toBeInstanceOf(PaymentError)
+    expect(result.current.error).toMatchObject({
+      message: 'Payment processing failed',
+      code: 'UNKNOWN',
+      cause: 'native crash',
+    })
+  })
+
+  it('wraps an Error thrown by native code, keeping its message', async () => {
+    const nativeError = new Error('Bridge torn down')
+    mockStartPayment.mockRejectedValueOnce(nativeError)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 12)
+    })
+
+    let paymentResult: any = 'not-null'
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toBeNull()
+    expect(result.current.error).toBeInstanceOf(PaymentError)
+    expect(result.current.error).toMatchObject({
+      message: 'Bridge torn down',
+      code: 'UNKNOWN',
+    })
+    expect(result.current.error?.cause).toBe(nativeError)
+    expect(result.current.isProcessing).toBe(false)
   })
 
   it('resets transient checkout state', async () => {
@@ -775,7 +864,7 @@ describe('usePaymentCheckout integration', () => {
     expect(result.current.error).toBeNull()
     expect(result.current.result).toBeNull()
 
-    const nativeSuccess = { success: true, transactionId: 'tx_1' }
+    const nativeSuccess = { status: 'success', success: true }
     await act(async () => {
       native.resolve(nativeSuccess)
       await first
@@ -883,7 +972,11 @@ describe('usePaymentCheckout integration', () => {
     })
 
     expect(paymentResult).toBeNull()
-    expect(result.current.error?.message).toBe('Native unavailable')
+    expect(result.current.error).toBeInstanceOf(PaymentError)
+    expect(result.current.error).toMatchObject({
+      message: 'Native unavailable',
+      code: 'UNKNOWN',
+    })
     expect(result.current.isProcessing).toBe(false)
     expect(mockStartPayment).not.toHaveBeenCalled()
   })

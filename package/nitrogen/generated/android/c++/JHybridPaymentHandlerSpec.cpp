@@ -55,6 +55,8 @@ namespace margelo::nitro::pay { struct PaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentItem; }
 // Forward declaration of `PaymentItemType` to properly resolve imports.
 namespace margelo::nitro::pay { enum class PaymentItemType; }
+// Forward declaration of `PaymentItemKind` to properly resolve imports.
+namespace margelo::nitro::pay { enum class PaymentItemKind; }
 // Forward declaration of `RecurringPaymentRequest` to properly resolve imports.
 namespace margelo::nitro::pay { struct RecurringPaymentRequest; }
 // Forward declaration of `RecurringBillingItem` to properly resolve imports.
@@ -93,11 +95,11 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "PaymentErrorCode.hpp"
 #include <optional>
 #include "JPaymentErrorCode.hpp"
-#include <string>
 #include "PaymentToken.hpp"
 #include "JPaymentToken.hpp"
 #include "PaymentMethod.hpp"
 #include "JPaymentMethod.hpp"
+#include <string>
 #include "PaymentNetwork.hpp"
 #include "JPaymentNetwork.hpp"
 #include "PaymentMethodType.hpp"
@@ -137,6 +139,8 @@ namespace margelo::nitro::pay { enum class PaymentAuthorizationStatus; }
 #include "JPaymentItem.hpp"
 #include "PaymentItemType.hpp"
 #include "JPaymentItemType.hpp"
+#include "PaymentItemKind.hpp"
+#include "JPaymentItemKind.hpp"
 #include "RecurringPaymentRequest.hpp"
 #include "JRecurringPaymentRequest.hpp"
 #include "RecurringBillingItem.hpp"

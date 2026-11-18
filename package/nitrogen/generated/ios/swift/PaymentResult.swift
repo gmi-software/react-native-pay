@@ -18,20 +18,14 @@ public extension PaymentResult {
   /**
    * Create a new instance of `PaymentResult`.
    */
-  init(status: PaymentStatus, code: PaymentErrorCode?, success: Bool, transactionId: String?, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
+  init(status: PaymentStatus, code: PaymentErrorCode?, success: Bool, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?) {
     self.init(status, { () -> bridge.std__optional_PaymentErrorCode_ in
       if let __unwrappedValue = code {
         return bridge.create_std__optional_PaymentErrorCode_(__unwrappedValue)
       } else {
         return .init()
       }
-    }(), success, { () -> bridge.std__optional_std__string_ in
-      if let __unwrappedValue = transactionId {
-        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
-      } else {
-        return .init()
-      }
-    }(), { () -> bridge.std__optional_PaymentToken_ in
+    }(), success, { () -> bridge.std__optional_PaymentToken_ in
       if let __unwrappedValue = token {
         return bridge.create_std__optional_PaymentToken_(__unwrappedValue)
       } else {
@@ -89,18 +83,6 @@ public extension PaymentResult {
   @inline(__always)
   var success: Bool {
     return self.__success
-  }
-  
-  @inline(__always)
-  var transactionId: String? {
-    return { () -> String? in
-      if bridge.has_value_std__optional_std__string_(self.__transactionId) {
-        let __unwrapped = bridge.get_std__optional_std__string_(self.__transactionId)
-        return String(__unwrapped)
-      } else {
-        return nil
-      }
-    }()
   }
   
   @inline(__always)

@@ -24,6 +24,7 @@
 #include "JGooglePayEnvironment.hpp"
 #include "JPaymentAmount.hpp"
 #include "JPaymentItem.hpp"
+#include "JPaymentItemKind.hpp"
 #include "JPaymentItemType.hpp"
 #include "JPaymentTokenContext.hpp"
 #include "JRecurringBillingItem.hpp"
@@ -31,6 +32,7 @@
 #include "JRecurringPaymentRequest.hpp"
 #include "JShippingMethod.hpp"
 #include "PaymentItem.hpp"
+#include "PaymentItemKind.hpp"
 #include "PaymentItemType.hpp"
 #include "PaymentTokenContext.hpp"
 #include "RecurringBillingItem.hpp"
@@ -67,6 +69,8 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> applePayMerchantIdentifier = this->getFieldValue(fieldApplePayMerchantIdentifier);
       static const auto fieldMerchantName = clazz->getField<jni::JString>("merchantName");
       jni::local_ref<jni::JString> merchantName = this->getFieldValue(fieldMerchantName);
+      static const auto fieldTotalLabel = clazz->getField<jni::JString>("totalLabel");
+      jni::local_ref<jni::JString> totalLabel = this->getFieldValue(fieldTotalLabel);
       static const auto fieldCountryCode = clazz->getField<jni::JString>("countryCode");
       jni::local_ref<jni::JString> countryCode = this->getFieldValue(fieldCountryCode);
       static const auto fieldCurrencyCode = clazz->getField<jni::JString>("currencyCode");
@@ -110,6 +114,7 @@ namespace margelo::nitro::pay {
       return PaymentRequest(
         applePayMerchantIdentifier != nullptr ? std::make_optional(applePayMerchantIdentifier->toStdString()) : std::nullopt,
         merchantName != nullptr ? std::make_optional(merchantName->toStdString()) : std::nullopt,
+        totalLabel != nullptr ? std::make_optional(totalLabel->toStdString()) : std::nullopt,
         countryCode->toStdString(),
         currencyCode->toStdString(),
         [&](auto&& __input) {
@@ -193,13 +198,14 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentRequest::javaobject> fromCpp(const PaymentRequest& value) {
-      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JShippingMethod>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JRecurringPaymentRequest>, jni::alias_ref<JDeferredPaymentRequest>, jni::alias_ref<JAutomaticReloadPaymentRequest>, jni::alias_ref<jni::JArrayClass<JPaymentTokenContext>>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
+      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JShippingMethod>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JRecurringPaymentRequest>, jni::alias_ref<JDeferredPaymentRequest>, jni::alias_ref<JAutomaticReloadPaymentRequest>, jni::alias_ref<jni::JArrayClass<JPaymentTokenContext>>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         value.applePayMerchantIdentifier.has_value() ? jni::make_jstring(value.applePayMerchantIdentifier.value()) : nullptr,
         value.merchantName.has_value() ? jni::make_jstring(value.merchantName.value()) : nullptr,
+        value.totalLabel.has_value() ? jni::make_jstring(value.totalLabel.value()) : nullptr,
         jni::make_jstring(value.countryCode),
         jni::make_jstring(value.currencyCode),
         [&](auto&& __input) {

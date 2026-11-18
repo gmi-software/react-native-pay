@@ -15,6 +15,7 @@ import type {
   PaymentRequest,
   PaymentResult,
   PaymentItem,
+  PaymentItemKind,
   PayServiceStatus,
   GooglePayAuthMethod,
   GooglePayEnvironment,
@@ -23,7 +24,9 @@ import type {
   PaymentToken,
   PaymentAuthorizationResult,
   PaymentDetails,
+  PaymentErrorCode,
 } from '../types'
+import { PaymentError } from '../errors'
 import {
   createPaymentItem,
   calculateTotal,
@@ -35,6 +38,16 @@ import {
 // NaN and Infinity become null. No objects: a `JSON.stringify` key list would
 // filter their keys too.
 type JsonValue = string | boolean | null | undefined | readonly JsonValue[]
+
+// Wraps what a call threw, keeping its message and the original as `cause`.
+function toPaymentError(
+  err: unknown,
+  fallbackMessage: string,
+  code: PaymentErrorCode
+): PaymentError {
+  const message = err instanceof Error ? err.message : fallbackMessage
+  return new PaymentError(message, code, { cause: err })
+}
 
 /**
  * Configuration for `usePaymentCheckout`.
@@ -48,6 +61,13 @@ export interface UsePaymentCheckoutConfig {
    * Android uses the app's label.
    */
   merchantName?: string
+
+  /**
+   * Labels the total in the Google Pay sheet. Defaults to `'Total'`.
+   * Android only: iOS labels the total with `merchantName`. See
+   * `PaymentRequest.totalLabel`.
+   */
+  totalLabel?: string
 
   /**
    * ISO 3166-1 alpha-2 country code for the transaction.
@@ -184,6 +204,7 @@ export interface UsePaymentCheckoutReturn {
       label: string
       amount: PaymentAmount
       type?: 'final' | 'pending'
+      kind?: PaymentItemKind
     }>
   ) => void
   removeItem: (index: number) => void
@@ -195,7 +216,10 @@ export interface UsePaymentCheckoutReturn {
   isProcessing: boolean
   /** The last result. A cancel has `status: 'cancelled'` and no `error`. */
   result: PaymentResult | null
-  /** Set when a payment fails or can't start; stays `null` on a cancel. */
+  /**
+   * Set when a payment fails or can't start; stays `null` on a cancel. The
+   * hook always sets a `PaymentError`, whose `code` says why.
+   */
   error: Error | null
 
   // Utilities
@@ -316,6 +340,7 @@ export function usePaymentCheckout(
   const paymentRequest = useMemo<PaymentRequest>(() => {
     const {
       merchantName,
+      totalLabel,
       countryCode = 'US',
       currencyCode = 'USD',
       supportedNetworks = ['visa', 'mastercard', 'amex', 'discover'],
@@ -341,6 +366,7 @@ export function usePaymentCheckout(
         items.length > 0 ? items : [createPaymentItem('Total', 0, 'final')],
       applePayMerchantIdentifier,
       merchantName,
+      totalLabel,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
@@ -411,11 +437,13 @@ export function usePaymentCheckout(
         label: string
         amount: PaymentAmount
         type?: 'final' | 'pending'
+        kind?: PaymentItemKind
       }>
     ) => {
-      const newItems = itemsToAdd.map((item) =>
-        createPaymentItem(item.label, item.amount, item.type || 'final')
-      )
+      const newItems = itemsToAdd.map((item) => ({
+        ...createPaymentItem(item.label, item.amount, item.type || 'final'),
+        ...(item.kind && { kind: item.kind }),
+      }))
       setItems((prev) => [...prev, ...newItems])
     },
     []
@@ -445,9 +473,7 @@ export function usePaymentCheckout(
       isPaymentInProgress =
         isPaymentInFlight.current || getPaymentHandler().isPaymentInProgress()
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Payment processing failed')
-      )
+      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
       return null
     }
     if (isPaymentInProgress) {
@@ -455,8 +481,7 @@ export function usePaymentCheckout(
     }
 
     if (items.length === 0) {
-      const emptyCartError = new Error('Cart is empty')
-      setError(emptyCartError)
+      setError(new PaymentError('Cart is empty', 'CONFIGURATION'))
       return null
     }
 
@@ -464,7 +489,7 @@ export function usePaymentCheckout(
     try {
       validatedRequest = normalizePaymentRequest(paymentRequest)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)))
+      setError(toPaymentError(err, String(err), 'CONFIGURATION'))
       return null
     }
 
@@ -487,14 +512,17 @@ export function usePaymentCheckout(
 
       // A cancel is the user's choice, not an error.
       if (paymentResult.status === 'failed') {
-        setError(new Error(paymentResult.error || 'Payment failed'))
+        setError(
+          new PaymentError(
+            paymentResult.error || 'Payment failed',
+            paymentResult.code ?? 'UNKNOWN'
+          )
+        )
       }
 
       return paymentResult
     } catch (err) {
-      const paymentError =
-        err instanceof Error ? err : new Error('Payment processing failed')
-      setError(paymentError)
+      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
       return null
     } finally {
       isPaymentInFlight.current = false

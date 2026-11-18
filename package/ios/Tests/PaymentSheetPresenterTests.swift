@@ -113,9 +113,10 @@ final class RefusedPaymentSheetTests: XCTestCase {
         return PaymentRequest(
             applePayMerchantIdentifier: "merchant.com.example",
             merchantName: "Example",
+            totalLabel: nil,
             countryCode: "US",
             currencyCode: "USD",
-            paymentItems: [PaymentItem(label: "Coffee", amount: .second("4.99"), type: .final)],
+            paymentItems: [PaymentItem(label: "Coffee", amount: .second("4.99"), type: .final, kind: nil)],
             merchantCapabilities: ["3DS"],
             supportedNetworks: ["visa"],
             shippingType: nil,

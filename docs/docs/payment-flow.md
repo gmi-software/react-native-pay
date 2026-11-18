@@ -94,13 +94,13 @@ A Google Pay error arrives either from `loadPaymentData` or as the sheet's `RESU
 
 ### Start/processing exception (hook)
 
-- `startPayment()` from `usePaymentCheckout` returns `null` when an exception occurs, and sets `error`.
+- `startPayment()` from `usePaymentCheckout` returns `null` when an exception occurs, and sets `error` to a [`PaymentError`](/docs/api/types#paymenterror) with `code: 'UNKNOWN'`.
 - Handle this as an app/runtime failure path (show generic error + retry).
 
 ### Empty cart or invalid amounts (hook)
 
-- Calling `startPayment()` with no cart items returns `null` and sets a "Cart is empty" error.
-- An invalid amount or a negative total also returns `null` and sets `error`, without opening the sheet.
+- Calling `startPayment()` with no cart items returns `null` and sets a "Cart is empty" error with `code: 'CONFIGURATION'`.
+- An invalid amount or a negative total also returns `null` and sets `error` with `code: 'CONFIGURATION'`, without opening the sheet.
 - Gate the pay button on `items.length > 0`.
 
 ## Token format
@@ -117,7 +117,7 @@ Always send the **entire token object** (or exactly the fields your gateway asks
 Your backend should:
 
 - Validate order ownership, amount, and currency from server-side order data.
-- Use an idempotency key derived from your order ID to prevent duplicate charges. Don't use `PaymentResult.transactionId`: the device generates a new one for every result.
+- Use an idempotency key derived from your order ID to prevent duplicate charges.
 - Call gateway APIs with the provider-specific token mapping.
 - Persist both wallet result and gateway result for audit/debug.
 - Return a final, app-friendly checkout status.

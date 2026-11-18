@@ -42,8 +42,8 @@ namespace margelo::nitro::pay { struct ShippingMethod; }
 #include "PaymentStatus.hpp"
 #include "PaymentErrorCode.hpp"
 #include <optional>
-#include <string>
 #include "PaymentToken.hpp"
+#include <string>
 #include "PaymentContact.hpp"
 #include "ShippingMethod.hpp"
 
@@ -57,7 +57,6 @@ namespace margelo::nitro::pay {
     PaymentStatus status     SWIFT_PRIVATE;
     std::optional<PaymentErrorCode> code     SWIFT_PRIVATE;
     bool success     SWIFT_PRIVATE;
-    std::optional<std::string> transactionId     SWIFT_PRIVATE;
     std::optional<PaymentToken> token     SWIFT_PRIVATE;
     std::optional<std::string> error     SWIFT_PRIVATE;
     std::optional<PaymentContact> billingContact     SWIFT_PRIVATE;
@@ -68,7 +67,7 @@ namespace margelo::nitro::pay {
 
   public:
     PaymentResult() = default;
-    explicit PaymentResult(PaymentStatus status, std::optional<PaymentErrorCode> code, bool success, std::optional<std::string> transactionId, std::optional<PaymentToken> token, std::optional<std::string> error, std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod): status(status), code(code), success(success), transactionId(transactionId), token(token), error(error), billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod) {}
+    explicit PaymentResult(PaymentStatus status, std::optional<PaymentErrorCode> code, bool success, std::optional<PaymentToken> token, std::optional<std::string> error, std::optional<PaymentContact> billingContact, std::optional<PaymentContact> shippingContact, std::optional<std::string> emailAddress, std::optional<std::string> phoneNumber, std::optional<ShippingMethod> shippingMethod): status(status), code(code), success(success), token(token), error(error), billingContact(billingContact), shippingContact(shippingContact), emailAddress(emailAddress), phoneNumber(phoneNumber), shippingMethod(shippingMethod) {}
 
   public:
     friend bool operator==(const PaymentResult& lhs, const PaymentResult& rhs) = default;
@@ -87,7 +86,6 @@ namespace margelo::nitro {
         JSIConverter<margelo::nitro::pay::PaymentStatus>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "status"))),
         JSIConverter<std::optional<margelo::nitro::pay::PaymentErrorCode>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "code"))),
         JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "success"))),
-        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionId"))),
         JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "token"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "error"))),
         JSIConverter<std::optional<margelo::nitro::pay::PaymentContact>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingContact"))),
@@ -102,7 +100,6 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "status"), JSIConverter<margelo::nitro::pay::PaymentStatus>::toJSI(runtime, arg.status));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "code"), JSIConverter<std::optional<margelo::nitro::pay::PaymentErrorCode>>::toJSI(runtime, arg.code));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "success"), JSIConverter<bool>::toJSI(runtime, arg.success));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "transactionId"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.transactionId));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "token"), JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::toJSI(runtime, arg.token));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "error"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.error));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "billingContact"), JSIConverter<std::optional<margelo::nitro::pay::PaymentContact>>::toJSI(runtime, arg.billingContact));
@@ -123,7 +120,6 @@ namespace margelo::nitro {
       if (!JSIConverter<margelo::nitro::pay::PaymentStatus>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "status")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::PaymentErrorCode>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "code")))) return false;
       if (!JSIConverter<bool>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "success")))) return false;
-      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "transactionId")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::PaymentToken>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "token")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "error")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::PaymentContact>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingContact")))) return false;

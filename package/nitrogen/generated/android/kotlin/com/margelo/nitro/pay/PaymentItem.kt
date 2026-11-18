@@ -26,7 +26,10 @@ data class PaymentItem(
   val amount: PaymentAmount,
   @DoNotStrip
   @Keep
-  val type: PaymentItemType
+  val type: PaymentItemType,
+  @DoNotStrip
+  @Keep
+  val kind: PaymentItemKind?
 ) {
   /* primary constructor */
 
@@ -36,13 +39,15 @@ data class PaymentItem(
     return Objects.deepEquals(this.label, other.label)
       && Objects.deepEquals(this.amount, other.amount)
       && Objects.deepEquals(this.type, other.type)
+      && Objects.deepEquals(this.kind, other.kind)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
       label,
       amount,
-      type
+      type,
+      kind
     ).contentDeepHashCode()
   }
 
@@ -54,8 +59,8 @@ data class PaymentItem(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(label: String, amount: PaymentAmount, type: PaymentItemType): PaymentItem {
-      return PaymentItem(label, amount, type)
+    private fun fromCpp(label: String, amount: PaymentAmount, type: PaymentItemType, kind: PaymentItemKind?): PaymentItem {
+      return PaymentItem(label, amount, type, kind)
     }
   }
 }

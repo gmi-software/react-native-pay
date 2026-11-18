@@ -41,6 +41,45 @@ describe('normalizePaymentRequest', () => {
     ])
   })
 
+  it('keeps item kinds and the total label', () => {
+    const normalized = normalizePaymentRequest({
+      ...request([
+        { label: 'Subtotal', amount: 10, type: 'final', kind: 'subtotal' },
+        { label: 'Coupon', amount: -2, type: 'final', kind: 'discount' },
+        { label: 'VAT', amount: '1.84', type: 'final', kind: 'tax' },
+      ]),
+      totalLabel: 'Razem',
+    })
+
+    expect(normalized.totalLabel).toBe('Razem')
+    expect(normalized.paymentItems.map((item) => item.kind)).toEqual([
+      'subtotal',
+      'discount',
+      'tax',
+    ])
+  })
+
+  it('rejects an unknown item kind', () => {
+    expect(() =>
+      normalizePaymentRequest(
+        request([
+          { label: 'VAT', amount: 1, type: 'final', kind: 'TAX' as 'tax' },
+        ])
+      )
+    ).toThrow(
+      'kind for "VAT" must be one of "subtotal", "tax", "discount", got "TAX"'
+    )
+  })
+
+  it.each(['', '   ', 42])('rejects the total label %p', (totalLabel) => {
+    expect(() =>
+      normalizePaymentRequest({
+        ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+        totalLabel: totalLabel as string,
+      })
+    ).toThrow('totalLabel must be a non-empty string')
+  })
+
   it('rejects a negative total', () => {
     expect(() =>
       normalizePaymentRequest(

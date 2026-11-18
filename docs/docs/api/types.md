@@ -25,13 +25,14 @@ Google Pay accepts at most two decimal places, so on Android a three-decimal amo
 
 ## PaymentItem
 
-A single line item (label, amount, type).
+A single line item (label, amount, type, and an optional kind).
 
 ```ts no-check
 interface PaymentItem {
   label: string
   amount: PaymentAmount // number | string
   type: 'final' | 'pending'
+  kind?: 'subtotal' | 'tax' | 'discount' // Android only
 }
 ```
 
@@ -40,7 +41,19 @@ interface PaymentItem {
 - **final** — Confirmed amount (e.g. product price, tax).
 - **pending** — Estimate (e.g. shipping that may change).
 
-If any item is `pending`, the total is an estimate too: Google Pay receives `totalPriceStatus: 'ESTIMATED'` and Apple Pay marks the total summary item as `.pending`. Every item is sent to Google Pay as a `LINE_ITEM` display item, with `status` set to `FINAL` or `PENDING`.
+If any item is `pending`, the total is an estimate too: Google Pay receives `totalPriceStatus: 'ESTIMATED'` and Apple Pay marks the total summary item as `.pending`. Each item is sent to Google Pay as a display item with `status` set to `FINAL` or `PENDING`.
+
+`kind` is exported as `PaymentItemKind`. Google Pay receives it as the display item's type: `'subtotal'` as `SUBTOTAL`, `'tax'` as `TAX` and `'discount'` as `DISCOUNT`. An item without `kind` is a `LINE_ITEM`, and the selected [shipping method](#shippingmethod) is a `SHIPPING_OPTION`. Give a discount a negative amount: `kind` only changes how Google Pay labels the line, not how it is added to the total. iOS ignores `kind`. Any other value throws before the payment starts.
+
+```ts
+import type { PaymentItem } from '@gmisoftware/react-native-pay'
+
+const items: PaymentItem[] = [
+  { label: 'Coffee beans', amount: '18.00', type: 'final' },
+  { label: 'Coupon', amount: '-3.00', type: 'final', kind: 'discount' },
+  { label: 'VAT', amount: '3.45', type: 'final', kind: 'tax' },
+]
+```
 
 ---
 
@@ -52,6 +65,7 @@ Full request passed to the native layer (or to `HybridPaymentHandler.startPaymen
 interface PaymentRequest {
   applePayMerchantIdentifier?: string
   merchantName?: string
+  totalLabel?: string              // Google Pay total label, default 'Total'
   countryCode: string              // ISO 3166-1 alpha-2, upper case: 'US'
   currencyCode: string             // ISO 4217, upper case: 'USD'
   paymentItems: PaymentItem[]
@@ -83,6 +97,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 
 `merchantName` is the business name shown to the payer: the name on the Google Pay sheet and the label of the Apple Pay total. Apple Pay shows the last summary item as the total ("Pay *label*"), so on iOS the library appends a total item labelled with `merchantName` after your `paymentItems`, also when there is only one item. Don't add your own "Total" item. If `merchantName` is missing or blank, Android uses the app's label from the manifest and iOS uses the app's display name (`CFBundleDisplayName`, then `CFBundleName`).
 
+`totalLabel` labels the total in the Google Pay sheet, for example `'Razem'` for a Polish sheet. It defaults to `'Total'` and must not be blank. Android only: iOS labels the total with `merchantName`. Google Pay shows no total label for `recurring`, `deferred` and `automaticReload` payments, so it has no effect on them.
+
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
 
 `supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
@@ -108,7 +124,6 @@ interface PaymentResult extends PaymentDetails {
   status: PaymentStatus     // 'success' | 'cancelled' | 'failed'
   code?: PaymentErrorCode   // set when status isn't 'success'
   success: boolean          // status === 'success'
-  transactionId?: string    // deprecated
   token?: PaymentToken
   error?: string            // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
@@ -129,10 +144,46 @@ type PaymentErrorCode =
 - **status** — `'cancelled'` means the user closed the sheet before authorizing. It is not an error: `usePaymentCheckout` leaves `error` as `null` for it.
 - **code** — Why the payment didn't succeed. `'CANCELLED'` for a cancel, one of the others for a failure. See [Error codes](/docs/payment-flow#error-codes) for what each one means and which native cases produce it.
 - **success** — Kept for compatibility. Use `status` to tell a cancel from a failure.
-- **transactionId** — Deprecated. A random ID the device generates for each successful result; it doesn't come from Apple, Google or your gateway. Don't use it as an idempotency key: use your order ID.
 - **token** — Set on success. Send it to your backend to complete the charge with your gateway, unless `onAuthorize` already did.
 - **Contact details and shipping method** — A successful result also holds the ones the request asked for; see [PaymentDetails](#paymentdetails).
 - **error** — A message for logs, such as `'Payment cancelled by user'`. Don't match on it; use `code`.
+
+---
+
+## PaymentError
+
+The `error` that [`usePaymentCheckout`](/docs/api/use-payment-checkout) sets when a payment fails or can't start. It extends `Error`.
+
+```ts no-check
+class PaymentError extends Error {
+  name: string             // 'PaymentError'
+  readonly code: PaymentErrorCode
+  cause?: unknown // the error it wraps, if any
+}
+```
+
+- **code** — The same values as [`PaymentResult.code`](#paymentresult): `'CONFIGURATION'` for an empty cart or an invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed `PaymentResult` (`'UNKNOWN'` if it has none). A cancel and `'IN_PROGRESS'` don't set `error`.
+- **cause** — The validation error or the value native code threw. An empty cart and a failed `PaymentResult` have no `cause`.
+
+`error` is React state, so read it from the hook in the render after `startPayment()` settles, not from the value an event handler captured. The hook types it as `Error | null`; narrow it with `instanceof PaymentError` to read `code`:
+
+```tsx
+import { Text } from 'react-native'
+import {
+  PaymentError,
+  usePaymentCheckout,
+} from '@gmisoftware/react-native-pay'
+
+function CheckoutError() {
+  const { error } = usePaymentCheckout({})
+
+  if (error instanceof PaymentError && error.code === 'CONFIGURATION') {
+    // A bug in the app: log it, and show the user a generic message.
+    return <Text>Payment is unavailable right now.</Text>
+  }
+  return error ? <Text>Payment failed. Try again.</Text> : null
+}
+```
 
 ---
 
