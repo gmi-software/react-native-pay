@@ -6,7 +6,7 @@ When the user authorizes a payment, your app receives a **token**. Nothing has b
 
 From the client, send at least:
 
-- **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive.
+- **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive. Once it is sent, drop it: call `reset()` if you use `usePaymentCheckout`, and don't put the result or token in navigation params or a global store.
 - **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
 
 Don't send the amount to charge. The server looks up the order and charges the amount and currency it stored. If you also send the total the user saw, the server only compares it with the order and rejects a mismatch.

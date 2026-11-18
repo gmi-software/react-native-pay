@@ -100,7 +100,7 @@ Which button to show for each combination is in [Check availability](/docs/guide
   - Returns `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
 - **error** — A [`PaymentError`](/docs/api/types#paymenterror) whenever it is set. Its `code` uses the [error codes](/docs/payment-flow#error-codes) of `PaymentResult`, so it tells you why `startPayment()` returned `null`. It is state: read it in the render after `startPayment()` settles, and narrow it with `instanceof PaymentError` to read `code`.
 - **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (arrays such as `supportedNetworks` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
-- **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles.
+- **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles. Call it once you no longer need `result`, for example after sending the token to your server, so the token doesn't stay in the hook's state.
 
 ## Example
 

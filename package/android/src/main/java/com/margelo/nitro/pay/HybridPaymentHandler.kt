@@ -320,9 +320,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // Settles this attempt once. Without it, a late outcome after the timeout
         // would settle the next payment that claimed the slot.
         var isSettled = false
+        var timeout: Runnable? = null
         val settle = { result: PaymentResult ->
             if (!isSettled) {
                 isSettled = true
+                // Otherwise the queued timeout keeps this attempt for its full delay.
+                timeout?.let { mainHandler.removeCallbacks(it) }
                 pendingPayment.settle(result)
             }
         }
@@ -339,14 +342,14 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             )
         }
         
-        mainHandler.postDelayed({
+        timeout = Runnable {
             settle(
                 PaymentMapper.createErrorResult(
                     PaymentErrorCode.PROVIDER_ERROR,
                     PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT
                 )
             )
-        }, PaymentConstants.AUTHORIZATION_TIMEOUT_MS)
+        }.also { mainHandler.postDelayed(it, PaymentConstants.AUTHORIZATION_TIMEOUT_MS) }
         
         try {
             authorize(token, PaymentMapper.paymentDetails(authorizedResult))
