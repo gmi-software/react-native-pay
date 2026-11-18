@@ -24,7 +24,9 @@ import type {
   PaymentToken,
   PaymentAuthorizationResult,
   PaymentDetails,
+  PaymentErrorCode,
 } from '../types'
+import { PaymentError } from '../errors'
 import {
   createPaymentItem,
   calculateTotal,
@@ -36,6 +38,16 @@ import {
 // NaN and Infinity become null. No objects: a `JSON.stringify` key list would
 // filter their keys too.
 type JsonValue = string | boolean | null | undefined | readonly JsonValue[]
+
+// Wraps what a call threw, keeping its message and the original as `cause`.
+function toPaymentError(
+  err: unknown,
+  fallbackMessage: string,
+  code: PaymentErrorCode
+): PaymentError {
+  const message = err instanceof Error ? err.message : fallbackMessage
+  return new PaymentError(message, code, { cause: err })
+}
 
 /**
  * Configuration for `usePaymentCheckout`.
@@ -204,7 +216,10 @@ export interface UsePaymentCheckoutReturn {
   isProcessing: boolean
   /** The last result. A cancel has `status: 'cancelled'` and no `error`. */
   result: PaymentResult | null
-  /** Set when a payment fails or can't start; stays `null` on a cancel. */
+  /**
+   * Set when a payment fails or can't start; stays `null` on a cancel. The
+   * hook always sets a `PaymentError`, whose `code` says why.
+   */
   error: Error | null
 
   // Utilities
@@ -458,9 +473,7 @@ export function usePaymentCheckout(
       isPaymentInProgress =
         isPaymentInFlight.current || getPaymentHandler().isPaymentInProgress()
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error('Payment processing failed')
-      )
+      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
       return null
     }
     if (isPaymentInProgress) {
@@ -468,8 +481,7 @@ export function usePaymentCheckout(
     }
 
     if (items.length === 0) {
-      const emptyCartError = new Error('Cart is empty')
-      setError(emptyCartError)
+      setError(new PaymentError('Cart is empty', 'CONFIGURATION'))
       return null
     }
 
@@ -477,7 +489,7 @@ export function usePaymentCheckout(
     try {
       validatedRequest = normalizePaymentRequest(paymentRequest)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)))
+      setError(toPaymentError(err, String(err), 'CONFIGURATION'))
       return null
     }
 
@@ -500,14 +512,17 @@ export function usePaymentCheckout(
 
       // A cancel is the user's choice, not an error.
       if (paymentResult.status === 'failed') {
-        setError(new Error(paymentResult.error || 'Payment failed'))
+        setError(
+          new PaymentError(
+            paymentResult.error || 'Payment failed',
+            paymentResult.code ?? 'UNKNOWN'
+          )
+        )
       }
 
       return paymentResult
     } catch (err) {
-      const paymentError =
-        err instanceof Error ? err : new Error('Payment processing failed')
-      setError(paymentError)
+      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
       return null
     } finally {
       isPaymentInFlight.current = false

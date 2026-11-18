@@ -22,6 +22,7 @@ export type {
   GooglePayButtonType,
 } from './specs/GooglePayButton.nitro'
 
+export { PaymentError } from './errors'
 export * from './types'
 export * from './utils'
 export * from './hooks'

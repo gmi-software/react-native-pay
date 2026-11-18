@@ -147,6 +147,43 @@ type PaymentErrorCode =
 
 ---
 
+## PaymentError
+
+The `error` that [`usePaymentCheckout`](/docs/api/use-payment-checkout) sets when a payment fails or can't start. It extends `Error`.
+
+```ts no-check
+class PaymentError extends Error {
+  name: string             // 'PaymentError'
+  readonly code: PaymentErrorCode
+  cause?: unknown // the error it wraps, if any
+}
+```
+
+- **code** — The same values as [`PaymentResult.code`](#paymentresult): `'CONFIGURATION'` for an empty cart or an invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed `PaymentResult` (`'UNKNOWN'` if it has none). A cancel and `'IN_PROGRESS'` don't set `error`.
+- **cause** — The validation error or the value native code threw. An empty cart and a failed `PaymentResult` have no `cause`.
+
+`error` is React state, so read it from the hook in the render after `startPayment()` settles, not from the value an event handler captured. The hook types it as `Error | null`; narrow it with `instanceof PaymentError` to read `code`:
+
+```tsx
+import { Text } from 'react-native'
+import {
+  PaymentError,
+  usePaymentCheckout,
+} from '@gmisoftware/react-native-pay'
+
+function CheckoutError() {
+  const { error } = usePaymentCheckout({})
+
+  if (error instanceof PaymentError && error.code === 'CONFIGURATION') {
+    // A bug in the app: log it, and show the user a generic message.
+    return <Text>Payment is unavailable right now.</Text>
+  }
+  return error ? <Text>Payment failed. Try again.</Text> : null
+}
+```
+
+---
+
 ## StartPaymentOptions
 
 Optional second argument of `HybridPaymentHandler.startPayment()`. The hook takes `onAuthorize` in its config instead.
