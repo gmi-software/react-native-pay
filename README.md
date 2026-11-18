@@ -399,7 +399,7 @@ interface UsePaymentCheckoutReturn {
   startPayment: () => Promise<PaymentResult | null>;
   isProcessing: boolean; // Payment in progress?
   result: PaymentResult | null; // Last payment result; check result.status
-  error: Error | null; // Last error; null after a cancel
+  error: Error | null; // Last error, a PaymentError with a `code`; null after a cancel
 
   // Utilities
   reset: () => void; // Reset payment state

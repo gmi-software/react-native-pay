@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
+  `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
+  invalid request, `'UNKNOWN'` when native code threw, and the result's `code` for a failed
+  `PaymentResult`. A caller can tell why `startPayment` returned `null` from `error.code`. The
+  wrapped error is in `cause`, and `message` is unchanged. `startPayment` still returns `null` in
+  these cases ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
+
 - **Subscriptions and later payments.** `PaymentRequest` takes `recurring`, `deferred` or
   `automaticReload`, mapped to PassKit's `PKRecurringPaymentRequest`, `PKDeferredPaymentRequest`
   and `PKAutomaticReloadPaymentRequest` on iOS, and to Google Pay's `recurringTransactionInfo`,
