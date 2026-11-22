@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`onAuthorize` inside the Google Pay sheet.** With `onAuthorize`, Android now asks Google Pay
+  for its `PAYMENT_AUTHORIZATION` callback, so the sheet stays open until your callback settles and
+  shows success or failure, as Apple Pay does. A failure shows your `PaymentAuthorizationResult.error`
+  to the payer ("Payment authorization failed" without one, or after a rejection), and the payer can
+  retry from the same sheet, which calls `onAuthorize` again with a new token. Closing the sheet
+  after a decline reports the decline, not a cancel. The library's manifest declares the
+  `PaymentDataCallbacksService` that Google Play services binds, and a headless JS task keeps JS
+  timers running while `onAuthorize` runs under the sheet. If Google Pay returns a payment
+  without calling back, `onAuthorize` runs after the sheet as before. Without `onAuthorize`, the
+  request is unchanged
+  ([#72](https://github.com/gmi-software/react-native-pay/issues/72)).
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
   invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it

@@ -43,6 +43,11 @@ object PaymentConstants {
     const val AUTHORIZATION_TIMEOUT_MS = 25_000L
     const val ERROR_AUTHORIZATION_FAILED = "Payment authorization failed"
     const val ERROR_AUTHORIZATION_TIMED_OUT = "Payment authorization timed out"
+    // Google Pay's callback that keeps its sheet open for `onAuthorize`
+    const val CALLBACK_INTENT_PAYMENT_AUTHORIZATION = "PAYMENT_AUTHORIZATION"
+    // Keeps JS timers running under the sheet; same key as src/sheetAuthorizationTask.ts
+    const val SHEET_AUTHORIZATION_TASK = "ReactNativePaySheetAuthorization"
+    const val SHEET_AUTHORIZATION_TASK_TIMEOUT_MS = 35_000L
     
     // How long an availability check waits for Google Pay
     const val READY_TO_PAY_TIMEOUT_SECONDS = 5L

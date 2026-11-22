@@ -222,7 +222,7 @@ interface StartPaymentOptions {
 
 interface PaymentAuthorizationResult {
   status: 'success' | 'failure'
-  error?: string // becomes PaymentResult.error, with code 'PROVIDER_ERROR', on failure
+  error?: string // becomes PaymentResult.error, with code 'PROVIDER_ERROR', on failure; the Google Pay sheet shows it
 }
 ```
 

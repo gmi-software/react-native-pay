@@ -101,10 +101,12 @@ The second argument of `onAuthorize` holds the contact details and shipping meth
 
 How it behaves:
 
-- **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`. A rejected promise is treated the same way.
-- **Retries on iOS:** if the user retries from the sheet after a failure or a timeout, `onAuthorize` runs again with the new token. The result reflects the last attempt. A retry can start while a timed-out charge is still running, so key idempotency on your order ID, not on the token.
-- **Timeout:** `onAuthorize` must settle within 25 seconds (Apple Pay itself gives up after about 30). Otherwise the payment fails with `code: 'PROVIDER_ERROR'` and "Payment authorization timed out", and the late result is ignored. Your server may still have charged the card, so make the charge idempotent and reconcile by order ID.
-- **Android:** Google Pay closes its sheet before it returns the token, and its basic flow has no step that waits for the merchant. `onAuthorize` still runs, with the same timeout, after the sheet closes, and its outcome decides the `PaymentResult`. The same callback works on both platforms.
+- **Failure:** `{ status: 'failure', error }` makes the sheet show the failure state. `startPayment` resolves with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`. A rejected promise is treated the same way. The Google Pay sheet also shows `error` to the payer, so write it for them; without one, or after a rejection, it shows "Payment authorization failed".
+- **Retries:** if the user retries from the sheet after a failure or a timeout, `onAuthorize` runs again with the new token. The result reflects the last attempt. Allow one successful charge per order, not per token, and give each charge attempt its own idempotency key, such as the order ID plus an attempt number:
+  - **After a decline**, start a new attempt. Gateways answer a key they have already seen with its first response, so a retry with another card under the old key gets the decline again.
+  - **After a timeout or a lost response**, the charge may still be running or may have succeeded. Look it up, or send it again with the same attempt's key, before you start a new attempt.
+- **Timeout:** `onAuthorize` must settle within 25 seconds (Apple Pay and Google Pay give up after about 30). Otherwise the payment fails with `code: 'PROVIDER_ERROR'` and "Payment authorization timed out", and the late result is ignored. Your server may still have charged the card, so make the charge idempotent and reconcile by order ID.
+- **Android:** with `onAuthorize`, the library asks Google Pay for its `PAYMENT_AUTHORIZATION` callback, which keeps the sheet open until your callback settles. The library's manifest declares the service Google Play services calls; you don't add anything. React Native stops JS timers while the sheet covers your app, so the library keeps them running while `onAuthorize` runs, and timeouts or retries inside it still fire. If Google Pay returns the payment without asking first, `onAuthorize` runs after the sheet has closed, with the same timeout, and only decides the `PaymentResult`. The same callback works on both platforms.
 
 ## Example: Node.js (conceptual, gateway-specific)
 
@@ -142,12 +144,16 @@ app.post('/process-payment', async (req, res) => {
       tokenPayload: token.paymentData,
       token: token,
       orderId: order.id,
-      idempotencyKey: `charge-${order.id}`,
+      // One key per attempt. A timeout or a lost response reuses it, so the
+      // gateway returns that charge instead of charging again. A retry after
+      // a decline is a new attempt: under the old key it would get the decline.
+      idempotencyKey: `charge-${order.id}-${order.chargeAttempt}`,
     })
 
     // Report success only for a completed charge. A decline or a pending
     // charge must not show success in the app. Use your gateway's status value.
     if (charge.status !== 'succeeded') {
+      if (charge.status === 'declined') await orders.startNextChargeAttempt(order.id)
       return res.status(402).json({ error: 'The payment was not completed' })
     }
     res.json({ success: true, chargeId: charge.id })

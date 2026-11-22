@@ -11,6 +11,7 @@ import {
   normalizePaymentSheetUpdate,
 } from './utils/paymentRequest'
 import { requireNitro } from './nitro'
+import { registerSheetAuthorizationTask } from './sheetAuthorizationTask'
 
 /**
  * Error returned when `startPayment` is called while another payment is
@@ -60,6 +61,8 @@ export function getPaymentHandler(): PaymentHandler {
     } catch (cause) {
       throw new Error(NATIVE_MODULE_MISSING_ERROR, { cause })
     }
+    // Before any onAuthorize reaches native code, on every path to it.
+    registerSheetAuthorizationTask()
   }
   return paymentHandler
 }

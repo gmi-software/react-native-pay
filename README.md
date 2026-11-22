@@ -222,8 +222,8 @@ function CheckoutScreen({ order }: { order: Order }) {
     currencyCode: 'USD',
     countryCode: 'US',
     // Charge on your server. It charges the order's stored amount, not one
-    // the app sends, and keys idempotency on the order ID, so a retry after
-    // a timeout can't charge twice.
+    // the app sends, and allows one charge per order, so a retry after a
+    // timeout can't charge twice.
     onAuthorize: async (token) => {
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
@@ -286,7 +286,7 @@ function CheckoutScreen({ order }: { order: Order }) {
 export default CheckoutScreen
 ```
 
-`result.status` is `'success'` only when your server charged the order. On iOS, `onAuthorize` keeps the Apple Pay sheet open until your server answers, so the sheet shows the real outcome. On Android, Google Pay closes its sheet before `onAuthorize` runs; the callback still decides the `PaymentResult`, with the same timeout. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
+`result.status` is `'success'` only when your server charged the order. `onAuthorize` keeps the Apple Pay or Google Pay sheet open until your server answers, so the sheet shows the real outcome. If Google Pay returns the payment without asking first, `onAuthorize` runs after its sheet has closed, so the sheet can't show the outcome. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 
@@ -1135,9 +1135,9 @@ function useOrderPayment() {
 ```
 
 - `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored. Your server may still have charged the card.
-- **Retries on iOS:** after a failure or a timeout the user can retry from the same sheet, and `onAuthorize` runs again with a new token. Make your server charge idempotent per order ID, not per token.
+- **Retries:** after a failure or a timeout the user can retry from the same sheet, and `onAuthorize` runs again with a new token. Allow one successful charge per order ID, not per token; see the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing) for idempotency keys after a decline or a timeout.
 - A rejected promise counts as a failure.
-- **Android:** Google Pay closes its sheet before returning the token, so `onAuthorize` runs afterwards and only decides the `PaymentResult`.
+- **Android:** the Google Pay sheet shows your `error` to the payer, or "Payment authorization failed" without one or after a rejection. If Google Pay returns the payment without asking first, `onAuthorize` runs after its sheet has closed and only decides the `PaymentResult`.
 
 ### Server-Side Processing
 
@@ -1145,7 +1145,7 @@ After receiving the payment token, process it on your server:
 
 #### Node.js example
 
-The server looks up the amount from the order, never from the request, and keys idempotency on the order ID, so a retry can't charge twice. The token format depends on the platform and your gateway, so `chargeWithGateway` stands for your gateway's API:
+The server looks up the amount from the order, never from the request, and gives each charge attempt its own idempotency key, so a timeout or a lost response can't charge twice and a retry after a decline isn't answered with the old decline. The token format depends on the platform and your gateway, so `chargeWithGateway` stands for your gateway's API:
 
 ```javascript
 // Backend API endpoint
@@ -1165,9 +1165,14 @@ app.post("/process-payment", async (req, res) => {
       // iOS: base64 of Apple's PKPaymentToken JSON.
       // Android: Google Pay's tokenizationData.token for your gateway.
       paymentData: token.paymentData,
-      idempotencyKey: `charge-${order.id}`,
+      // Reused after a timeout; a new attempt after a decline.
+      idempotencyKey: `charge-${order.id}-${order.chargeAttempt}`,
     });
 
+    if (charge.status !== "succeeded") {
+      if (charge.status === "declined") await orders.startNextChargeAttempt(order.id);
+      return res.status(402).json({ error: "The payment was not completed" });
+    }
     await orders.markPaid(order.id, charge.id);
     res.json({ success: true, chargeId: charge.id });
   } catch (error) {

@@ -500,20 +500,22 @@ export type PaymentAuthorizationStatus = 'success' | 'failure'
 export interface PaymentAuthorizationResult {
   status: PaymentAuthorizationStatus
   // Reported as `PaymentResult.error`, with code `'PROVIDER_ERROR'`, when
-  // `status` is `'failure'`.
+  // `status` is `'failure'`. On Android the Google Pay sheet also shows it to
+  // the payer, so write it for them, such as "Card declined".
   error?: string
 }
 
 export interface StartPaymentOptions {
   /**
    * Called with the token after the user authorizes the payment. Charge it on
-   * your server and resolve with the outcome. On iOS the Apple Pay sheet stays
-   * up until this settles and then shows success or failure. On Android it
-   * runs after the Google Pay sheet has closed.
+   * your server and resolve with the outcome. The Apple Pay or Google Pay
+   * sheet stays up until this settles and then shows success or failure; on
+   * Android the sheet shows your `error`. If Google Pay returns a payment
+   * without asking first, this runs after its sheet has closed.
    * It must settle within 25 seconds, or the payment fails with a timeout and
    * its later result is ignored. A rejection counts as `'failure'`.
-   * On iOS, after a `'failure'` or a timeout the user can retry from the same
-   * sheet, which calls this again with a new token. Make the charge idempotent
+   * After a `'failure'` or a timeout the user can retry from the same sheet,
+   * which calls this again with a new token. Allow one successful charge
    * per order ID, not per token.
    * `details` holds the contact details and shipping method the request
    * asked for, so you can check them before charging.

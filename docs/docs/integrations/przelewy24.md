@@ -187,7 +187,7 @@ export function CheckoutWithPrzelewy24({
 }
 ```
 
-The client's `PaymentResult` is not proof of payment: your server, and Przelewy24's notification to it, are the source of truth for the amount and the payment status. On Android, Google Pay closes its sheet before `onAuthorize` runs; see [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+The client's `PaymentResult` is not proof of payment: your server, and Przelewy24's notification to it, are the source of truth for the amount and the payment status. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
 
 ### What to forward to backend
 

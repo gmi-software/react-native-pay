@@ -12,6 +12,7 @@ import com.google.android.gms.common.api.Status
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wallet.IsReadyToPayRequest
+import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import com.google.android.gms.wallet.PaymentsClient
 import com.google.android.gms.wallet.Wallet
@@ -37,6 +38,12 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     // Written on the JS thread, read on the main thread
     @Volatile private var onAuthorize: AuthorizeCallback? = null
     @Volatile private var requestedDetails = RequestedDetails()
+    // Set with onAuthorize, for the in-sheet authorization; main thread after startPayment.
+    @Volatile private var sheetAuthorization: SheetAuthorization? = null
+    // The in-flight payment's link to Google's callback, so a late callback
+    // can't reach the next payment.
+    @Volatile private var sheetAuthorizer: PaymentDataCallbacks.Authorizer? = null
+    private val jsTimersKeepAlive = JsTimersKeepAlive { reactContext }
     private val mainHandler = Handler(Looper.getMainLooper())
     
     // Registered only while the sheet is open, so the React context doesn't
@@ -118,8 +125,30 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             )
             return promise
         }
-        onAuthorize = options?.onAuthorize
+        val authorize = options?.onAuthorize
+        onAuthorize = authorize
         requestedDetails = RequestedDetails.from(request)
+        if (authorize != null) {
+            val sheet = SheetAuthorization(
+                authorize = { token, authorizedResult, onOutcome ->
+                    // The sheet pauses the app's activity, which stops JS timers.
+                    jsTimersKeepAlive.start()
+                    runAuthorization(authorize, token, authorizedResult) { outcome, payerMessage ->
+                        jsTimersKeepAlive.stop()
+                        onOutcome(outcome, payerMessage)
+                    }
+                },
+                settle = ::settlePayment,
+                authorizeAfterSheet = ::handlePaymentSuccess
+            )
+            val details = requestedDetails
+            val authorizer = PaymentDataCallbacks.Authorizer { paymentData, answer ->
+                authorizeInSheet(sheet, details, paymentData, answer)
+            }
+            sheetAuthorization = sheet
+            sheetAuthorizer = authorizer
+            PaymentDataCallbacks.register(authorizer)
+        }
         
         try {
             val environment = determineEnvironment(request.googlePayEnvironment)
@@ -128,7 +157,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
                 GooglePayRequestBuilder.createPaymentDataRequest(
                     request,
                     environment,
-                    fallbackMerchantName = appLabel()
+                    fallbackMerchantName = appLabel(),
+                    authorizeInSheet = authorize != null
                 )
             } catch (e: IllegalArgumentException) {
                 // The builder's validation: only this call reports a configuration error.
@@ -165,15 +195,17 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // Completion listeners run on the main thread.
         createPaymentsClient(environment).loadPaymentData(request).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                handlePaymentSuccess(PaymentMapper.mapPaymentDataToResult(task.result, requestedDetails))
+                sheetFinished(PaymentMapper.mapPaymentDataToResult(task.result, requestedDetails))
                 return@addOnCompleteListener
             }
             when (val error = task.exception) {
                 is ResolvableApiException -> showPaymentSheet(error)
                 is ApiException -> handleWalletError(error.status)
-                else -> handlePaymentError(
-                    PaymentErrorCode.UNKNOWN,
-                    "Payment error: ${error?.message ?: "Unknown error"}"
+                else -> sheetFinished(
+                    PaymentMapper.createErrorResult(
+                        PaymentErrorCode.UNKNOWN,
+                        "Payment error: ${error?.message ?: "Unknown error"}"
+                    )
                 )
             }
         }
@@ -206,16 +238,50 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             TaskResultContracts.GetPaymentDataResult().parseResult(resultCode, data),
             requestedDetails
         )
-        if (result.success) {
-            handlePaymentSuccess(result)
-            return
-        }
         if (result.code == PaymentErrorCode.CANCELLED) {
             PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_CANCELLED)
-        } else {
+        } else if (!result.success) {
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, result.error ?: "Payment error")
         }
-        settlePayment(result)
+        sheetFinished(result)
+    }
+    
+    /**
+     * What the sheet returned. With onAuthorize, [SheetAuthorization] decides
+     * once any running attempt has settled.
+     */
+    private fun sheetFinished(result: PaymentResult) {
+        val sheet = sheetAuthorization
+        when {
+            sheet != null -> sheet.sheetClosed(result)
+            result.success -> handlePaymentSuccess(result)
+            else -> settlePayment(result)
+        }
+    }
+    
+    /**
+     * Google Pay's `PAYMENT_AUTHORIZATION` callback for the payment whose
+     * [sheet] it is, from [PaymentDataCallbacksService] on a worker thread.
+     */
+    private fun authorizeInSheet(
+        sheet: SheetAuthorization,
+        requestedDetails: RequestedDetails,
+        paymentData: PaymentData?,
+        answer: (String) -> Unit
+    ) {
+        mainHandler.post {
+            if (sheetAuthorization !== sheet) {
+                // That payment has already settled, maybe before another began.
+                answer(SheetAuthorization.failureJson())
+                return@post
+            }
+            PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Authorizing in the Google Pay sheet")
+            val authorizedResult = paymentData?.let { PaymentMapper.mapPaymentDataToResult(it, requestedDetails) }
+                ?: PaymentMapper.createErrorResult(PaymentErrorCode.PROVIDER_ERROR, "Payment data is missing")
+            sheet.paymentAuthorized(authorizedResult) { outcome, payerMessage ->
+                answer(SheetAuthorization.googleResultJson(outcome, payerMessage))
+            }
+        }
     }
     
     // MARK: - Private helpers
@@ -294,31 +360,50 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     
     private fun handleWalletError(status: Status?) {
         PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment error ${status?.statusCode}: ${status?.statusMessage}")
-        settlePayment(PaymentMapper.walletErrorResult(status?.statusCode, status?.statusMessage))
+        sheetFinished(PaymentMapper.walletErrorResult(status?.statusCode, status?.statusMessage))
     }
     
     private fun settlePayment(result: PaymentResult) {
         // Clear before settling: once the slot is free, a new startPayment may set its own.
         onAuthorize = null
+        sheetAuthorization = null
+        sheetAuthorizer?.let { PaymentDataCallbacks.unregister(it) }
+        sheetAuthorizer = null
+        jsTimersKeepAlive.stop()
         pendingPayment.settle(result)
     }
     
     /**
-     * Lets the merchant decide the result. Google Pay has already closed its
-     * sheet, so unlike iOS there is no UI to update. Runs on the main thread.
-     * The payment keeps its slot until the outcome settles, so overlapping
-     * calls are rejected meanwhile.
+     * Lets the merchant decide the result after the sheet has closed, when
+     * Google Pay returned a payment without its `PAYMENT_AUTHORIZATION`
+     * callback. There is no UI to update. Runs on the main thread. The
+     * payment keeps its slot until the outcome settles, so overlapping calls
+     * are rejected meanwhile.
      */
     private fun authorizePayment(
         authorize: AuthorizeCallback,
         token: PaymentToken,
         authorizedResult: PaymentResult
     ) {
+        runAuthorization(authorize, token, authorizedResult) { result, _ -> settlePayment(result) }
+    }
+    
+    /**
+     * Runs one onAuthorize attempt, which settles once: with the merchant's
+     * outcome, its failure, or the timeout, which Google Pay's own 30-second
+     * limit allows. Main thread.
+     */
+    private fun runAuthorization(
+        authorize: AuthorizeCallback,
+        token: PaymentToken,
+        authorizedResult: PaymentResult,
+        onSettled: (PaymentResult, String) -> Unit
+    ) {
         lateinit var timeout: Runnable
-        val attempt = AuthorizationAttempt(authorizedResult) {
+        val attempt = AuthorizationAttempt(authorizedResult) { result, payerMessage ->
             // Otherwise the queued timeout keeps this attempt for its full delay.
             mainHandler.removeCallbacks(timeout)
-            pendingPayment.settle(it)
+            onSettled(result, payerMessage)
         }
         // Nitro settles JS promises on the JS thread.
         val failOnMain = { error: Throwable -> mainHandler.post { attempt.failed(error) } }
