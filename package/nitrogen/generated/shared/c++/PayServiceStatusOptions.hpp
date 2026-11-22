@@ -46,11 +46,12 @@ namespace margelo::nitro::pay {
     std::optional<std::vector<std::string>> supportedNetworks     SWIFT_PRIVATE;
     std::optional<std::vector<std::string>> merchantCapabilities     SWIFT_PRIVATE;
     std::optional<std::vector<std::string>> googlePayAllowedAuthMethods     SWIFT_PRIVATE;
+    std::optional<bool> googlePayAllowPrepaidCards     SWIFT_PRIVATE;
     std::optional<GooglePayEnvironment> googlePayEnvironment     SWIFT_PRIVATE;
 
   public:
     PayServiceStatusOptions() = default;
-    explicit PayServiceStatusOptions(std::optional<std::vector<std::string>> supportedNetworks, std::optional<std::vector<std::string>> merchantCapabilities, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<GooglePayEnvironment> googlePayEnvironment): supportedNetworks(supportedNetworks), merchantCapabilities(merchantCapabilities), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), googlePayEnvironment(googlePayEnvironment) {}
+    explicit PayServiceStatusOptions(std::optional<std::vector<std::string>> supportedNetworks, std::optional<std::vector<std::string>> merchantCapabilities, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<bool> googlePayAllowPrepaidCards, std::optional<GooglePayEnvironment> googlePayEnvironment): supportedNetworks(supportedNetworks), merchantCapabilities(merchantCapabilities), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), googlePayAllowPrepaidCards(googlePayAllowPrepaidCards), googlePayEnvironment(googlePayEnvironment) {}
 
   public:
     friend bool operator==(const PayServiceStatusOptions& lhs, const PayServiceStatusOptions& rhs) = default;
@@ -69,6 +70,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"))),
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"))),
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"))),
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards"))),
         JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment")))
       );
     }
@@ -77,6 +79,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.supportedNetworks));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.merchantCapabilities));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.googlePayAllowedAuthMethods));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.googlePayAllowPrepaidCards));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::toJSI(runtime, arg.googlePayEnvironment));
       return obj;
     }
@@ -91,6 +94,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "supportedNetworks")))) return false;
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "merchantCapabilities")))) return false;
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods")))) return false;
+      if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment")))) return false;
       return true;
     }

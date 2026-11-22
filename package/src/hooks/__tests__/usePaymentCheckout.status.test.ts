@@ -93,12 +93,13 @@ describe('usePaymentCheckout availability', () => {
       }
     )
 
-    it('checks the networks, capabilities, auth methods and environment from the config', async () => {
+    it('checks the networks, capabilities, auth methods, prepaid cards and environment from the config', async () => {
       const { result } = renderHook(() =>
         usePaymentCheckout({
           supportedNetworks: ['visa', 'mastercard'],
           merchantCapabilities: ['3DS', 'Debit'],
           googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+          googlePayAllowPrepaidCards: false,
           googlePayEnvironment: 'PRODUCTION',
         })
       )
@@ -112,8 +113,12 @@ describe('usePaymentCheckout availability', () => {
         supportedNetworks: ['visa', 'mastercard'],
         merchantCapabilities: ['3DS', 'Debit'],
         googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+        googlePayAllowPrepaidCards: false,
         googlePayEnvironment: 'PRODUCTION',
       })
+      expect(result.current.paymentRequest.googlePayAllowPrepaidCards).toBe(
+        false
+      )
     })
 
     it('checks the defaults the payment request uses', async () => {

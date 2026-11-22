@@ -65,12 +65,13 @@ Renders the Google Pay button. Only available on Android.
 | `radius` | `number` | No | Corner radius in dp, like other React Native sizes. |
 | `supportedNetworks` | `string[]` | No | The card networks your payment accepts, as in `PaymentRequest.supportedNetworks`. Default: `visa`, `mastercard`, `amex`, `discover`. |
 | `googlePayAllowedAuthMethods` | `string[]` | No | As in `PaymentRequest.googlePayAllowedAuthMethods`. Default: both. |
+| `googlePayAllowPrepaidCards` | `boolean` | No | As in `PaymentRequest.googlePayAllowPrepaidCards`. `false` leaves prepaid cards out. Default: `true`. |
 | `merchantCapabilities` | `string[]` | No | As in `PaymentRequest.merchantCapabilities`. `'Debit'` without `'Credit'` leaves credit cards out. Default: every card type. |
 | `onPress` | `() => void` | No | Called when the user taps the button. |
 | `disabled` | `boolean` | No | Ignores taps while `true`. See [Disabled buttons](#disabled-buttons). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
-The button can show the payer's card, so give it the same `supportedNetworks`, `googlePayAllowedAuthMethods` and `merchantCapabilities` as the payment, under the same names. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass them from `paymentRequest`. An invalid value (an unknown network, auth method or merchant capability, an empty `supportedNetworks` or `googlePayAllowedAuthMethods` list, or no network Google Pay offers) logs a warning in development, with the same rules as the payment. The button then keeps the cards it showed before, or the default cards on the first render, and still calls the current `onPress`. An empty `merchantCapabilities` list is valid and accepts credit and debit cards.
+The button can show the payer's card, so give it the same `supportedNetworks`, `googlePayAllowedAuthMethods`, `googlePayAllowPrepaidCards` and `merchantCapabilities` as the payment, under the same names. Otherwise it may show a card the payment then refuses. With `usePaymentCheckout`, pass them from `paymentRequest`. An invalid value (an unknown network, auth method or merchant capability, an empty `supportedNetworks` or `googlePayAllowedAuthMethods` list, or no network Google Pay offers) logs a warning in development, with the same rules as the payment. The button then keeps the cards it showed before, or the default cards on the first render, and still calls the current `onPress`. An empty `merchantCapabilities` list is valid and accepts credit and debit cards.
 
 **GooglePayButtonType:**  
 `'buy'` | `'book'` | `'checkout'` | `'donate'` | `'order'` | `'pay'` | `'subscribe'` | `'plain'`

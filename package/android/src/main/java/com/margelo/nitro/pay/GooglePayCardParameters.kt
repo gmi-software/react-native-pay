@@ -53,7 +53,8 @@ internal object GooglePayNetworks {
 internal data class GooglePayCardParameters(
     val cardNetworks: List<String>,
     val authMethods: List<String>,
-    val allowCreditCards: Boolean = true
+    val allowCreditCards: Boolean = true,
+    val allowPrepaidCards: Boolean = true
 ) {
     /** The `parameters` of a CARD payment method, before any billing address */
     fun toJson(): JSONObject = JSONObject().apply {
@@ -61,6 +62,9 @@ internal data class GooglePayCardParameters(
         put("allowedCardNetworks", JSONArray(cardNetworks))
         if (!allowCreditCards) {
             put("allowCreditCards", false)
+        }
+        if (!allowPrepaidCards) {
+            put("allowPrepaidCards", false)
         }
     }
 
@@ -85,13 +89,17 @@ internal data class GooglePayCardParameters(
          * it turns credit cards off. Google Pay cannot turn debit cards off, so
          * Credit alone accepts both. 3DS and EMV are Apple Pay protocols.
          *
+         * Only `false` for [allowPrepaidCards] changes the request: it turns
+         * prepaid cards off.
+         *
          * @throws IllegalArgumentException for an unknown value, or when no
          *   network or no auth method is left
          */
         fun from(
             supportedNetworks: Array<String>?,
             authMethods: Array<String>?,
-            merchantCapabilities: Array<String>? = null
+            merchantCapabilities: Array<String>? = null,
+            allowPrepaidCards: Boolean? = null
         ): GooglePayCardParameters {
             val networkNames = supportedNetworks ?: DEFAULT_NETWORKS
             require(networkNames.isNotEmpty()) { "supportedNetworks needs at least one network" }
@@ -121,7 +129,12 @@ internal data class GooglePayCardParameters(
             }
             val debitOnly = "Debit" in capabilities && "Credit" !in capabilities
 
-            return GooglePayCardParameters(cardNetworks, methods, allowCreditCards = !debitOnly)
+            return GooglePayCardParameters(
+                cardNetworks,
+                methods,
+                allowCreditCards = !debitOnly,
+                allowPrepaidCards = allowPrepaidCards != false
+            )
         }
     }
 }

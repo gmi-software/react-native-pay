@@ -150,6 +150,12 @@ export interface UsePaymentCheckoutConfig
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]
 
   /**
+   * `false` leaves prepaid cards out of the Google Pay sheet, for a gateway or
+   * risk policy that refuses them. Defaults to `true`. Android only.
+   */
+  googlePayAllowPrepaidCards?: boolean
+
+  /**
    * The label of the Google Pay sheet's button: `'default'` ("Continue" or
    * "Pay"), `'completeImmediatePurchase'` ("Pay now") or
    * `'continueToReview'` ("Review Order"). Omitted, Google Pay picks, as with
@@ -405,6 +411,7 @@ export function usePaymentCheckout(
       googlePayGateway,
       googlePayGatewayMerchantId,
       googlePayAllowedAuthMethods,
+      googlePayAllowPrepaidCards,
       googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,
@@ -428,6 +435,7 @@ export function usePaymentCheckout(
       googlePayGateway,
       googlePayGatewayMerchantId,
       googlePayAllowedAuthMethods,
+      googlePayAllowPrepaidCards,
       googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,
@@ -443,6 +451,7 @@ export function usePaymentCheckout(
     supportedNetworks: paymentRequest.supportedNetworks,
     merchantCapabilities: paymentRequest.merchantCapabilities,
     googlePayAllowedAuthMethods: paymentRequest.googlePayAllowedAuthMethods,
+    googlePayAllowPrepaidCards: paymentRequest.googlePayAllowPrepaidCards,
     googlePayEnvironment: paymentRequest.googlePayEnvironment,
   } satisfies PayServiceStatusOptions)
 

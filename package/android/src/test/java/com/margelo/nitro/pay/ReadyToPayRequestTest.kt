@@ -42,5 +42,16 @@ class ReadyToPayRequestTest {
         )
         assertTrue(request.has("existingPaymentMethodRequired"))
         assertFalse(request.getBoolean("existingPaymentMethodRequired"))
+        assertFalse(request.cardParameters().has("allowPrepaidCards"))
+    }
+
+    @Test
+    fun isReadyToPayRequest_leavesPrepaidCardsOutWhenThePaymentDoes() {
+        val request = GooglePayRequestBuilder.createIsReadyToPayRequest(
+            cardParameters = GooglePayCardParameters.from(null, null, null, allowPrepaidCards = false),
+            existingPaymentMethodRequired = true
+        )
+
+        assertFalse(request.cardParameters().getBoolean("allowPrepaidCards"))
     }
 }

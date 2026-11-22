@@ -59,6 +59,7 @@ func paymentRequest(
         googlePayGateway: nil,
         googlePayGatewayMerchantId: nil,
         googlePayAllowedAuthMethods: nil,
+        googlePayAllowPrepaidCards: nil,
         googlePayCheckoutOption: nil
     )
 }

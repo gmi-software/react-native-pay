@@ -81,6 +81,7 @@ final class PaymentSheetSessionTests: XCTestCase {
             googlePayGateway: nil,
             googlePayGatewayMerchantId: nil,
             googlePayAllowedAuthMethods: nil,
+            googlePayAllowPrepaidCards: nil,
             googlePayCheckoutOption: nil
         )
     }

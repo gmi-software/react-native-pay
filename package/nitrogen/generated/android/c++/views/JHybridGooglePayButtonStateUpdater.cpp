@@ -57,6 +57,10 @@ void JHybridGooglePayButtonStateUpdater::updateViewProps(jni::alias_ref<jni::JCl
     hybridView->setGooglePayAllowedAuthMethods(props->googlePayAllowedAuthMethods.value);
     props->googlePayAllowedAuthMethods.isDirty = false;
   }
+  if (props->googlePayAllowPrepaidCards.isDirty) {
+    hybridView->setGooglePayAllowPrepaidCards(props->googlePayAllowPrepaidCards.value);
+    props->googlePayAllowPrepaidCards.isDirty = false;
+  }
   if (props->merchantCapabilities.isDirty) {
     hybridView->setMerchantCapabilities(props->merchantCapabilities.value);
     props->merchantCapabilities.isDirty = false;

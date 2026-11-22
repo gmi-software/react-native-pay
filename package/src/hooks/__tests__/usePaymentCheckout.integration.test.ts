@@ -618,6 +618,7 @@ describe('usePaymentCheckout integration', () => {
         ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
         ['CRYPTOGRAM_3DS'],
       ],
+      googlePayAllowPrepaidCards: [true, false],
       googlePayCheckoutOption: ['default', 'completeImmediatePurchase'],
       billingContactRequired: [false, true],
       shippingContactRequired: [false, true],

@@ -89,6 +89,7 @@ interface PaymentRequest {
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
   googlePayAllowedAuthMethods?: string[] // GooglePayAuthMethod values
+  googlePayAllowPrepaidCards?: boolean // default: true
   googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
 }
 ```
@@ -106,6 +107,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
 
 `googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
+
+`googlePayAllowPrepaidCards: false` leaves prepaid cards out of the Google Pay sheet, for a gateway or risk policy that refuses them. Sent as Google Pay's `allowPrepaidCards`. Omitted or `true`, prepaid cards are accepted. Android only: Apple Pay cannot leave prepaid cards out.
 
 `googlePayCheckoutOption` sets the label of the Google Pay sheet's button: see [`GooglePayCheckoutOption`](#googlepaycheckoutoption). Omitted, Google Pay picks "Continue" or "Pay". Android only.
 
@@ -385,6 +388,7 @@ interface PayServiceStatusOptions {
   supportedNetworks?: string[]           // default: ['visa', 'mastercard', 'amex', 'discover']
   merchantCapabilities?: string[]        // default: ['3DS']
   googlePayAllowedAuthMethods?: string[] // Android only. Default: both
+  googlePayAllowPrepaidCards?: boolean   // Android only. Default: true
   googlePayEnvironment?: 'TEST' | 'PRODUCTION' // Android only. Default: 'TEST'
 }
 ```

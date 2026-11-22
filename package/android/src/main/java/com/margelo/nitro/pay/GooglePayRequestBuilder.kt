@@ -58,7 +58,8 @@ object GooglePayRequestBuilder {
         val cardParameters = GooglePayCardParameters.from(
             request.supportedNetworks,
             request.googlePayAllowedAuthMethods,
-            request.merchantCapabilities
+            request.merchantCapabilities,
+            request.googlePayAllowPrepaidCards
         )
 
         return JSONObject().apply {
