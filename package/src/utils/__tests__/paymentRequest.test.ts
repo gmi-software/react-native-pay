@@ -192,6 +192,7 @@ describe('normalizePaymentSheetUpdate', () => {
 
   it.each([
     ['not an object', undefined, 'must resolve with an object, got undefined'],
+    ['an array', [], 'must resolve with an object, got an array'],
     [
       'a negative total',
       { paymentItems: [{ label: 'Refund', amount: -5, type: 'final' }] },

@@ -272,7 +272,7 @@ interface PaymentSheetSelection {
   shippingAddress?: PaymentSheetAddress
   shippingMethod?: ShippingMethod
   card?: PaymentSheetCard
-  couponCode?: string          // the last code accepted without an error
+  couponCode?: string          // the last code accepted without an error; in onCouponCodeChange, the code being checked
 }
 ```
 

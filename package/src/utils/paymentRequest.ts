@@ -203,10 +203,9 @@ export function normalizePaymentSheetUpdate(
   request: PaymentRequest
 ): PaymentSheetUpdate {
   const { currencyCode } = request
-  if (typeof update !== 'object' || update === null) {
-    throw new Error(
-      `A sheet callback must resolve with an object, got ${String(update)}`
-    )
+  if (typeof update !== 'object' || update === null || Array.isArray(update)) {
+    const got = Array.isArray(update) ? 'an array' : String(update)
+    throw new Error(`A sheet callback must resolve with an object, got ${got}`)
   }
   const { paymentItems, shippingMethods, error } = update
   if (shippingMethods?.length === 0) {
