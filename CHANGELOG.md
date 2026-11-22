@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **Cart updates in the Google Pay sheet.** Android now calls `onShippingAddressChange`,
+  `onShippingMethodChange` and `onPaymentMethodChange` through Google Pay's payment data callbacks
+  (`SHIPPING_ADDRESS`, `SHIPPING_OPTION`, `PAYMENT_METHOD`), with the same `PaymentSheetSelection`,
+  `PaymentSheetUpdate` and 25-second limit as iOS. Every answer carries the whole cart, because
+  Google Pay never adds a shipping option's price itself. The callbacks need a one-off payment:
+  Google Pay can't update `recurring`, `deferred` or `automaticReload` payments, and a debug build
+  logs the callbacks it won't call. With a sheet callback, the payer picks the shipping method in
+  the sheet (see Changed). An `error` from `onPaymentMethodChange` isn't shown, and Google
+  Pay has no coupon field. Without `onAuthorize`, the library accepts the payment in the sheet,
+  since Google Pay needs its authorization callback with the others. See
+  [On Android](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#on-android)
+  ([#72](https://github.com/gmi-software/react-native-pay/issues/72)).
 - **`onAuthorize` inside the Google Pay sheet.** With `onAuthorize`, Android now asks Google Pay
   for its `PAYMENT_AUTHORIZATION` callback, so the sheet stays open until your callback settles and
   shows success or failure, as Apple Pay does. A failure shows your `PaymentAuthorizationResult.error`
@@ -14,8 +26,8 @@ All notable changes to this project are documented in this file.
   after a decline reports the decline, not a cancel. The library's manifest declares the
   `PaymentDataCallbacksService` that Google Play services binds, and a headless JS task keeps JS
   timers running while `onAuthorize` runs under the sheet. If Google Pay returns a payment
-  without calling back, `onAuthorize` runs after the sheet as before. Without `onAuthorize`, the
-  request is unchanged
+  without calling back, `onAuthorize` runs after the sheet as before. Without `onAuthorize` or a
+  sheet callback, the request is unchanged
   ([#72](https://github.com/gmi-software/react-native-pay/issues/72)).
 - **`googlePayCheckoutOption`** in `PaymentRequest` and the `usePaymentCheckout` config
   (`GooglePayCheckoutOption`: `'default'`, `'completeImmediatePurchase'`, `'continueToReview'`)
@@ -38,8 +50,8 @@ All notable changes to this project are documented in this file.
   The coupon field appears only with `onCouponCodeChange`; `PaymentRequest.couponCode` sets a code
   already applied, and the accepted code is `PaymentDetails.couponCode`. A callback that fails,
   times out after 25 seconds or returns an invalid update leaves the sheet as it was. With
-  `applePayMultiTokenContexts`, an update must keep the total. iOS only for now: Android ignores
-  the callbacks until [#72](https://github.com/gmi-software/react-native-pay/issues/72). See the
+  `applePayMultiTokenContexts`, an update must keep the total. Android calls them too, except
+  `onCouponCodeChange` (see above). See the
   [guide](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#update-the-cart-in-the-sheet)
   ([#77](https://github.com/gmi-software/react-native-pay/issues/77)).
 - **Subscriptions and later payments.** `PaymentRequest` takes `recurring`, `deferred` or
@@ -62,6 +74,13 @@ All notable changes to this project are documented in this file.
   it. See the [guide](https://gmi-software.github.io/react-native-pay/docs/guides/multi-merchant).
 
 ### Changed
+
+- **Android: the payer picks the shipping method in the Google Pay sheet** when the payment has
+  a sheet callback, `shippingContactRequired` and `shippingMethods`, as on iOS. Before, Android
+  always charged the first method. `result.shippingMethod` and the `details` of `onAuthorize` hold
+  the method the payer picked, so read them instead of assuming the first one. Without a sheet
+  callback, `onAuthorize` alone included, Android still charges the first method
+  ([#72](https://github.com/gmi-software/react-native-pay/issues/72)).
 
 - **Breaking: `usePaymentCheckout().startPayment` never returns `null`.** An empty cart, an invalid
   request, a throwing in-progress check or a native throw now resolves with
@@ -114,6 +133,9 @@ All notable changes to this project are documented in this file.
 3. Replace `null` checks on what `usePaymentCheckout().startPayment()` returns, such as
    `if (!result)` or `result === null`, which no longer match: check
    `result.status === 'failed'` and read `result.code`. `result?.status` still works.
+4. On Android, with a sheet callback and `shippingMethods`, charge the
+   `shippingMethod` from `onAuthorize`'s `details` or the result, not the first method of the
+   request.
 
 ### Fixed
 

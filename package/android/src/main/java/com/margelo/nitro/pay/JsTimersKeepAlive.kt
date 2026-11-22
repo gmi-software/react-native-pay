@@ -6,17 +6,21 @@ import com.facebook.react.jstasks.HeadlessJsTaskConfig
 import com.facebook.react.jstasks.HeadlessJsTaskContext
 
 /**
- * Keeps JS timers running while `onAuthorize` runs under the Google Pay sheet.
+ * Keeps JS timers running while `onAuthorize` or a sheet callback runs under
+ * the Google Pay sheet.
  *
  * React Native stops JS timers while the app's activity is paused, as it is
  * under the sheet, unless a headless JS task is running. The library's JS
  * registers [PaymentConstants.SHEET_AUTHORIZATION_TASK], a task that never
- * settles by itself; this starts it and finishes it. Main thread only.
+ * settles by itself; this starts it and finishes it. Each [start] needs a
+ * [stop]: the task runs until every caller has stopped. Main thread only.
  */
 internal class JsTimersKeepAlive(private val reactContext: () -> ReactContext) {
     private var taskId: Int? = null
+    private var holders = 0
 
     fun start() {
+        holders++
         if (taskId != null) return
         taskId = try {
             val config = HeadlessJsTaskConfig(
@@ -35,6 +39,17 @@ internal class JsTimersKeepAlive(private val reactContext: () -> ReactContext) {
     }
 
     fun stop() {
+        if (holders > 0) holders--
+        if (holders == 0) finishTask()
+    }
+
+    /** Finishes the task whoever still holds it, as when the payment settles. */
+    fun stopAll() {
+        holders = 0
+        finishTask()
+    }
+
+    private fun finishTask() {
         val id = taskId ?: return
         taskId = null
         try {

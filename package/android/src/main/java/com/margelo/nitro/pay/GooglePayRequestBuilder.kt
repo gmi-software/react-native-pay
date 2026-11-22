@@ -42,17 +42,18 @@ object GooglePayRequestBuilder {
      *
      * @param fallbackMerchantName shown when the request has no merchantName,
      *   typically the app label. When both are blank, merchantName is omitted.
-     * @param authorizeInSheet asks Google Pay to keep its sheet open until
-     *   [PaymentDataCallbacksService] answers, for `onAuthorize`.
+     * @param callbacks the payment data callbacks [PaymentDataCallbacksService]
+     *   answers while the sheet is open. With a shipping option, the payer
+     *   picks one of the shipping methods in the sheet.
      */
-    fun createPaymentDataRequest(
+    internal fun createPaymentDataRequest(
         request: PaymentRequest,
         environment: Int,
         fallbackMerchantName: String? = null,
-        authorizeInSheet: Boolean = false
+        callbacks: CallbackIntents = CallbackIntents.NONE
     ): JSONObject {
         validatePaymentRequest(request, environment)
-        validateShippingMethods(request)
+        validateShippingMethods(request.shippingMethods)
         val requested = RequestedDetails.from(request)
         val cardParameters = GooglePayCardParameters.from(
             request.supportedNetworks,
@@ -67,7 +68,8 @@ object GooglePayRequestBuilder {
             put("allowedPaymentMethods", JSONArray().apply {
                 put(createCardPaymentMethod(request, environment, requested, cardParameters))
             })
-            val (transactionKey, transaction) = createTransaction(request, requested.shippingMethod)
+            val (transactionKey, transaction) =
+                createTransaction(request, request.paymentItems, requested.shippingMethod)
             put(transactionKey, transaction)
             if (requested.email) {
                 put("emailRequired", true)
@@ -78,10 +80,60 @@ object GooglePayRequestBuilder {
                     put("phoneNumberRequired", requested.phoneNumberOnShippingAddress)
                 })
             }
-            if (authorizeInSheet) {
-                put("callbackIntents", JSONArray().put(PaymentConstants.CALLBACK_INTENT_PAYMENT_AUTHORIZATION))
+            val shippingMethods = request.shippingMethods
+            if (callbacks.shippingOption && !shippingMethods.isNullOrEmpty()) {
+                put("shippingOptionRequired", true)
+                put(
+                    "shippingOptionParameters",
+                    createShippingOptionParameters(shippingMethods, shippingMethods[0].identifier)
+                )
             }
+            callbacks.toJson()?.let { put("callbackIntents", it) }
         }
+    }
+
+    /**
+     * The shipping options the payer picks from, with [selectedIdentifier]
+     * selected. Google Pay shows no price for an option, only the total.
+     */
+    internal fun createShippingOptionParameters(
+        methods: Array<ShippingMethod>,
+        selectedIdentifier: String
+    ): JSONObject {
+        return JSONObject().apply {
+            put("defaultSelectedOptionId", selectedIdentifier)
+            put("shippingOptions", JSONArray().apply {
+                methods.forEach { method ->
+                    put(JSONObject().apply {
+                        put("id", method.identifier)
+                        put("label", method.label)
+                        method.detail?.takeIf { it.isNotBlank() }?.let { put("description", it) }
+                    })
+                }
+            })
+        }
+    }
+
+    /**
+     * The `newTransactionInfo` of a sheet update: what [createPaymentDataRequest]
+     * sends for [items] and [shippingMethod], with the `checkoutOption` an
+     * update must have. Only for a payment whose sheet can be updated, see
+     * [CallbackIntents.canUpdateSheet].
+     *
+     * @throws IllegalArgumentException when the request would reject the
+     *   items, such as a negative total
+     */
+    internal fun createTransactionInfoUpdate(
+        request: PaymentRequest,
+        items: Array<PaymentItem>,
+        shippingMethod: ShippingMethod?
+    ): JSONObject {
+        val (key, transaction) = createTransaction(request, items, shippingMethod)
+        require(key == "transactionInfo") { "Google Pay can't update $key" }
+        if (!transaction.has("checkoutOption")) {
+            transaction.put("checkoutOption", PaymentConstants.CHECKOUT_OPTION_DEFAULT)
+        }
+        return transaction
     }
     
     /**
@@ -191,9 +243,9 @@ object GooglePayRequestBuilder {
     /**
      * Same rules and messages as iOS
      */
-    private fun validateShippingMethods(request: PaymentRequest) {
+    internal fun validateShippingMethods(methods: Array<ShippingMethod>?) {
         val identifiers = mutableSetOf<String>()
-        request.shippingMethods?.forEach { method ->
+        methods?.forEach { method ->
             require(method.identifier.isNotBlank()) {
                 "Shipping method \"${method.label}\" needs an identifier"
             }
@@ -207,23 +259,25 @@ object GooglePayRequestBuilder {
     }
     
     /**
-     * The transaction object and its key: `transactionInfo`, or the
-     * recurring, deferred or automatic reload object that replaces it. The
-     * shipping method is charged as its own line.
+     * The transaction object and its key, for [paymentItems] and
+     * [shippingMethod]: `transactionInfo`, or the recurring, deferred or
+     * automatic reload object that replaces it. The shipping method is
+     * charged as its own line.
      */
     private fun createTransaction(
         request: PaymentRequest,
+        paymentItems: Array<PaymentItem>,
         shippingMethod: ShippingMethod?
     ): Pair<String, JSONObject> {
         // Checked without shipping, like on iOS, where the payer can pick any method.
-        val itemsTotal = PaymentAmounts.total(request.paymentItems)
+        val itemsTotal = PaymentAmounts.total(paymentItems)
         require(itemsTotal.signum() >= 0) {
             "Payment total must not be negative, got ${itemsTotal.toPlainString()}"
         }
         val shippingAmount = shippingMethod?.let { PaymentAmounts.parse(it) } ?: BigDecimal.ZERO
         val totalPrice = PaymentAmounts.formatPrice(itemsTotal.add(shippingAmount))
-        val displayItems = if (request.paymentItems.isNotEmpty() || shippingMethod != null) {
-            createDisplayItems(request.paymentItems, shippingMethod)
+        val displayItems = if (paymentItems.isNotEmpty() || shippingMethod != null) {
+            createDisplayItems(paymentItems, shippingMethod)
         } else {
             null
         }
@@ -231,7 +285,7 @@ object GooglePayRequestBuilder {
         // The merchant token objects have no checkoutOption, so it has no effect there.
         MerchantTokenTransactions.create(request, totalPrice, displayItems)?.let { return it }
 
-        val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
+        val hasPendingItems = paymentItems.any { it.type == PaymentItemType.PENDING }
         val checkoutOption = request.googlePayCheckoutOption
         require(
             !(hasPendingItems && checkoutOption == GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE)

@@ -75,9 +75,9 @@ const handleClearCart = () => {
 
 ## Update the cart in the sheet
 
-While the Apple Pay sheet is open, the payer can pick another shipping address, shipping method or card, and enter a coupon code. Pass callbacks to update the cart when they do: tax by region, an address you don't deliver to, a fee for credit cards, a discount code. They go in the [`usePaymentCheckout`](/docs/api/use-payment-checkout#configuration) config or in the second argument of `HybridPaymentHandler.startPayment()`.
+While the Apple Pay or Google Pay sheet is open, the payer can pick another shipping address, shipping method or card, and on iOS enter a coupon code. Pass callbacks to update the cart when they do: tax by region, an address you don't deliver to, a fee for credit cards, a discount code. They go in the [`usePaymentCheckout`](/docs/api/use-payment-checkout#configuration) config or in the second argument of `HybridPaymentHandler.startPayment()`.
 
-**iOS only for now.** Android ignores these callbacks until Google Pay's payment data callbacks are supported ([#72](https://github.com/gmi-software/react-native-pay/issues/72)), so check the address in `onAuthorize` there. Google Pay has no coupon field.
+**Android** calls them through Google Pay's payment data callbacks, with a few differences. See [On Android](#on-android).
 
 ```ts
 import {
@@ -145,3 +145,16 @@ export async function checkout() {
 - **Several merchants.** With [`applePayMultiTokenContexts`](/docs/api/types#several-merchants), PassKit needs the total to stay equal to the contexts' sum. An update may change the items and the shipping methods, but they must add up to the same total and every method must cost the same as before; otherwise the sheet keeps its items. An `error` alone always applies.
 - **25 seconds.** Each callback must settle within 25 seconds, like `onAuthorize`. If it rejects, times out or returns an invalid update, the sheet keeps its current items and shows no error; a rejection or an invalid update is logged in development.
 - **The hook's `items` don't change.** With `usePaymentCheckout`, updates change only the sheet, so a coupon the payer tried and then cancelled leaves no discount in your cart.
+
+### On Android
+
+Google Pay calls `onShippingAddressChange`, `onShippingMethodChange` and `onPaymentMethodChange` while its sheet is open, through the library's `PaymentDataCallbacksService`. Where it differs from iOS:
+
+- **One-off payments only.** Google Pay can't update a `recurring`, `deferred` or `automaticReload` payment, so the callbacks aren't called there; a debug build logs a warning. Check the address in `onAuthorize` instead.
+- **Shipping needs `shippingContactRequired`**, for `onShippingAddressChange` and for the payer to pick a shipping method. Google Pay offers `shippingMethods` in its sheet once the payment has any of these callbacks; see [Shipping methods](/docs/guides/contact-details#shipping-methods).
+- **When the sheet opens**, the callbacks run for the payer's default address and card, the address first.
+- **No price next to a shipping option.** Google Pay shows each method's `label` and `detail`, and the total for the selected one. Put the price in `detail` if the payer should see it before choosing.
+- **Errors.** An address `error` is shown for that address, and an `error` from `onShippingMethodChange` for that method. An `error` from `onPaymentMethodChange` isn't shown, because Google Pay has none for a card. Check the address again in `onAuthorize`, as the payer may still pay after an error.
+- **The card** has a `network` and a `type`, from Google's card network and funding source, but no `displayName`.
+- **No coupon field.** `onCouponCodeChange` is iOS only.
+- **The payment is accepted in the sheet.** Google Pay needs its authorization callback with the others, so without `onAuthorize` the library accepts the payment there, and `startPayment` resolves as it would without callbacks.

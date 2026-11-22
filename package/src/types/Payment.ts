@@ -375,9 +375,10 @@ export interface PaymentRequest {
   /**
    * Delivery options for the payer. The selected method is added to the
    * total as its own line and returned as `PaymentResult.shippingMethod`.
-   * The order matters: the first method is selected by default on iOS, and
-   * is the one charged on Android, where Google Pay cannot offer a choice
-   * yet. Use it with `shippingContactRequired`.
+   * The order matters: the first method is selected by default. On Android
+   * the payer can pick another only when the payment has a sheet callback,
+   * such as `onShippingMethodChange`; otherwise the first one is charged. Use it with
+   * `shippingContactRequired`.
    */
   shippingMethods?: ShippingMethod[]
   /**
@@ -555,8 +556,8 @@ export interface StartPaymentOptions {
    * region, or an address you don't deliver to. Needs
    * `PaymentRequest.shippingContactRequired`.
    * The address is redacted until the payer authorizes; the full one comes in
-   * `onAuthorize`. iOS only for now; Android ignores it (#72), so check the
-   * address in `onAuthorize` there.
+   * `onAuthorize`. On Android, not for recurring, deferred or automatic
+   * reload payments, which Google Pay can't update.
    * See `PaymentSheetUpdate` for the rules all sheet callbacks share.
    */
   onShippingAddressChange?: (
@@ -566,8 +567,8 @@ export interface StartPaymentOptions {
   /**
    * Called when the payer picks another shipping method. Without it, the
    * sheet adds the method's amount to the current items itself. On iOS an
-   * `error` is not shown: Apple Pay has none for this change. iOS only for
-   * now; Android ignores it (#72).
+   * `error` is not shown: Apple Pay has none for this change. On Android it
+   * needs `shippingContactRequired`.
    */
   onShippingMethodChange?: (
     shippingMethod: ShippingMethod,
@@ -575,8 +576,8 @@ export interface StartPaymentOptions {
   ) => Promise<PaymentSheetUpdate>
   /**
    * Called when the payer picks a card, including the one the sheet opens
-   * with: for example a surcharge for credit cards. iOS only for now; Android
-   * ignores it (#72).
+   * with: for example a surcharge for credit cards. On Android an `error` is
+   * not shown: Google Pay has none for a card.
    */
   onPaymentMethodChange?: (
     card: PaymentSheetCard,

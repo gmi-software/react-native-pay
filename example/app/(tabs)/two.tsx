@@ -104,9 +104,9 @@ type Demo = {
 // Built on tap, so the dates stay in the future.
 const DEMOS: Demo[] = [
   {
-    title: "Coupon, tax and card fee (iOS)",
+    title: "Tax, shipping and card fee",
     detail:
-      "Try SAVE10, EXPIRED or SLOW in the coupon field, a California or non-US address, and a credit card.",
+      "Try a California or non-US address, Express shipping and a credit card. On iOS, also SAVE10, EXPIRED or SLOW in the coupon field.",
     request: () => ({
       ...baseRequest,
       paymentItems: sheetCart({}),
@@ -115,13 +115,14 @@ const DEMOS: Demo[] = [
         {
           identifier: "standard",
           label: "Standard",
-          detail: "3-5 days",
+          // Google Pay shows no price next to an option.
+          detail: "Free, 3-5 days",
           amount: "0.00",
         },
         {
           identifier: "express",
           label: "Express",
-          detail: "Next day",
+          detail: "$9.00, next day",
           amount: "9.00",
         },
       ],

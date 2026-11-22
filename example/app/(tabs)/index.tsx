@@ -20,7 +20,7 @@ import {
 
 // Rehearses the release checklist:
 // https://gmi-software.github.io/react-native-pay/docs/guides/testing#release-checklist
-const SIMULATED_SERVER_MODES = ["off", "approve", "decline"] as const;
+const SIMULATED_SERVER_MODES = ["off", "approve", "decline", "slow"] as const;
 type SimulatedServerMode = (typeof SIMULATED_SERVER_MODES)[number];
 
 export default function TabOneScreen() {
@@ -57,8 +57,10 @@ export default function TabOneScreen() {
       simulatedServer === "off"
         ? undefined
         : async () => {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            return simulatedServer === "approve"
+            // "slow" answers after the library's 25-second limit.
+            const delay = simulatedServer === "slow" ? 30_000 : 1500;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            return simulatedServer !== "decline"
               ? { status: "success" }
               : { status: "failure", error: "Declined by the test server" };
           },
