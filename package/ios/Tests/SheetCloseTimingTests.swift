@@ -12,7 +12,7 @@ final class SheetCloseTimingTests: XCTestCase {
     /// Presents the sheet now and closes it `seconds` later.
     private func closedEarly(after seconds: TimeInterval) -> Bool {
         let timing = timing()
-        timing.sheetPresented()
+        timing.sheetPresented(at: clock)
         clock += seconds
         timing.sheetClosed()
         return timing.closedEarly
@@ -42,14 +42,14 @@ final class SheetCloseTimingTests: XCTestCase {
         let timing = timing()
         timing.sheetClosed()
         clock += 0.2
-        timing.sheetPresented()
+        timing.sheetPresented(at: clock)
 
         XCTAssertTrue(timing.closedEarly)
     }
 
     func testIgnoresTimeAfterTheClose() {
         let timing = timing()
-        timing.sheetPresented()
+        timing.sheetPresented(at: clock)
         clock += 0.5
         timing.sheetClosed()
         // The dismiss animation and the hop to the main queue come after.
@@ -60,7 +60,7 @@ final class SheetCloseTimingTests: XCTestCase {
 
     func testWithoutARecordedCloseMeasuresToNow() {
         let timing = timing()
-        timing.sheetPresented()
+        timing.sheetPresented(at: clock)
         clock += 2
 
         XCTAssertFalse(timing.closedEarly)

@@ -455,12 +455,13 @@ final class PaymentSheetPresenter {
 
     /// Calls `onFailure` when there is no sheet. PassKit then calls no
     /// delegate method, so `onFailure` is the payment's only chance to settle.
-    /// Calls `onPresented` on the main thread once the sheet has appeared.
+    /// Calls `onPresented` on the main thread once the sheet has appeared,
+    /// with the `SheetCloseTiming.uptime()` at which PassKit reported it.
     func present(
         _ request: PKPaymentRequest,
         delegate: PKPaymentAuthorizationControllerDelegate,
         onFailure: @escaping (PaymentFailure) -> Void,
-        onPresented: @escaping () -> Void = {}
+        onPresented: @escaping (TimeInterval) -> Void = { _ in }
     ) {
         guard let sheet = makeSheet(request) else {
             onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToCreate))
@@ -469,13 +470,15 @@ final class PaymentSheetPresenter {
         sheet.delegate = delegate
         self.sheet = sheet
         sheet.present { presented in
+            // Before the hop, so a busy main thread doesn't count as time on screen.
+            let presentedAt = SheetCloseTiming.uptime()
             // PassKit does not say which thread this runs on.
             DispatchQueue.main.async {
                 guard presented else {
                     onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent))
                     return
                 }
-                onPresented()
+                onPresented(presentedAt)
             }
         }
     }
@@ -594,9 +597,10 @@ final class PaymentSheetSession {
             .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
     }
 
-    /// Notes that the sheet has finished appearing.
-    func sheetDidPresent() {
-        closeTiming.sheetPresented()
+    /// Notes that the sheet finished appearing at `presentedAt`, on the
+    /// session's clock.
+    func sheetDidPresent(at presentedAt: TimeInterval) {
+        closeTiming.sheetPresented(at: presentedAt)
     }
 
     /// Notes that PassKit has started to close the sheet. Called before the
@@ -795,7 +799,7 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
             paymentRequest,
             delegate: delegate,
             onFailure: { self.handlePaymentResult(PaymentResultFactory.failure($0)) },
-            onPresented: { [weak session] in session?.sheetDidPresent() }
+            onPresented: { [weak session] in session?.sheetDidPresent(at: $0) }
         )
     }
 }

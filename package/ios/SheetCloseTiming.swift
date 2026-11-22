@@ -17,13 +17,20 @@ final class SheetCloseTiming {
     private var presentedAt: TimeInterval?
     private var closedAt: TimeInterval?
 
-    init(now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+    init(now: @escaping () -> TimeInterval = SheetCloseTiming.uptime) {
         self.now = now
     }
 
-    /// Records that the sheet has finished appearing.
-    func sheetPresented() {
-        presentedAt = now()
+    /// The clock the payment flow uses. Safe to read on any thread.
+    static func uptime() -> TimeInterval {
+        return ProcessInfo.processInfo.systemUptime
+    }
+
+    /// Records that the sheet finished appearing at `presentedAt`, read on
+    /// this timing's clock. PassKit reports it on any thread, and the hop to
+    /// the main thread can wait, so the time is read before the hop.
+    func sheetPresented(at presentedAt: TimeInterval) {
+        self.presentedAt = presentedAt
     }
 
     /// Records that the sheet has started to close.

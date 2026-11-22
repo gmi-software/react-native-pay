@@ -100,7 +100,7 @@ final class PaymentSheetPresenterTests: XCTestCase {
             PKPaymentRequest(),
             delegate: delegate,
             onFailure: { _ in answered.fulfill() },
-            onPresented: {
+            onPresented: { _ in
                 presentedOnMain = Thread.isMainThread
                 answered.fulfill()
             }
@@ -115,6 +115,28 @@ final class PaymentSheetPresenterTests: XCTestCase {
 
     func testDoesNotReportARefusedSheetAsPresented() {
         XCTAssertNil(presentedOnMain(FakeSheet(presents: false)))
+    }
+
+    func testReadsThePresentationTimeBeforeTheMainThreadIsFree() throws {
+        let presenter = PaymentSheetPresenter { _ in FakeSheet(presents: true, answeringOn: .global()) }
+        let presented = expectation(description: "sheet presented")
+        var presentedAt: TimeInterval?
+        let start = SheetCloseTiming.uptime()
+
+        presenter.present(
+            PKPaymentRequest(),
+            delegate: delegate,
+            onFailure: { _ in },
+            onPresented: {
+                presentedAt = $0
+                presented.fulfill()
+            }
+        )
+        // Keeps the main thread busy while PassKit answers.
+        Thread.sleep(forTimeInterval: 0.5)
+        wait(for: [presented], timeout: 1)
+
+        XCTAssertLessThan(try XCTUnwrap(presentedAt) - start, 0.4)
     }
 
     func testHoldsTheSheetUntilReleased() {

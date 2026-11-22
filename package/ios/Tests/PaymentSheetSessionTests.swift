@@ -269,7 +269,7 @@ final class PaymentSheetSessionTests: XCTestCase {
     func testWarnsWhenTheSheetClosesRightAfterAppearing() throws {
         let session = try makeSession()
 
-        session.sheetDidPresent()
+        session.sheetDidPresent(at: clock)
         clock += 0.3
         session.sheetWillDismiss()
         session.sheetDidFinish()
@@ -284,7 +284,7 @@ final class PaymentSheetSessionTests: XCTestCase {
     func testDoesNotWarnWhenTheUserCancelsLater() throws {
         let session = try makeSession()
 
-        session.sheetDidPresent()
+        session.sheetDidPresent(at: clock)
         clock += 2
         session.sheetWillDismiss()
         session.sheetDidFinish()
@@ -296,7 +296,7 @@ final class PaymentSheetSessionTests: XCTestCase {
     func testDoesNotWarnAfterAQuickAuthorization() throws {
         let session = try makeSession(withOnAuthorize: false)
 
-        session.sheetDidPresent()
+        session.sheetDidPresent(at: clock)
         clock += 0.3
         authorize(session)
         session.sheetWillDismiss()
