@@ -29,6 +29,7 @@ interface UsePaymentCheckoutConfig {
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[] // default: both
+  googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
   // Contact details, returned in the result
   billingContactRequired?: boolean
   shippingContactRequired?: boolean
@@ -52,6 +53,7 @@ interface UsePaymentCheckoutConfig {
 - **totalLabel** — Android only. The label of the total in the Google Pay sheet, such as `'Razem'`. Defaults to `'Total'`. iOS labels the total with `merchantName`. See [PaymentRequest](/docs/api/types#paymentrequest).
 - **supportedNetworks** — The card networks the payer can choose, as [PaymentNetwork](/docs/api/types#paymentnetwork) names. Both platforms honour it. A network the platform does not offer is left out, and an unknown name fails the payment. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only).
 - **googlePayAllowedAuthMethods** — Android only. Which Google Pay cards to accept: `'PAN_ONLY'` (saved to the Google account), `'CRYPTOGRAM_3DS'` (tokenized on the device), or both, the default. See [GooglePayAuthMethod](/docs/api/types#googlepayauthmethod).
+- **googlePayCheckoutOption** — Android only. The label of the Google Pay sheet's button: `'default'` ("Continue" or "Pay", as when it is omitted), `'completeImmediatePurchase'` ("Pay now") or `'continueToReview'` ("Review Order"). `'completeImmediatePurchase'` needs a final total: with a `'pending'` item, `startPayment()` fails with a `'CONFIGURATION'` error before the sheet opens. See [GooglePayCheckoutOption](/docs/api/types#googlepaycheckoutoption).
 - **merchantCapabilities** — The card types to accept and, on iOS, the payment protocols. iOS adds `'3DS'` when neither `'3DS'` nor `'EMV'` is given. On Android only `'Debit'` without `'Credit'` has an effect: it leaves credit cards out. Google Pay cannot leave debit cards out, so `['3DS', 'Credit']` accepts every card type on Android. An unknown value fails the payment on both platforms. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only). See [MerchantCapability](/docs/api/types#merchantcapability).
 - **supportedNetworks**, **merchantCapabilities**, **googlePayAllowedAuthMethods**, **googlePayEnvironment** — Also used for the availability check, which fails like the payment for a value the payment would refuse. Set `googlePayEnvironment: 'PRODUCTION'` in a live app: in `TEST`, Google Pay reports a card whether or not there is one. Omitted, it is `'TEST'`, and an Android release build logs a warning once per app run when `startPayment()` builds a payment. The availability check alone logs nothing.
 - **billingContactRequired**, **shippingContactRequired**, **emailRequired**, **phoneNumberRequired** — Ask the payer for a billing address, a shipping address, an email address or a phone number. They come back as `result.billingContact`, `result.shippingContact`, `result.emailAddress` and `result.phoneNumber`. See [Shipping and contact details](/docs/guides/contact-details).

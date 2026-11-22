@@ -19,6 +19,7 @@ import type {
   PaymentItemKind,
   PayServiceStatus,
   GooglePayAuthMethod,
+  GooglePayCheckoutOption,
   GooglePayEnvironment,
   MerchantCapability,
   PayServiceStatusOptions,
@@ -147,6 +148,14 @@ export interface UsePaymentCheckoutConfig
    * device tokens only. Android only.
    */
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]
+
+  /**
+   * The label of the Google Pay sheet's button: `'default'` ("Continue" or
+   * "Pay"), `'completeImmediatePurchase'` ("Pay now") or
+   * `'continueToReview'` ("Review Order"). Omitted, Google Pay picks, as with
+   * `'default'`. Android only. See `PaymentRequest.googlePayCheckoutOption`.
+   */
+  googlePayCheckoutOption?: GooglePayCheckoutOption
 
   /**
    * Ask for the billing name and postal address, returned as
@@ -396,6 +405,7 @@ export function usePaymentCheckout(
       googlePayGateway,
       googlePayGatewayMerchantId,
       googlePayAllowedAuthMethods,
+      googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,
@@ -418,6 +428,7 @@ export function usePaymentCheckout(
       googlePayGateway,
       googlePayGatewayMerchantId,
       googlePayAllowedAuthMethods,
+      googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,
       emailRequired,

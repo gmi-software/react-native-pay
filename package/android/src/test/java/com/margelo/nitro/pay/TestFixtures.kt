@@ -35,7 +35,8 @@ internal fun paymentRequest(
     merchantCapabilities: Array<String> = arrayOf("3DS"),
     recurring: RecurringPaymentRequest? = null,
     deferred: DeferredPaymentRequest? = null,
-    automaticReload: AutomaticReloadPaymentRequest? = null
+    automaticReload: AutomaticReloadPaymentRequest? = null,
+    googlePayCheckoutOption: GooglePayCheckoutOption? = null
 ) = PaymentRequest(
     applePayMerchantIdentifier = null,
     merchantName = merchantName,
@@ -60,7 +61,8 @@ internal fun paymentRequest(
     googlePayEnvironment = environment,
     googlePayGateway = googlePayGateway,
     googlePayGatewayMerchantId = googlePayGatewayMerchantId,
-    googlePayAllowedAuthMethods = googlePayAllowedAuthMethods
+    googlePayAllowedAuthMethods = googlePayAllowedAuthMethods,
+    googlePayCheckoutOption = googlePayCheckoutOption
 )
 
 internal fun JSONArray.objects(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }

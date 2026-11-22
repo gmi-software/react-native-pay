@@ -5,6 +5,7 @@
  */
 
 import type {
+  GooglePayCheckoutOption,
   PaymentItem,
   PaymentItemKind,
   PaymentRequest,
@@ -28,6 +29,11 @@ const PAYMENT_ITEM_KINDS: readonly PaymentItemKind[] = [
   'subtotal',
   'tax',
   'discount',
+]
+const GOOGLE_PAY_CHECKOUT_OPTIONS: readonly GooglePayCheckoutOption[] = [
+  'default',
+  'completeImmediatePurchase',
+  'continueToReview',
 ]
 
 function checkCode(
@@ -66,6 +72,18 @@ function checkTotalLabel(totalLabel: unknown) {
   }
 }
 
+// Native code would reject an unknown value without naming the field.
+function checkGooglePayCheckoutOption(option: unknown) {
+  if (
+    option !== undefined &&
+    !GOOGLE_PAY_CHECKOUT_OPTIONS.includes(option as GooglePayCheckoutOption)
+  ) {
+    throw new Error(
+      `googlePayCheckoutOption must be one of ${GOOGLE_PAY_CHECKOUT_OPTIONS.map((o) => `"${o}"`).join(', ')}, got ${JSON.stringify(option)}`
+    )
+  }
+}
+
 /**
  * Validates a payment request and returns a copy whose amounts are exact
  * decimal strings. `createPaymentRequest`, `usePaymentCheckout` and
@@ -75,8 +93,9 @@ function checkTotalLabel(totalLabel: unknown) {
  * `currencyCode` must be an ISO 4217 code (`'USD'`) and `countryCode` an
  * ISO 3166-1 alpha-2 code (`'US'`), both upper case. Line items may be
  * negative (discounts), but the total may not. An item's `kind` must be a
- * `PaymentItemKind`, and `totalLabel` must not be blank. An Android release
- * build warns once if `googlePayEnvironment` is omitted.
+ * `PaymentItemKind`, `googlePayCheckoutOption` a `GooglePayCheckoutOption`,
+ * and `totalLabel` must not be blank. An Android release build warns once if
+ * `googlePayEnvironment` is omitted.
  *
  * `recurring`, `deferred` and `automaticReload` follow the stricter of Apple
  * Pay's and Google Pay's rules, so a request that passes works on both: dates
@@ -87,7 +106,8 @@ function checkTotalLabel(totalLabel: unknown) {
  * shipping methods must then all cost the same. On Android the field is
  * removed without being checked.
  *
- * @throws Error if a code, an amount, a `kind` or `totalLabel` is invalid,
+ * @throws Error if a code, an amount, a `kind`, `totalLabel` or
+ *   `googlePayCheckoutOption` is invalid,
  *   the total is negative, a recurring, deferred or automatic reload request
  *   is invalid, or `applePayMultiTokenContexts` is invalid.
  */
@@ -99,6 +119,7 @@ export function normalizePaymentRequest(
   checkCode('currencyCode', currencyCode, CURRENCY_CODE_PATTERN, 'USD')
   checkCode('countryCode', request.countryCode, COUNTRY_CODE_PATTERN, 'US')
   checkTotalLabel(request.totalLabel)
+  checkGooglePayCheckoutOption(request.googlePayCheckoutOption)
   const paymentItems = normalizePaymentItems(request.paymentItems, currencyCode)
   const total = sumExactly(paymentItems.map((item) => item.amount))
 

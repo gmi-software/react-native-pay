@@ -91,6 +91,28 @@ class MerchantTokenTransactionsTest {
     }
 
     @Test
+    fun checkoutOption_hasNoEffectOnMerchantTokenPayments() {
+        val requests = listOf(
+            paymentRequest(recurring = recurring(), googlePayCheckoutOption = GooglePayCheckoutOption.CONTINUETOREVIEW),
+            paymentRequest(
+                arrayOf(item("Deposit", "20.00", PaymentItemType.PENDING)),
+                deferred = deferred,
+                googlePayCheckoutOption = GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE
+            ),
+            paymentRequest(
+                automaticReload = automaticReload,
+                googlePayCheckoutOption = GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE
+            )
+        )
+
+        requests.forEach { request ->
+            val json = GooglePayRequestBuilder.createPaymentDataRequest(request, WalletConstants.ENVIRONMENT_TEST)
+
+            assertFalse(json.toString().contains("checkoutOption"))
+        }
+    }
+
+    @Test
     fun recurring_replacesTransactionInfoWithTheSharedFields() {
         val info = build(recurring = recurring()).also {
             assertEquals(listOf("recurringTransactionInfo"), it.transactionKeys())

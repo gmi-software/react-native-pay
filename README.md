@@ -364,6 +364,7 @@ interface UsePaymentCheckoutConfig {
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
+  googlePayCheckoutOption?: GooglePayCheckoutOption; // Sheet button label. Default: Google Pay picks
   // Contact details, returned in the result (see "Shipping and contact details")
   billingContactRequired?: boolean;
   shippingContactRequired?: boolean;
@@ -794,6 +795,7 @@ interface PaymentRequest {
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
   googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
+  googlePayCheckoutOption?: GooglePayCheckoutOption; // the sheet's button label
 }
 
 // Payment Result
@@ -873,6 +875,13 @@ type PaymentNetwork =
 // Google Pay auth methods (Android). PAN_ONLY payments need a 3-D Secure step-up:
 // https://gmi-software.github.io/react-native-pay/docs/setup/android-google-pay#card-authentication-and-3-d-secure
 type GooglePayAuthMethod = "PAN_ONLY" | "CRYPTOGRAM_3DS";
+
+// Google Pay sheet button label (Android): "Continue"/"Pay", "Pay now", "Review Order".
+// 'completeImmediatePurchase' fails with a 'pending' item.
+type GooglePayCheckoutOption =
+  | "default"
+  | "completeImmediatePurchase"
+  | "continueToReview";
 
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";

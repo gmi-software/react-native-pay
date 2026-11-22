@@ -32,6 +32,8 @@ namespace margelo::nitro::pay { struct DeferredBillingItem; }
 namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
 // Forward declaration of `FreeCancellation` to properly resolve imports.
 namespace margelo::nitro::pay { struct FreeCancellation; }
+// Forward declaration of `GooglePayCheckoutOption` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
@@ -118,6 +120,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "DeferredBillingItem.hpp"
 #include "DeferredPaymentRequest.hpp"
 #include "FreeCancellation.hpp"
+#include "GooglePayCheckoutOption.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
@@ -756,6 +759,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<PaymentTokenContext> get_std__optional_std__vector_PaymentTokenContext__(const std::optional<std::vector<PaymentTokenContext>>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<GooglePayCheckoutOption>
+  /**
+   * Specialized version of `std::optional<GooglePayCheckoutOption>`.
+   */
+  using std__optional_GooglePayCheckoutOption_ = std::optional<GooglePayCheckoutOption>;
+  inline std::optional<GooglePayCheckoutOption> create_std__optional_GooglePayCheckoutOption_(const GooglePayCheckoutOption& value) noexcept {
+    return std::optional<GooglePayCheckoutOption>(value);
+  }
+  inline bool has_value_std__optional_GooglePayCheckoutOption_(const std::optional<GooglePayCheckoutOption>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline GooglePayCheckoutOption get_std__optional_GooglePayCheckoutOption_(const std::optional<GooglePayCheckoutOption>& optional) noexcept {
     return optional.value();
   }
   
