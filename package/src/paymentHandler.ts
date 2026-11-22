@@ -61,6 +61,8 @@ export function getPaymentHandler(): PaymentHandler {
     } catch (cause) {
       throw new Error(NATIVE_MODULE_MISSING_ERROR, { cause })
     }
+    // Before any onAuthorize reaches native code, on every path to it.
+    registerSheetAuthorizationTask()
   }
   return paymentHandler
 }
@@ -110,9 +112,6 @@ export function prepareStartPaymentOptions(
     onPaymentMethodChange,
     onCouponCodeChange,
   } = options ?? {}
-  if (onAuthorize) {
-    registerSheetAuthorizationTask()
-  }
   const prepared: StartPaymentOptions = {
     ...(onAuthorize && {
       onAuthorize: async (token, details) => onAuthorize(token, details),

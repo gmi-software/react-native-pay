@@ -187,8 +187,8 @@ export interface UsePaymentCheckoutConfig
    * Android the sheet shows your `error`.
    * It must settle within 25 seconds, or the payment fails with a timeout.
    * After a `'failure'` or a timeout the user can retry from the same sheet,
-   * which calls this again with a new token. Make the charge idempotent per
-   * order ID, not per token.
+   * which calls this again with a new token. Allow one successful charge
+   * per order ID, not per token.
    * `details` holds the contact details requested above.
    * An inline function is fine: `startPayment` keeps its identity and uses the
    * function from the latest render. A payment keeps the function it started

@@ -40,7 +40,9 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     @Volatile private var requestedDetails = RequestedDetails()
     // Set with onAuthorize, for the in-sheet authorization; main thread after startPayment.
     @Volatile private var sheetAuthorization: SheetAuthorization? = null
-    private val sheetAuthorizer = PaymentDataCallbacks.Authorizer(::authorizeInSheet)
+    // The in-flight payment's link to Google's callback, so a late callback
+    // can't reach the next payment.
+    @Volatile private var sheetAuthorizer: PaymentDataCallbacks.Authorizer? = null
     private val jsTimersKeepAlive = JsTimersKeepAlive { reactContext }
     private val mainHandler = Handler(Looper.getMainLooper())
     
@@ -127,7 +129,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         onAuthorize = authorize
         requestedDetails = RequestedDetails.from(request)
         if (authorize != null) {
-            sheetAuthorization = SheetAuthorization(
+            val sheet = SheetAuthorization(
                 authorize = { token, authorizedResult, onOutcome ->
                     // The sheet pauses the app's activity, which stops JS timers.
                     jsTimersKeepAlive.start()
@@ -139,7 +141,13 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
                 settle = ::settlePayment,
                 authorizeAfterSheet = ::handlePaymentSuccess
             )
-            PaymentDataCallbacks.register(sheetAuthorizer)
+            val details = requestedDetails
+            val authorizer = PaymentDataCallbacks.Authorizer { paymentData, answer ->
+                authorizeInSheet(sheet, details, paymentData, answer)
+            }
+            sheetAuthorization = sheet
+            sheetAuthorizer = authorizer
+            PaymentDataCallbacks.register(authorizer)
         }
         
         try {
@@ -252,14 +260,18 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     }
     
     /**
-     * Google Pay's `PAYMENT_AUTHORIZATION` callback, from
-     * [PaymentDataCallbacksService] on a worker thread.
+     * Google Pay's `PAYMENT_AUTHORIZATION` callback for the payment whose
+     * [sheet] it is, from [PaymentDataCallbacksService] on a worker thread.
      */
-    private fun authorizeInSheet(paymentData: PaymentData?, answer: (String) -> Unit) {
+    private fun authorizeInSheet(
+        sheet: SheetAuthorization,
+        requestedDetails: RequestedDetails,
+        paymentData: PaymentData?,
+        answer: (String) -> Unit
+    ) {
         mainHandler.post {
-            val sheet = sheetAuthorization
-            if (sheet == null) {
-                // The payment has already settled.
+            if (sheetAuthorization !== sheet) {
+                // That payment has already settled, maybe before another began.
                 answer(SheetAuthorization.failureJson())
                 return@post
             }
@@ -355,7 +367,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // Clear before settling: once the slot is free, a new startPayment may set its own.
         onAuthorize = null
         sheetAuthorization = null
-        PaymentDataCallbacks.unregister(sheetAuthorizer)
+        sheetAuthorizer?.let { PaymentDataCallbacks.unregister(it) }
+        sheetAuthorizer = null
         jsTimersKeepAlive.stop()
         pendingPayment.settle(result)
     }

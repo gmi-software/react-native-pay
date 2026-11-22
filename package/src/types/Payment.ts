@@ -515,8 +515,8 @@ export interface StartPaymentOptions {
    * It must settle within 25 seconds, or the payment fails with a timeout and
    * its later result is ignored. A rejection counts as `'failure'`.
    * After a `'failure'` or a timeout the user can retry from the same sheet,
-   * which calls this again with a new token. Make the charge idempotent per
-   * order ID, not per token.
+   * which calls this again with a new token. Allow one successful charge
+   * per order ID, not per token.
    * `details` holds the contact details and shipping method the request
    * asked for, so you can check them before charging.
    */

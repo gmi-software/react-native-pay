@@ -1,24 +1,21 @@
-import type { PaymentRequest } from '../types'
-
-const request: PaymentRequest = {
-  countryCode: 'US',
-  currencyCode: 'USD',
-  paymentItems: [{ label: 'Coffee', amount: '4.50', type: 'final' }],
-  merchantCapabilities: ['3DS'],
-  supportedNetworks: ['visa'],
-}
+// Required lazily, outside isolateModules, so one mock serves every test.
+const mockNative = { startPayment: jest.fn() }
+jest.mock('react-native-nitro-modules', () => ({
+  NitroModules: { createHybridObject: () => mockNative },
+}))
 
 function loadOnPlatform(os: 'android' | 'ios') {
   const registerHeadlessTask = jest.fn()
-  let prepare!: typeof import('../paymentHandler').prepareStartPaymentOptions
+  const startPayment = mockNative.startPayment
+  let getPaymentHandler!: typeof import('../paymentHandler').getPaymentHandler
   jest.isolateModules(() => {
     jest.doMock('react-native', () => ({
       Platform: { OS: os, select: (spec: any) => spec[os] ?? spec.default },
       AppRegistry: { registerHeadlessTask },
     }))
-    prepare = require('../paymentHandler').prepareStartPaymentOptions
+    getPaymentHandler = require('../paymentHandler').getPaymentHandler
   })
-  return { prepare, registerHeadlessTask }
+  return { getPaymentHandler, registerHeadlessTask, startPayment }
 }
 
 afterEach(() => {
@@ -26,12 +23,12 @@ afterEach(() => {
 })
 
 describe('sheet authorization task', () => {
-  it('registers once on Android when onAuthorize is set', () => {
-    const { prepare, registerHeadlessTask } = loadOnPlatform('android')
-    const onAuthorize = async () => ({ status: 'success' as const })
+  it('is registered once on Android, with the native handler', () => {
+    const { getPaymentHandler, registerHeadlessTask } =
+      loadOnPlatform('android')
 
-    prepare({ onAuthorize }, request)
-    prepare({ onAuthorize }, request)
+    getPaymentHandler()
+    getPaymentHandler()
 
     expect(registerHeadlessTask).toHaveBeenCalledTimes(1)
     expect(registerHeadlessTask.mock.calls[0][0]).toBe(
@@ -39,9 +36,24 @@ describe('sheet authorization task', () => {
     )
   })
 
+  it('is registered before the raw handler gets onAuthorize', () => {
+    const { getPaymentHandler, registerHeadlessTask, startPayment } =
+      loadOnPlatform('android')
+
+    getPaymentHandler().startPayment({} as any, {
+      onAuthorize: async () => ({ status: 'success' }),
+    })
+
+    expect(startPayment).toHaveBeenCalledTimes(1)
+    expect(registerHeadlessTask.mock.invocationCallOrder[0]).toBeLessThan(
+      startPayment.mock.invocationCallOrder[0]!
+    )
+  })
+
   it('never settles by itself, so native code decides when it ends', async () => {
-    const { prepare, registerHeadlessTask } = loadOnPlatform('android')
-    prepare({ onAuthorize: async () => ({ status: 'success' }) }, request)
+    const { getPaymentHandler, registerHeadlessTask } =
+      loadOnPlatform('android')
+    getPaymentHandler()
 
     const task = registerHeadlessTask.mock.calls[0][1]()
     const settled = jest.fn()
@@ -51,13 +63,11 @@ describe('sheet authorization task', () => {
     expect(settled).not.toHaveBeenCalled()
   })
 
-  it('is not registered without onAuthorize or on iOS', () => {
-    const android = loadOnPlatform('android')
-    android.prepare(undefined, request)
-    expect(android.registerHeadlessTask).not.toHaveBeenCalled()
+  it('is not registered on iOS', () => {
+    const { getPaymentHandler, registerHeadlessTask } = loadOnPlatform('ios')
 
-    const ios = loadOnPlatform('ios')
-    ios.prepare({ onAuthorize: async () => ({ status: 'success' }) }, request)
-    expect(ios.registerHeadlessTask).not.toHaveBeenCalled()
+    getPaymentHandler()
+
+    expect(registerHeadlessTask).not.toHaveBeenCalled()
   })
 })

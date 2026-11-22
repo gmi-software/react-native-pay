@@ -11,7 +11,7 @@ export const SHEET_AUTHORIZATION_TASK = 'ReactNativePaySheetAuthorization'
 
 let registered = false
 
-/** Registers the task once, on Android. */
+/** Registers the task once, on Android. Called when the native handler is created. */
 export function registerSheetAuthorizationTask(): void {
   if (registered || Platform.OS !== 'android') return
   registered = true

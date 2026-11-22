@@ -115,14 +115,15 @@ In your own app, use your server against your gateway's test mode, and your gate
 - [ ] **Success.** Pay with a test card.
   - `startPayment` resolves with `status: 'success'` and a `token`, and your server charges once.
   - With `onAuthorize`, the Apple Pay or Google Pay sheet shows success only after your server answers.
+  - Android fallback: if Google Pay returns the payment without asking first, its sheet closes before `onAuthorize` runs. `startPayment` still resolves only after your server answers, with its outcome. Debug builds log "Authorizing in the Google Pay sheet" when the sheet waits; without that line, you are testing the fallback.
 - [ ] **User cancel.** Open the sheet and close it without paying.
   - `startPayment` resolves with `status: 'cancelled'` and `code: 'CANCELLED'`. Your server is not called.
   - The hook leaves `error` as `null`, so your UI shows no failure.
 - [ ] **Decline through `onAuthorize`.** Set the example app to `decline`, or make your server decline.
   - The sheet shows the failure and lets the user retry, which calls `onAuthorize` again with a new token. On Android, the Google Pay sheet shows your `error`. Closing the sheet resolves `startPayment` with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error`.
-  - The order isn't marked paid, and a retry doesn't charge twice. Make the charge idempotent per order ID, not per token.
+  - The order isn't marked paid, and a retry doesn't charge twice. Allow one successful charge per order ID, not per token, and use a new idempotency key for the retry after a decline (see [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes)).
 - [ ] **Slow server.** Make your server take longer than 25 seconds to answer `onAuthorize`.
-  - `startPayment` resolves with `code: 'PROVIDER_ERROR'` and `error: 'Payment authorization timed out'`. The user can first retry from the sheet, which shows "Payment authorization timed out" on Android.
+  - The sheet shows the failure ("Payment authorization timed out" on Android) and stays open for a retry. Close it without retrying: `startPayment` then resolves with `code: 'PROVIDER_ERROR'` and `error: 'Payment authorization timed out'`. A successful retry instead resolves with that attempt's result.
   - Your server may still charge after the app has given up. Check that your backend can reconcile that order.
 - [ ] **Double tap.** Tap the pay button twice quickly.
   - Only one sheet opens. The second call resolves at once with `code: 'IN_PROGRESS'`, and the first payment settles normally.
