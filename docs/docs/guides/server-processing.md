@@ -37,17 +37,15 @@ function useOrderPayment() {
   return async () => {
     const result = await startPayment()
     if (result?.status === 'success' && result.token) {
-      try {
-        const response = await fetch('https://api.yourserver.com/process-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: result.token, orderId: order.id }),
-        })
-        if (!response.ok) throw new Error('Payment processing failed')
-      } finally {
-        // Drop the token from the hook's state, also when the request fails.
-        reset()
-      }
+      // Drop the token from the hook's state before the request, so a later
+      // payment's result can't be cleared by this one.
+      reset()
+      const response = await fetch('https://api.yourserver.com/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: result.token, orderId: order.id }),
+      })
+      if (!response.ok) throw new Error('Payment processing failed')
     }
   }
 }
