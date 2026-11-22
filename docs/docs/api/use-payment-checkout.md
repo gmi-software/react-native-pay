@@ -106,7 +106,7 @@ Which button to show for each combination is in [Check availability](/docs/guide
   - Returns `status: 'failed'` and `code: 'UNKNOWN'` if an exception is thrown while starting/processing the payment, with the thrown message in `error` (`'Payment processing failed'` if it wasn't an `Error`). What was thrown is in the hook's `error.cause`.
   - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ status: 'failed', code: 'PROVIDER_ERROR', error }` and sets `error`.
   - Returns `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
-- **error** — A [`PaymentError`](/docs/api/types#paymenterror) whenever it is set. Its `code` uses the [error codes](/docs/payment-flow#error-codes) of `PaymentResult` and matches the failed result's `code`. It is state: read it in the render after `startPayment()` settles, and narrow it with `instanceof PaymentError` to read `code`.
+- **error** — A [`PaymentError`](/docs/api/types#paymenterror) whenever it is set. Its `code` uses the [error codes](/docs/payment-flow#error-codes) of `PaymentResult` and matches the failed result's `code`, except that a native result without a `code` gives `'UNKNOWN'`. `'IN_PROGRESS'` doesn't set it, so branch on the returned result. It is state: read it in the render after `startPayment()` settles, and narrow it with `instanceof PaymentError` to read `code`.
 - **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (arrays such as `supportedNetworks` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles. Call it after `startPayment()` resolves, once you no longer need `result`, so the token doesn't stay in the hook's state. Calling it inside `onAuthorize` is too early: the hook stores the result after the callback settles.
 
@@ -152,7 +152,7 @@ if (result.status === 'success' && result.token) {
   reset()
 }
 // 'cancelled': the user closed the sheet; `error` stays null.
-// 'failed': result.code says why, and `error` is set with the same code.
+// 'failed': result.code says why. `error` is set too, except for 'IN_PROGRESS'.
 ```
 
 ## Empty cart
