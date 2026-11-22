@@ -76,6 +76,8 @@ final class PaymentSheetSessionTests: XCTestCase {
             automaticReload: nil,
             applePayMultiTokenContexts: nil,
             couponCode: nil,
+            applePayMerchantCategoryCode: nil,
+            applePayLaterAvailability: nil,
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,

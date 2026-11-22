@@ -50,6 +50,13 @@ All notable changes to this project are documented in this file.
   `paymentRequest.googlePayAllowPrepaidCards` gives it for the button. Omitted or `true`, the
   requests are unchanged. Android only
   ([#87](https://github.com/gmi-software/react-native-pay/issues/87)).
+- **`applePayMerchantCategoryCode`** and **`applePayLaterAvailability`** in `PaymentRequest`.
+  The first sets `PKPaymentRequest.merchantCategoryCode`, an ISO 18245 code from 0 to 9999, so
+  Apple Pay leaves out the cards that don't accept the category (iOS 18 and later). The second
+  (`ApplePayLaterAvailability`: `'available'`, `'itemIneligible'`, `'recurringTransaction'`) hides
+  Apple Pay Later and tells the payer why (iOS 17 and later). Earlier iOS versions ignore them, but
+  an invalid value fails with `code: 'CONFIGURATION'` on any iOS version. iOS only; Android ignores
+  both ([#78](https://github.com/gmi-software/react-native-pay/issues/78)).
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
   invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it

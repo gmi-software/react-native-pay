@@ -45,6 +45,15 @@ private enum ErrorMessage {
     static func unknownShippingType(_ shippingType: String) -> String {
         return "Unknown shipping type \"\(shippingType)\". Use \"shipping\", \"delivery\", \"storePickup\" or \"servicePickup\""
     }
+
+    static func invalidMerchantCategoryCode(_ code: Double) -> String {
+        // NSNumber prints 10000, not 10000.0.
+        return "Invalid merchant category code \(NSNumber(value: code)). Use a whole number from 0 to 9999"
+    }
+
+    static func unknownApplePayLaterAvailability(_ availability: String) -> String {
+        return "Unknown Apple Pay Later availability \"\(availability)\". Use \"available\", \"itemIneligible\" or \"recurringTransaction\""
+    }
 }
 
 /// Why a payment ended without success.
@@ -119,6 +128,9 @@ struct PaymentRequestBuilder {
             paymentRequest.shippingType = try convertShippingType(shippingType)
         }
         
+        try configureMerchantCategoryCode(paymentRequest, code: request.applePayMerchantCategoryCode)
+        try configureApplePayLater(paymentRequest, availability: request.applePayLaterAvailability)
+
         configureContactRequirements(paymentRequest, request: request)
         
         return paymentRequest
@@ -317,6 +329,38 @@ struct PaymentRequestBuilder {
         }
     }
     
+    /// Checks the code on every iOS version, so a bad one fails the same
+    /// everywhere; only iOS 18 and later can use it.
+    private static func configureMerchantCategoryCode(_ paymentRequest: PKPaymentRequest, code: Double?) throws {
+        guard let code = code else { return }
+        guard let rawValue = Int16(exactly: code), (0...9999).contains(rawValue) else {
+            throw PaymentFailure.configuration(ErrorMessage.invalidMerchantCategoryCode(code))
+        }
+        if #available(iOS 18.0, *) {
+            paymentRequest.merchantCategoryCode = PKPaymentRequest.MerchantCategoryCode(rawValue: rawValue)
+        }
+    }
+
+    /// The `ApplePayLaterAvailability` values, so iOS before 17 checks them too.
+    private enum ApplePayLater: String {
+        case available, itemIneligible, recurringTransaction
+    }
+
+    /// Checks the value on every iOS version, like the category code;
+    /// Apple Pay Later needs iOS 17.
+    private static func configureApplePayLater(_ paymentRequest: PKPaymentRequest, availability: String?) throws {
+        guard let availability = availability else { return }
+        guard let value = ApplePayLater(rawValue: availability) else {
+            throw PaymentFailure.configuration(ErrorMessage.unknownApplePayLaterAvailability(availability))
+        }
+        guard #available(iOS 17.0, *) else { return }
+        switch value {
+        case .available: paymentRequest.applePayLaterAvailability = .available
+        case .itemIneligible: paymentRequest.applePayLaterAvailability = .unavailable(.itemIneligible)
+        case .recurringTransaction: paymentRequest.applePayLaterAvailability = .unavailable(.recurringTransaction)
+        }
+    }
+
     private static func configureContactRequirements(_ paymentRequest: PKPaymentRequest, request: PaymentRequest) {
         if request.billingContactRequired == true {
             paymentRequest.requiredBillingContactFields = [.postalAddress, .name]

@@ -77,6 +77,12 @@ data class PaymentRequest(
   val couponCode: String?,
   @DoNotStrip
   @Keep
+  val applePayMerchantCategoryCode: Double?,
+  @DoNotStrip
+  @Keep
+  val applePayLaterAvailability: String?,
+  @DoNotStrip
+  @Keep
   val googlePayMerchantId: String?,
   @DoNotStrip
   @Keep
@@ -121,6 +127,8 @@ data class PaymentRequest(
       && Objects.deepEquals(this.automaticReload, other.automaticReload)
       && Objects.deepEquals(this.applePayMultiTokenContexts, other.applePayMultiTokenContexts)
       && Objects.deepEquals(this.couponCode, other.couponCode)
+      && Objects.deepEquals(this.applePayMerchantCategoryCode, other.applePayMerchantCategoryCode)
+      && Objects.deepEquals(this.applePayLaterAvailability, other.applePayLaterAvailability)
       && Objects.deepEquals(this.googlePayMerchantId, other.googlePayMerchantId)
       && Objects.deepEquals(this.googlePayEnvironment, other.googlePayEnvironment)
       && Objects.deepEquals(this.googlePayGateway, other.googlePayGateway)
@@ -151,6 +159,8 @@ data class PaymentRequest(
       automaticReload,
       applePayMultiTokenContexts,
       couponCode,
+      applePayMerchantCategoryCode,
+      applePayLaterAvailability,
       googlePayMerchantId,
       googlePayEnvironment,
       googlePayGateway,
@@ -169,8 +179,8 @@ data class PaymentRequest(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: Array<PaymentTokenContext>?, couponCode: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: Array<String>?, googlePayAllowPrepaidCards: Boolean?, googlePayCheckoutOption: GooglePayCheckoutOption?): PaymentRequest {
-      return PaymentRequest(applePayMerchantIdentifier, merchantName, totalLabel, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, recurring, deferred, automaticReload, applePayMultiTokenContexts, couponCode, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, googlePayAllowedAuthMethods, googlePayAllowPrepaidCards, googlePayCheckoutOption)
+    private fun fromCpp(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: Array<PaymentItem>, merchantCapabilities: Array<String>, supportedNetworks: Array<String>, shippingType: String?, shippingMethods: Array<ShippingMethod>?, billingContactRequired: Boolean?, shippingContactRequired: Boolean?, emailRequired: Boolean?, phoneNumberRequired: Boolean?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: Array<PaymentTokenContext>?, couponCode: String?, applePayMerchantCategoryCode: Double?, applePayLaterAvailability: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: Array<String>?, googlePayAllowPrepaidCards: Boolean?, googlePayCheckoutOption: GooglePayCheckoutOption?): PaymentRequest {
+      return PaymentRequest(applePayMerchantIdentifier, merchantName, totalLabel, countryCode, currencyCode, paymentItems, merchantCapabilities, supportedNetworks, shippingType, shippingMethods, billingContactRequired, shippingContactRequired, emailRequired, phoneNumberRequired, recurring, deferred, automaticReload, applePayMultiTokenContexts, couponCode, applePayMerchantCategoryCode, applePayLaterAvailability, googlePayMerchantId, googlePayEnvironment, googlePayGateway, googlePayGatewayMerchantId, googlePayAllowedAuthMethods, googlePayAllowPrepaidCards, googlePayCheckoutOption)
     }
   }
 }

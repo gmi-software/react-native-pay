@@ -127,6 +127,15 @@ export type ShippingType =
   | 'storePickup'
   | 'servicePickup'
 
+/**
+ * Whether the payer may pay with Apple Pay Later, and if not, why. The sheet
+ * tells the payer the reason. iOS only.
+ */
+export type ApplePayLaterAvailability =
+  | 'available'
+  | 'itemIneligible'
+  | 'recurringTransaction'
+
 export interface PKPass {
   passTypeIdentifier: string
   serialNumber: string
@@ -438,6 +447,22 @@ export interface PaymentRequest {
    * `'CONFIGURATION'`. iOS only; Android ignores it.
    */
   couponCode?: string
+  /**
+   * The merchant's ISO 18245 category code, from 0 to 9999, for example
+   * `5411` for grocery stores. Apple Pay leaves out the cards that don't
+   * accept the category. iOS 18 and later; earlier versions ignore it.
+   * Another value, including a fraction, fails the payment with
+   * `'CONFIGURATION'` on any iOS version. iOS only; Android ignores it.
+   */
+  applePayMerchantCategoryCode?: number
+  /**
+   * An `ApplePayLaterAvailability` value. Hides Apple Pay Later and tells
+   * the payer why, for example for gift cards, which must not be paid over
+   * time. iOS 17 and later; earlier versions ignore it. An unknown value
+   * fails the payment on iOS. Not typed as `ApplePayLaterAvailability` for
+   * the same reason as `merchantCapabilities`. iOS only; Android ignores it.
+   */
+  applePayLaterAvailability?: string
   // Google Pay specific configuration (Android only)
   googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment

@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: [PaymentTokenContext]?, couponCode: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: [String]?, googlePayAllowPrepaidCards: Bool?, googlePayCheckoutOption: GooglePayCheckoutOption?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: [PaymentTokenContext]?, couponCode: String?, applePayMerchantCategoryCode: Double?, applePayLaterAvailability: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayAllowedAuthMethods: [String]?, googlePayAllowPrepaidCards: Bool?, googlePayCheckoutOption: GooglePayCheckoutOption?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -129,6 +129,18 @@ public extension PaymentRequest {
       }
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = couponCode {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_double_ in
+      if let __unwrappedValue = applePayMerchantCategoryCode {
+        return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = applePayLaterAvailability {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
@@ -349,6 +361,30 @@ public extension PaymentRequest {
     return { () -> String? in
       if bridge.has_value_std__optional_std__string_(self.__couponCode) {
         let __unwrapped = bridge.get_std__optional_std__string_(self.__couponCode)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var applePayMerchantCategoryCode: Double? {
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__applePayMerchantCategoryCode) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__applePayMerchantCategoryCode)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var applePayLaterAvailability: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__applePayLaterAvailability) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__applePayLaterAvailability)
         return String(__unwrapped)
       } else {
         return nil
