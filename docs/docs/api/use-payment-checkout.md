@@ -140,7 +140,8 @@ addItems([
 
 const result = await startPayment()
 if (result?.status === 'success' && result.token) {
-  // Send result.token to your server
+  // Send result.token to your server, then drop it from the hook's state.
+  reset()
 }
 // 'cancelled': the user closed the sheet; `error` stays null.
 // 'failed': `error` is set, and result.code says why.

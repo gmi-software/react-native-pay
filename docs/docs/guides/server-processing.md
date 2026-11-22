@@ -22,7 +22,7 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 const order = { id: 'order_123', label: 'Premium plan', total: '49.99' } // your order
 
 function useOrderPayment() {
-  const { addItem, clearItems, startPayment } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment, reset } = usePaymentCheckout({
     currencyCode: 'USD',
   })
 
@@ -37,12 +37,17 @@ function useOrderPayment() {
   return async () => {
     const result = await startPayment()
     if (result?.status === 'success' && result.token) {
-      const response = await fetch('https://api.yourserver.com/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: result.token, orderId: order.id }),
-      })
-      if (!response.ok) throw new Error('Payment processing failed')
+      try {
+        const response = await fetch('https://api.yourserver.com/process-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: result.token, orderId: order.id }),
+        })
+        if (!response.ok) throw new Error('Payment processing failed')
+      } finally {
+        // Drop the token from the hook's state, also when the request fails.
+        reset()
+      }
     }
   }
 }
@@ -61,7 +66,7 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 const order = { id: 'order_123', label: 'Premium plan', total: '49.99' } // your order
 
 function useOrderPayment() {
-  const { addItem, clearItems, startPayment } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment, reset } = usePaymentCheckout({
     currencyCode: 'USD',
     onAuthorize: async (token) => {
       const response = await fetch('https://api.yourserver.com/process-payment', {
@@ -86,6 +91,8 @@ function useOrderPayment() {
     const result = await startPayment()
     // result.status is 'success' only when onAuthorize returned 'success'.
     // The token is already charged, so don't send it to your server again.
+    // The hook stored the result only now, so drop the token here.
+    if (result?.status === 'success') reset()
   }
 }
 ```
