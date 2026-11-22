@@ -6,7 +6,7 @@ When the user authorizes a payment, your app receives a **token**. Nothing has b
 
 From the client, send at least:
 
-- **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive.
+- **token** — The full `PaymentToken` object (or the fields your gateway needs). Treat as sensitive. Once it is sent, drop it: with `usePaymentCheckout`, call `reset()` after `startPayment()` resolves, also when `onAuthorize` sent the token, since the hook stores the result only then. Don't put the result or token in navigation params or a global store.
 - **order/cart id** — So the server knows what was purchased, and as the base of your idempotency key.
 
 Don't send the amount to charge. The server looks up the order and charges the amount and currency it stored. If you also send the total the user saw, the server only compares it with the order and rejects a mismatch.
@@ -22,7 +22,7 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 const order = { id: 'order_123', label: 'Premium plan', total: '49.99' } // your order
 
 function useOrderPayment() {
-  const { addItem, clearItems, startPayment } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment, reset } = usePaymentCheckout({
     currencyCode: 'USD',
   })
 
@@ -37,6 +37,9 @@ function useOrderPayment() {
   return async () => {
     const result = await startPayment()
     if (result?.status === 'success' && result.token) {
+      // Drop the token from the hook's state before the request, so a later
+      // payment's result can't be cleared by this one.
+      reset()
       const response = await fetch('https://api.yourserver.com/process-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,7 +64,7 @@ import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
 const order = { id: 'order_123', label: 'Premium plan', total: '49.99' } // your order
 
 function useOrderPayment() {
-  const { addItem, clearItems, startPayment } = usePaymentCheckout({
+  const { addItem, clearItems, startPayment, reset } = usePaymentCheckout({
     currencyCode: 'USD',
     onAuthorize: async (token) => {
       const response = await fetch('https://api.yourserver.com/process-payment', {
@@ -86,6 +89,8 @@ function useOrderPayment() {
     const result = await startPayment()
     // result.status is 'success' only when onAuthorize returned 'success'.
     // The token is already charged, so don't send it to your server again.
+    // The hook stored the result only now, so drop the token here.
+    if (result?.status === 'success') reset()
   }
 }
 ```

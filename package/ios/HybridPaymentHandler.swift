@@ -556,11 +556,11 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
 
         // PassKit calls this again when the user retries after a failure, so
         // each attempt completes its own handler exactly once. Runs on main.
-        var isSettled = false
         isAuthorizing = true
-        let settle = { (result: PaymentResult) in
-            guard !isSettled else { return }
-            isSettled = true
+        let attempt = AuthorizationAttempt(
+            timeout: authorizationTimeout,
+            timeoutResult: PaymentResultFactory.failure(.providerError, ErrorMessage.authorizationTimedOut)
+        ) { result in
             self.isAuthorizing = false
             self.authorizedResult = result
             completion(PKPaymentAuthorizationResult(
@@ -573,11 +573,7 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
         }
         // Nitro settles JS promises on the JS thread.
         let settleOnMain = { (result: PaymentResult) in
-            DispatchQueue.main.async { settle(result) }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + authorizationTimeout) {
-            settle(PaymentResultFactory.failure(.providerError, ErrorMessage.authorizationTimedOut))
+            DispatchQueue.main.async { attempt.settle(result) }
         }
 
         onAuthorize(paymentToken, details)
@@ -621,6 +617,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
 
     private func reportResult() {
         if paymentAuthorized, let authorizedResult {
+            // The result holds the token, which JS now owns.
+            self.authorizedResult = nil
             paymentHandler?.handlePaymentResult(authorizedResult)
             return
         }
