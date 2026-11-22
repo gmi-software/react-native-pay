@@ -674,32 +674,145 @@ class GooglePayRequestBuilderTest {
         }
     }
 
-    // In-sheet authorization
+    // Payment data callbacks
+
+    private fun buildWithCallbacks(request: PaymentRequest, callbacks: CallbackIntents): JSONObject =
+        GooglePayRequestBuilder.createPaymentDataRequest(
+            request,
+            WalletConstants.ENVIRONMENT_TEST,
+            callbacks = callbacks
+        )
 
     @Test
     fun onAuthorize_asksGooglePayForThePaymentAuthorizationCallback() {
-        val request = GooglePayRequestBuilder.createPaymentDataRequest(
+        val request = buildWithCallbacks(
             paymentRequest(arrayOf(item("Coffee", "4.50"))),
-            WalletConstants.ENVIRONMENT_TEST,
-            authorizeInSheet = true
+            CallbackIntents(authorization = true)
         )
 
         assertEquals(listOf("PAYMENT_AUTHORIZATION"), request.getJSONArray("callbackIntents").strings())
+        assertFalse(request.has("shippingOptionRequired"))
     }
 
     @Test
-    fun withoutOnAuthorize_theRequestIsUnchanged() {
-        val request = paymentRequest(arrayOf(item("Coffee", "4.50")), shippingContactRequired = true)
-        val withCallbacks = GooglePayRequestBuilder.createPaymentDataRequest(
-            request,
-            WalletConstants.ENVIRONMENT_TEST,
-            authorizeInSheet = true
+    fun withoutCallbacks_theRequestIsUnchanged() {
+        val request = paymentRequest(
+            arrayOf(item("Coffee", "4.50")),
+            shippingContactRequired = true,
+            shippingMethods = shippingMethods
         )
+        val withCallbacks = buildWithCallbacks(request, CallbackIntents(authorization = true))
 
         val plain = build(request)
 
         assertFalse(plain.has("callbackIntents"))
+        assertFalse(plain.has("shippingOptionRequired"))
         withCallbacks.remove("callbackIntents")
         assertEquals(withCallbacks.toString(), plain.toString())
+    }
+
+    @Test
+    fun sheetCallbacks_askForEveryIntentInGooglesOrder() {
+        val request = buildWithCallbacks(
+            paymentRequest(arrayOf(item("Coffee", "4.50")), shippingContactRequired = true),
+            CallbackIntents(authorization = true, shippingAddress = true, shippingOption = true, paymentMethod = true)
+        )
+
+        assertEquals(
+            listOf("PAYMENT_AUTHORIZATION", "SHIPPING_ADDRESS", "SHIPPING_OPTION", "PAYMENT_METHOD"),
+            request.getJSONArray("callbackIntents").strings()
+        )
+    }
+
+    @Test
+    fun shippingOption_letsThePayerPickAShippingMethod() {
+        val methods = arrayOf(
+            ShippingMethod("standard", "Standard", PaymentAmount.create("4.50"), "3-5 days"),
+            ShippingMethod("express", "Express", PaymentAmount.create("9.00"), " ")
+        )
+        val request = buildWithCallbacks(
+            paymentRequest(arrayOf(item("Beans", "18.00")), shippingContactRequired = true, shippingMethods = methods),
+            CallbackIntents(authorization = true, shippingOption = true)
+        )
+
+        assertTrue(request.getBoolean("shippingOptionRequired"))
+        val parameters = request.getJSONObject("shippingOptionParameters")
+        assertEquals("standard", parameters.getString("defaultSelectedOptionId"))
+        val options = parameters.getJSONArray("shippingOptions").objects()
+        assertEquals(listOf("standard", "express"), options.map { it.getString("id") })
+        assertEquals(listOf("Standard", "Express"), options.map { it.getString("label") })
+        assertEquals("3-5 days", options[0].getString("description"))
+        assertFalse(options[1].has("description"))
+        // The first method is charged until the payer picks another.
+        assertEquals("22.50", request.totalPrice())
+    }
+
+    @Test
+    fun shippingOption_rejectsAMethodGooglePayCantCharge() {
+        // KWD allows three decimal places; Google Pay takes two.
+        val methods = arrayOf(
+            ShippingMethod("standard", "Standard", PaymentAmount.create("0.000"), null),
+            ShippingMethod("express", "Express", PaymentAmount.create("1.005"), null)
+        )
+        val request = paymentRequest(
+            arrayOf(item("Beans", "18.000")),
+            currencyCode = "KWD",
+            shippingContactRequired = true,
+            shippingMethods = methods
+        )
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            buildWithCallbacks(request, CallbackIntents(authorization = true, shippingOption = true))
+        }
+        assertEquals("Google Pay accepts at most two decimal places, got 1.005", error.message)
+        // Without the picker only the first method is charged, as before.
+        assertEquals("18.00", build(request).totalPrice())
+    }
+
+    @Test
+    fun transactionInfoUpdate_chargesTheGivenItemsAndMethod() {
+        val request = paymentRequest(arrayOf(item("Beans", "18.00")), shippingMethods = shippingMethods)
+
+        val update = GooglePayRequestBuilder.createTransactionInfoUpdate(
+            request,
+            arrayOf(item("Beans", "18.00"), item("Tax", "1.50", kind = PaymentItemKind.TAX)),
+            shippingMethods[1]
+        )
+
+        assertEquals("28.50", update.getString("totalPrice"))
+        assertEquals("FINAL", update.getString("totalPriceStatus"))
+        assertEquals("USD", update.getString("currencyCode"))
+        assertEquals("US", update.getString("countryCode"))
+        assertEquals("Total", update.getString("totalPriceLabel"))
+        // Required in an update.
+        assertEquals("DEFAULT", update.getString("checkoutOption"))
+        assertEquals(
+            listOf("Beans", "Tax", "Express"),
+            update.getJSONArray("displayItems").objects().map { it.getString("label") }
+        )
+    }
+
+    @Test
+    fun transactionInfoUpdate_keepsTheRequestsCheckoutOption() {
+        val request = paymentRequest(
+            arrayOf(item("Beans", "18.00")),
+            googlePayCheckoutOption = GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE
+        )
+
+        val update = GooglePayRequestBuilder.createTransactionInfoUpdate(request, request.paymentItems, null)
+
+        assertEquals("COMPLETE_IMMEDIATE_PURCHASE", update.getString("checkoutOption"))
+    }
+
+    @Test
+    fun transactionInfoUpdate_rejectsWhatTheRequestWouldReject() {
+        val request = paymentRequest(arrayOf(item("Beans", "18.00")))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            GooglePayRequestBuilder.createTransactionInfoUpdate(request, arrayOf(item("Refund", "-1.00")), null)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            GooglePayRequestBuilder.createTransactionInfoUpdate(request, arrayOf(item("Beans", "1.005")), null)
+        }
     }
 }

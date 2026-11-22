@@ -204,7 +204,7 @@ interface StartPaymentOptions {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>
-  // Sheet callbacks, iOS only for now
+  // Sheet callbacks; Android has no coupon field
   onShippingAddressChange?: (
     address: PaymentSheetAddress,
     selection: PaymentSheetSelection
@@ -235,7 +235,7 @@ See [Charge before the sheet closes](/docs/guides/server-processing#charge-befor
 
 ## Payment sheet updates
 
-What the sheet callbacks of [`StartPaymentOptions`](#startpaymentoptions) get and return. iOS only for now; Android ignores the callbacks until [#72](https://github.com/gmi-software/react-native-pay/issues/72).
+What the sheet callbacks of [`StartPaymentOptions`](#startpaymentoptions) get and return. Google Pay calls them too, except `onCouponCodeChange`, for one-off payments; see [On Android](/docs/guides/dynamic-cart#on-android).
 
 ```ts no-check
 interface PaymentSheetUpdate {
@@ -613,7 +613,7 @@ interface ShippingMethod {
 }
 ```
 
-The selected method appears as its own line in the sheet and is included in the total. `PaymentResult.shippingMethod` is the selected entry as you sent it. On Android, Google Pay cannot offer a choice yet, so the first method is charged and returned.
+The selected method appears as its own line in the sheet and is included in the total. `PaymentResult.shippingMethod` is the selected entry as you sent it. On Android, the payer picks the method in the Google Pay sheet only when the payment has a sheet callback; otherwise the first method is charged and returned. See [Shipping methods](/docs/guides/contact-details#shipping-methods).
 
 ---
 

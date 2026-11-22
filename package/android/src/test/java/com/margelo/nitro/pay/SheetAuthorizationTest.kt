@@ -80,6 +80,30 @@ class SheetAuthorizationTest {
     }
 
     @Test
+    fun withoutOnAuthorize_thePaymentIsAcceptedInTheSheetAndSettlesOnce() {
+        // What the handler does for sheet callbacks without onAuthorize.
+        val accepted = mutableListOf<PaymentResult>()
+        val accepting = SheetAuthorization(
+            authorize = { _, authorizedResult, onOutcome ->
+                onOutcome(authorizedResult, PaymentConstants.ERROR_AUTHORIZATION_FAILED)
+            },
+            settle = { accepted.add(it) },
+            authorizeAfterSheet = { authorizedAfterSheet.add(it) }
+        )
+        val sheetAnswers = mutableListOf<String>()
+
+        accepting.paymentAuthorized(firstCard) { outcome, payerMessage ->
+            sheetAnswers.add(SheetAuthorization.googleResultJson(outcome, payerMessage))
+        }
+        accepting.sheetClosed(firstCard)
+        accepting.sheetClosed(firstCard)
+
+        assertEquals(listOf("SUCCESS"), sheetAnswers.map { JSONObject(it).getString("transactionState") })
+        assertEquals(listOf(firstCard), accepted)
+        assertTrue(authorizedAfterSheet.isEmpty())
+    }
+
+    @Test
     fun theOutcomeIsRecordedBeforeTheSheetHearsIt() {
         // Google Pay may return the sheet's result as soon as it hears the answer.
         sheet.paymentAuthorized(firstCard) { _, _ -> sheet.sheetClosed(firstCard) }

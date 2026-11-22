@@ -112,7 +112,7 @@ async function payWithShipping() {
 - The order matters. On iOS the first method is selected when the sheet opens, so put the default first.
 - `result.shippingMethod` and the second argument of `onAuthorize` hold the selected entry of `shippingMethods`, as you sent it.
 - Every `identifier` must be non-empty and unique, no `amount` may be negative, and the `paymentItems` must not total less than zero on their own: shipping can't make up for a larger discount. Otherwise the payment fails before the sheet opens, with `code: 'CONFIGURATION'` and an error such as `Shipping method identifier "express" is used more than once`.
-- **Android:** Google Pay can't offer a choice yet (see below), so Android charges the first method: it appears as a line item, is included in the total and is returned as `shippingMethod`.
+- **Android:** Google Pay offers a choice only through its payment data callbacks. With a [sheet callback](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet), such as `onShippingMethodChange`, and `shippingContactRequired`, the payer picks the method in the Google Pay sheet, which opens with the first one selected. Without one, `onAuthorize` alone included, Android charges the first method: it appears as a line item, is included in the total and is returned as `shippingMethod`. Google Pay shows no price next to an option, so put it in `detail` if the payer should see it before choosing. `recurring`, `deferred` and `automaticReload` payments always charge the first method.
 
 ## Platform differences
 
@@ -122,6 +122,4 @@ async function payWithShipping() {
 
 ## Not supported yet
 
-- **Choosing a shipping method on Android:** Google Pay only offers shipping options through its payment data callbacks, which the library doesn't use yet. Until it does, Android charges the first method.
-- **Prices or shipping methods that depend on the address on Android:** on iOS, `onShippingAddressChange` updates the cart while the sheet is open (see [Update the cart in the sheet](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet)). Android ignores it until Google Pay's payment data callbacks are supported.
-- **Limiting shipping countries on Android:** on iOS, return a `shippingAddressUnserviceable` error from `onShippingAddressChange`. On Android, check the country on your server and resolve `onAuthorize` with `'failure'`.
+- **Choosing a shipping method on Android without sheet callbacks:** Google Pay offers shipping options only through its payment data callbacks, so without a sheet callback Android charges the first method.

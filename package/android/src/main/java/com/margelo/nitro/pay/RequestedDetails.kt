@@ -6,9 +6,10 @@ package com.margelo.nitro.pay
  * Google Pay only collects a phone number with an address, so a phone number
  * is requested with the shipping address, or else with the billing address.
  *
- * Google Pay only offers a choice of shipping options through its
- * `SHIPPING_OPTION` callback, which the library doesn't use yet, so the first
- * shipping method is the one charged.
+ * [shippingMethod] is the request's first shipping method. Google Pay offers
+ * a choice of shipping methods only through its `SHIPPING_OPTION` callback,
+ * which the library asks for with a sheet callback (see [CallbackIntents]);
+ * then [SheetUpdater] tracks the payer's choice.
  */
 internal data class RequestedDetails(
     val billingContact: Boolean = false,

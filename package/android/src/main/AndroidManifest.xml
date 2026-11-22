@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <application>
-    <!-- Keeps the Google Pay sheet open for onAuthorize. Only Google Play
-         services can bind it, and only for a request with callbackIntents. -->
+    <!-- Answers Google Pay's payment data callbacks while its sheet is open:
+         onAuthorize and the sheet callbacks. Only Google Play services can
+         bind it, and only for a request with callbackIntents. -->
     <service
       android:name="com.margelo.nitro.pay.PaymentDataCallbacksService"
       android:exported="true"

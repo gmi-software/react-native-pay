@@ -376,7 +376,7 @@ interface UsePaymentCheckoutConfig {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>;
-  // Update the cart while the sheet is open, iOS only for now (see "Updating the cart in the sheet")
+  // Update the cart while the sheet is open; coupons are iOS only (see "Updating the cart in the sheet")
   onShippingAddressChange?: StartPaymentOptions["onShippingAddressChange"];
   onShippingMethodChange?: StartPaymentOptions["onShippingMethodChange"];
   onPaymentMethodChange?: StartPaymentOptions["onPaymentMethodChange"];
@@ -509,7 +509,7 @@ interface StartPaymentOptions {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>;
-  // Update the cart while the sheet is open, iOS only for now (see "Updating the cart in the sheet")
+  // Update the cart while the sheet is open; coupons are iOS only (see "Updating the cart in the sheet")
   onShippingAddressChange?: (
     address: PaymentSheetAddress,
     selection: PaymentSheetSelection
@@ -917,13 +917,13 @@ Google Pay can leave credit cards out, but not debit cards. On Android, `"Debit"
 
 Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `phoneNumberRequired` to ask the payer for a billing address, a shipping address, an email address or a phone number. Each one fills `billingContact`, `shippingContact`, `emailAddress` or `phoneNumber` in the result and in the second argument of `onAuthorize`, on both platforms. Google Pay only collects a phone number with an address: without `shippingContactRequired`, Android asks for it with at least the billing name, country and postal code.
 
-`shippingMethods` (with `HybridPaymentHandler`) lets the payer pick a delivery option; the selected method is added to the total and returned as `shippingMethod`. The first one is selected by default on iOS. Google Pay cannot offer a choice yet, so Android charges the first method. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
+`shippingMethods` (with `HybridPaymentHandler`) lets the payer pick a delivery option; the selected method is added to the total and returned as `shippingMethod`. The first one is selected by default. On Android the payer can pick another only when the payment has a sheet callback, such as `onShippingMethodChange`, and `shippingContactRequired`; otherwise Android charges the first method. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
 
 `shippingType` (`"shipping"`, `"delivery"`, `"storePickup"` or `"servicePickup"`) only changes Apple Pay's labels. An unknown value fails the payment on iOS.
 
 ### Updating the cart in the sheet
 
-On iOS, the cart can follow the payer's choices while the Apple Pay sheet is open. `onShippingAddressChange`, `onShippingMethodChange`, `onPaymentMethodChange` and `onCouponCodeChange` (in `StartPaymentOptions` or the hook's config) get the change and everything chosen so far, and return new `paymentItems`, new `shippingMethods` or an error for the payer: tax by region, an address you don't deliver to, a credit card fee, a coupon code. The coupon field appears only with `onCouponCodeChange`, and the accepted code comes back as `couponCode`. Android ignores these callbacks for now ([#72](https://github.com/gmi-software/react-native-pay/issues/72)). See the [dynamic cart guide](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#update-the-cart-in-the-sheet).
+The cart can follow the payer's choices while the Apple Pay or Google Pay sheet is open. `onShippingAddressChange`, `onShippingMethodChange`, `onPaymentMethodChange` and `onCouponCodeChange` (in `StartPaymentOptions` or the hook's config) get the change and everything chosen so far, and return new `paymentItems`, new `shippingMethods` or an error for the payer: tax by region, an address you don't deliver to, a credit card fee, a coupon code. The coupon field appears only with `onCouponCodeChange`, and the accepted code comes back as `couponCode`. On Android, Google Pay has no coupon field, and it can't update `recurring`, `deferred` or `automaticReload` payments. See the [dynamic cart guide](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#update-the-cart-in-the-sheet).
 
 ### Subscriptions and later payments
 
