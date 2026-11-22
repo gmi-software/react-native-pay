@@ -88,6 +88,58 @@ namespace margelo::nitro::pay::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const PaymentSheetUpdate& /* result */)>
+  Func_void_PaymentSheetUpdate create_Func_void_PaymentSheetUpdate(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_PaymentSheetUpdate::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentSheetUpdate& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentSheetAddress& address, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
+      auto __result = swiftClosure.call(address, selection);
+      return __result;
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::shared_ptr<Promise<PaymentSheetUpdate>>& /* result */)>
+  Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::shared_ptr<Promise<PaymentSheetUpdate>>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const ShippingMethod& shippingMethod, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
+      auto __result = swiftClosure.call(shippingMethod, selection);
+      return __result;
+    };
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const PaymentSheetCard& card, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
+      auto __result = swiftClosure.call(card, selection);
+      return __result;
+    };
+  }
+  
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>
+  Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::string& couponCode, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
+      auto __result = swiftClosure.call(couponCode, selection);
+      return __result;
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridPaymentHandlerSpec>
   std::shared_ptr<HybridPaymentHandlerSpec> create_std__shared_ptr_HybridPaymentHandlerSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     NitroPay::HybridPaymentHandlerSpec_cxx swiftPart = NitroPay::HybridPaymentHandlerSpec_cxx::fromUnsafe(swiftUnsafePointer);

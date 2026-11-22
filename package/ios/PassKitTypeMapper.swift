@@ -188,7 +188,8 @@ enum PassKitTypeMapper {
         shippingContact: PKContact?,
         requiredBillingFields: Set<PKContactField>,
         requiredShippingFields: Set<PKContactField>,
-        shippingMethod: ShippingMethod? = nil
+        shippingMethod: ShippingMethod? = nil,
+        couponCode: String? = nil
     ) -> PaymentDetails {
         return PaymentDetails.init(
             billingContact: requiredBillingFields.contains(.postalAddress)
@@ -199,7 +200,31 @@ enum PassKitTypeMapper {
                 ? nonEmpty(shippingContact?.emailAddress) : nil,
             phoneNumber: requiredShippingFields.contains(.phoneNumber)
                 ? nonEmpty(shippingContact?.phoneNumber?.stringValue) : nil,
-            shippingMethod: shippingMethod
+            shippingMethod: shippingMethod,
+            couponCode: couponCode
+        )
+    }
+
+    // MARK: - Payment Sheet
+
+    /// The redacted address the sheet reports before authorization, or nil
+    /// without a country: then the payer hasn't picked an address.
+    static func convertSheetAddress(_ contact: PKContact) -> PaymentSheetAddress? {
+        guard let address = contact.postalAddress,
+              let countryCode = nonEmpty(address.isoCountryCode)?.uppercased() else { return nil }
+        return PaymentSheetAddress(
+            countryCode: countryCode,
+            administrativeArea: nonEmpty(address.state),
+            locality: nonEmpty(address.city),
+            postalCode: nonEmpty(address.postalCode)
+        )
+    }
+
+    static func convertSheetCard(_ method: PKPaymentMethod) -> PaymentSheetCard {
+        return PaymentSheetCard(
+            network: method.network.map { convert($0) },
+            type: convert(method.type),
+            displayName: nonEmpty(method.displayName)
         )
     }
 

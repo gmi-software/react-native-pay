@@ -34,11 +34,17 @@ interface UsePaymentCheckoutConfig {
   shippingContactRequired?: boolean
   emailRequired?: boolean
   phoneNumberRequired?: boolean
+  couponCode?: string           // iOS: a code already applied
   // Charge the token before the sheet closes
   onAuthorize?: (
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>
+  // Update the cart in the sheet (iOS only for now)
+  onShippingAddressChange?: StartPaymentOptions['onShippingAddressChange']
+  onShippingMethodChange?: StartPaymentOptions['onShippingMethodChange']
+  onPaymentMethodChange?: StartPaymentOptions['onPaymentMethodChange']
+  onCouponCodeChange?: StartPaymentOptions['onCouponCodeChange']
 }
 ```
 
@@ -50,6 +56,8 @@ interface UsePaymentCheckoutConfig {
 - **supportedNetworks**, **merchantCapabilities**, **googlePayAllowedAuthMethods**, **googlePayEnvironment** — Also used for the availability check, which fails like the payment for a value the payment would refuse. Set `googlePayEnvironment: 'PRODUCTION'` in a live app: in `TEST`, Google Pay reports a card whether or not there is one. Omitted, it is `'TEST'`, and an Android release build logs a warning once per app run when `startPayment()` builds a payment. The availability check alone logs nothing.
 - **billingContactRequired**, **shippingContactRequired**, **emailRequired**, **phoneNumberRequired** — Ask the payer for a billing address, a shipping address, an email address or a phone number. They come back as `result.billingContact`, `result.shippingContact`, `result.emailAddress` and `result.phoneNumber`. See [Shipping and contact details](/docs/guides/contact-details).
 - **onAuthorize** — Called with the token and the requested contact details after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
+- **onShippingAddressChange**, **onShippingMethodChange**, **onPaymentMethodChange**, **onCouponCodeChange** — Update the cart while the sheet is open, as in [`StartPaymentOptions`](/docs/api/types#startpaymentoptions). What they return changes only the sheet: `items` stays as you set it, so a coupon the payer tried and then cancelled leaves no discount behind. Inline functions are fine, as for `onAuthorize`. iOS only for now. See [Update the cart in the sheet](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet).
+- **couponCode** — A coupon code already applied, shown in the sheet's coupon field. `items` must already include its discount. Needs `onCouponCodeChange`. iOS only.
 
 ## Return value
 

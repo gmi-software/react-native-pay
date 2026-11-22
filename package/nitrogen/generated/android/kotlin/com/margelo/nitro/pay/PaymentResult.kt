@@ -47,7 +47,10 @@ data class PaymentResult(
   val phoneNumber: String?,
   @DoNotStrip
   @Keep
-  val shippingMethod: ShippingMethod?
+  val shippingMethod: ShippingMethod?,
+  @DoNotStrip
+  @Keep
+  val couponCode: String?
 ) {
   /* primary constructor */
 
@@ -64,6 +67,7 @@ data class PaymentResult(
       && Objects.deepEquals(this.emailAddress, other.emailAddress)
       && Objects.deepEquals(this.phoneNumber, other.phoneNumber)
       && Objects.deepEquals(this.shippingMethod, other.shippingMethod)
+      && Objects.deepEquals(this.couponCode, other.couponCode)
   }
 
   override fun hashCode(): Int {
@@ -77,7 +81,8 @@ data class PaymentResult(
       shippingContact,
       emailAddress,
       phoneNumber,
-      shippingMethod
+      shippingMethod,
+      couponCode
     ).contentDeepHashCode()
   }
 
@@ -89,8 +94,8 @@ data class PaymentResult(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(status: PaymentStatus, code: PaymentErrorCode?, success: Boolean, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?): PaymentResult {
-      return PaymentResult(status, code, success, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod)
+    private fun fromCpp(status: PaymentStatus, code: PaymentErrorCode?, success: Boolean, token: PaymentToken?, error: String?, billingContact: PaymentContact?, shippingContact: PaymentContact?, emailAddress: String?, phoneNumber: String?, shippingMethod: ShippingMethod?, couponCode: String?): PaymentResult {
+      return PaymentResult(status, code, success, token, error, billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod, couponCode)
     }
   }
 }

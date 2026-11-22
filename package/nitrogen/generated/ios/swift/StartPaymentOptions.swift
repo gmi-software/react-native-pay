@@ -18,12 +18,48 @@ public extension StartPaymentOptions {
   /**
    * Create a new instance of `StartPaymentOptions`.
    */
-  init(onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?) {
+  init(onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?, onShippingAddressChange: ((_ address: PaymentSheetAddress, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onShippingMethodChange: ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onPaymentMethodChange: ((_ card: PaymentSheetCard, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onCouponCodeChange: ((_ couponCode: String, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?) {
     self.init({ () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______ in
       if let __unwrappedValue = onAuthorize {
         return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails in
           let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(__unwrappedValue)
           return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails(__closureWrapper.toUnsafe())
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______ in
+      if let __unwrappedValue = onShippingAddressChange {
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection in
+          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(__unwrappedValue)
+          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(__closureWrapper.toUnsafe())
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______ in
+      if let __unwrappedValue = onShippingMethodChange {
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection in
+          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__unwrappedValue)
+          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__closureWrapper.toUnsafe())
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______ in
+      if let __unwrappedValue = onPaymentMethodChange {
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection in
+          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(__unwrappedValue)
+          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(__closureWrapper.toUnsafe())
+        }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______ in
+      if let __unwrappedValue = onCouponCodeChange {
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection in
+          let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(__unwrappedValue)
+          return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(__closureWrapper.toUnsafe())
         }())
       } else {
         return .init()
@@ -57,6 +93,158 @@ public extension StartPaymentOptions {
                 return bridge.create_Func_void_std__exception_ptr(__closureWrapper.toUnsafe())
               }()
               let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult____(__result)
+              __promiseHolder.addOnResolvedListener(__resolverCpp)
+              __promiseHolder.addOnRejectedListener(__rejecterCpp)
+              return __promise
+            }()
+          }
+        }()
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var onShippingAddressChange: ((_ address: PaymentSheetAddress, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
+    return { () -> ((_ address: PaymentSheetAddress, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______(self.__onShippingAddressChange) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetAddress_____address_____const_PaymentSheetSelection_____selection______(self.__onShippingAddressChange)
+        return { () -> (PaymentSheetAddress, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection(__unwrapped)
+          return { (__address: PaymentSheetAddress, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+            let __result = __wrappedFunction.call(__address, __selection)
+            return { () -> Promise<Promise<PaymentSheetUpdate>> in
+              let __promise = Promise<Promise<PaymentSheetUpdate>>()
+              let __resolver = { (__result: Promise<PaymentSheetUpdate>) in
+                __promise.resolve(withResult: __result)
+              }
+              let __rejecter = { (__error: Error) in
+                __promise.reject(withError: __error)
+              }
+              let __resolverCpp = { () -> bridge.Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ in
+                let __closureWrapper = Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__resolver)
+                return bridge.create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__closureWrapper.toUnsafe())
+              }()
+              let __rejecterCpp = { () -> bridge.Func_void_std__exception_ptr in
+                let __closureWrapper = Func_void_std__exception_ptr(__rejecter)
+                return bridge.create_Func_void_std__exception_ptr(__closureWrapper.toUnsafe())
+              }()
+              let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(__result)
+              __promiseHolder.addOnResolvedListener(__resolverCpp)
+              __promiseHolder.addOnRejectedListener(__rejecterCpp)
+              return __promise
+            }()
+          }
+        }()
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var onShippingMethodChange: ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
+    return { () -> ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange)
+        return { () -> (ShippingMethod, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__unwrapped)
+          return { (__shippingMethod: ShippingMethod, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+            let __result = __wrappedFunction.call(__shippingMethod, __selection)
+            return { () -> Promise<Promise<PaymentSheetUpdate>> in
+              let __promise = Promise<Promise<PaymentSheetUpdate>>()
+              let __resolver = { (__result: Promise<PaymentSheetUpdate>) in
+                __promise.resolve(withResult: __result)
+              }
+              let __rejecter = { (__error: Error) in
+                __promise.reject(withError: __error)
+              }
+              let __resolverCpp = { () -> bridge.Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ in
+                let __closureWrapper = Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__resolver)
+                return bridge.create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__closureWrapper.toUnsafe())
+              }()
+              let __rejecterCpp = { () -> bridge.Func_void_std__exception_ptr in
+                let __closureWrapper = Func_void_std__exception_ptr(__rejecter)
+                return bridge.create_Func_void_std__exception_ptr(__closureWrapper.toUnsafe())
+              }()
+              let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(__result)
+              __promiseHolder.addOnResolvedListener(__resolverCpp)
+              __promiseHolder.addOnRejectedListener(__rejecterCpp)
+              return __promise
+            }()
+          }
+        }()
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var onPaymentMethodChange: ((_ card: PaymentSheetCard, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
+    return { () -> ((_ card: PaymentSheetCard, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______(self.__onPaymentMethodChange) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_PaymentSheetCard_____card_____const_PaymentSheetSelection_____selection______(self.__onPaymentMethodChange)
+        return { () -> (PaymentSheetCard, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection(__unwrapped)
+          return { (__card: PaymentSheetCard, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+            let __result = __wrappedFunction.call(__card, __selection)
+            return { () -> Promise<Promise<PaymentSheetUpdate>> in
+              let __promise = Promise<Promise<PaymentSheetUpdate>>()
+              let __resolver = { (__result: Promise<PaymentSheetUpdate>) in
+                __promise.resolve(withResult: __result)
+              }
+              let __rejecter = { (__error: Error) in
+                __promise.reject(withError: __error)
+              }
+              let __resolverCpp = { () -> bridge.Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ in
+                let __closureWrapper = Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__resolver)
+                return bridge.create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__closureWrapper.toUnsafe())
+              }()
+              let __rejecterCpp = { () -> bridge.Func_void_std__exception_ptr in
+                let __closureWrapper = Func_void_std__exception_ptr(__rejecter)
+                return bridge.create_Func_void_std__exception_ptr(__closureWrapper.toUnsafe())
+              }()
+              let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(__result)
+              __promiseHolder.addOnResolvedListener(__resolverCpp)
+              __promiseHolder.addOnRejectedListener(__rejecterCpp)
+              return __promise
+            }()
+          }
+        }()
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var onCouponCodeChange: ((_ couponCode: String, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
+    return { () -> ((_ couponCode: String, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______(self.__onCouponCodeChange) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_std__string_____couponCode_____const_PaymentSheetSelection_____selection______(self.__onCouponCodeChange)
+        return { () -> (String, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+          let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection(__unwrapped)
+          return { (__couponCode: String, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+            let __result = __wrappedFunction.call(std.string(__couponCode), __selection)
+            return { () -> Promise<Promise<PaymentSheetUpdate>> in
+              let __promise = Promise<Promise<PaymentSheetUpdate>>()
+              let __resolver = { (__result: Promise<PaymentSheetUpdate>) in
+                __promise.resolve(withResult: __result)
+              }
+              let __rejecter = { (__error: Error) in
+                __promise.reject(withError: __error)
+              }
+              let __resolverCpp = { () -> bridge.Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__ in
+                let __closureWrapper = Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__resolver)
+                return bridge.create_Func_void_std__shared_ptr_Promise_PaymentSheetUpdate__(__closureWrapper.toUnsafe())
+              }()
+              let __rejecterCpp = { () -> bridge.Func_void_std__exception_ptr in
+                let __closureWrapper = Func_void_std__exception_ptr(__rejecter)
+                return bridge.create_Func_void_std__exception_ptr(__closureWrapper.toUnsafe())
+              }()
+              let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(__result)
               __promiseHolder.addOnResolvedListener(__resolverCpp)
               __promiseHolder.addOnRejectedListener(__rejecterCpp)
               return __promise

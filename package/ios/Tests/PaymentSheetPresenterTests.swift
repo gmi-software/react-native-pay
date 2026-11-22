@@ -170,32 +170,8 @@ final class PaymentSheetPresenterTests: XCTestCase {
 /// Runs `startPayment` with a sheet PassKit refuses, as in issue #20.
 final class RefusedPaymentSheetTests: XCTestCase {
 
-    private func paymentRequest() -> PaymentRequest {
-        return PaymentRequest(
-            applePayMerchantIdentifier: "merchant.com.example",
-            merchantName: "Example",
-            totalLabel: nil,
-            countryCode: "US",
-            currencyCode: "USD",
-            paymentItems: [PaymentItem(label: "Coffee", amount: .second("4.99"), type: .final, kind: nil)],
-            merchantCapabilities: ["3DS"],
-            supportedNetworks: ["visa"],
-            shippingType: nil,
-            shippingMethods: nil,
-            billingContactRequired: nil,
-            shippingContactRequired: nil,
-            emailRequired: nil,
-            phoneNumberRequired: nil,
-            recurring: nil,
-            deferred: nil,
-            automaticReload: nil,
-            applePayMultiTokenContexts: nil,
-            googlePayMerchantId: nil,
-            googlePayEnvironment: nil,
-            googlePayGateway: nil,
-            googlePayGatewayMerchantId: nil,
-            googlePayAllowedAuthMethods: nil
-        )
+    private func coffeeRequest() -> PaymentRequest {
+        return paymentRequest(items: [item("Coffee", "4.99")], merchantName: "Example")
     }
 
     func testSettlesThePaymentAndLetsTheNextOneStart() throws {
@@ -211,7 +187,7 @@ final class RefusedPaymentSheetTests: XCTestCase {
             var status: PaymentStatus?
             var code: PaymentErrorCode?
             var error: String?
-            try handler.startPayment(request: paymentRequest(), options: nil).then { result in
+            try handler.startPayment(request: coffeeRequest(), options: nil).then { result in
                 status = result.status
                 code = result.code
                 error = result.error

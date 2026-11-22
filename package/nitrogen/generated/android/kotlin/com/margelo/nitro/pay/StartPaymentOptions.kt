@@ -20,23 +20,43 @@ import com.margelo.nitro.core.Promise
 data class StartPaymentOptions(
   @DoNotStrip
   @Keep
-  val onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?
+  val onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?,
+  @DoNotStrip
+  @Keep
+  val onShippingAddressChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection?,
+  @DoNotStrip
+  @Keep
+  val onShippingMethodChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection?,
+  @DoNotStrip
+  @Keep
+  val onPaymentMethodChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection?,
+  @DoNotStrip
+  @Keep
+  val onCouponCodeChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection?
 ) {
   /**
    * Create a new instance of StartPaymentOptions from Kotlin
    */
-  constructor(onAuthorize: ((token: PaymentToken, details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?):
-         this(onAuthorize?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_java(it) })
+  constructor(onAuthorize: ((token: PaymentToken, details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?, onShippingAddressChange: ((address: PaymentSheetAddress, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onShippingMethodChange: ((shippingMethod: ShippingMethod, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onPaymentMethodChange: ((card: PaymentSheetCard, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onCouponCodeChange: ((couponCode: String, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?):
+         this(onAuthorize?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_java(it) }, onShippingAddressChange?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_java(it) }, onShippingMethodChange?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_java(it) }, onPaymentMethodChange?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_java(it) }, onCouponCodeChange?.let { Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_java(it) })
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is StartPaymentOptions) return false
     return Objects.deepEquals(this.onAuthorize, other.onAuthorize)
+      && Objects.deepEquals(this.onShippingAddressChange, other.onShippingAddressChange)
+      && Objects.deepEquals(this.onShippingMethodChange, other.onShippingMethodChange)
+      && Objects.deepEquals(this.onPaymentMethodChange, other.onPaymentMethodChange)
+      && Objects.deepEquals(this.onCouponCodeChange, other.onCouponCodeChange)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
-      onAuthorize
+      onAuthorize,
+      onShippingAddressChange,
+      onShippingMethodChange,
+      onPaymentMethodChange,
+      onCouponCodeChange
     ).contentDeepHashCode()
   }
 
@@ -48,8 +68,8 @@ data class StartPaymentOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?): StartPaymentOptions {
-      return StartPaymentOptions(onAuthorize)
+    private fun fromCpp(onAuthorize: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails?, onShippingAddressChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection?, onShippingMethodChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection?, onPaymentMethodChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection?, onCouponCodeChange: Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection?): StartPaymentOptions {
+      return StartPaymentOptions(onAuthorize, onShippingAddressChange, onShippingMethodChange, onPaymentMethodChange, onCouponCodeChange)
     }
   }
 }

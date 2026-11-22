@@ -82,6 +82,7 @@ interface PaymentRequest {
   deferred?: DeferredPaymentRequest
   automaticReload?: AutomaticReloadPaymentRequest
   applePayMultiTokenContexts?: PaymentTokenContext[] // several merchants, iOS 16+
+  couponCode?: string               // iOS only, needs onCouponCodeChange
   // Google Pay (Android)
   googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
@@ -113,6 +114,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 
 `applePayMultiTokenContexts` pays several merchants with one sheet: see [Several merchants](#several-merchants). iOS only.
 
+`couponCode` is a code already applied, shown in the sheet's coupon field; `paymentItems` must already include its discount. It needs `StartPaymentOptions.onCouponCodeChange`, or the payment fails with `code: 'CONFIGURATION'`. iOS only; Android ignores it.
+
 ---
 
 ## PaymentResult
@@ -127,7 +130,8 @@ interface PaymentResult extends PaymentDetails {
   token?: PaymentToken
   error?: string            // message for logs, also set on a cancel
   // From PaymentDetails, set only when requested:
-  // billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod
+  // billingContact, shippingContact, emailAddress, phoneNumber, shippingMethod,
+  // couponCode
 }
 
 type PaymentStatus = 'success' | 'cancelled' | 'failed'
@@ -189,7 +193,7 @@ function CheckoutError() {
 
 ## StartPaymentOptions
 
-Optional second argument of `HybridPaymentHandler.startPayment()`. The hook takes `onAuthorize` in its config instead.
+Optional second argument of `HybridPaymentHandler.startPayment()`. The hook takes these callbacks in its config instead.
 
 ```ts no-check
 interface StartPaymentOptions {
@@ -197,6 +201,23 @@ interface StartPaymentOptions {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>
+  // Sheet callbacks, iOS only for now
+  onShippingAddressChange?: (
+    address: PaymentSheetAddress,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  onShippingMethodChange?: (
+    method: ShippingMethod,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  onPaymentMethodChange?: (
+    card: PaymentSheetCard,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
+  onCouponCodeChange?: (
+    couponCode: string,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>
 }
 
 interface PaymentAuthorizationResult {
@@ -205,7 +226,59 @@ interface PaymentAuthorizationResult {
 }
 ```
 
-See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes).
+See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes) for `onAuthorize` and [Update the cart in the sheet](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet) for the sheet callbacks.
+
+---
+
+## Payment sheet updates
+
+What the sheet callbacks of [`StartPaymentOptions`](#startpaymentoptions) get and return. iOS only for now; Android ignores the callbacks until [#72](https://github.com/gmi-software/react-native-pay/issues/72).
+
+```ts no-check
+interface PaymentSheetUpdate {
+  paymentItems?: PaymentItem[]       // the new cart; left out = unchanged
+  shippingMethods?: ShippingMethod[] // the new list; must not be empty
+  error?: PaymentSheetError
+}
+
+interface PaymentSheetError {
+  code: PaymentSheetErrorCode
+  message: string // shown to the payer
+}
+
+type PaymentSheetErrorCode =
+  | 'shippingAddressInvalid'
+  | 'shippingAddressUnserviceable'
+  | 'couponCodeInvalid'
+  | 'couponCodeExpired'
+  | 'other'
+
+// Redacted until the payer authorizes: no street, name, email or phone
+interface PaymentSheetAddress {
+  countryCode: string          // ISO 3166-1 alpha-2: 'US'
+  administrativeArea?: string  // state or province
+  locality?: string            // city
+  postalCode?: string          // only the start in the UK and Canada
+}
+
+interface PaymentSheetCard {
+  network?: PaymentNetwork
+  type: PaymentMethodType      // 'credit', 'debit', 'prepaid', 'store' or 'unknown'
+  displayName?: string         // 'Visa 1234'
+}
+
+// What the payer chose so far, including the change the callback is called for
+interface PaymentSheetSelection {
+  shippingAddress?: PaymentSheetAddress
+  shippingMethod?: ShippingMethod
+  card?: PaymentSheetCard
+  couponCode?: string          // the last code accepted without an error; in onCouponCodeChange, the code being checked
+}
+```
+
+- **PaymentSheetUpdate** — Return payment items only: the library adds the selected shipping method, later charges and the total, as for `PaymentRequest`. Amounts follow the same rules. When new `shippingMethods` still contain the selected one, it stays selected; otherwise the first one is.
+- **PaymentSheetError** — The payer can't pay until they change what it refers to. On iOS an error from `onShippingMethodChange` isn't shown: Apple Pay has none for that change.
+- **Failures** — Every sheet callback must settle within 25 seconds. If it rejects, times out or returns an invalid update, the sheet keeps its current items without an error. A rejection or an invalid update is logged in development.
 
 ---
 
@@ -422,7 +495,8 @@ interface PaymentDetails {
   shippingContact?: PaymentContact // shippingContactRequired
   emailAddress?: string            // emailRequired
   phoneNumber?: string             // phoneNumberRequired, as the payer entered it
-  shippingMethod?: ShippingMethod  // the selected entry of shippingMethods
+  shippingMethod?: ShippingMethod  // the selected shipping method
+  couponCode?: string              // iOS, the last code onCouponCodeChange accepted
 }
 ```
 
@@ -500,7 +574,7 @@ interface PaymentTokenContext {
 }
 ```
 
-The amounts must add up to exactly the total, `paymentItems` plus the shipping method, so list yourself too for any share you keep; all `shippingMethods` must then cost the same. The field can't be combined with `recurring`, `deferred` or `automaticReload`; such a request fails with `code: 'CONFIGURATION'` on every iOS version. Without them, Apple Pay needs iOS 16; on older versions the payment fails with `code: 'NOT_AVAILABLE'`. Android removes it without checking these rules. The result still holds one `PaymentToken`: each merchant's cryptogram is in its encrypted payment data, under `authenticationResponses`.
+The amounts must add up to exactly the total, `paymentItems` plus the shipping method, so list yourself too for any share you keep; all `shippingMethods` must then cost the same. A [sheet update](#payment-sheet-updates) must keep that total, or the sheet keeps its items. The field can't be combined with `recurring`, `deferred` or `automaticReload`; such a request fails with `code: 'CONFIGURATION'` on every iOS version. Without them, Apple Pay needs iOS 16; on older versions the payment fails with `code: 'NOT_AVAILABLE'`. Android removes it without checking these rules. The result still holds one `PaymentToken`: each merchant's cryptogram is in its encrypted payment data, under `authenticationResponses`.
 
 ---
 

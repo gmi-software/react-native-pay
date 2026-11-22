@@ -9,6 +9,7 @@ import {
 import {
   getPaymentHandler,
   PAYMENT_IN_PROGRESS_RESULT,
+  prepareStartPaymentOptions,
 } from '../paymentHandler'
 import type {
   PaymentAmount,
@@ -25,6 +26,7 @@ import type {
   PaymentAuthorizationResult,
   PaymentDetails,
   PaymentErrorCode,
+  StartPaymentOptions,
 } from '../types'
 import { PaymentError } from '../errors'
 import {
@@ -51,8 +53,21 @@ function toPaymentError(
 
 /**
  * Configuration for `usePaymentCheckout`.
+ *
+ * The sheet callbacks (`onShippingAddressChange`, `onShippingMethodChange`,
+ * `onPaymentMethodChange`, `onCouponCodeChange`) work as in
+ * `StartPaymentOptions`. What they return changes only the sheet: `items`
+ * stays as you set it, so a coupon the payer tried and cancelled leaves no
+ * discount behind. Like `onAuthorize`, they can be inline functions.
  */
-export interface UsePaymentCheckoutConfig {
+export interface UsePaymentCheckoutConfig
+  extends Pick<
+    StartPaymentOptions,
+    | 'onShippingAddressChange'
+    | 'onShippingMethodChange'
+    | 'onPaymentMethodChange'
+    | 'onCouponCodeChange'
+  > {
   /**
    * Business name shown to the payer on both platforms.
    * On iOS it labels the Apple Pay total, so the sheet reads "Pay <merchantName>".
@@ -156,6 +171,12 @@ export interface UsePaymentCheckoutConfig {
    * comes with an address. See `PaymentRequest.phoneNumberRequired`.
    */
   phoneNumberRequired?: boolean
+
+  /**
+   * A coupon code already applied; `items` must include its discount. Needs
+   * `onCouponCodeChange`. iOS only. See `PaymentRequest.couponCode`.
+   */
+  couponCode?: string
 
   /**
    * Called with the token after the user authorizes the payment. Charge it on
@@ -302,7 +323,14 @@ export interface UsePaymentCheckoutReturn {
 export function usePaymentCheckout(
   config: UsePaymentCheckoutConfig
 ): UsePaymentCheckoutReturn {
-  const { onAuthorize, ...requestConfig } = config
+  const {
+    onAuthorize,
+    onShippingAddressChange,
+    onShippingMethodChange,
+    onPaymentMethodChange,
+    onCouponCodeChange,
+    ...requestConfig
+  } = config
 
   // Apps usually pass an inline config, which is new on every render, so
   // compare the rest of it by value, with its keys sorted. A callback added to
@@ -316,10 +344,17 @@ export function usePaymentCheckout(
     [requestConfigKey]
   )
 
-  // The latest callback, so `startPayment` can stay stable when it changes.
-  const onAuthorizeRef = useRef(onAuthorize)
+  // The latest callbacks, so `startPayment` can stay stable when they change.
+  const callbacks: StartPaymentOptions = {
+    onAuthorize,
+    onShippingAddressChange,
+    onShippingMethodChange,
+    onPaymentMethodChange,
+    onCouponCodeChange,
+  }
+  const callbacksRef = useRef(callbacks)
   useLayoutEffect(() => {
-    onAuthorizeRef.current = onAuthorize
+    callbacksRef.current = callbacks
   })
 
   const [status, setStatus] = useState<PayServiceStatus | null>(null)
@@ -355,6 +390,7 @@ export function usePaymentCheckout(
       shippingContactRequired,
       emailRequired,
       phoneNumberRequired,
+      couponCode,
     } = stableRequestConfig
 
     return sanitizePaymentRequest({
@@ -376,6 +412,7 @@ export function usePaymentCheckout(
       shippingContactRequired,
       emailRequired,
       phoneNumberRequired,
+      couponCode,
     })
   }, [stableRequestConfig, items])
 
@@ -498,14 +535,14 @@ export function usePaymentCheckout(
     setResult(null)
     setError(null)
 
-    const authorize = onAuthorizeRef.current
+    const options = prepareStartPaymentOptions(
+      callbacksRef.current,
+      validatedRequest
+    )
 
     try {
-      const paymentResult = authorize
-        ? await getPaymentHandler().startPayment(validatedRequest, {
-            // `async` turns a synchronous return or throw into the Promise native expects.
-            onAuthorize: async (token, details) => authorize(token, details),
-          })
+      const paymentResult = options
+        ? await getPaymentHandler().startPayment(validatedRequest, options)
         : await getPaymentHandler().startPayment(validatedRequest)
 
       setResult(paymentResult)

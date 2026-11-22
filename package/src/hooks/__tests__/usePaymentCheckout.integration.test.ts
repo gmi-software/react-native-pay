@@ -20,6 +20,7 @@ import {
 } from '../usePaymentCheckout'
 import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../../paymentHandler'
 import { PaymentError } from '../../errors'
+import type { StartPaymentOptions } from '../../types'
 
 const CANCELLED_RESULT = {
   status: 'cancelled',
@@ -512,7 +513,10 @@ describe('usePaymentCheckout integration', () => {
       expect(result.current.paymentRequest).toBe(paymentRequest)
     })
 
-    type RequestConfig = Omit<UsePaymentCheckoutConfig, 'onAuthorize'>
+    type RequestConfig = Omit<
+      UsePaymentCheckoutConfig,
+      keyof StartPaymentOptions
+    >
 
     // A row for every field: a new config field fails typecheck until it has one.
     const configChanges: {
@@ -540,6 +544,7 @@ describe('usePaymentCheckout integration', () => {
       shippingContactRequired: [false, true],
       emailRequired: [false, true],
       phoneNumberRequired: [false, true],
+      couponCode: ['WELCOME', 'SAVE10'],
     }
 
     it.each(Object.entries(configChanges))(
@@ -761,6 +766,78 @@ describe('usePaymentCheckout integration', () => {
       })
 
       expect(onAuthorize).toHaveBeenCalledWith(token, details)
+
+      await act(async () => {
+        native.resolve({ success: true })
+        await payment
+      })
+    })
+  })
+
+  describe('sheet callbacks', () => {
+    const selection = { couponCode: 'SAVE10' }
+
+    it('passes them to native, checked, without changing the cart', async () => {
+      mockStartPayment.mockResolvedValueOnce({ success: true })
+      const onCouponCodeChange = jest.fn(async () => ({
+        paymentItems: [
+          { label: 'Order', amount: 12, type: 'final' as const },
+          { label: 'SAVE10', amount: -1.2, type: 'final' as const },
+        ],
+      }))
+      const { result } = renderWithConfig({
+        couponCode: 'WELCOME',
+        onCouponCodeChange,
+      })
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+
+      await act(async () => {
+        await result.current.startPayment()
+      })
+      const [request, options] = mockStartPayment.mock.calls[0]!
+      expect(request.couponCode).toBe('WELCOME')
+      expect(Object.keys(options)).toEqual(['onCouponCodeChange'])
+      let update: any
+      await act(async () => {
+        update = await options.onCouponCodeChange('SAVE10', selection)
+      })
+
+      expect(onCouponCodeChange).toHaveBeenCalledWith('SAVE10', selection)
+      expect(update.paymentItems.map((item: any) => item.amount)).toEqual([
+        '12.00',
+        '-1.20',
+      ])
+      expect(result.current.items).toEqual([
+        { label: 'Order', amount: 12, type: 'final' },
+      ])
+    })
+
+    it('keeps the callbacks a payment started with', async () => {
+      const native = createDeferred<any>()
+      mockStartPayment.mockReturnValueOnce(native.promise)
+      const first = jest.fn(async () => ({}))
+      const { result, rerender } = renderWithConfig({
+        onShippingAddressChange: first,
+      })
+      act(() => {
+        result.current.addItem('Order', 12)
+      })
+
+      let payment!: Promise<any>
+      act(() => {
+        payment = result.current.startPayment()
+      })
+      rerender({ onShippingAddressChange: jest.fn(async () => ({})) })
+      await act(async () => {
+        await mockStartPayment.mock.calls[0]?.[1].onShippingAddressChange(
+          { countryCode: 'US' },
+          selection
+        )
+      })
+
+      expect(first).toHaveBeenCalledWith({ countryCode: 'US' }, selection)
 
       await act(async () => {
         native.resolve({ success: true })

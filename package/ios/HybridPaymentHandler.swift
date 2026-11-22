@@ -14,6 +14,7 @@ private enum ErrorMessage {
     static let authorizationTimedOut = "Payment authorization timed out"
     static let negativeTotal = "Payment total must not be negative"
     static let sheetClosedEarly = "The Apple Pay sheet closed less than \(Int(SheetCloseTiming.threshold)) s after it appeared, before authorization. startPayment reports this as a cancel. If you didn't close the sheet yourself, Apple Pay probably refused the request: check that the merchant ID is set up for Apple Pay. See https://gmi-software.github.io/react-native-pay/docs/troubleshooting#the-apple-pay-sheet-closes-right-away"
+    static let couponCodeWithoutCallback = "couponCode needs onCouponCodeChange: the payer could change the code and nothing would happen"
 
     static func unknownMerchantCapability(_ capability: String) -> String {
         return "Unknown merchant capability \"\(capability)\". Use \"3DS\", \"EMV\", \"Credit\" or \"Debit\""
@@ -66,9 +67,10 @@ struct PaymentFailure: LocalizedError, CustomStringConvertible {
     }
 }
 
-// PassKit fails the sheet on its own when the authorization completion is not
-// called within about 30 seconds, so settle first with a definite result.
-let authorizationTimeout: TimeInterval = 25
+// PassKit fails the sheet on its own when a completion is not called within
+// about 30 seconds, so settle first with a definite result. Applies to
+// `onAuthorize` and the sheet callbacks.
+let callbackTimeout: TimeInterval = 25
 
 // Internal, not private, because `PaymentSheetSession` takes one.
 typealias AuthorizeCallback = (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>
@@ -104,8 +106,9 @@ struct PaymentRequestBuilder {
         }
         // PassKit selects the first method when the sheet opens.
         paymentRequest.paymentSummaryItems = try buildSummaryItems(
-            for: request,
-            selectedShippingMethodIdentifier: shippingMethods.first?.identifier,
+            request.paymentItems,
+            shippingMethod: request.shippingMethods?.first,
+            merchantName: resolveMerchantName(from: request),
             laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         )
         try MultiTokenRequestBuilder.configure(paymentRequest, from: request)
@@ -119,6 +122,24 @@ struct PaymentRequestBuilder {
         configureContactRequirements(paymentRequest, request: request)
         
         return paymentRequest
+    }
+
+    /// Shows the coupon field only when a callback can answer it.
+    static func configureCouponCode(
+        _ paymentRequest: PKPaymentRequest,
+        couponCode: String?,
+        hasCallback: Bool
+    ) throws {
+        // An empty code is no code.
+        let couponCode = couponCode.flatMap { $0.isEmpty ? nil : $0 }
+        guard hasCallback else {
+            if couponCode != nil {
+                throw PaymentFailure.configuration(ErrorMessage.couponCodeWithoutCallback)
+            }
+            return
+        }
+        paymentRequest.supportsCouponCode = true
+        paymentRequest.couponCode = couponCode
     }
 
     private static func resolveMerchantIdentifier(from request: PaymentRequest) -> String? {
@@ -145,7 +166,8 @@ struct PaymentRequestBuilder {
         return nil
     }
     
-    private static func buildShippingMethods(_ methods: [ShippingMethod]) throws -> [PKShippingMethod] {
+    /// Internal so the sheet updates can check a new list the same way.
+    static func buildShippingMethods(_ methods: [ShippingMethod]) throws -> [PKShippingMethod] {
         var identifiers = Set<String>()
         return try methods.map { method in
             guard !method.identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -171,14 +193,16 @@ struct PaymentRequestBuilder {
     }
 
     /// The payment items, then the selected shipping method as its own line,
-    /// then `laterCharges`, then the total of what is charged now. Internal
-    /// so the delegate and the unit tests can rebuild it.
+    /// then `laterCharges`, then the total of what is charged now, labelled
+    /// with `merchantName`. Internal so the sheet updates and the unit tests
+    /// can rebuild it.
     static func buildSummaryItems(
-        for request: PaymentRequest,
-        selectedShippingMethodIdentifier: String?,
+        _ paymentItems: [PaymentItem],
+        shippingMethod: ShippingMethod?,
+        merchantName: String,
         laterCharges: [PKPaymentSummaryItem]
     ) throws -> [PKPaymentSummaryItem] {
-        let amounts = try request.paymentItems.map { try $0.amount.decimalNumber(for: $0.label) }
+        let amounts = try paymentItems.map { try $0.amount.decimalNumber(for: $0.label) }
 
         // Checked without shipping: methods are never negative, so then every
         // method the payer can pick keeps the total valid.
@@ -189,14 +213,13 @@ struct PaymentRequestBuilder {
             throw PaymentFailure.configuration(ErrorMessage.negativeTotal)
         }
 
-        var lineItems = zip(request.paymentItems, amounts).map { item, amount in
+        var lineItems = zip(paymentItems, amounts).map { item, amount in
             let pkItem = PKPaymentSummaryItem(label: item.label, amount: amount)
             pkItem.type = item.type == .final ? .final : .pending
             return pkItem
         }
 
-        if let identifier = selectedShippingMethodIdentifier,
-           let method = request.shippingMethods?.first(where: { $0.identifier == identifier }) {
+        if let method = shippingMethod {
             let amount = try shippingMethodAmount(method)
             let shippingItem = PKShippingMethod(label: method.label, amount: amount)
             shippingItem.identifier = method.identifier
@@ -210,16 +233,16 @@ struct PaymentRequestBuilder {
         // PassKit shows the last item as the grand total ("Pay <label>"), so
         // always append one labelled with the merchant, even for a single item.
         let totalItem = PKPaymentSummaryItem(
-            label: resolveMerchantName(from: request),
+            label: merchantName,
             amount: NSDecimalNumber(decimal: totalAmount)
         )
         // The total is only as final as its least final item.
-        totalItem.type = request.paymentItems.contains { $0.type == .pending } ? .pending : .final
+        totalItem.type = paymentItems.contains { $0.type == .pending } ? .pending : .final
 
         return lineItems + [totalItem]
     }
 
-    private static func resolveMerchantName(from request: PaymentRequest) -> String {
+    static func resolveMerchantName(from request: PaymentRequest) -> String {
         let candidates = [
             request.merchantName,
             Bundle.main.object(forInfoDictionaryKey: BundleKey.displayName) as? String,
@@ -388,7 +411,8 @@ private enum PaymentResultFactory {
             shippingContact: details.shippingContact,
             emailAddress: details.emailAddress,
             phoneNumber: details.phoneNumber,
-            shippingMethod: details.shippingMethod
+            shippingMethod: details.shippingMethod,
+            couponCode: details.couponCode
         )
     }
 
@@ -403,7 +427,8 @@ private enum PaymentResultFactory {
             shippingContact: nil,
             emailAddress: nil,
             phoneNumber: nil,
-            shippingMethod: nil
+            shippingMethod: nil,
+            couponCode: nil
         )
     }
 
@@ -502,15 +527,13 @@ final class PaymentSheetPresenter {
 /// The sheet's state and what to do on each PassKit callback, without the
 /// PassKit objects, so the NitroPay unit tests can drive it. Main thread only.
 final class PaymentSheetSession {
-    private let request: PaymentRequest
-    private let laterCharges: [PKPaymentSummaryItem]
+    /// The cart the sheet shows and the payer's changes to it.
+    let sheet: PaymentSheetUpdater
     private let onAuthorize: AuthorizeCallback?
     private let timeout: TimeInterval
     private let report: (PaymentResult) -> Void
     private let closeTiming: SheetCloseTiming
     private let warn: (String) -> Void
-    private var selectedShippingMethodIdentifier: String?
-    private var summaryItems: [PKPaymentSummaryItem]
     private var authorizedResult: PaymentResult?
     private var isAuthorizing: Bool = false
     private var finishedWhileAuthorizing: Bool = false
@@ -519,41 +542,29 @@ final class PaymentSheetSession {
         request: PaymentRequest,
         paymentRequest: PKPaymentRequest,
         onAuthorize: AuthorizeCallback?,
-        timeout: TimeInterval = authorizationTimeout,
+        sheetCallbacks: PaymentSheetCallbacks = PaymentSheetCallbacks(),
+        timeout: TimeInterval = callbackTimeout,
         closeTiming: SheetCloseTiming = SheetCloseTiming(),
         warn: @escaping (String) -> Void = PayLog.warn,
         report: @escaping (PaymentResult) -> Void
     ) {
-        self.request = request
-        self.laterCharges = MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
+        self.sheet = PaymentSheetUpdater(
+            request: request,
+            paymentRequest: paymentRequest,
+            callbacks: sheetCallbacks,
+            timeout: timeout
+        )
         self.onAuthorize = onAuthorize
         self.timeout = timeout
         self.report = report
         self.closeTiming = closeTiming
         self.warn = warn
-        self.selectedShippingMethodIdentifier = paymentRequest.shippingMethods?.first?.identifier
-        self.summaryItems = paymentRequest.paymentSummaryItems
     }
 
-    /// The summary items to show with the method the payer picked.
-    func selectShippingMethod(_ identifier: String?) -> [PKPaymentSummaryItem] {
-        selectedShippingMethodIdentifier = identifier
-        // The request was validated when it was built, so this only keeps the
-        // current items if rebuilding fails.
-        if let items = try? PaymentRequestBuilder.buildSummaryItems(
-            for: request,
-            selectedShippingMethodIdentifier: identifier,
-            laterCharges: laterCharges
-        ) {
-            summaryItems = items
-        }
-        return summaryItems
-    }
-
-    /// The request's entry for the method the payer authorized with.
+    /// The request's entry for the method the payer authorized with, or the
+    /// last one selected when the payment has none.
     func shippingMethod(authorizedWith identifier: String?) -> ShippingMethod? {
-        let identifier = identifier ?? selectedShippingMethodIdentifier
-        return request.shippingMethods?.first { $0.identifier == identifier }
+        return sheet.shippingMethod(withIdentifier: identifier) ?? sheet.selectedShippingMethod
     }
 
     /// Asks `onAuthorize` for the outcome and completes the attempt with it.
@@ -643,24 +654,69 @@ final class PaymentSheetSession {
 
 // MARK: - Payment Delegate
 
-/// Hands PassKit's callbacks to a `PaymentSheetSession`.
-private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate {
+/// Hands PassKit's callbacks to a `PaymentSheetSession`. Internal, not
+/// private, so the NitroPay unit tests can reach it.
+final class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate {
     private let session: PaymentSheetSession
     private let paymentRequest: PKPaymentRequest
+    private let hasSheetCallbacks: Bool
 
-    init(session: PaymentSheetSession, paymentRequest: PKPaymentRequest) {
+    init(session: PaymentSheetSession, paymentRequest: PKPaymentRequest, hasSheetCallbacks: Bool) {
         self.session = session
         self.paymentRequest = paymentRequest
+        self.hasSheetCallbacks = hasSheetCallbacks
     }
+
+    /// Changes PassKit reports only to a delegate that implements them.
+    static let sheetChangeSelectors: Set<Selector> = [
+        #selector(paymentAuthorizationController(_:didSelectShippingContact:handler:)),
+        #selector(paymentAuthorizationController(_:didSelectPaymentMethod:handler:)),
+        #selector(paymentAuthorizationController(_:didChangeCouponCode:handler:)),
+    ]
+
+    // Without sheet callbacks, PassKit handles these changes itself, as before
+    // they existed. Internal so the unit tests can check it.
+    static func responds(to selector: Selector, hasSheetCallbacks: Bool) -> Bool {
+        return hasSheetCallbacks || !sheetChangeSelectors.contains(selector)
+    }
+
+    override func responds(to aSelector: Selector!) -> Bool {
+        return Self.responds(to: aSelector, hasSheetCallbacks: hasSheetCallbacks)
+            && super.responds(to: aSelector)
+    }
+
+    // PassKit waits for each completion. `session.sheet` calls it on the main thread.
 
     func paymentAuthorizationController(
         _ controller: PKPaymentAuthorizationController,
         didSelectShippingMethod shippingMethod: PKShippingMethod,
         handler completion: @escaping (PKPaymentRequestShippingMethodUpdate) -> Void
     ) {
-        // PassKit waits for the completion.
-        let items = session.selectShippingMethod(shippingMethod.identifier)
-        completion(PKPaymentRequestShippingMethodUpdate(paymentSummaryItems: items))
+        session.sheet.shippingMethodChanged(to: shippingMethod, completion: completion)
+    }
+
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didSelectShippingContact contact: PKContact,
+        handler completion: @escaping (PKPaymentRequestShippingContactUpdate) -> Void
+    ) {
+        session.sheet.shippingAddressChanged(to: contact, completion: completion)
+    }
+
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didSelectPaymentMethod paymentMethod: PKPaymentMethod,
+        handler completion: @escaping (PKPaymentRequestPaymentMethodUpdate) -> Void
+    ) {
+        session.sheet.paymentMethodChanged(to: paymentMethod, completion: completion)
+    }
+
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didChangeCouponCode couponCode: String,
+        handler completion: @escaping (PKPaymentRequestCouponCodeUpdate) -> Void
+    ) {
+        session.sheet.couponCodeChanged(to: couponCode, completion: completion)
     }
 
     func paymentAuthorizationController(
@@ -673,7 +729,8 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
             shippingContact: payment.shippingContact,
             requiredBillingFields: paymentRequest.requiredBillingContactFields,
             requiredShippingFields: paymentRequest.requiredShippingContactFields,
-            shippingMethod: session.shippingMethod(authorizedWith: payment.shippingMethod?.identifier)
+            shippingMethod: session.shippingMethod(authorizedWith: payment.shippingMethod?.identifier),
+            couponCode: session.sheet.selection.couponCode
         )
         session.authorize(
             token: PaymentTokenConverter.convert(payment.token),
@@ -756,10 +813,11 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
             return promise
         }
         let onAuthorize = options?.onAuthorize
+        let sheetCallbacks = PaymentSheetCallbacks(options)
         
         DispatchQueue.main.async {
             do {
-                try self.performPayment(request: request, onAuthorize: onAuthorize)
+                try self.performPayment(request: request, onAuthorize: onAuthorize, sheetCallbacks: sheetCallbacks)
             } catch let failure as PaymentFailure {
                 self.handlePaymentResult(PaymentResultFactory.failure(failure))
             } catch {
@@ -781,16 +839,30 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     
     // MARK: - Private Methods
     
-    private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
+    private func performPayment(
+        request: PaymentRequest,
+        onAuthorize: AuthorizeCallback?,
+        sheetCallbacks: PaymentSheetCallbacks
+    ) throws {
         let paymentRequest = try PaymentRequestBuilder.build(from: request)
+        try PaymentRequestBuilder.configureCouponCode(
+            paymentRequest,
+            couponCode: request.couponCode,
+            hasCallback: sheetCallbacks.onCouponCodeChange != nil
+        )
 
         let session = PaymentSheetSession(
             request: request,
             paymentRequest: paymentRequest,
             onAuthorize: onAuthorize,
+            sheetCallbacks: sheetCallbacks,
             report: { [weak self] in self?.handlePaymentResult($0) }
         )
-        let delegate = PaymentDelegate(session: session, paymentRequest: paymentRequest)
+        let delegate = PaymentDelegate(
+            session: session,
+            paymentRequest: paymentRequest,
+            hasSheetCallbacks: !sheetCallbacks.isEmpty
+        )
         self.delegate = delegate
 
         // The sheet has its own window, so a view controller of the app that

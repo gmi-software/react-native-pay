@@ -50,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Merchant Tokens',
+          title: 'More Demos',
           tabBarIcon: ({ color }) => <TabBarIcon name="repeat" color={color} />,
         }}
       />

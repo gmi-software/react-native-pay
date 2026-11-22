@@ -25,6 +25,10 @@
 #include "JCNPhoneNumber.hpp"
 #include "JCNPostalAddress.hpp"
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection.hpp"
+#include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection.hpp"
 #include "JPKSecureElementPass.hpp"
 #include "JPassActivationState.hpp"
 #include "JPaymentAmount.hpp"
@@ -32,9 +36,18 @@
 #include "JPaymentAuthorizationStatus.hpp"
 #include "JPaymentContact.hpp"
 #include "JPaymentDetails.hpp"
+#include "JPaymentItem.hpp"
+#include "JPaymentItemKind.hpp"
+#include "JPaymentItemType.hpp"
 #include "JPaymentMethod.hpp"
 #include "JPaymentMethodType.hpp"
 #include "JPaymentNetwork.hpp"
+#include "JPaymentSheetAddress.hpp"
+#include "JPaymentSheetCard.hpp"
+#include "JPaymentSheetError.hpp"
+#include "JPaymentSheetErrorCode.hpp"
+#include "JPaymentSheetSelection.hpp"
+#include "JPaymentSheetUpdate.hpp"
 #include "JPaymentToken.hpp"
 #include "JShippingMethod.hpp"
 #include "PKSecureElementPass.hpp"
@@ -43,9 +56,18 @@
 #include "PaymentAuthorizationStatus.hpp"
 #include "PaymentContact.hpp"
 #include "PaymentDetails.hpp"
+#include "PaymentItem.hpp"
+#include "PaymentItemKind.hpp"
+#include "PaymentItemType.hpp"
 #include "PaymentMethod.hpp"
 #include "PaymentMethodType.hpp"
 #include "PaymentNetwork.hpp"
+#include "PaymentSheetAddress.hpp"
+#include "PaymentSheetCard.hpp"
+#include "PaymentSheetError.hpp"
+#include "PaymentSheetErrorCode.hpp"
+#include "PaymentSheetSelection.hpp"
+#include "PaymentSheetUpdate.hpp"
 #include "PaymentToken.hpp"
 #include "ShippingMethod.hpp"
 #include <NitroModules/JNICallable.hpp>
@@ -78,6 +100,14 @@ namespace margelo::nitro::pay {
       static const auto clazz = javaClassStatic();
       static const auto fieldOnAuthorize = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject>("onAuthorize");
       jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject> onAuthorize = this->getFieldValue(fieldOnAuthorize);
+      static const auto fieldOnShippingAddressChange = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection::javaobject>("onShippingAddressChange");
+      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection::javaobject> onShippingAddressChange = this->getFieldValue(fieldOnShippingAddressChange);
+      static const auto fieldOnShippingMethodChange = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::javaobject>("onShippingMethodChange");
+      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::javaobject> onShippingMethodChange = this->getFieldValue(fieldOnShippingMethodChange);
+      static const auto fieldOnPaymentMethodChange = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection::javaobject>("onPaymentMethodChange");
+      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection::javaobject> onPaymentMethodChange = this->getFieldValue(fieldOnPaymentMethodChange);
+      static const auto fieldOnCouponCodeChange = clazz->getField<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection::javaobject>("onCouponCodeChange");
+      jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection::javaobject> onCouponCodeChange = this->getFieldValue(fieldOnCouponCodeChange);
       return StartPaymentOptions(
         onAuthorize != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)> {
           if (onAuthorize->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::javaClassStatic())) [[likely]] {
@@ -86,6 +116,42 @@ namespace margelo::nitro::pay {
           } else {
             auto onAuthorizeRef = jni::make_global(onAuthorize);
             return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(PaymentToken, PaymentDetails)>(std::move(onAuthorizeRef));
+          }
+        }()) : std::nullopt,
+        onShippingAddressChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)> {
+          if (onShippingAddressChange->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_cxx::javaClassStatic())) [[likely]] {
+            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_cxx::javaobject>(onShippingAddressChange);
+            return downcast->cthis()->getFunction();
+          } else {
+            auto onShippingAddressChangeRef = jni::make_global(onShippingAddressChange);
+            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(PaymentSheetAddress, PaymentSheetSelection)>(std::move(onShippingAddressChangeRef));
+          }
+        }()) : std::nullopt,
+        onShippingMethodChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)> {
+          if (onShippingMethodChange->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::javaClassStatic())) [[likely]] {
+            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::javaobject>(onShippingMethodChange);
+            return downcast->cthis()->getFunction();
+          } else {
+            auto onShippingMethodChangeRef = jni::make_global(onShippingMethodChange);
+            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(ShippingMethod, PaymentSheetSelection)>(std::move(onShippingMethodChangeRef));
+          }
+        }()) : std::nullopt,
+        onPaymentMethodChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)> {
+          if (onPaymentMethodChange->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_cxx::javaClassStatic())) [[likely]] {
+            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_cxx::javaobject>(onPaymentMethodChange);
+            return downcast->cthis()->getFunction();
+          } else {
+            auto onPaymentMethodChangeRef = jni::make_global(onPaymentMethodChange);
+            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(PaymentSheetCard, PaymentSheetSelection)>(std::move(onPaymentMethodChangeRef));
+          }
+        }()) : std::nullopt,
+        onCouponCodeChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)> {
+          if (onCouponCodeChange->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_cxx::javaClassStatic())) [[likely]] {
+            auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_cxx::javaobject>(onCouponCodeChange);
+            return downcast->cthis()->getFunction();
+          } else {
+            auto onCouponCodeChangeRef = jni::make_global(onCouponCodeChange);
+            return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(std::string, PaymentSheetSelection)>(std::move(onCouponCodeChangeRef));
           }
         }()) : std::nullopt
       );
@@ -97,12 +163,16 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JStartPaymentOptions::javaobject> fromCpp(const StartPaymentOptions& value) {
-      using JSignature = JStartPaymentOptions(jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject>);
+      using JSignature = JStartPaymentOptions(jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails::javaobject>, jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection::javaobject>, jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::javaobject>, jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection::javaobject>, jni::alias_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection::javaobject>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
-        value.onAuthorize.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::fromCpp(value.onAuthorize.value()) : nullptr
+        value.onAuthorize.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails_cxx::fromCpp(value.onAuthorize.value()) : nullptr,
+        value.onShippingAddressChange.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection_cxx::fromCpp(value.onShippingAddressChange.value()) : nullptr,
+        value.onShippingMethodChange.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::fromCpp(value.onShippingMethodChange.value()) : nullptr,
+        value.onPaymentMethodChange.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection_cxx::fromCpp(value.onPaymentMethodChange.value()) : nullptr,
+        value.onCouponCodeChange.has_value() ? JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection_cxx::fromCpp(value.onCouponCodeChange.value()) : nullptr
       );
     }
   };

@@ -43,7 +43,8 @@ final class PaymentSheetSessionTests: XCTestCase {
         shippingContact: nil,
         emailAddress: "payer@example.com",
         phoneNumber: nil,
-        shippingMethod: nil
+        shippingMethod: nil,
+        couponCode: nil
     )
 
     private let shippingMethods = [
@@ -74,6 +75,7 @@ final class PaymentSheetSessionTests: XCTestCase {
             deferred: nil,
             automaticReload: nil,
             applePayMultiTokenContexts: nil,
+            couponCode: nil,
             googlePayMerchantId: nil,
             googlePayEnvironment: nil,
             googlePayGateway: nil,
@@ -214,7 +216,7 @@ final class PaymentSheetSessionTests: XCTestCase {
 
     func testTimesOutBeforePassKitDoes() throws {
         // PassKit fails the sheet itself after about 30 seconds.
-        XCTAssertEqual(authorizationTimeout, 25)
+        XCTAssertEqual(callbackTimeout, 25)
         let session = try makeSession(timeout: shortTimeout)
 
         authorize(session)
@@ -369,10 +371,20 @@ final class PaymentSheetSessionTests: XCTestCase {
 
     // MARK: - Shipping method
 
+    /// Selects the method in the sheet, as PassKit does. Without an
+    /// `onShippingMethodChange`, the sheet completes at once.
+    private func selectShippingMethod(_ identifier: String, in session: PaymentSheetSession) -> [PKPaymentSummaryItem] {
+        let method = PKShippingMethod(label: identifier, amount: .zero)
+        method.identifier = identifier
+        var items: [PKPaymentSummaryItem] = []
+        session.sheet.shippingMethodChanged(to: method) { items = $0.paymentSummaryItems }
+        return items
+    }
+
     func testRebuildsTheSummaryForTheSelectedShippingMethod() throws {
         let session = try makeSession(request: paymentRequest(shippingMethods: shippingMethods))
 
-        let items = session.selectShippingMethod("express")
+        let items = selectShippingMethod("express", in: session)
 
         XCTAssertEqual(amounts(items), ["Coffee 4.99", "Express 10", "Example 14.99"])
     }
@@ -384,7 +396,7 @@ final class PaymentSheetSessionTests: XCTestCase {
             builtFrom: paymentRequest(shippingMethods: shippingMethods)
         )
 
-        let items = session.selectShippingMethod("express")
+        let items = selectShippingMethod("express", in: session)
 
         XCTAssertEqual(amounts(items), ["Coffee 4.99", "Standard 5", "Example 9.99"])
     }
@@ -395,7 +407,7 @@ final class PaymentSheetSessionTests: XCTestCase {
         // PassKit selects the first method when the sheet opens.
         XCTAssertEqual(session.shippingMethod(authorizedWith: nil)?.identifier, "standard")
 
-        _ = session.selectShippingMethod("express")
+        _ = selectShippingMethod("express", in: session)
         XCTAssertEqual(session.shippingMethod(authorizedWith: nil)?.identifier, "express")
         // The method on the payment wins over the last one selected.
         XCTAssertEqual(session.shippingMethod(authorizedWith: "standard")?.identifier, "standard")

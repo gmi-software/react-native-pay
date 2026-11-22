@@ -55,6 +55,7 @@ internal fun paymentRequest(
     deferred = deferred,
     automaticReload = automaticReload,
     applePayMultiTokenContexts = null,
+    couponCode = null,
     googlePayMerchantId = googlePayMerchantId,
     googlePayEnvironment = environment,
     googlePayGateway = googlePayGateway,
