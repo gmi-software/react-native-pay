@@ -2,25 +2,33 @@ import PassKit
 import XCTest
 @testable import NitroPay
 
-/// Answers `present` the way the test asks, on the queue it names.
+/// Answers `present` the way the test asks, on the queue it names, and
+/// signals `answered` once the completion has returned.
 private final class FakeSheet: PaymentSheet {
     weak var delegate: PKPaymentAuthorizationControllerDelegate?
     private let presents: Bool
     private let queue: DispatchQueue?
+    private let answered: DispatchSemaphore?
     private(set) var presentCount = 0
 
-    init(presents: Bool, answeringOn queue: DispatchQueue? = nil) {
+    init(presents: Bool, answeringOn queue: DispatchQueue? = nil, answered: DispatchSemaphore? = nil) {
         self.presents = presents
         self.queue = queue
+        self.answered = answered
     }
 
     func present(completion: (@Sendable (Bool) -> Void)?) {
         presentCount += 1
         let presents = self.presents
+        let answered = self.answered
         if let queue {
-            queue.async { completion?(presents) }
+            queue.async {
+                completion?(presents)
+                answered?.signal()
+            }
         } else {
             completion?(presents)
+            answered?.signal()
         }
     }
 }
@@ -118,10 +126,12 @@ final class PaymentSheetPresenterTests: XCTestCase {
     }
 
     func testReadsThePresentationTimeBeforeTheMainThreadIsFree() throws {
-        let presenter = PaymentSheetPresenter { _ in FakeSheet(presents: true, answeringOn: .global()) }
+        let answered = DispatchSemaphore(value: 0)
+        let presenter = PaymentSheetPresenter { _ in
+            FakeSheet(presents: true, answeringOn: .global(), answered: answered)
+        }
         let presented = expectation(description: "sheet presented")
         var presentedAt: TimeInterval?
-        let start = SheetCloseTiming.uptime()
 
         presenter.present(
             PKPaymentRequest(),
@@ -132,11 +142,13 @@ final class PaymentSheetPresenterTests: XCTestCase {
                 presented.fulfill()
             }
         )
-        // Keeps the main thread busy while PassKit answers.
-        Thread.sleep(forTimeInterval: 0.5)
+        // Holds the main thread until PassKit's completion has returned, so
+        // the hop to main can only run after this point.
+        answered.wait()
+        let mainThreadFreed = SheetCloseTiming.uptime()
         wait(for: [presented], timeout: 1)
 
-        XCTAssertLessThan(try XCTUnwrap(presentedAt) - start, 0.4)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(presentedAt), mainThreadFreed)
     }
 
     func testHoldsTheSheetUntilReleased() {
