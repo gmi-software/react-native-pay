@@ -90,6 +90,33 @@ final class PaymentSheetPresenterTests: XCTestCase {
         XCTAssertEqual(reportedOnMain, true)
     }
 
+    /// Whether `onPresented` ran, and on the main thread, once PassKit answered.
+    private func presentedOnMain(_ sheet: FakeSheet) -> Bool? {
+        let presenter = PaymentSheetPresenter { _ in sheet }
+        let answered = expectation(description: "presentation answered")
+        var presentedOnMain: Bool?
+
+        presenter.present(
+            PKPaymentRequest(),
+            delegate: delegate,
+            onFailure: { _ in answered.fulfill() },
+            onPresented: {
+                presentedOnMain = Thread.isMainThread
+                answered.fulfill()
+            }
+        )
+        wait(for: [answered], timeout: 1)
+        return presentedOnMain
+    }
+
+    func testReportsAPresentedSheetOnTheMainThreadWhenPassKitAnswersOffIt() {
+        XCTAssertEqual(presentedOnMain(FakeSheet(presents: true, answeringOn: .global())), true)
+    }
+
+    func testDoesNotReportARefusedSheetAsPresented() {
+        XCTAssertNil(presentedOnMain(FakeSheet(presents: false)))
+    }
+
     func testHoldsTheSheetUntilReleased() {
         weak var weakSheet: FakeSheet?
         let presenter = PaymentSheetPresenter { _ in

@@ -23,6 +23,8 @@ final class PaymentSheetSessionTests: XCTestCase {
     private let merchant = FakeMerchant()
     private var reported: [PaymentResult] = []
     private var completions: [PKPaymentAuthorizationStatus] = []
+    private var warnings: [String] = []
+    private var clock: TimeInterval = 100
 
     private let token = PaymentToken(
         paymentMethod: PaymentMethod(
@@ -94,6 +96,8 @@ final class PaymentSheetSessionTests: XCTestCase {
             paymentRequest: paymentRequest,
             onAuthorize: onAuthorize ?? (withOnAuthorize ? merchant.onAuthorize : nil),
             timeout: timeout,
+            closeTiming: SheetCloseTiming { self.clock },
+            warn: { self.warnings.append($0) },
             report: { self.reported.append($0) }
         )
     }
@@ -260,6 +264,46 @@ final class PaymentSheetSessionTests: XCTestCase {
         XCTAssertEqual(reported.first?.status, .cancelled)
         XCTAssertEqual(reported.first?.code, .cancelled)
         XCTAssertEqual(reported.first?.error, "Payment cancelled by user")
+    }
+
+    func testWarnsWhenTheSheetClosesRightAfterAppearing() throws {
+        let session = try makeSession()
+
+        session.sheetDidPresent()
+        clock += 0.3
+        session.sheetWillDismiss()
+        session.sheetDidFinish()
+
+        XCTAssertEqual(warnings.count, 1)
+        XCTAssertTrue(warnings.first?.contains("closed less than 1 s after it appeared") == true)
+        XCTAssertEqual(reported.first?.status, .cancelled)
+        XCTAssertEqual(reported.first?.code, .cancelled)
+        XCTAssertEqual(reported.first?.error, "Payment cancelled by user")
+    }
+
+    func testDoesNotWarnWhenTheUserCancelsLater() throws {
+        let session = try makeSession()
+
+        session.sheetDidPresent()
+        clock += 2
+        session.sheetWillDismiss()
+        session.sheetDidFinish()
+
+        XCTAssertEqual(warnings, [])
+        XCTAssertEqual(reported.first?.status, .cancelled)
+    }
+
+    func testDoesNotWarnAfterAQuickAuthorization() throws {
+        let session = try makeSession(withOnAuthorize: false)
+
+        session.sheetDidPresent()
+        clock += 0.3
+        authorize(session)
+        session.sheetWillDismiss()
+        session.sheetDidFinish()
+
+        XCTAssertEqual(warnings, [])
+        XCTAssertEqual(reported.first?.status, .success)
     }
 
     func testWaitsForTheMerchantWhenTheSheetClosesWhileAuthorizing() throws {
