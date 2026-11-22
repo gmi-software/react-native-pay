@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.9.2">
 <title data-rh="true">Testing payments | React Native Pay</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://gmi-software.github.io/react-native-pay/docs/guides/testing"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Testing payments | React Native Pay"><meta data-rh="true" name="description" content="Before you release, run a payment end to end on both platforms: in the Apple Pay sandbox on an iPhone, and in the Google Pay TEST environment on Android. This page covers both setups, the production access Google requires, and the flows to check before every release."><meta data-rh="true" property="og:description" content="Before you release, run a payment end to end on both platforms: in the Apple Pay sandbox on an iPhone, and in the Google Pay TEST environment on Android. This page covers both setups, the production access Google requires, and the flows to check before every release."><link data-rh="true" rel="icon" href="/react-native-pay/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing" hreflang="en"><link data-rh="true" rel="alternate" href="https://gmi-software.github.io/react-native-pay/docs/guides/testing" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Recipes & Guides","item":"https://gmi-software.github.io/react-native-pay/docs/guides/manual-flow"},{"@type":"ListItem","position":2,"name":"Testing payments","item":"https://gmi-software.github.io/react-native-pay/docs/guides/testing"}]}</script><link rel="stylesheet" href="/react-native-pay/assets/css/styles.38087aaa.css">
-<script src="/react-native-pay/assets/js/runtime~main.91b01528.js" defer="defer"></script>
+<script src="/react-native-pay/assets/js/runtime~main.36a6f360.js" defer="defer"></script>
 <script src="/react-native-pay/assets/js/main.a6c29f84.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -88,7 +88,8 @@
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Success.</strong> Pay with a test card.<!-- -->
 <ul>
 <li class=""><code>startPayment</code> resolves with <code>status: &#x27;success&#x27;</code> and a <code>token</code>, and your server charges once.</li>
-<li class="">With <code>onAuthorize</code>, the Apple Pay sheet shows its checkmark only after your server answers. On Android, the Google Pay sheet closes first and <code>onAuthorize</code> runs after.</li>
+<li class="">With <code>onAuthorize</code>, the Apple Pay or Google Pay sheet shows success only after your server answers.</li>
+<li class="">Android fallback: if Google Pay returns the payment without asking first, its sheet closes before <code>onAuthorize</code> runs. <code>startPayment</code> still resolves only after your server answers, with its outcome. Debug builds log &quot;Authorizing in the Google Pay sheet&quot; when the sheet waits; without that line, you are testing the fallback.</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>User cancel.</strong> Open the sheet and close it without paying.<!-- -->
@@ -99,14 +100,13 @@
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Decline through <code>onAuthorize</code>.</strong> Set the example app to <code>decline</code>, or make your server decline.<!-- -->
 <ul>
-<li class="">On iOS, the sheet shows the failure and lets the user retry, which calls <code>onAuthorize</code> again with a new token. Closing the sheet resolves <code>startPayment</code> with <code>status: &#x27;failed&#x27;</code>, <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and your <code>error</code>.</li>
-<li class="">On Android, the sheet has already closed, and <code>startPayment</code> resolves with <code>status: &#x27;failed&#x27;</code>, <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and your <code>error</code>.</li>
-<li class="">The order isn&#x27;t marked paid, and a retry doesn&#x27;t charge twice. Make the charge idempotent per order ID, not per token.</li>
+<li class="">The sheet shows the failure and lets the user retry, which calls <code>onAuthorize</code> again with a new token. On Android, the Google Pay sheet shows your <code>error</code>. Closing the sheet resolves <code>startPayment</code> with <code>status: &#x27;failed&#x27;</code>, <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and your <code>error</code>.</li>
+<li class="">The order isn&#x27;t marked paid, and a retry doesn&#x27;t charge twice. Allow one successful charge per order ID, not per token, and use a new idempotency key for the retry after a decline (see <a class="" href="/react-native-pay/docs/guides/server-processing#charge-before-the-sheet-closes">Charge before the sheet closes</a>).</li>
 </ul>
 </li>
 <li class="task-list-item"><input type="checkbox" disabled=""> <strong>Slow server.</strong> Make your server take longer than 25 seconds to answer <code>onAuthorize</code>.<!-- -->
 <ul>
-<li class=""><code>startPayment</code> resolves with <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and <code>error: &#x27;Payment authorization timed out&#x27;</code>. On iOS, the user can first retry from the sheet.</li>
+<li class="">The sheet shows the failure (&quot;Payment authorization timed out&quot; on Android) and stays open for a retry. Close it without retrying: <code>startPayment</code> then resolves with <code>code: &#x27;PROVIDER_ERROR&#x27;</code> and <code>error: &#x27;Payment authorization timed out&#x27;</code>. A successful retry instead resolves with that attempt&#x27;s result.</li>
 <li class="">Your server may still charge after the app has given up. Check that your backend can reconcile that order.</li>
 </ul>
 </li>
