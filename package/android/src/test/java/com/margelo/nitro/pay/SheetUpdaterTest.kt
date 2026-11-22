@@ -206,10 +206,13 @@ class SheetUpdaterTest {
 
     @Test
     fun unusableUpdates_leaveTheCartAsItWas() {
+        val unpayable = ShippingMethod("courier", "Courier", PaymentAmount.create("1.005"), null)
         val unusable = listOf(
             null,
             update(methods = emptyArray()),
             update(methods = arrayOf(express, express)),
+            // Google Pay can't charge it, so it can't be offered, even unselected.
+            update(methods = arrayOf(standard, unpayable)),
             update(items = arrayOf(item("Refund", "-50.00"))),
             update(items = arrayOf(item("Sneakers", "40.005")))
         )
@@ -277,6 +280,51 @@ class SheetUpdaterTest {
 
         assertEquals(1, calls.size)
         assertEquals(1, answers.size)
+    }
+
+    @Test
+    fun shippingOptionIds_areMatchedExactly() {
+        val padded = ShippingMethod(" express ", "Express", PaymentAmount.create("9.00"), null)
+        val sheet = updater(
+            SheetCallbacks(),
+            paymentRequest = paymentRequest(
+                arrayOf(item("Sneakers", "40.00")),
+                shippingContactRequired = true,
+                shippingMethods = arrayOf(standard, padded)
+            )
+        )
+
+        sheet.change(trigger("SHIPPING_OPTION").put("shippingOptionData", JSONObject().put("id", " express ")))
+
+        assertEquals(padded, sheet.selectedShippingMethod)
+        assertEquals("49.00", answers.single().total())
+    }
+
+    @Test
+    fun aSupersededChange_dropsItsError() {
+        val sheet = updater()
+        sheet.change(trigger("INITIALIZE").put("shippingAddress", address(country = "CA")).put("paymentMethodData", card()))
+        calls[0].done(update(error = PaymentSheetError(PaymentSheetErrorCode.SHIPPINGADDRESSUNSERVICEABLE, "US only.")))
+        // The card callback is still running when the payer picks a US address.
+        sheet.change(trigger("SHIPPING_ADDRESS").put("shippingAddress", address()))
+        calls[2].done(update(arrayOf(item("Sneakers", "40.00"), item("CA tax", "2.90"))))
+
+        calls[1].done(update())
+
+        assertEquals(listOf("42.90", "42.90"), answers.map { it.total() })
+        answers.forEach { assertFalse(it.has("error")) }
+    }
+
+    @Test
+    fun aSupersededChangeThatTimesOut_dropsItsErrorToo() {
+        val sheet = updater()
+        sheet.change(trigger("INITIALIZE").put("shippingAddress", address(country = "CA")).put("paymentMethodData", card()))
+        calls[0].done(update(error = PaymentSheetError(PaymentSheetErrorCode.SHIPPINGADDRESSUNSERVICEABLE, "US only.")))
+        sheet.change(trigger("SHIPPING_ADDRESS").put("shippingAddress", address()))
+
+        timers[0].block()
+
+        assertFalse(answers.single().has("error"))
     }
 
     @Test

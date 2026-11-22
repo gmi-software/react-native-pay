@@ -95,11 +95,16 @@ object GooglePayRequestBuilder {
     /**
      * The shipping options the payer picks from, with [selectedIdentifier]
      * selected. Google Pay shows no price for an option, only the total.
+     *
+     * @throws IllegalArgumentException when a method's amount has more than
+     *   two decimal places, which Google Pay can't charge: checked for every
+     *   method, since the payer can pick any of them
      */
     internal fun createShippingOptionParameters(
         methods: Array<ShippingMethod>,
         selectedIdentifier: String
     ): JSONObject {
+        methods.forEach { PaymentAmounts.googlePayPrice(it) }
         return JSONObject().apply {
             put("defaultSelectedOptionId", selectedIdentifier)
             put("shippingOptions", JSONArray().apply {

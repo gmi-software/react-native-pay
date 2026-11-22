@@ -87,7 +87,8 @@ internal class SheetUpdater(
             if (isAnswered) return
             isAnswered = true
             cancelTimeout()
-            answer(updateJson(error))
+            // After a newer change, the cart is that change's: this one's error may not fit it.
+            answer(updateJson(error.takeIf { change == latestChange }))
         }
         cancelTimeout = schedule(timeoutMs) { finish() }
 
@@ -125,7 +126,8 @@ internal class SheetUpdater(
         val isInitialize = trigger == PaymentConstants.CALLBACK_TRIGGER_INITIALIZE
         val steps = ArrayDeque<Step>()
 
-        data.optJSONObject("shippingOptionData")?.optNonEmpty("id")?.let { id ->
+        // Not trimmed: the identifier must match the app's exactly.
+        data.optJSONObject("shippingOptionData")?.optIdentifier("id")?.let { id ->
             if (shippingMethods.any { it.identifier == id }) selectedShippingMethodIdentifier = id
         }
         val address = data.optJSONObject("shippingAddress")?.let(::sheetAddress)
@@ -181,6 +183,10 @@ internal class SheetUpdater(
                 items,
                 methods.firstOrNull { it.identifier == selectedIdentifier }
             )
+            // Every option's price, so picking any of them can be answered.
+            if (intents.shippingOption && methods.isNotEmpty() && selectedIdentifier != null) {
+                GooglePayRequestBuilder.createShippingOptionParameters(methods, selectedIdentifier)
+            }
         } catch (e: IllegalArgumentException) {
             return false
         }
@@ -190,10 +196,21 @@ internal class SheetUpdater(
         return true
     }
 
-    /** The `PaymentDataRequestUpdate` JSON for the current cart. */
+    /**
+     * The `PaymentDataRequestUpdate` JSON for the current cart. The cart was
+     * checked when it was set; if it still can't be sent, the sheet stays as
+     * it is rather than the app crashing on the main thread.
+     */
     private fun updateJson(error: JSONObject?): String {
+        return try {
+            cartJson(error)
+        } catch (e: IllegalArgumentException) {
+            PaymentDataCallbacks.UNCHANGED_SHEET
+        }
+    }
+
+    private fun cartJson(error: JSONObject?): String {
         return JSONObject().apply {
-            // The cart was checked when it was set.
             put(
                 "newTransactionInfo",
                 GooglePayRequestBuilder.createTransactionInfoUpdate(request, paymentItems, selectedShippingMethod)
@@ -263,6 +280,12 @@ internal class SheetUpdater(
         private fun JSONObject.optNonEmpty(key: String): String? {
             if (isNull(key)) return null
             return optString(key).trim().ifEmpty { null }
+        }
+
+        /** The string at [key] as it is, or null when it is missing or blank. */
+        private fun JSONObject.optIdentifier(key: String): String? {
+            if (isNull(key)) return null
+            return optString(key).takeUnless { it.isBlank() }
         }
     }
 }

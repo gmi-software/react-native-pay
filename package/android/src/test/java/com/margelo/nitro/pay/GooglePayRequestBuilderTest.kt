@@ -748,6 +748,28 @@ class GooglePayRequestBuilderTest {
     }
 
     @Test
+    fun shippingOption_rejectsAMethodGooglePayCantCharge() {
+        // KWD allows three decimal places; Google Pay takes two.
+        val methods = arrayOf(
+            ShippingMethod("standard", "Standard", PaymentAmount.create("0.000"), null),
+            ShippingMethod("express", "Express", PaymentAmount.create("1.005"), null)
+        )
+        val request = paymentRequest(
+            arrayOf(item("Beans", "18.000")),
+            currencyCode = "KWD",
+            shippingContactRequired = true,
+            shippingMethods = methods
+        )
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            buildWithCallbacks(request, CallbackIntents(authorization = true, shippingOption = true))
+        }
+        assertEquals("Google Pay accepts at most two decimal places, got 1.005", error.message)
+        // Without the picker only the first method is charged, as before.
+        assertEquals("18.00", build(request).totalPrice())
+    }
+
+    @Test
     fun transactionInfoUpdate_chargesTheGivenItemsAndMethod() {
         val request = paymentRequest(arrayOf(item("Beans", "18.00")), shippingMethods = shippingMethods)
 
