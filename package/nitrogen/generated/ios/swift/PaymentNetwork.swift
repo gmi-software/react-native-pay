@@ -83,6 +83,24 @@ public extension PaymentNetwork {
         self = .jaywan
       case "myDebit":
         self = .mydebit
+      case "conecs":
+        self = .conecs
+      case "elCorteIngles":
+        self = .elcorteingles
+      case "ruPay":
+        self = .rupay
+      case "verve":
+        self = .verve
+      case "humo":
+        self = .humo
+      case "uzCard":
+        self = .uzcard
+      case "payPak":
+        self = .paypak
+      case "maal":
+        self = .maal
+      case "elcard":
+        self = .elcard
       case "unknown":
         self = .unknown
       default:
@@ -161,6 +179,24 @@ public extension PaymentNetwork {
         return "jaywan"
       case .mydebit:
         return "myDebit"
+      case .conecs:
+        return "conecs"
+      case .elcorteingles:
+        return "elCorteIngles"
+      case .rupay:
+        return "ruPay"
+      case .verve:
+        return "verve"
+      case .humo:
+        return "humo"
+      case .uzcard:
+        return "uzCard"
+      case .paypak:
+        return "payPak"
+      case .maal:
+        return "maal"
+      case .elcard:
+        return "elcard"
       case .unknown:
         return "unknown"
     }

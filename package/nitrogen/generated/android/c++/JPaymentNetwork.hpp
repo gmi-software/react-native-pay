@@ -141,6 +141,33 @@ namespace margelo::nitro::pay {
         case PaymentNetwork::MYDEBIT:
           static const auto fieldMYDEBIT = clazz->getStaticField<JPaymentNetwork>("MYDEBIT");
           return clazz->getStaticFieldValue(fieldMYDEBIT);
+        case PaymentNetwork::CONECS:
+          static const auto fieldCONECS = clazz->getStaticField<JPaymentNetwork>("CONECS");
+          return clazz->getStaticFieldValue(fieldCONECS);
+        case PaymentNetwork::ELCORTEINGLES:
+          static const auto fieldELCORTEINGLES = clazz->getStaticField<JPaymentNetwork>("ELCORTEINGLES");
+          return clazz->getStaticFieldValue(fieldELCORTEINGLES);
+        case PaymentNetwork::RUPAY:
+          static const auto fieldRUPAY = clazz->getStaticField<JPaymentNetwork>("RUPAY");
+          return clazz->getStaticFieldValue(fieldRUPAY);
+        case PaymentNetwork::VERVE:
+          static const auto fieldVERVE = clazz->getStaticField<JPaymentNetwork>("VERVE");
+          return clazz->getStaticFieldValue(fieldVERVE);
+        case PaymentNetwork::HUMO:
+          static const auto fieldHUMO = clazz->getStaticField<JPaymentNetwork>("HUMO");
+          return clazz->getStaticFieldValue(fieldHUMO);
+        case PaymentNetwork::UZCARD:
+          static const auto fieldUZCARD = clazz->getStaticField<JPaymentNetwork>("UZCARD");
+          return clazz->getStaticFieldValue(fieldUZCARD);
+        case PaymentNetwork::PAYPAK:
+          static const auto fieldPAYPAK = clazz->getStaticField<JPaymentNetwork>("PAYPAK");
+          return clazz->getStaticFieldValue(fieldPAYPAK);
+        case PaymentNetwork::MAAL:
+          static const auto fieldMAAL = clazz->getStaticField<JPaymentNetwork>("MAAL");
+          return clazz->getStaticFieldValue(fieldMAAL);
+        case PaymentNetwork::ELCARD:
+          static const auto fieldELCARD = clazz->getStaticField<JPaymentNetwork>("ELCARD");
+          return clazz->getStaticFieldValue(fieldELCARD);
         case PaymentNetwork::UNKNOWN:
           static const auto fieldUNKNOWN = clazz->getStaticField<JPaymentNetwork>("UNKNOWN");
           return clazz->getStaticFieldValue(fieldUNKNOWN);

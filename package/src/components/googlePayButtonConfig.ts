@@ -42,6 +42,15 @@ const PAYMENT_NETWORKS = {
   himyan: false,
   jaywan: false,
   myDebit: false,
+  conecs: false,
+  elCorteIngles: false,
+  ruPay: false,
+  verve: false,
+  humo: false,
+  uzCard: false,
+  payPak: false,
+  maal: false,
+  elcard: false,
 } satisfies Record<Exclude<PaymentNetwork, 'unknown'>, boolean>
 
 const AUTH_METHODS: GooglePayAuthMethod[] = ['PAN_ONLY', 'CRYPTOGRAM_3DS']

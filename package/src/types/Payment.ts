@@ -64,6 +64,15 @@ export type PaymentNetwork =
   | 'himyan'
   | 'jaywan'
   | 'myDebit'
+  | 'conecs'
+  | 'elCorteIngles'
+  | 'ruPay'
+  | 'verve'
+  | 'humo'
+  | 'uzCard'
+  | 'payPak'
+  | 'maal'
+  | 'elcard'
   | 'unknown'
 
 export type PassActivationState =

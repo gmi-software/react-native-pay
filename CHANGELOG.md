@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **Apple Pay networks from iOS 26.2 to 27.** `PaymentNetwork` adds `conecs` (iOS 26.2),
+  `elCorteIngles` (iOS 26.4) and `ruPay`, `verve`, `humo`, `uzCard`, `payPak`, `maal` and `elcard`
+  (iOS 27). A request may name them, and a card on one of them is reported by name instead of
+  `'unknown'`. Each needs an app built with the Xcode whose iOS SDK adds it (26.2, 26.4 or 27);
+  an older Xcode still builds and leaves it out. Google Pay offers none of them
+  ([#79](https://github.com/gmi-software/react-native-pay/issues/79)).
 - **Cart updates in the Google Pay sheet.** Android now calls `onShippingAddressChange`,
   `onShippingMethodChange` and `onPaymentMethodChange` through Google Pay's payment data callbacks
   (`SHIPPING_ADDRESS`, `SHIPPING_OPTION`, `PAYMENT_METHOD`), with the same `PaymentSheetSelection`,

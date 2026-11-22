@@ -342,14 +342,17 @@ type PaymentNetwork =
   | 'girocard' | 'mada' | 'mir' | 'quicPay' | 'suica' | 'vPay'
   | 'waon' | 'nanaco' | 'bancontact' | 'postFinance' | 'pagoBancomat'
   | 'tmoney' | 'meeza' | 'napas' | 'bankAxept' | 'himyan' | 'jaywan'
-  | 'myDebit'
+  | 'myDebit' | 'conecs' | 'elCorteIngles' | 'ruPay' | 'verve'
+  | 'humo' | 'uzCard' | 'payPak' | 'maal' | 'elcard'
   | 'unknown' // results only
 ```
 
 | Platform | Offers |
 |----------|--------|
 | Google Pay | `visa`, `mastercard`, `amex`, `discover`, `jcb`, `interac`, and `electron`, `maestro` and `elo` for Brazilian combo cards |
-| Apple Pay | Every network but `unknown`. Some need a newer iOS: `bancontact` 16, `postFinance` 16.4, `pagoBancomat` and `tmoney` 17, `meeza` 17.4, `napas` and `bankAxept` 17.5, `himyan` and `jaywan` 18.4, `myDebit` 26 |
+| Apple Pay | Every network but `unknown`. Some need a newer iOS: `bancontact` 16, `postFinance` 16.4, `pagoBancomat` and `tmoney` 17, `meeza` 17.4, `napas` and `bankAxept` 17.5, `himyan` and `jaywan` 18.4, `myDebit` 26, `conecs` 26.2, `elCorteIngles` 26.4, `ruPay`, `verve`, `humo`, `uzCard`, `payPak`, `maal` and `elcard` 27 |
+
+An app built with an older Xcode leaves out the networks its iOS SDK lacks: `conecs` needs Xcode 26.2, `elCorteIngles` Xcode 26.4, and the iOS 27 networks Xcode 27.
 
 `'unknown'` is never a valid request value. A result reports it for a card on a network that is not listed here, instead of guessing.
 

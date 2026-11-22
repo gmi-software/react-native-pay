@@ -50,7 +50,8 @@ enum PassKitTypeMapper {
         .idcredit, .interac, .privatelabel, .cartesbancaires, .chinaunionpay,
         .dankort, .eftpos, .girocard, .mada, .mir, .quicpay, .suica, .vpay,
         .waon, .nanaco, .bancontact, .postfinance, .pagobancomat, .tmoney,
-        .meeza, .napas, .bankaxept, .himyan, .jaywan, .mydebit,
+        .meeza, .napas, .bankaxept, .himyan, .jaywan, .mydebit, .conecs,
+        .elcorteingles, .rupay, .verve, .humo, .uzcard, .paypak, .maal, .elcard,
     ]
 
     /// The network with this name, ignoring case, or nil for a name that is
@@ -117,6 +118,73 @@ enum PassKitTypeMapper {
         case .mydebit:
             guard #available(iOS 26.0, *) else { return nil }
             return .myDebit
+        // Each network below needs the iOS SDK that adds it, so an app built
+        // with an older Xcode leaves it out. The compiler version tells the
+        // SDKs apart: Swift 6.2.3 ships with Xcode 26.2, 6.3 with 26.4, 6.4
+        // with 27.0.
+        case .conecs:
+            #if compiler(>=6.2.3)
+            guard #available(iOS 26.2, *) else { return nil }
+            return .conecs
+            #else
+            return nil
+            #endif
+        case .elcorteingles:
+            #if compiler(>=6.3)
+            guard #available(iOS 26.4, *) else { return nil }
+            return .elCorteIngles
+            #else
+            return nil
+            #endif
+        case .rupay:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .ruPay
+            #else
+            return nil
+            #endif
+        case .verve:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .verve
+            #else
+            return nil
+            #endif
+        case .humo:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .humo
+            #else
+            return nil
+            #endif
+        case .uzcard:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .uzCard
+            #else
+            return nil
+            #endif
+        case .paypak:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .payPak
+            #else
+            return nil
+            #endif
+        case .maal:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .maal
+            #else
+            return nil
+            #endif
+        case .elcard:
+            #if compiler(>=6.4)
+            guard #available(iOS 27.0, *) else { return nil }
+            return .elcard
+            #else
+            return nil
+            #endif
         case .unknown: return nil
         }
     }

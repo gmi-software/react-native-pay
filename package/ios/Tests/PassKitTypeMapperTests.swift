@@ -12,8 +12,44 @@ final class PassKitTypeMapperTests: XCTestCase {
         "cartesBancaires", "chinaUnionPay", "dankort", "eftpos", "girocard",
         "mada", "mir", "quicPay", "suica", "vPay", "waon", "nanaco",
         "bancontact", "postFinance", "pagoBancomat", "tmoney", "meeza",
-        "napas", "bankAxept", "himyan", "jaywan", "myDebit",
+        "napas", "bankAxept", "himyan", "jaywan", "myDebit", "conecs",
+        "elCorteIngles", "ruPay", "verve", "humo", "uzCard", "payPak", "maal",
+        "elcard",
     ]
+
+    // The first iOS with each network that is newer than iOS 15
+    private let minimumIOSVersions: [String: (Int, Int)] = [
+        "bancontact": (16, 0), "postFinance": (16, 4), "pagoBancomat": (17, 0),
+        "tmoney": (17, 0), "meeza": (17, 4), "napas": (17, 5),
+        "bankAxept": (17, 5), "himyan": (18, 4), "jaywan": (18, 4),
+        "myDebit": (26, 0), "conecs": (26, 2), "elCorteIngles": (26, 4),
+        "ruPay": (27, 0), "verve": (27, 0), "humo": (27, 0), "uzCard": (27, 0),
+        "payPak": (27, 0), "maal": (27, 0), "elcard": (27, 0),
+    ]
+
+    // The networks the iOS SDK of this build lacks, as PassKitTypeMapper
+    // checks them
+    private var networksMissingFromSDK: Set<String> {
+        var names: Set<String> = []
+        #if !compiler(>=6.2.3)
+        names.insert("conecs")
+        #endif
+        #if !compiler(>=6.3)
+        names.insert("elCorteIngles")
+        #endif
+        #if !compiler(>=6.4)
+        names.formUnion(["ruPay", "verve", "humo", "uzCard", "payPak", "maal", "elcard"])
+        #endif
+        return names
+    }
+
+    private func isAvailable(_ name: String) -> Bool {
+        if networksMissingFromSDK.contains(name) { return false }
+        guard let (major, minor) = minimumIOSVersions[name] else { return true }
+        return ProcessInfo.processInfo.isOperatingSystemAtLeast(
+            OperatingSystemVersion(majorVersion: major, minorVersion: minor, patchVersion: 0)
+        )
+    }
 
     // Swift drops this `convert` overload when it is looked up before the
     // C++ `PaymentNetwork` enum is imported. Naming the type in a signature
@@ -32,10 +68,10 @@ final class PassKitTypeMapperTests: XCTestCase {
             let network = try XCTUnwrap(PassKitTypeMapper.paymentNetwork(named: name), name)
             XCTAssertEqual(network.stringValue, name)
             guard let pkNetwork = pkNetwork(named: name) else {
-                // Only a network newer than the simulator's iOS has none.
-                if #available(iOS 26.0, *) { XCTFail("No PassKit network for \(name)") }
+                XCTAssertFalse(isAvailable(name), "No PassKit network for \(name)")
                 continue
             }
+            XCTAssertTrue(isAvailable(name), "\(name) is not on this iOS version")
             XCTAssertEqual(convert(pkNetwork), PaymentNetwork(fromString: name), name)
         }
         XCTAssertEqual(pkNetwork(named: "mastercard"), .masterCard)
