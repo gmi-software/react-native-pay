@@ -7,13 +7,11 @@ import android.os.Looper
 import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wallet.IsReadyToPayRequest
-import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.PaymentDataRequest
 import com.google.android.gms.wallet.PaymentsClient
 import com.google.android.gms.wallet.Wallet
@@ -167,7 +165,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         // Completion listeners run on the main thread.
         createPaymentsClient(environment).loadPaymentData(request).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                handlePaymentSuccess(task.result)
+                handlePaymentSuccess(PaymentMapper.mapPaymentDataToResult(task.result, requestedDetails))
                 return@addOnCompleteListener
             }
             when (val error = task.exception) {
@@ -182,22 +180,19 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     }
     
     private fun showPaymentSheet(sheet: ResolvableApiException) {
-        val activity = reactContext.currentActivity
-        if (activity == null) {
-            handlePaymentError(PaymentErrorCode.NOT_AVAILABLE, PaymentConstants.ERROR_NO_ACTIVITY)
+        val failure = PaymentSheet.show(
+            reactContext.currentActivity,
+            listenForResult = { reactContext.addActivityEventListener(sheetResultListener) },
+            stopListening = ::stopListeningForSheetResult,
+            start = { sheet.startResolutionForResult(it, PaymentConstants.LOAD_PAYMENT_DATA_REQUEST_CODE) }
+        )
+        if (failure == null) {
+            PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment UI launched")
             return
         }
-        
-        reactContext.addActivityEventListener(sheetResultListener)
-        try {
-            sheet.startResolutionForResult(activity, PaymentConstants.LOAD_PAYMENT_DATA_REQUEST_CODE)
-            PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment UI launched")
-        } catch (e: Exception) {
-            // Outside startPayment's try, so settle here instead of crashing.
-            stopListeningForSheetResult()
-            PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to show payment UI", e)
-            handlePaymentError(PaymentErrorCode.NOT_AVAILABLE, "Failed to show payment UI: ${e.message}")
-        }
+        // Outside startPayment's try, so settle here instead of crashing.
+        PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, failure.error ?: "Failed to show payment UI")
+        settlePayment(failure)
     }
     
     private fun stopListeningForSheetResult() {
@@ -207,17 +202,20 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
     private fun handleSheetResult(resultCode: Int, data: Intent?) {
         // Reads the result as Google's Activity Result contract does: the payment
         // data, a cancel, or the error status Google Pay put in the intent.
-        val result = TaskResultContracts.GetPaymentDataResult().parseResult(resultCode, data)
-        val paymentData = result.result
-        when {
-            paymentData != null -> handlePaymentSuccess(paymentData)
-            result.status.statusCode == CommonStatusCodes.CANCELED -> {
-                // Also returned when the user dismisses Google's sign-in prompt.
-                PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_CANCELLED)
-                handlePaymentError(PaymentErrorCode.CANCELLED, PaymentConstants.ERROR_PAYMENT_CANCELLED)
-            }
-            else -> handleWalletError(result.status)
+        val result = PaymentSheet.result(
+            TaskResultContracts.GetPaymentDataResult().parseResult(resultCode, data),
+            requestedDetails
+        )
+        if (result.success) {
+            handlePaymentSuccess(result)
+            return
         }
+        if (result.code == PaymentErrorCode.CANCELLED) {
+            PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, PaymentConstants.ERROR_PAYMENT_CANCELLED)
+        } else {
+            PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, result.error ?: "Payment error")
+        }
+        settlePayment(result)
     }
     
     // MARK: - Private helpers
@@ -278,9 +276,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         }
     }
     
-    private fun handlePaymentSuccess(paymentData: PaymentData) {
+    private fun handlePaymentSuccess(result: PaymentResult) {
         PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "Payment successful")
-        val result = PaymentMapper.mapPaymentDataToResult(paymentData, requestedDetails)
         val authorize = onAuthorize
         val token = result.token
         if (authorize == null || token == null) {
@@ -317,52 +314,30 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         token: PaymentToken,
         authorizedResult: PaymentResult
     ) {
-        // Settles this attempt once. Without it, a late outcome after the timeout
-        // would settle the next payment that claimed the slot.
-        var isSettled = false
-        var timeout: Runnable? = null
-        val settle = { result: PaymentResult ->
-            if (!isSettled) {
-                isSettled = true
-                // Otherwise the queued timeout keeps this attempt for its full delay.
-                timeout?.let { mainHandler.removeCallbacks(it) }
-                pendingPayment.settle(result)
-            }
+        lateinit var timeout: Runnable
+        val attempt = AuthorizationAttempt(authorizedResult) {
+            // Otherwise the queued timeout keeps this attempt for its full delay.
+            mainHandler.removeCallbacks(timeout)
+            pendingPayment.settle(it)
         }
         // Nitro settles JS promises on the JS thread.
-        val settleOnMain = { result: PaymentResult ->
-            mainHandler.post { settle(result) }
-        }
-        val settleWithError = { error: Throwable ->
-            settleOnMain(
-                PaymentMapper.createErrorResult(
-                    PaymentErrorCode.PROVIDER_ERROR,
-                    error.message ?: PaymentConstants.ERROR_AUTHORIZATION_FAILED
-                )
-            )
-        }
+        val failOnMain = { error: Throwable -> mainHandler.post { attempt.failed(error) } }
         
-        timeout = Runnable {
-            settle(
-                PaymentMapper.createErrorResult(
-                    PaymentErrorCode.PROVIDER_ERROR,
-                    PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT
-                )
-            )
-        }.also { mainHandler.postDelayed(it, PaymentConstants.AUTHORIZATION_TIMEOUT_MS) }
+        timeout = Runnable { attempt.timedOut() }
+        mainHandler.postDelayed(timeout, PaymentConstants.AUTHORIZATION_TIMEOUT_MS)
         
         try {
             authorize(token, PaymentMapper.paymentDetails(authorizedResult))
                 .then { authorization ->
                     authorization
-                        .then { settleOnMain(PaymentMapper.applyAuthorization(it, authorizedResult)) }
-                        .catch { settleWithError(it) }
+                        .then { mainHandler.post { attempt.authorized(it) } }
+                        .catch { failOnMain(it) }
                 }
-                .catch { settleWithError(it) }
+                .catch { failOnMain(it) }
         } catch (e: Throwable) {
             // Thrown when the JS runtime is gone.
             PayLog.e(PaymentConstants.TAG_PAYMENT_HANDLER, "Failed to call onAuthorize", e)
-            settleWithError(e)
+            failOnMain(e)
         }
     }
     

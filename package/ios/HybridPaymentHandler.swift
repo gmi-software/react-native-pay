@@ -67,9 +67,10 @@ struct PaymentFailure: LocalizedError, CustomStringConvertible {
 
 // PassKit fails the sheet on its own when the authorization completion is not
 // called within about 30 seconds, so settle first with a definite result.
-private let authorizationTimeout: TimeInterval = 25
+let authorizationTimeout: TimeInterval = 25
 
-private typealias AuthorizeCallback = (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>
+// Internal, not private, because `PaymentSheetSession` takes one.
+typealias AuthorizeCallback = (PaymentToken, PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>
 
 private enum BundleKey {
     static let applePayMerchantIdentifiers = "ReactNativePayApplePayMerchantIdentifiers"
@@ -487,88 +488,84 @@ final class PaymentSheetPresenter {
     }
 }
 
-// MARK: - Payment Delegate
+// MARK: - Payment Sheet Session
 
-private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate {
-    private weak var paymentHandler: HybridPaymentHandler?
+/// The sheet's state and what to do on each PassKit callback, without the
+/// PassKit objects, so the NitroPay unit tests can drive it. Main thread only.
+final class PaymentSheetSession {
     private let request: PaymentRequest
-    private let paymentRequest: PKPaymentRequest
+    private let laterCharges: [PKPaymentSummaryItem]
     private let onAuthorize: AuthorizeCallback?
+    private let timeout: TimeInterval
+    private let report: (PaymentResult) -> Void
     private var selectedShippingMethodIdentifier: String?
     private var summaryItems: [PKPaymentSummaryItem]
-    private var paymentAuthorized: Bool = false
     private var authorizedResult: PaymentResult?
     private var isAuthorizing: Bool = false
     private var finishedWhileAuthorizing: Bool = false
-    
+
     init(
-        paymentHandler: HybridPaymentHandler,
         request: PaymentRequest,
         paymentRequest: PKPaymentRequest,
-        onAuthorize: AuthorizeCallback?
+        onAuthorize: AuthorizeCallback?,
+        timeout: TimeInterval = authorizationTimeout,
+        report: @escaping (PaymentResult) -> Void
     ) {
-        self.paymentHandler = paymentHandler
         self.request = request
-        self.paymentRequest = paymentRequest
+        self.laterCharges = MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
         self.onAuthorize = onAuthorize
+        self.timeout = timeout
+        self.report = report
         self.selectedShippingMethodIdentifier = paymentRequest.shippingMethods?.first?.identifier
         self.summaryItems = paymentRequest.paymentSummaryItems
     }
-    
-    func paymentAuthorizationController(
-        _ controller: PKPaymentAuthorizationController,
-        didSelectShippingMethod shippingMethod: PKShippingMethod,
-        handler completion: @escaping (PKPaymentRequestShippingMethodUpdate) -> Void
-    ) {
-        selectedShippingMethodIdentifier = shippingMethod.identifier
+
+    /// The summary items to show with the method the payer picked.
+    func selectShippingMethod(_ identifier: String?) -> [PKPaymentSummaryItem] {
+        selectedShippingMethodIdentifier = identifier
         // The request was validated when it was built, so this only keeps the
-        // current items if rebuilding fails. PassKit waits for the completion.
+        // current items if rebuilding fails.
         if let items = try? PaymentRequestBuilder.buildSummaryItems(
             for: request,
-            selectedShippingMethodIdentifier: shippingMethod.identifier,
-            laterCharges: MerchantTokenRequestBuilder.laterCharges(of: paymentRequest)
+            selectedShippingMethodIdentifier: identifier,
+            laterCharges: laterCharges
         ) {
             summaryItems = items
         }
-        completion(PKPaymentRequestShippingMethodUpdate(paymentSummaryItems: summaryItems))
+        return summaryItems
     }
 
-    func paymentAuthorizationController(
-        _ controller: PKPaymentAuthorizationController,
-        didAuthorizePayment payment: PKPayment,
-        handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
-    ) {
-        paymentAuthorized = true
-        let paymentToken = PaymentTokenConverter.convert(payment.token)
-        let details = PassKitTypeMapper.convertPaymentDetails(
-            billingContact: payment.billingContact,
-            shippingContact: payment.shippingContact,
-            requiredBillingFields: paymentRequest.requiredBillingContactFields,
-            requiredShippingFields: paymentRequest.requiredShippingContactFields,
-            shippingMethod: selectedShippingMethod(payment)
-        )
+    /// The request's entry for the method the payer authorized with.
+    func shippingMethod(authorizedWith identifier: String?) -> ShippingMethod? {
+        let identifier = identifier ?? selectedShippingMethodIdentifier
+        return request.shippingMethods?.first { $0.identifier == identifier }
+    }
 
+    /// Asks `onAuthorize` for the outcome and completes the attempt with it.
+    func authorize(
+        token: PaymentToken,
+        details: PaymentDetails,
+        completion: @escaping (PKPaymentAuthorizationResult) -> Void
+    ) {
         guard let onAuthorize else {
-            authorizedResult = PaymentResultFactory.success(token: paymentToken, details: details)
-            completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
+            let result = PaymentResultFactory.success(token: token, details: details)
+            authorizedResult = result
+            completion(Self.authorizationResult(for: result))
             return
         }
 
         // PassKit calls this again when the user retries after a failure, so
-        // each attempt completes its own handler exactly once. Runs on main.
+        // each attempt completes its own handler exactly once.
         isAuthorizing = true
         let attempt = AuthorizationAttempt(
-            timeout: authorizationTimeout,
+            timeout: timeout,
             timeoutResult: PaymentResultFactory.failure(.providerError, ErrorMessage.authorizationTimedOut)
         ) { result in
             self.isAuthorizing = false
             self.authorizedResult = result
-            completion(PKPaymentAuthorizationResult(
-                status: result.success ? .success : .failure,
-                errors: nil
-            ))
+            completion(Self.authorizationResult(for: result))
             if self.finishedWhileAuthorizing {
-                self.reportResult()
+                self.reportAuthorizedResult()
             }
         }
         // Nitro settles JS promises on the JS thread.
@@ -576,31 +573,89 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
             DispatchQueue.main.async { attempt.settle(result) }
         }
 
-        onAuthorize(paymentToken, details)
+        onAuthorize(token, details)
             .then { authorization in
                 authorization
-                    .then { settleOnMain(PaymentResultFactory.from($0, token: paymentToken, details: details)) }
+                    .then { settleOnMain(PaymentResultFactory.from($0, token: token, details: details)) }
                     .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
             }
             .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
     }
-    
-    /// The request's entry for the method the payer authorized with.
-    private func selectedShippingMethod(_ payment: PKPayment) -> ShippingMethod? {
-        let identifier = payment.shippingMethod?.identifier ?? selectedShippingMethodIdentifier
-        return request.shippingMethods?.first { $0.identifier == identifier }
+
+    /// Reports the payment's result once the sheet has closed.
+    func sheetDidFinish() {
+        // Report the merchant's outcome, not a cancellation, once it arrives.
+        if isAuthorizing {
+            finishedWhileAuthorizing = true
+            return
+        }
+        if authorizedResult != nil {
+            reportAuthorizedResult()
+            return
+        }
+        // PassKit doesn't say why a sheet closed before authorization, so a
+        // sheet that closes by itself also reports a cancel.
+        report(PaymentResultFactory.failure(.cancelled, ErrorMessage.paymentCancelled))
+    }
+
+    private func reportAuthorizedResult() {
+        guard let authorizedResult else { return }
+        // The result holds the token, which JS now owns.
+        self.authorizedResult = nil
+        report(authorizedResult)
+    }
+
+    private static func authorizationResult(for result: PaymentResult) -> PKPaymentAuthorizationResult {
+        return PKPaymentAuthorizationResult(status: result.success ? .success : .failure, errors: nil)
+    }
+}
+
+// MARK: - Payment Delegate
+
+/// Hands PassKit's callbacks to a `PaymentSheetSession`.
+private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate {
+    private let session: PaymentSheetSession
+    private let paymentRequest: PKPaymentRequest
+
+    init(session: PaymentSheetSession, paymentRequest: PKPaymentRequest) {
+        self.session = session
+        self.paymentRequest = paymentRequest
+    }
+
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didSelectShippingMethod shippingMethod: PKShippingMethod,
+        handler completion: @escaping (PKPaymentRequestShippingMethodUpdate) -> Void
+    ) {
+        // PassKit waits for the completion.
+        let items = session.selectShippingMethod(shippingMethod.identifier)
+        completion(PKPaymentRequestShippingMethodUpdate(paymentSummaryItems: items))
+    }
+
+    func paymentAuthorizationController(
+        _ controller: PKPaymentAuthorizationController,
+        didAuthorizePayment payment: PKPayment,
+        handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
+    ) {
+        let details = PassKitTypeMapper.convertPaymentDetails(
+            billingContact: payment.billingContact,
+            shippingContact: payment.shippingContact,
+            requiredBillingFields: paymentRequest.requiredBillingContactFields,
+            requiredShippingFields: paymentRequest.requiredShippingContactFields,
+            shippingMethod: session.shippingMethod(authorizedWith: payment.shippingMethod?.identifier)
+        )
+        session.authorize(
+            token: PaymentTokenConverter.convert(payment.token),
+            details: details,
+            completion: completion
+        )
     }
 
     func paymentAuthorizationControllerDidFinish(_ controller: PKPaymentAuthorizationController) {
         controller.dismiss {
             // PassKit does not say which thread this runs on.
             DispatchQueue.main.async {
-                // Report the merchant's outcome, not a cancellation, once it arrives.
-                if self.isAuthorizing {
-                    self.finishedWhileAuthorizing = true
-                    return
-                }
-                self.reportResult()
+                self.session.sheetDidFinish()
             }
         }
     }
@@ -613,21 +668,6 @@ private class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegat
             .filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
             .flatMap(\.windows)
         return windows.first(where: \.isKeyWindow) ?? windows.first
-    }
-
-    private func reportResult() {
-        if paymentAuthorized, let authorizedResult {
-            // The result holds the token, which JS now owns.
-            self.authorizedResult = nil
-            paymentHandler?.handlePaymentResult(authorizedResult)
-            return
-        }
-
-        // PassKit doesn't say why a sheet closed before authorization, so a
-        // sheet that closes by itself also reports a cancel.
-        paymentHandler?.handlePaymentResult(
-            PaymentResultFactory.failure(.cancelled, ErrorMessage.paymentCancelled)
-        )
     }
 }
 
@@ -712,12 +752,13 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
     private func performPayment(request: PaymentRequest, onAuthorize: AuthorizeCallback?) throws {
         let paymentRequest = try PaymentRequestBuilder.build(from: request)
 
-        let delegate = PaymentDelegate(
-            paymentHandler: self,
+        let session = PaymentSheetSession(
             request: request,
             paymentRequest: paymentRequest,
-            onAuthorize: onAuthorize
+            onAuthorize: onAuthorize,
+            report: { [weak self] in self?.handlePaymentResult($0) }
         )
+        let delegate = PaymentDelegate(session: session, paymentRequest: paymentRequest)
         self.delegate = delegate
 
         // The sheet has its own window, so a view controller of the app that
