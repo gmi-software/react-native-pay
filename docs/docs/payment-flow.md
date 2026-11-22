@@ -94,13 +94,13 @@ A Google Pay error arrives either from `loadPaymentData` or as the sheet's `RESU
 
 ### Start/processing exception (hook)
 
-- `startPayment()` from `usePaymentCheckout` returns `null` when an exception occurs, and sets `error` to a [`PaymentError`](/docs/api/types#paymenterror) with `code: 'UNKNOWN'`.
+- `startPayment()` from `usePaymentCheckout` returns `status: 'failed'` with `code: 'UNKNOWN'` when an exception occurs, and sets `error` to a [`PaymentError`](/docs/api/types#paymenterror) with the same `code`.
 - Handle this as an app/runtime failure path (show generic error + retry).
 
 ### Empty cart or invalid amounts (hook)
 
-- Calling `startPayment()` with no cart items returns `null` and sets a "Cart is empty" error with `code: 'CONFIGURATION'`.
-- An invalid amount or a negative total also returns `null` and sets `error` with `code: 'CONFIGURATION'`, without opening the sheet.
+- Calling `startPayment()` with no cart items returns `status: 'failed'` with `code: 'CONFIGURATION'`, and sets a "Cart is empty" error with the same `code`.
+- An invalid amount or a negative total also returns `code: 'CONFIGURATION'` and sets `error`, without opening the sheet.
 - Gate the pay button on `items.length > 0`.
 
 ## Token format

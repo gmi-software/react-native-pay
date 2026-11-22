@@ -233,13 +233,23 @@ export interface UsePaymentCheckoutReturn {
   clearItems: () => void
 
   // Payment processing
-  startPayment: () => Promise<PaymentResult | null>
+  /**
+   * Opens the payment sheet and resolves with the outcome. A payment that
+   * can't start, such as with an empty cart or an invalid amount, or whose
+   * native call throws resolves with `status: 'failed'` and a `code`, and
+   * sets `result` and `error` to match. A call while a payment is in flight
+   * resolves with `code: 'IN_PROGRESS'` and leaves `result` and `error` to
+   * that payment.
+   */
+  startPayment: () => Promise<PaymentResult>
   isProcessing: boolean
   /** The last result. A cancel has `status: 'cancelled'` and no `error`. */
   result: PaymentResult | null
   /**
    * Set when a payment fails or can't start; stays `null` on a cancel. The
-   * hook always sets a `PaymentError`, whose `code` says why.
+   * hook always sets a `PaymentError`, with the failed result's `code` and,
+   * as `message`, its `error` (`'UNKNOWN'` and `'Payment failed'` when a
+   * native result lacks them).
    */
   error: Error | null
 
@@ -503,31 +513,43 @@ export function usePaymentCheckout(
     setItems([])
   }, [])
 
-  const startPayment = useCallback(async (): Promise<PaymentResult | null> => {
+  const startPayment = useCallback(async (): Promise<PaymentResult> => {
+    // Sets `result` and `error` for a payment that failed without a native
+    // result, and returns that result.
+    const fail = (paymentError: PaymentError): PaymentResult => {
+      const failed: PaymentResult = {
+        status: 'failed',
+        code: paymentError.code,
+        success: false,
+        error: paymentError.message,
+      }
+      setResult(failed)
+      setError(paymentError)
+      return failed
+    }
+
     // The native check covers payments started by HybridPaymentHandler or another hook.
     let isPaymentInProgress: boolean
     try {
       isPaymentInProgress =
         isPaymentInFlight.current || getPaymentHandler().isPaymentInProgress()
     } catch (err) {
-      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
-      return null
+      return fail(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
     }
+    // Leaves `result` and `error` to the payment in flight.
     if (isPaymentInProgress) {
       return { ...PAYMENT_IN_PROGRESS_RESULT }
     }
 
     if (items.length === 0) {
-      setError(new PaymentError('Cart is empty', 'CONFIGURATION'))
-      return null
+      return fail(new PaymentError('Cart is empty', 'CONFIGURATION'))
     }
 
     let validatedRequest: PaymentRequest
     try {
       validatedRequest = normalizePaymentRequest(paymentRequest)
     } catch (err) {
-      setError(toPaymentError(err, String(err), 'CONFIGURATION'))
-      return null
+      return fail(toPaymentError(err, String(err), 'CONFIGURATION'))
     }
 
     isPaymentInFlight.current = true
@@ -559,8 +581,7 @@ export function usePaymentCheckout(
 
       return paymentResult
     } catch (err) {
-      setError(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
-      return null
+      return fail(toPaymentError(err, 'Payment processing failed', 'UNKNOWN'))
     } finally {
       isPaymentInFlight.current = false
       setIsProcessing(false)

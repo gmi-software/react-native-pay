@@ -232,7 +232,7 @@ describe('request validation', () => {
   )
 
   it.each(invalidRequests)(
-    'usePaymentCheckout rejects %s without calling native',
+    'usePaymentCheckout resolves %s with CONFIGURATION without calling native',
     async (_, request) => {
       const { currencyCode, countryCode, paymentItems } = request
       const { result } = renderHook(() =>
@@ -247,8 +247,11 @@ describe('request validation', () => {
         hookResult = await result.current.startPayment()
       })
 
-      expect(hookResult).toBeNull()
-      expect(result.current.error).toBeInstanceOf(Error)
+      // The same shape HybridPaymentHandler resolves with.
+      expect(hookResult).toEqual(
+        await HybridPaymentHandler.startPayment(request)
+      )
+      expect(result.current.error).toHaveProperty('code', 'CONFIGURATION')
       expect(nativeStartPayment()).not.toHaveBeenCalled()
     }
   )

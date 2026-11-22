@@ -4,7 +4,7 @@ Common issues and fixes for React Native Pay.
 
 ## Before you debug
 
-- Ensure your cart is not empty. `startPayment()` returns `null` with a "Cart is empty" error when `items.length === 0`.
+- Ensure your cart is not empty. `startPayment()` fails with `code: 'CONFIGURATION'` and a "Cart is empty" error when `items.length === 0`.
 - Test on a real device whenever possible (simulator/emulator payment support is limited).
 - Re-run native generation after plugin changes:
 

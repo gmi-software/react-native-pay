@@ -26,8 +26,8 @@ function useOrderPayment() {
     currencyCode: 'USD',
   })
 
-  // Fill the cart before the user taps pay: startPayment() returns null
-  // for an empty cart, and items added in the same handler arrive too late.
+  // Fill the cart before the user taps pay: startPayment() fails for an
+  // empty cart, and items added in the same handler arrive too late.
   useEffect(() => {
     addItem(order.label, order.total)
     return clearItems
@@ -36,7 +36,7 @@ function useOrderPayment() {
   // Pass this to the pay button's onPress.
   return async () => {
     const result = await startPayment()
-    if (result?.status === 'success' && result.token) {
+    if (result.status === 'success' && result.token) {
       // Drop the token from the hook's state before the request, so a later
       // payment's result can't be cleared by this one.
       reset()
@@ -90,7 +90,7 @@ function useOrderPayment() {
     // result.status is 'success' only when onAuthorize returned 'success'.
     // The token is already charged, so don't send it to your server again.
     // The hook stored the result only now, so drop the token here.
-    if (result?.status === 'success') reset()
+    if (result.status === 'success') reset()
   }
 }
 ```

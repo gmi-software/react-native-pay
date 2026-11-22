@@ -99,8 +99,8 @@ function CheckoutScreen({ order }: { order: Order }) {
     },
   })
 
-  // The sheet shows the lines your server priced. startPayment() returns
-  // null for an empty cart, so fill it before the user taps pay.
+  // The sheet shows the lines your server priced. startPayment() fails
+  // for an empty cart, so fill it before the user taps pay.
   useEffect(() => {
     addItems(order.lines)
     return clearItems
@@ -108,7 +108,7 @@ function CheckoutScreen({ order }: { order: Order }) {
 
   const handlePay = async () => {
     const result = await startPayment()
-    if (result?.status === 'success') {
+    if (result.status === 'success') {
       // Your server charged the payment: show your confirmation here.
     }
     // 'failed': `error` is set, including when your server declined or

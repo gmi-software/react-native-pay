@@ -62,7 +62,11 @@ describe('without the native module', () => {
     await waitFor(() => {
       expect(result.current.isCheckingStatus).toBe(false)
     })
-    await expect(result.current.startPayment()).resolves.toBeNull()
+    await expect(result.current.startPayment()).resolves.toMatchObject({
+      status: 'failed',
+      code: 'UNKNOWN',
+      error: expect.stringMatching(NATIVE_MODULE_MISSING),
+    })
     await waitFor(() => {
       expect(result.current.error?.message).toMatch(NATIVE_MODULE_MISSING)
     })

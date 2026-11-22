@@ -49,7 +49,7 @@ function useShippedOrder() {
 
   return async () => {
     const result = await startPayment()
-    if (result?.status === 'success') {
+    if (result.status === 'success') {
       console.log('Shipping to', result.shippingContact?.postalAddress?.city)
     }
   }

@@ -66,7 +66,7 @@ const handleClearCart = () => {
 
 ## Rules
 
-- **At least one item** is required before `startPayment()`. Otherwise the hook sets an error and returns `null`.
+- **At least one item** is required before `startPayment()`. Otherwise it returns `status: 'failed'` with `code: 'CONFIGURATION'` and sets `error`.
 - **total** is derived from `items`; you don’t set it manually. It is an exact decimal sum.
 - **Round computed amounts** with `formatAmount(value, currencyCode)`. `startPayment()` rejects amounts with more decimal places than the currency allows, which includes unrounded float results such as `1.1 * 3`. See [`PaymentAmount`](/docs/api/types#paymentamount).
 - **Discounts** can be negative line items, as long as the total is not negative.
