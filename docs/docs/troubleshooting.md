@@ -54,6 +54,16 @@ npx expo prebuild --clean
 - The merchant ID in the request, or the first one in the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, must be listed under the **Apple Pay Payment Processing** capability in Xcode and in your App ID.
 - Rebuild after changing the Expo plugin's `merchantIdentifier`: `npx expo prebuild --clean`.
 
+In a debug build, the library logs a warning when the sheet closes less than 1 second after it appeared, before the user authorized. The result is still `status: 'cancelled'` and `code: 'CANCELLED'`, and a user who closes the sheet that fast gets the same warning. The warning starts with `[NitroPay] The Apple Pay sheet closed` and appears in the Xcode console, not in Metro. Without Xcode, stream the simulator's log:
+
+```bash
+xcrun simctl spawn booted log stream --predicate 'eventMessage CONTAINS "[NitroPay]"'
+```
+
+On a physical device, open Console.app on the Mac, select the device and search for `[NitroPay]`.
+
+Release builds log nothing, because the payment request holds your merchant IDs, item labels and amounts.
+
 See [Apple Pay button not showing](#apple-pay-button-not-showing) for the full checklist.
 
 ### "Unable to present payment authorization"

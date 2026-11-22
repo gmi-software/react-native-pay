@@ -13,6 +13,7 @@ private enum ErrorMessage {
     static let authorizationFailed = "Payment authorization failed"
     static let authorizationTimedOut = "Payment authorization timed out"
     static let negativeTotal = "Payment total must not be negative"
+    static let sheetClosedEarly = "The Apple Pay sheet closed less than \(Int(SheetCloseTiming.threshold)) s after it appeared, before authorization. startPayment reports this as a cancel. If you didn't close the sheet yourself, Apple Pay probably refused the request: check that the merchant ID is set up for Apple Pay. See https://gmi-software.github.io/react-native-pay/docs/troubleshooting#the-apple-pay-sheet-closes-right-away"
     static let couponCodeWithoutCallback = "couponCode needs onCouponCodeChange: the payer could change the code and nothing would happen"
 
     static func unknownMerchantCapability(_ capability: String) -> String {
@@ -479,10 +480,13 @@ final class PaymentSheetPresenter {
 
     /// Calls `onFailure` when there is no sheet. PassKit then calls no
     /// delegate method, so `onFailure` is the payment's only chance to settle.
+    /// Calls `onPresented` on the main thread once the sheet has appeared,
+    /// with the `SheetCloseTiming.uptime()` at which PassKit reported it.
     func present(
         _ request: PKPaymentRequest,
         delegate: PKPaymentAuthorizationControllerDelegate,
-        onFailure: @escaping (PaymentFailure) -> Void
+        onFailure: @escaping (PaymentFailure) -> Void,
+        onPresented: @escaping (TimeInterval) -> Void = { _ in }
     ) {
         guard let sheet = makeSheet(request) else {
             onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToCreate))
@@ -491,10 +495,15 @@ final class PaymentSheetPresenter {
         sheet.delegate = delegate
         self.sheet = sheet
         sheet.present { presented in
-            guard !presented else { return }
+            // Before the hop, so a busy main thread doesn't count as time on screen.
+            let presentedAt = SheetCloseTiming.uptime()
             // PassKit does not say which thread this runs on.
             DispatchQueue.main.async {
-                onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent))
+                guard presented else {
+                    onFailure(PaymentFailure(code: .notAvailable, message: ErrorMessage.unableToPresent))
+                    return
+                }
+                onPresented(presentedAt)
             }
         }
     }
@@ -523,6 +532,8 @@ final class PaymentSheetSession {
     private let onAuthorize: AuthorizeCallback?
     private let timeout: TimeInterval
     private let report: (PaymentResult) -> Void
+    private let closeTiming: SheetCloseTiming
+    private let warn: (String) -> Void
     private var authorizedResult: PaymentResult?
     private var isAuthorizing: Bool = false
     private var finishedWhileAuthorizing: Bool = false
@@ -533,6 +544,8 @@ final class PaymentSheetSession {
         onAuthorize: AuthorizeCallback?,
         sheetCallbacks: PaymentSheetCallbacks = PaymentSheetCallbacks(),
         timeout: TimeInterval = callbackTimeout,
+        closeTiming: SheetCloseTiming = SheetCloseTiming(),
+        warn: @escaping (String) -> Void = PayLog.warn,
         report: @escaping (PaymentResult) -> Void
     ) {
         self.sheet = PaymentSheetUpdater(
@@ -544,6 +557,8 @@ final class PaymentSheetSession {
         self.onAuthorize = onAuthorize
         self.timeout = timeout
         self.report = report
+        self.closeTiming = closeTiming
+        self.warn = warn
     }
 
     /// The request's entry for the method the payer authorized with, or the
@@ -593,6 +608,18 @@ final class PaymentSheetSession {
             .catch { settleOnMain(PaymentResultFactory.authorizationFailure($0)) }
     }
 
+    /// Notes that the sheet finished appearing at `presentedAt`, on the
+    /// session's clock.
+    func sheetDidPresent(at presentedAt: TimeInterval) {
+        closeTiming.sheetPresented(at: presentedAt)
+    }
+
+    /// Notes that PassKit has started to close the sheet. Called before the
+    /// dismiss animation, so the animation doesn't count as time on screen.
+    func sheetWillDismiss() {
+        closeTiming.sheetClosed()
+    }
+
     /// Reports the payment's result once the sheet has closed.
     func sheetDidFinish() {
         // Report the merchant's outcome, not a cancellation, once it arrives.
@@ -605,7 +632,11 @@ final class PaymentSheetSession {
             return
         }
         // PassKit doesn't say why a sheet closed before authorization, so a
-        // sheet that closes by itself also reports a cancel.
+        // sheet that closes by itself also reports a cancel. Debug builds log
+        // a warning when it closed right after appearing.
+        if closeTiming.closedEarly {
+            warn(ErrorMessage.sheetClosedEarly)
+        }
         report(PaymentResultFactory.failure(.cancelled, ErrorMessage.paymentCancelled))
     }
 
@@ -709,6 +740,7 @@ final class PaymentDelegate: NSObject, PKPaymentAuthorizationControllerDelegate 
     }
 
     func paymentAuthorizationControllerDidFinish(_ controller: PKPaymentAuthorizationController) {
+        session.sheetWillDismiss()
         controller.dismiss {
             // PassKit does not say which thread this runs on.
             DispatchQueue.main.async {
@@ -838,7 +870,8 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         sheetPresenter.present(
             paymentRequest,
             delegate: delegate,
-            onFailure: { self.handlePaymentResult(PaymentResultFactory.failure($0)) }
+            onFailure: { self.handlePaymentResult(PaymentResultFactory.failure($0)) },
+            onPresented: { [weak session] in session?.sheetDidPresent(at: $0) }
         )
     }
 }
