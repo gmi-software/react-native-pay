@@ -42,7 +42,7 @@ If you are using Expo, run `npx expo prebuild --clean` after plugin changes and 
 
 ## 4. Minimal checkout screen
 
-Use the hook and the platform-specific button. Your server creates the order and prices it; the screen shows its lines and pays for that order. Pass `onAuthorize` to charge the token on your server: `startPayment()` resolves with `status: 'success'` only when your server charged the payment. On iOS the Apple Pay sheet waits for your server and shows its answer; on Android, Google Pay closes its sheet before `onAuthorize` runs.
+Use the hook and the platform-specific button. Your server creates the order and prices it; the screen shows its lines and pays for that order. Pass `onAuthorize` to charge the token on your server: `startPayment()` resolves with `status: 'success'` only when your server charged the payment. The Apple Pay or Google Pay sheet waits for your server and shows its answer.
 
 ```tsx
 import React, { useEffect } from 'react'

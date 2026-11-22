@@ -42,11 +42,14 @@ object GooglePayRequestBuilder {
      *
      * @param fallbackMerchantName shown when the request has no merchantName,
      *   typically the app label. When both are blank, merchantName is omitted.
+     * @param authorizeInSheet asks Google Pay to keep its sheet open until
+     *   [PaymentDataCallbacksService] answers, for `onAuthorize`.
      */
     fun createPaymentDataRequest(
         request: PaymentRequest,
         environment: Int,
-        fallbackMerchantName: String? = null
+        fallbackMerchantName: String? = null,
+        authorizeInSheet: Boolean = false
     ): JSONObject {
         validatePaymentRequest(request, environment)
         validateShippingMethods(request)
@@ -74,6 +77,9 @@ object GooglePayRequestBuilder {
                 put("shippingAddressParameters", JSONObject().apply {
                     put("phoneNumberRequired", requested.phoneNumberOnShippingAddress)
                 })
+            }
+            if (authorizeInSheet) {
+                put("callbackIntents", JSONArray().put(PaymentConstants.CALLBACK_INTENT_PAYMENT_AUTHORIZATION))
             }
         }
     }

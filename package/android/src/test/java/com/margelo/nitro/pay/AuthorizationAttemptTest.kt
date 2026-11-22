@@ -32,7 +32,11 @@ class AuthorizationAttemptTest {
     )
 
     private val settled = mutableListOf<PaymentResult>()
-    private val attempt = AuthorizationAttempt(authorizedResult) { settled.add(it) }
+    private val payerMessages = mutableListOf<String>()
+    private val attempt = AuthorizationAttempt(authorizedResult) { result, payerMessage ->
+        settled.add(result)
+        payerMessages.add(payerMessage)
+    }
 
     private val timedOut = PaymentMapper.createErrorResult(
         PaymentErrorCode.PROVIDER_ERROR,
@@ -65,6 +69,35 @@ class AuthorizationAttemptTest {
             listOf(PaymentMapper.createErrorResult(PaymentErrorCode.PROVIDER_ERROR, "Server unreachable")),
             settled
         )
+    }
+
+    @Test
+    fun theSheetShowsTheMerchantsError() {
+        attempt.authorized(PaymentAuthorizationResult(PaymentAuthorizationStatus.FAILURE, "Card declined"))
+
+        assertEquals(listOf("Card declined"), payerMessages)
+    }
+
+    @Test
+    fun theSheetShowsAGenericFailureWithoutAnError() {
+        attempt.authorized(PaymentAuthorizationResult(PaymentAuthorizationStatus.FAILURE, " "))
+
+        assertEquals(listOf(PaymentConstants.ERROR_AUTHORIZATION_FAILED), payerMessages)
+    }
+
+    @Test
+    fun theSheetDoesNotShowARejectionsMessage() {
+        // It may be raw exception text.
+        attempt.failed(RuntimeException("java.net.SocketTimeoutException"))
+
+        assertEquals(listOf(PaymentConstants.ERROR_AUTHORIZATION_FAILED), payerMessages)
+    }
+
+    @Test
+    fun theSheetShowsTheTimeout() {
+        attempt.timedOut()
+
+        assertEquals(listOf(PaymentConstants.ERROR_AUTHORIZATION_TIMED_OUT), payerMessages)
     }
 
     @Test
@@ -104,7 +137,7 @@ class AuthorizationAttemptTest {
         val first = mutableListOf<PaymentResult>()
         val second = mutableListOf<PaymentResult>()
         pending.tryBegin { first.add(it) }
-        val firstAttempt = AuthorizationAttempt(authorizedResult) { pending.settle(it) }
+        val firstAttempt = AuthorizationAttempt(authorizedResult) { result, _ -> pending.settle(result) }
 
         firstAttempt.timedOut()
         pending.tryBegin { second.add(it) }

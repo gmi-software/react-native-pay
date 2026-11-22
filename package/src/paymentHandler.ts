@@ -11,6 +11,7 @@ import {
   normalizePaymentSheetUpdate,
 } from './utils/paymentRequest'
 import { requireNitro } from './nitro'
+import { registerSheetAuthorizationTask } from './sheetAuthorizationTask'
 
 /**
  * Error returned when `startPayment` is called while another payment is
@@ -109,6 +110,9 @@ export function prepareStartPaymentOptions(
     onPaymentMethodChange,
     onCouponCodeChange,
   } = options ?? {}
+  if (onAuthorize) {
+    registerSheetAuthorizationTask()
+  }
   const prepared: StartPaymentOptions = {
     ...(onAuthorize && {
       onAuthorize: async (token, details) => onAuthorize(token, details),

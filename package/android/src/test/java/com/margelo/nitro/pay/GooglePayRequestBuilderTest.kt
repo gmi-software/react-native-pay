@@ -611,4 +611,33 @@ class GooglePayRequestBuilderTest {
             cardParametersOf(null, merchantCapabilities = arrayOf("Unknown"))
         }
     }
+
+    // In-sheet authorization
+
+    @Test
+    fun onAuthorize_asksGooglePayForThePaymentAuthorizationCallback() {
+        val request = GooglePayRequestBuilder.createPaymentDataRequest(
+            paymentRequest(arrayOf(item("Coffee", "4.50"))),
+            WalletConstants.ENVIRONMENT_TEST,
+            authorizeInSheet = true
+        )
+
+        assertEquals(listOf("PAYMENT_AUTHORIZATION"), request.getJSONArray("callbackIntents").strings())
+    }
+
+    @Test
+    fun withoutOnAuthorize_theRequestIsUnchanged() {
+        val request = paymentRequest(arrayOf(item("Coffee", "4.50")), shippingContactRequired = true)
+        val withCallbacks = GooglePayRequestBuilder.createPaymentDataRequest(
+            request,
+            WalletConstants.ENVIRONMENT_TEST,
+            authorizeInSheet = true
+        )
+
+        val plain = build(request)
+
+        assertFalse(plain.has("callbackIntents"))
+        withCallbacks.remove("callbackIntents")
+        assertEquals(withCallbacks.toString(), plain.toString())
+    }
 }

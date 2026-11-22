@@ -183,12 +183,12 @@ export interface UsePaymentCheckoutConfig
    * your server and resolve with the outcome; `startPayment` then resolves
    * with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error` on
    * `'failure'`.
-   * On iOS the Apple Pay sheet waits for it and shows the outcome. On Android
-   * it runs after the Google Pay sheet has closed.
+   * The Apple Pay or Google Pay sheet waits for it and shows the outcome; on
+   * Android the sheet shows your `error`.
    * It must settle within 25 seconds, or the payment fails with a timeout.
-   * On iOS, after a `'failure'` or a timeout the user can retry from the same
-   * sheet, which calls this again with a new token. Make the charge idempotent
-   * per order ID, not per token.
+   * After a `'failure'` or a timeout the user can retry from the same sheet,
+   * which calls this again with a new token. Make the charge idempotent per
+   * order ID, not per token.
    * `details` holds the contact details requested above.
    * An inline function is fine: `startPayment` keeps its identity and uses the
    * function from the latest render. A payment keeps the function it started

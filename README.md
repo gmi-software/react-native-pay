@@ -286,7 +286,7 @@ function CheckoutScreen({ order }: { order: Order }) {
 export default CheckoutScreen
 ```
 
-`result.status` is `'success'` only when your server charged the order. On iOS, `onAuthorize` keeps the Apple Pay sheet open until your server answers, so the sheet shows the real outcome. On Android, Google Pay closes its sheet before `onAuthorize` runs; the callback still decides the `PaymentResult`, with the same timeout. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
+`result.status` is `'success'` only when your server charged the order. `onAuthorize` keeps the Apple Pay or Google Pay sheet open until your server answers, so the sheet shows the real outcome. Without `onAuthorize`, Apple Pay shows its success checkmark as soon as the user authorizes, before your server has charged anything: don't tell the user the payment succeeded until your server answers. See [Charging Before the Sheet Closes](#charging-before-the-sheet-closes) and the [server-side processing guide](https://gmi-software.github.io/react-native-pay/docs/guides/server-processing).
 
 ---
 
@@ -1135,9 +1135,9 @@ function useOrderPayment() {
 ```
 
 - `onAuthorize` must settle within 25 seconds. Otherwise the payment fails with "Payment authorization timed out", and its later result is ignored. Your server may still have charged the card.
-- **Retries on iOS:** after a failure or a timeout the user can retry from the same sheet, and `onAuthorize` runs again with a new token. Make your server charge idempotent per order ID, not per token.
+- **Retries:** after a failure or a timeout the user can retry from the same sheet, and `onAuthorize` runs again with a new token. Make your server charge idempotent per order ID, not per token.
 - A rejected promise counts as a failure.
-- **Android:** Google Pay closes its sheet before returning the token, so `onAuthorize` runs afterwards and only decides the `PaymentResult`.
+- **Android:** the Google Pay sheet shows your `error` to the payer, or "Payment authorization failed" without one or after a rejection. If Google Pay returns the payment without asking first, `onAuthorize` runs after its sheet has closed and only decides the `PaymentResult`.
 
 ### Server-Side Processing
 
