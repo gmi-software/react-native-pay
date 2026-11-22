@@ -599,11 +599,17 @@ interface ApplePayButtonProps {
 
   buttonStyle: "white" | "whiteOutline" | "black";
 
+  // iOS 26+: the plain button instead of the payer's default card. Defaults to false.
+  disableCardArt?: boolean;
+  cornerRadius?: number; // Corner radius in points; defaults to the system radius
+
   onPress?: () => void;
   disabled?: boolean; // ignores taps while true
   style?: ViewStyle;
 }
 ```
+
+From iOS 26 the button can show the payer's default card from Wallet instead of the plain label. Pass `disableCardArt` when your layout needs the plain button. Card art only shows on a real device with a card in Wallet, never on the simulator. Set rounder corners with `cornerRadius`, not by clipping the button in a `View`: Apple's guidelines ask apps not to crop it.
 
 ##### Example
 
@@ -617,6 +623,7 @@ const handlePayment = async () => {
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
+  cornerRadius={24}
   onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
@@ -1102,7 +1109,7 @@ const handleClearCart = () => {
 
 ### Custom Payment Buttons
 
-Apple and Google require their own buttons to start a payment: don't draw your own "Apple Pay" or "G Pay" button. Use `ApplePayButton` and `GooglePayButton`, and pick the label and look with their `buttonType`, `buttonStyle`, `theme` and `radius` props. See Apple's [Apple Pay guidelines](https://developer.apple.com/design/human-interface-guidelines/apple-pay) and Google's [brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines).
+Apple and Google require their own buttons to start a payment: don't draw your own "Apple Pay" or "G Pay" button. Use `ApplePayButton` and `GooglePayButton`, and pick the label and look with their `buttonType`, `buttonStyle`, `cornerRadius`, `disableCardArt`, `theme` and `radius` props. See Apple's [Apple Pay guidelines](https://developer.apple.com/design/human-interface-guidelines/apple-pay) and Google's [brand guidelines](https://developers.google.com/pay/api/android/guides/brand-guidelines).
 
 ### Charging Before the Sheet Closes
 

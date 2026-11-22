@@ -89,6 +89,16 @@ using namespace margelo::nitro::pay::views;
     swiftPart.setButtonStyle(static_cast<int>(newViewProps.buttonStyle.value));
     newViewProps.buttonStyle.isDirty = false;
   }
+  // disableCardArt: optional
+  if (newViewProps.disableCardArt.isDirty) {
+    swiftPart.setDisableCardArt(newViewProps.disableCardArt.value);
+    newViewProps.disableCardArt.isDirty = false;
+  }
+  // cornerRadius: optional
+  if (newViewProps.cornerRadius.isDirty) {
+    swiftPart.setCornerRadius(newViewProps.cornerRadius.value);
+    newViewProps.cornerRadius.isDirty = false;
+  }
   // onPress: optional
   if (newViewProps.onPress.isDirty) {
     swiftPart.setOnPress(newViewProps.onPress.value);

@@ -46,6 +46,26 @@ namespace margelo::nitro::pay::views {
         throw std::runtime_error(std::string("ApplePayButton.buttonStyle: ") + exc.what());
       }
     }()),
+    disableCardArt([&]() -> CachedProp<std::optional<bool>> {
+      try {
+        const react::RawValue* rawValue = rawProps.at("disableCardArt", nullptr, nullptr);
+        if (rawValue == nullptr) return sourceProps.disableCardArt;
+        const auto& [runtime, value] = (std::pair<jsi::Runtime*, jsi::Value>)*rawValue;
+        return CachedProp<std::optional<bool>>::fromRawValue(*runtime, value, sourceProps.disableCardArt);
+      } catch (const std::exception& exc) {
+        throw std::runtime_error(std::string("ApplePayButton.disableCardArt: ") + exc.what());
+      }
+    }()),
+    cornerRadius([&]() -> CachedProp<std::optional<double>> {
+      try {
+        const react::RawValue* rawValue = rawProps.at("cornerRadius", nullptr, nullptr);
+        if (rawValue == nullptr) return sourceProps.cornerRadius;
+        const auto& [runtime, value] = (std::pair<jsi::Runtime*, jsi::Value>)*rawValue;
+        return CachedProp<std::optional<double>>::fromRawValue(*runtime, value, sourceProps.cornerRadius);
+      } catch (const std::exception& exc) {
+        throw std::runtime_error(std::string("ApplePayButton.cornerRadius: ") + exc.what());
+      }
+    }()),
     onPress([&]() -> CachedProp<std::optional<std::function<void()>>> {
       try {
         const react::RawValue* rawValue = rawProps.at("onPress", nullptr, nullptr);
@@ -71,6 +91,8 @@ namespace margelo::nitro::pay::views {
     switch (hashString(propName)) {
       case hashString("buttonType"): return true;
       case hashString("buttonStyle"): return true;
+      case hashString("disableCardArt"): return true;
+      case hashString("cornerRadius"): return true;
       case hashString("onPress"): return true;
       case hashString("hybridRef"): return true;
       default: return false;

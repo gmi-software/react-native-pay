@@ -40,6 +40,59 @@ final class HybridApplePayButtonTests: XCTestCase {
         XCTAssertEqual(paymentButtons(in: button).count, 1)
     }
 
+    func testRebuildsTheButtonOnlyWhenDisableCardArtChanges() {
+        let button = HybridApplePayButton()
+        let initial = paymentButtons(in: button).first
+
+        // Unset and false are the same setting.
+        button.disableCardArt = false
+        button.afterUpdate()
+        XCTAssertTrue(paymentButtons(in: button).first === initial)
+
+        button.disableCardArt = true
+        button.afterUpdate()
+        let disabled = paymentButtons(in: button).first
+        XCTAssertFalse(disabled === initial)
+
+        button.disableCardArt = true
+        button.afterUpdate()
+        XCTAssertTrue(paymentButtons(in: button).first === disabled)
+
+        button.disableCardArt = nil
+        button.afterUpdate()
+        XCTAssertFalse(paymentButtons(in: button).first === disabled)
+        XCTAssertEqual(paymentButtons(in: button).count, 1)
+    }
+
+    func testSetsTheCornerRadiusOnTheSameButton() throws {
+        let button = HybridApplePayButton()
+        let initial = try XCTUnwrap(paymentButtons(in: button).first)
+        let systemRadius = initial.cornerRadius
+
+        button.cornerRadius = 24
+        button.afterUpdate()
+        XCTAssertTrue(paymentButtons(in: button).first === initial)
+        XCTAssertEqual(initial.cornerRadius, 24)
+
+        button.cornerRadius = nil
+        button.afterUpdate()
+        XCTAssertTrue(paymentButtons(in: button).first === initial)
+        XCTAssertEqual(initial.cornerRadius, systemRadius)
+    }
+
+    func testKeepsTheCornerRadiusAcrossARebuild() throws {
+        let button = HybridApplePayButton()
+        button.cornerRadius = 24
+        button.afterUpdate()
+
+        button.buttonStyle = .white
+        button.disableCardArt = true
+        button.afterUpdate()
+
+        let rebuilt = try XCTUnwrap(paymentButtons(in: button).first)
+        XCTAssertEqual(rebuilt.cornerRadius, 24)
+    }
+
     func testTapCallsTheLatestOnPress() throws {
         let button = HybridApplePayButton()
         var calls: [String] = []

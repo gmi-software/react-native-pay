@@ -20,8 +20,8 @@ namespace margelo::nitro::pay { enum class ApplePayButtonStyle; }
 
 #include "ApplePayButtonType.hpp"
 #include "ApplePayButtonStyle.hpp"
-#include <functional>
 #include <optional>
+#include <functional>
 
 namespace margelo::nitro::pay {
 
@@ -54,6 +54,10 @@ namespace margelo::nitro::pay {
       virtual void setButtonType(ApplePayButtonType buttonType) = 0;
       virtual ApplePayButtonStyle getButtonStyle() = 0;
       virtual void setButtonStyle(ApplePayButtonStyle buttonStyle) = 0;
+      virtual std::optional<bool> getDisableCardArt() = 0;
+      virtual void setDisableCardArt(std::optional<bool> disableCardArt) = 0;
+      virtual std::optional<double> getCornerRadius() = 0;
+      virtual void setCornerRadius(std::optional<double> cornerRadius) = 0;
       virtual std::optional<std::function<void()>> getOnPress() = 0;
       virtual void setOnPress(const std::optional<std::function<void()>>& onPress) = 0;
 
