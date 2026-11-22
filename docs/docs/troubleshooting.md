@@ -144,8 +144,30 @@ A wrapped `onPress` still works, but TypeScript reports `Type 'NitroViewWrappedC
 
 ### Nitro or native module not found
 
+If an app throws `React Native Pay: the native PaymentHandler is not available`, the app runs without the native module:
+
 - Install `react-native-nitro-modules` (required): `bun add react-native-nitro-modules`.
-- Rebuild after adding/upgrading the package.
+- Rebuild after adding/upgrading the package. With Expo, run `npx expo prebuild` and use a development build: Expo Go doesn't include the native module.
+- On web there is no native module. Importing the package works there, `usePaymentCheckout` reports `isSupported: false`, and both pay buttons render nothing.
+
+### Jest tests
+
+Importing the package doesn't need the native module, so tests of code that only uses helpers such as `formatAmount` run without a mock. Tests that call `HybridPaymentHandler`, run a payment through `usePaymentCheckout`, or render a pay button on its platform need a mock of `react-native-nitro-modules`:
+
+```ts no-check
+jest.mock('react-native-nitro-modules', () => ({
+  NitroModules: {
+    createHybridObject: () => ({
+      payServiceStatus: async () => ({ isSupported: true, hasActiveCard: true }),
+      isPaymentInProgress: () => false,
+      startPayment: async () => ({ status: 'success', success: true }),
+      openPaymentSetup: () => {},
+    }),
+  },
+  getHostComponent: (name: string) => name,
+  callback: (func: unknown) => ({ f: func }),
+}))
+```
 
 ### Clean rebuild
 

@@ -66,7 +66,7 @@ bun add @gmisoftware/react-native-pay
 - React Native 0.70+
 - React Native Nitro Modules 0.36.0+ (required)
 - Android `minSdkVersion` 26+ (required for Nitro Modules prefab)
-- Expo 53–57 (if using Expo; SDK 57 requires Node.js 22.13+)
+- Expo 53–57 (optional; only if you use Expo. SDK 57 requires Node.js 22.13+)
 
 ---
 
@@ -442,6 +442,8 @@ const result = await checkout.startPayment();
 ### `HybridPaymentHandler`
 
 Low-level payment handler for direct control.
+
+The native handler is created the first time you use `HybridPaymentHandler`, not when you import the package, so helpers such as `formatAmount` and `createPaymentRequest` import on web and in Jest. Where the native module is missing (web, Expo Go, a build made before installing the package, or Jest without a mock), `HybridPaymentHandler` and `getPaymentHandler()` fail with an `Error` that says how to fix it (the Promise methods reject, the others throw), and `usePaymentCheckout` reports `isSupported: false`.
 
 #### Methods
 

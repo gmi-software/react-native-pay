@@ -7,7 +7,7 @@ Install the payment library and its required dependency in your React Native (or
 - **React Native** 0.70 or newer (tested with **0.86** / Expo SDK 57)
 - **react-native-nitro-modules** 0.36.0 or newer (required)
 - **Android minSdkVersion** 26 or newer (required for Nitro Modules prefab)
-- **Expo** 53–57 if you use Expo (SDK 57 requires Node.js 22.13+)
+- **Expo** 53–57, optional: only if you use Expo (SDK 57 requires Node.js 22.13+)
 
 ## Step 1: Install Nitro Modules
 

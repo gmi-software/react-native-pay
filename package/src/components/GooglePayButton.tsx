@@ -1,11 +1,12 @@
 import React from 'react'
 import { Platform, type ViewProps } from 'react-native'
-import { getHostComponent } from 'react-native-nitro-modules'
+import type { ReactNativeView } from 'react-native-nitro-modules'
 import type {
   GooglePayButtonMethods,
   GooglePayButtonProps as NativeGooglePayButtonProps,
 } from '../specs/GooglePayButton.nitro'
 import GooglePayButtonConfig from '../../nitrogen/generated/shared/json/GooglePayButtonConfig.json'
+import { requireNitro } from '../nitro'
 import {
   type PayButtonPressProps,
   useDevWarning,
@@ -13,10 +14,20 @@ import {
 } from './usePayButtonPress'
 import { googlePayButtonConfigError } from './googlePayButtonConfig'
 
-const NativeGooglePayButton = getHostComponent<
-  NativeGooglePayButtonProps,
-  GooglePayButtonMethods
->('GooglePayButton', () => GooglePayButtonConfig)
+let NativeGooglePayButton:
+  | ReactNativeView<NativeGooglePayButtonProps, GooglePayButtonMethods>
+  | undefined
+
+// Created on first render, so importing the package does not need Nitro.
+function getNativeGooglePayButton() {
+  if (NativeGooglePayButton === undefined) {
+    NativeGooglePayButton = requireNitro().getHostComponent<
+      NativeGooglePayButtonProps,
+      GooglePayButtonMethods
+    >('GooglePayButton', () => GooglePayButtonConfig)
+  }
+  return NativeGooglePayButton
+}
 
 export interface GooglePayButtonProps
   extends Omit<NativeGooglePayButtonProps, 'onPress'>,
@@ -27,12 +38,7 @@ export interface GooglePayButtonProps
  * The native Google Pay button (`PayButton`). Android only: it renders
  * nothing on iOS.
  */
-export function GooglePayButton({
-  onPress,
-  disabled,
-  ...props
-}: GooglePayButtonProps) {
-  const press = usePayButtonPress('GooglePayButton', onPress, disabled)
+export function GooglePayButton(props: GooglePayButtonProps) {
   const isWrongPlatform = Platform.OS !== 'android'
   useDevWarning(
     isWrongPlatform,
@@ -44,5 +50,11 @@ export function GooglePayButton({
     `GooglePayButton: ${configError}. Android keeps the button it showed before, with the default cards if it never had valid ones.`
   )
   if (isWrongPlatform) return null
-  return <NativeGooglePayButton {...props} onPress={press} />
+  return <NativeButton {...props} />
+}
+
+function NativeButton({ onPress, disabled, ...props }: GooglePayButtonProps) {
+  const press = usePayButtonPress('GooglePayButton', onPress, disabled)
+  const Button = getNativeGooglePayButton()
+  return <Button {...props} onPress={press} />
 }

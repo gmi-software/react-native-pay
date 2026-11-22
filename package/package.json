@@ -32,6 +32,11 @@
     "react-native-nitro-modules": ">=0.36.0",
     "expo": ">=53.0.0"
   },
+  "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    }
+  },
   "bugs": {
     "url": "https://github.com/gmi-software/react-native-pay/issues"
   },

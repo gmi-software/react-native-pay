@@ -7,7 +7,7 @@ Supported versions and upgrade notes.
 - **react** — `*` (compatible with current React 18/19)
 - **react-native** — `*` (0.70+ recommended)
 - **react-native-nitro-modules** — **>= 0.36.0** (required)
-- **expo** — **>= 53.0.0** (if using Expo; tested with SDK 57 / React Native 0.86)
+- **expo** — **>= 53.0.0**, optional (only if you use Expo; tested with SDK 57 / React Native 0.86). Package managers don't install it for bare React Native apps.
 - **Android minSdkVersion** — **26+** (required for Nitro Modules prefab)
 
 Install the correct Nitro version first; the payment library depends on it.

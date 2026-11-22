@@ -8,6 +8,8 @@ Low-level API for payment operations. Use it when you need full control over the
 import { HybridPaymentHandler, createPaymentRequest } from '@gmisoftware/react-native-pay'
 ```
 
+The native handler is created the first time you use `HybridPaymentHandler`, not when you import the package, so the package's helpers such as `formatAmount` and `createPaymentRequest` import on web and in Jest. Where the native module is missing (web, Expo Go, a build made before installing the package, or Jest without a mock), `HybridPaymentHandler` and `getPaymentHandler()` fail with an `Error` that says how to fix it: the Promise methods reject with it, and the others throw it. See [Troubleshooting](/docs/troubleshooting#nitro-or-native-module-not-found).
+
 ## Methods
 
 ### payServiceStatus(options?)
