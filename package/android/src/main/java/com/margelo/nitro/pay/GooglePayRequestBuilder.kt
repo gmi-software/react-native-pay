@@ -228,9 +228,16 @@ object GooglePayRequestBuilder {
             null
         }
 
+        // The merchant token objects have no checkoutOption, so it has no effect there.
         MerchantTokenTransactions.create(request, totalPrice, displayItems)?.let { return it }
 
         val hasPendingItems = request.paymentItems.any { it.type == PaymentItemType.PENDING }
+        val checkoutOption = request.googlePayCheckoutOption
+        require(
+            !(hasPendingItems && checkoutOption == GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE)
+        ) {
+            "googlePayCheckoutOption 'completeImmediatePurchase' needs a final total, but a payment item is pending"
+        }
         return "transactionInfo" to JSONObject().apply {
             put(
                 "totalPriceStatus",
@@ -244,7 +251,15 @@ object GooglePayRequestBuilder {
             put("currencyCode", request.currencyCode)
             put("countryCode", request.countryCode)
             displayItems?.let { put("displayItems", it) }
+            checkoutOption?.let { put("checkoutOption", checkoutOptionValue(it)) }
         }
+    }
+
+    private fun checkoutOptionValue(option: GooglePayCheckoutOption): String = when (option) {
+        GooglePayCheckoutOption.DEFAULT -> PaymentConstants.CHECKOUT_OPTION_DEFAULT
+        GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE ->
+            PaymentConstants.CHECKOUT_OPTION_COMPLETE_IMMEDIATE_PURCHASE
+        GooglePayCheckoutOption.CONTINUETOREVIEW -> PaymentConstants.CHECKOUT_OPTION_CONTINUE_TO_REVIEW
     }
     
     /**

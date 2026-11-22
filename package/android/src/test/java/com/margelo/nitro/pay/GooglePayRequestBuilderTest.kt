@@ -118,6 +118,68 @@ class GooglePayRequestBuilderTest {
         assertEquals("Razem", json.getJSONObject("transactionInfo").getString("totalPriceLabel"))
     }
 
+    // Checkout option
+
+    @Test
+    fun checkoutOption_isLeftOutWhenNotSet() {
+        val json = build(paymentRequest(arrayOf(item("Coffee", 4.99))))
+
+        assertFalse(json.getJSONObject("transactionInfo").has("checkoutOption"))
+    }
+
+    @Test
+    fun checkoutOption_sendsEachValue() {
+        val expected = mapOf(
+            GooglePayCheckoutOption.DEFAULT to "DEFAULT",
+            GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE to "COMPLETE_IMMEDIATE_PURCHASE",
+            GooglePayCheckoutOption.CONTINUETOREVIEW to "CONTINUE_TO_REVIEW"
+        )
+        assertEquals(GooglePayCheckoutOption.values().toSet(), expected.keys)
+
+        expected.forEach { (option, value) ->
+            val json = build(
+                paymentRequest(arrayOf(item("Coffee", 4.99)), googlePayCheckoutOption = option)
+            )
+
+            assertEquals(value, json.getJSONObject("transactionInfo").getString("checkoutOption"))
+        }
+    }
+
+    @Test
+    fun checkoutOption_completeImmediatePurchaseRejectsAPendingItem() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(
+                paymentRequest(
+                    arrayOf(
+                        item("Coffee", 4.99),
+                        item("Shipping (estimate)", 5.0, PaymentItemType.PENDING)
+                    ),
+                    googlePayCheckoutOption = GooglePayCheckoutOption.COMPLETEIMMEDIATEPURCHASE
+                )
+            )
+        }
+
+        assertEquals(
+            "googlePayCheckoutOption 'completeImmediatePurchase' needs a final total, but a payment item is pending",
+            error.message
+        )
+    }
+
+    @Test
+    fun checkoutOption_otherValuesAllowAPendingItem() {
+        listOf(GooglePayCheckoutOption.DEFAULT, GooglePayCheckoutOption.CONTINUETOREVIEW).forEach { option ->
+            val json = build(
+                paymentRequest(
+                    arrayOf(item("Shipping (estimate)", 5.0, PaymentItemType.PENDING)),
+                    googlePayCheckoutOption = option
+                )
+            )
+
+            assertEquals("ESTIMATED", json.totalPriceStatus())
+            assertTrue(json.getJSONObject("transactionInfo").has("checkoutOption"))
+        }
+    }
+
     @Test
     fun displayItemTypeIsNeverAStatusValue() {
         val json = build(

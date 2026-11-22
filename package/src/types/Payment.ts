@@ -84,6 +84,22 @@ export type GooglePayEnvironment = 'TEST' | 'PRODUCTION'
 export type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 
 /**
+ * The label of the Google Pay sheet's button, sent as
+ * `transactionInfo.checkoutOption`. Android only.
+ *
+ * - `'default'`: Google Pay picks "Continue" or "Pay".
+ * - `'completeImmediatePurchase'`: "Pay now", for a payment that completes
+ *   when the payer confirms. Not with a `'pending'` payment item: Google Pay
+ *   only allows it for a final total.
+ * - `'continueToReview'`: "Review Order", when your app shows a review step
+ *   after the sheet.
+ */
+export type GooglePayCheckoutOption =
+  | 'default'
+  | 'completeImmediatePurchase'
+  | 'continueToReview'
+
+/**
  * Merchant capability. `'3DS'` and `'EMV'` are Apple Pay payment protocols
  * (EMV only covers China UnionPay); `'Credit'` and `'Debit'` limit the
  * accepted card types. iOS adds `'3DS'` when neither protocol is given.
@@ -423,6 +439,15 @@ export interface PaymentRequest {
    * `GooglePayAuthMethod` for the same reason as `merchantCapabilities`.
    */
   googlePayAllowedAuthMethods?: string[]
+  /**
+   * The label of the Google Pay sheet's button. Omitted, Google Pay picks
+   * "Continue" or "Pay", as with `'default'`. `'completeImmediatePurchase'`
+   * with a `'pending'` payment item fails the payment with
+   * `'CONFIGURATION'` on Android. No effect on `recurring`, `deferred` and
+   * `automaticReload` payments, whose Google Pay objects have no such option.
+   * Android only.
+   */
+  googlePayCheckoutOption?: GooglePayCheckoutOption
 }
 
 /**

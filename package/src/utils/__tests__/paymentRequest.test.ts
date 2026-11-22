@@ -83,6 +83,46 @@ describe('normalizePaymentRequest', () => {
     ).toThrow('totalLabel must be a non-empty string')
   })
 
+  it.each([
+    'default',
+    'completeImmediatePurchase',
+    'continueToReview',
+  ] as const)(
+    'keeps the Google Pay checkout option %p',
+    (googlePayCheckoutOption) => {
+      const normalized = normalizePaymentRequest({
+        ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+        googlePayCheckoutOption,
+      })
+
+      expect(normalized.googlePayCheckoutOption).toBe(googlePayCheckoutOption)
+    }
+  )
+
+  it.each(['COMPLETE_IMMEDIATE_PURCHASE', '', null])(
+    'rejects the Google Pay checkout option %p',
+    (googlePayCheckoutOption) => {
+      expect(() =>
+        normalizePaymentRequest({
+          ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+          googlePayCheckoutOption: googlePayCheckoutOption as 'default',
+        })
+      ).toThrow(
+        `googlePayCheckoutOption must be one of "default", "completeImmediatePurchase", "continueToReview", got ${JSON.stringify(googlePayCheckoutOption)}`
+      )
+    }
+  )
+
+  // Google Pay's rule: iOS has no such button, so a pending item is fine here.
+  it('keeps completeImmediatePurchase with a pending item for native to check', () => {
+    const normalized = normalizePaymentRequest({
+      ...request([{ label: 'Shipping', amount: 5, type: 'pending' }]),
+      googlePayCheckoutOption: 'completeImmediatePurchase',
+    })
+
+    expect(normalized.googlePayCheckoutOption).toBe('completeImmediatePurchase')
+  })
+
   it('rejects a negative total', () => {
     expect(() =>
       normalizePaymentRequest(

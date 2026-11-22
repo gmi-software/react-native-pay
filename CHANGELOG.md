@@ -17,6 +17,13 @@ All notable changes to this project are documented in this file.
   without calling back, `onAuthorize` runs after the sheet as before. Without `onAuthorize`, the
   request is unchanged
   ([#72](https://github.com/gmi-software/react-native-pay/issues/72)).
+- **`googlePayCheckoutOption`** in `PaymentRequest` and the `usePaymentCheckout` config
+  (`GooglePayCheckoutOption`: `'default'`, `'completeImmediatePurchase'`, `'continueToReview'`)
+  sets the Google Pay sheet's button label ("Continue" or "Pay", "Pay now", "Review Order") through
+  `transactionInfo.checkoutOption`. `'completeImmediatePurchase'` with a `'pending'` item fails with
+  `code: 'CONFIGURATION'` before the sheet opens. Without the option the request is unchanged. No
+  effect on `recurring`, `deferred` and `automaticReload` payments. Android only
+  ([#85](https://github.com/gmi-software/react-native-pay/issues/85)).
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
   invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it

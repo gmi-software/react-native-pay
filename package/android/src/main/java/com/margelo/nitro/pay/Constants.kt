@@ -38,6 +38,9 @@ object PaymentConstants {
     const val SHIPPING_OPTION_TYPE = "SHIPPING_OPTION"
     const val DISPLAY_ITEM_STATUS_FINAL = "FINAL"
     const val DISPLAY_ITEM_STATUS_PENDING = "PENDING"
+    const val CHECKOUT_OPTION_DEFAULT = "DEFAULT"
+    const val CHECKOUT_OPTION_COMPLETE_IMMEDIATE_PURCHASE = "COMPLETE_IMMEDIATE_PURCHASE"
+    const val CHECKOUT_OPTION_CONTINUE_TO_REVIEW = "CONTINUE_TO_REVIEW"
     
     // Merchant authorization (`StartPaymentOptions.onAuthorize`), same limit as iOS
     const val AUTHORIZATION_TIMEOUT_MS = 25_000L

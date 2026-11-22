@@ -514,6 +514,42 @@ describe('usePaymentCheckout integration', () => {
     ])
   })
 
+  it('sends the Google Pay checkout option', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() =>
+      usePaymentCheckout({ googlePayCheckoutOption: 'continueToReview' })
+    )
+
+    act(() => {
+      result.current.addItem('Coffee', 10)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const [request] = mockStartPayment.mock.calls[0]
+    expect(request.googlePayCheckoutOption).toBe('continueToReview')
+  })
+
+  it('leaves the Google Pay checkout option out when not set', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() => usePaymentCheckout({}))
+
+    act(() => {
+      result.current.addItem('Coffee', 10)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const [request] = mockStartPayment.mock.calls[0]
+    expect(request).not.toHaveProperty('googlePayCheckoutOption')
+  })
+
   describe('identity across re-renders', () => {
     // These tests end synchronously: a status check settling after them would
     // update the hook outside act.
@@ -582,6 +618,7 @@ describe('usePaymentCheckout integration', () => {
         ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
         ['CRYPTOGRAM_3DS'],
       ],
+      googlePayCheckoutOption: ['default', 'completeImmediatePurchase'],
       billingContactRequired: [false, true],
       shippingContactRequired: [false, true],
       emailRequired: [false, true],

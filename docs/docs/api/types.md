@@ -89,6 +89,7 @@ interface PaymentRequest {
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
   googlePayAllowedAuthMethods?: string[] // GooglePayAuthMethod values
+  googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
 }
 ```
 
@@ -105,6 +106,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
 
 `googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
+
+`googlePayCheckoutOption` sets the label of the Google Pay sheet's button: see [`GooglePayCheckoutOption`](#googlepaycheckoutoption). Omitted, Google Pay picks "Continue" or "Pay". Android only.
 
 `billingContactRequired`, `shippingContactRequired`, `emailRequired` and `phoneNumberRequired` ask the payer for contact details, which come back in the result as [`PaymentDetails`](#paymentdetails). On Android, a phone number is collected with an address. See [Shipping and contact details](/docs/guides/contact-details).
 
@@ -411,6 +414,25 @@ type GooglePayAuthMethod = 'PAN_ONLY' | 'CRYPTOGRAM_3DS'
 - `'CRYPTOGRAM_3DS'` — Cards tokenized on the device. The token holds a 3-D Secure cryptogram. Google Pay does not offer `jcb` or `discover` with it.
 
 The default is both. Pass `['CRYPTOGRAM_3DS']` when your gateway or Strong Customer Authentication requires device tokens. Android matches the values ignoring case, and any other value fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown Google Pay auth method "<value>". Use "PAN_ONLY" or "CRYPTOGRAM_3DS"`. They are separate from `merchantCapabilities`: every Apple Pay card is a device token, so iOS has nothing like `'PAN_ONLY'`.
+
+---
+
+## GooglePayCheckoutOption
+
+The label of the Google Pay sheet's button, used in `googlePayCheckoutOption` (Android only). Sent as Google Pay's `transactionInfo.checkoutOption`.
+
+```ts
+type GooglePayCheckoutOption =
+  | 'default'
+  | 'completeImmediatePurchase'
+  | 'continueToReview'
+```
+
+- `'default'` — Google Pay picks "Continue" or "Pay". The same label as leaving the option out.
+- `'completeImmediatePurchase'` — "Pay now", for a payment that completes when the payer confirms. Google Pay allows it only for a final total, so a `'pending'` payment item fails the payment on Android with `code: 'CONFIGURATION'` and an `error` that contains `googlePayCheckoutOption 'completeImmediatePurchase' needs a final total, but a payment item is pending`.
+- `'continueToReview'` — "Review Order", when your app shows a review step after the sheet.
+
+Any other value fails the payment on both platforms with `code: 'CONFIGURATION'`. It has no effect on `recurring`, `deferred` and `automaticReload` payments: their Google Pay objects have no checkout option. iOS has no such label and ignores it.
 
 ---
 
