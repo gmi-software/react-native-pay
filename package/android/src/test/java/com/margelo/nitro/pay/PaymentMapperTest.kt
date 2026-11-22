@@ -25,7 +25,8 @@ class PaymentMapperTest {
         shippingContact = null,
         emailAddress = null,
         phoneNumber = null,
-        shippingMethod = null
+        shippingMethod = null,
+        couponCode = null
     )
 
     private val paymentDataWithContacts = PaymentData.fromJson(

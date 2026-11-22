@@ -34,6 +34,16 @@ namespace margelo::nitro::pay { struct PaymentAuthorizationResult; }
 namespace margelo::nitro::pay { struct PaymentToken; }
 // Forward declaration of `PaymentDetails` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentDetails; }
+// Forward declaration of `PaymentSheetUpdate` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetUpdate; }
+// Forward declaration of `PaymentSheetAddress` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetAddress; }
+// Forward declaration of `PaymentSheetSelection` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetSelection; }
+// Forward declaration of `ShippingMethod` to properly resolve imports.
+namespace margelo::nitro::pay { struct ShippingMethod; }
+// Forward declaration of `PaymentSheetCard` to properly resolve imports.
+namespace margelo::nitro::pay { struct PaymentSheetCard; }
 
 #include "PaymentAuthorizationResult.hpp"
 #include <NitroModules/Promise.hpp>
@@ -41,6 +51,12 @@ namespace margelo::nitro::pay { struct PaymentDetails; }
 #include "PaymentDetails.hpp"
 #include <functional>
 #include <optional>
+#include "PaymentSheetUpdate.hpp"
+#include "PaymentSheetAddress.hpp"
+#include "PaymentSheetSelection.hpp"
+#include "ShippingMethod.hpp"
+#include "PaymentSheetCard.hpp"
+#include <string>
 
 namespace margelo::nitro::pay {
 
@@ -50,13 +66,17 @@ namespace margelo::nitro::pay {
   struct StartPaymentOptions final {
   public:
     std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> onAuthorize     SWIFT_PRIVATE;
+    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>> onShippingAddressChange     SWIFT_PRIVATE;
+    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>> onShippingMethodChange     SWIFT_PRIVATE;
+    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>> onPaymentMethodChange     SWIFT_PRIVATE;
+    std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>> onCouponCodeChange     SWIFT_PRIVATE;
 
   public:
     StartPaymentOptions() = default;
-    explicit StartPaymentOptions(std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> onAuthorize): onAuthorize(onAuthorize) {}
+    explicit StartPaymentOptions(std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentAuthorizationResult>>>>(const PaymentToken& /* token */, const PaymentDetails& /* details */)>> onAuthorize, std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetAddress& /* address */, const PaymentSheetSelection& /* selection */)>> onShippingAddressChange, std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>> onShippingMethodChange, std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const PaymentSheetCard& /* card */, const PaymentSheetSelection& /* selection */)>> onPaymentMethodChange, std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const std::string& /* couponCode */, const PaymentSheetSelection& /* selection */)>> onCouponCodeChange): onAuthorize(onAuthorize), onShippingAddressChange(onShippingAddressChange), onShippingMethodChange(onShippingMethodChange), onPaymentMethodChange(onPaymentMethodChange), onCouponCodeChange(onCouponCodeChange) {}
 
   public:
-    // StartPaymentOptions is not equatable because these properties are not equatable: onAuthorize
+    // StartPaymentOptions is not equatable because these properties are not equatable: onAuthorize, onShippingAddressChange, onShippingMethodChange, onPaymentMethodChange, onCouponCodeChange
   };
 
 } // namespace margelo::nitro::pay
@@ -69,12 +89,20 @@ namespace margelo::nitro {
     static inline margelo::nitro::pay::StartPaymentOptions fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::pay::StartPaymentOptions(
-        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize"))),
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetAddress&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onShippingAddressChange"))),
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::ShippingMethod&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onShippingMethodChange"))),
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetCard&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onPaymentMethodChange"))),
+        JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const std::string&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onCouponCodeChange")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::StartPaymentOptions& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::toJSI(runtime, arg.onAuthorize));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onShippingAddressChange"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetAddress&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::toJSI(runtime, arg.onShippingAddressChange));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onShippingMethodChange"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::ShippingMethod&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::toJSI(runtime, arg.onShippingMethodChange));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onPaymentMethodChange"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetCard&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::toJSI(runtime, arg.onPaymentMethodChange));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "onCouponCodeChange"), JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const std::string&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::toJSI(runtime, arg.onCouponCodeChange));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -86,6 +114,10 @@ namespace margelo::nitro {
         return false;
       }
       if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentAuthorizationResult>>>>(const margelo::nitro::pay::PaymentToken&, const margelo::nitro::pay::PaymentDetails&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onAuthorize")))) return false;
+      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetAddress&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onShippingAddressChange")))) return false;
+      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::ShippingMethod&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onShippingMethodChange")))) return false;
+      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const margelo::nitro::pay::PaymentSheetCard&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onPaymentMethodChange")))) return false;
+      if (!JSIConverter<std::optional<std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<margelo::nitro::pay::PaymentSheetUpdate>>>>(const std::string&, const margelo::nitro::pay::PaymentSheetSelection&)>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "onCouponCodeChange")))) return false;
       return true;
     }
   };

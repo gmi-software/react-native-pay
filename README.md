@@ -369,11 +369,17 @@ interface UsePaymentCheckoutConfig {
   shippingContactRequired?: boolean;
   emailRequired?: boolean;
   phoneNumberRequired?: boolean;
+  couponCode?: string; // iOS: a code already applied, needs onCouponCodeChange
   // Charge the token while the sheet waits (see "Charging before the sheet closes")
   onAuthorize?: (
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>;
+  // Update the cart while the sheet is open, iOS only for now (see "Updating the cart in the sheet")
+  onShippingAddressChange?: StartPaymentOptions["onShippingAddressChange"];
+  onShippingMethodChange?: StartPaymentOptions["onShippingMethodChange"];
+  onPaymentMethodChange?: StartPaymentOptions["onPaymentMethodChange"];
+  onCouponCodeChange?: StartPaymentOptions["onCouponCodeChange"];
 }
 ```
 
@@ -502,6 +508,23 @@ interface StartPaymentOptions {
     token: PaymentToken,
     details: PaymentDetails
   ) => Promise<PaymentAuthorizationResult>;
+  // Update the cart while the sheet is open, iOS only for now (see "Updating the cart in the sheet")
+  onShippingAddressChange?: (
+    address: PaymentSheetAddress,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>;
+  onShippingMethodChange?: (
+    method: ShippingMethod,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>;
+  onPaymentMethodChange?: (
+    card: PaymentSheetCard,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>;
+  onCouponCodeChange?: (
+    couponCode: string,
+    selection: PaymentSheetSelection
+  ) => Promise<PaymentSheetUpdate>;
 }
 
 interface PaymentAuthorizationResult {
@@ -764,6 +787,7 @@ interface PaymentRequest {
   deferred?: DeferredPaymentRequest; // one later charge, iOS 16.4+
   automaticReload?: AutomaticReloadPaymentRequest; // top-ups, iOS 16+
   applePayMultiTokenContexts?: PaymentTokenContext[]; // several merchants, iOS 16+
+  couponCode?: string; // iOS only, needs onCouponCodeChange
   // Google Pay specific
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
@@ -880,6 +904,10 @@ Set `billingContactRequired`, `shippingContactRequired`, `emailRequired` or `pho
 `shippingMethods` (with `HybridPaymentHandler`) lets the payer pick a delivery option; the selected method is added to the total and returned as `shippingMethod`. The first one is selected by default on iOS. Google Pay cannot offer a choice yet, so Android charges the first method. See the [contact details guide](https://gmi-software.github.io/react-native-pay/docs/guides/contact-details).
 
 `shippingType` (`"shipping"`, `"delivery"`, `"storePickup"` or `"servicePickup"`) only changes Apple Pay's labels. An unknown value fails the payment on iOS.
+
+### Updating the cart in the sheet
+
+On iOS, the cart can follow the payer's choices while the Apple Pay sheet is open. `onShippingAddressChange`, `onShippingMethodChange`, `onPaymentMethodChange` and `onCouponCodeChange` (in `StartPaymentOptions` or the hook's config) get the change and everything chosen so far, and return new `paymentItems`, new `shippingMethods` or an error for the payer: tax by region, an address you don't deliver to, a credit card fee, a coupon code. The coupon field appears only with `onCouponCodeChange`, and the accepted code comes back as `couponCode`. Android ignores these callbacks for now ([#72](https://github.com/gmi-software/react-native-pay/issues/72)). See the [dynamic cart guide](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#update-the-cart-in-the-sheet).
 
 ### Subscriptions and later payments
 

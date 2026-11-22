@@ -1,6 +1,15 @@
 import type { PaymentHandler } from './specs/PaymentHandler.nitro'
-import type { PaymentRequest, PaymentResult } from './types'
-import { normalizePaymentRequest } from './utils/paymentRequest'
+import type {
+  PaymentRequest,
+  PaymentResult,
+  PaymentSheetSelection,
+  PaymentSheetUpdate,
+  StartPaymentOptions,
+} from './types'
+import {
+  normalizePaymentRequest,
+  normalizePaymentSheetUpdate,
+} from './utils/paymentRequest'
 import { requireNitro } from './nitro'
 
 /**
@@ -55,6 +64,87 @@ export function getPaymentHandler(): PaymentHandler {
   return paymentHandler
 }
 
+type SheetCallback<Value> = (
+  value: Value,
+  selection: PaymentSheetSelection
+) => Promise<PaymentSheetUpdate>
+
+function checkedSheetCallback<Value>(
+  name: string,
+  callback: SheetCallback<Value>,
+  request: PaymentRequest
+): SheetCallback<Value> {
+  return async (value, selection) => {
+    try {
+      return normalizePaymentSheetUpdate(
+        await callback(value, selection),
+        request
+      )
+    } catch (err) {
+      if (__DEV__) {
+        console.warn(
+          `[react-native-pay] ${name} failed, so the payment sheet keeps its items: ${err instanceof Error ? err.message : String(err)}`
+        )
+      }
+      throw err
+    }
+  }
+}
+
+/**
+ * The options native code gets. Each callback becomes `async`, so a
+ * synchronous throw still rejects. What a sheet callback returns is checked
+ * with the rules of `request`, as `normalizePaymentRequest` returned it; an invalid update rejects, so the sheet keeps its
+ * items, and in development the reason is logged. `undefined` without
+ * callbacks.
+ */
+export function prepareStartPaymentOptions(
+  options: StartPaymentOptions | undefined,
+  request: PaymentRequest
+): StartPaymentOptions | undefined {
+  const {
+    onAuthorize,
+    onShippingAddressChange,
+    onShippingMethodChange,
+    onPaymentMethodChange,
+    onCouponCodeChange,
+  } = options ?? {}
+  const prepared: StartPaymentOptions = {
+    ...(onAuthorize && {
+      onAuthorize: async (token, details) => onAuthorize(token, details),
+    }),
+    ...(onShippingAddressChange && {
+      onShippingAddressChange: checkedSheetCallback(
+        'onShippingAddressChange',
+        onShippingAddressChange,
+        request
+      ),
+    }),
+    ...(onShippingMethodChange && {
+      onShippingMethodChange: checkedSheetCallback(
+        'onShippingMethodChange',
+        onShippingMethodChange,
+        request
+      ),
+    }),
+    ...(onPaymentMethodChange && {
+      onPaymentMethodChange: checkedSheetCallback(
+        'onPaymentMethodChange',
+        onPaymentMethodChange,
+        request
+      ),
+    }),
+    ...(onCouponCodeChange && {
+      onCouponCodeChange: checkedSheetCallback(
+        'onCouponCodeChange',
+        onCouponCodeChange,
+        request
+      ),
+    }),
+  }
+  return Object.keys(prepared).length > 0 ? prepared : undefined
+}
+
 /** The `PaymentHandler` methods that `HybridPaymentHandler` offers. */
 export type PaymentHandlerMethods = Pick<
   PaymentHandler,
@@ -68,7 +158,8 @@ export type PaymentHandlerMethods = Pick<
  * The exported `HybridPaymentHandler`. It delegates to the shared native
  * instance, but `startPayment` first validates the request with
  * `normalizePaymentRequest`, as `usePaymentCheckout` does, and resolves an
- * invalid one with `code: 'CONFIGURATION'` without calling native.
+ * invalid one with `code: 'CONFIGURATION'` without calling native. Its
+ * callbacks go through `prepareStartPaymentOptions`.
  */
 export const validatingPaymentHandler: PaymentHandlerMethods = {
   payServiceStatus: (options) => getPaymentHandler().payServiceStatus(options),
@@ -84,9 +175,13 @@ export const validatingPaymentHandler: PaymentHandlerMethods = {
         error: err instanceof Error ? err.message : String(err),
       }
     }
-    return options === undefined
+    const preparedOptions = prepareStartPaymentOptions(
+      options,
+      validatedRequest
+    )
+    return preparedOptions === undefined
       ? getPaymentHandler().startPayment(validatedRequest)
-      : getPaymentHandler().startPayment(validatedRequest, options)
+      : getPaymentHandler().startPayment(validatedRequest, preparedOptions)
   },
   isPaymentInProgress: () => getPaymentHandler().isPaymentInProgress(),
   openPaymentSetup: () => getPaymentHandler().openPaymentSetup(),

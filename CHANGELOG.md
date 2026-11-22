@@ -14,7 +14,18 @@ All notable changes to this project are documented in this file.
   unchanged. `error` keeps its `Error | null` type: narrow it with `error instanceof PaymentError`
   before reading `code`, from the render after the update
   ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
-
+- **Cart updates in the Apple Pay sheet.** `StartPaymentOptions` and the `usePaymentCheckout`
+  config take `onShippingAddressChange`, `onShippingMethodChange`, `onPaymentMethodChange` and
+  `onCouponCodeChange`. Each gets the change and a `PaymentSheetSelection` of everything chosen so
+  far, and returns a `PaymentSheetUpdate`: new `paymentItems`, new `shippingMethods` or a
+  `PaymentSheetError` for the payer, such as an address you don't deliver to or an invalid coupon.
+  The coupon field appears only with `onCouponCodeChange`; `PaymentRequest.couponCode` sets a code
+  already applied, and the accepted code is `PaymentDetails.couponCode`. A callback that fails,
+  times out after 25 seconds or returns an invalid update leaves the sheet as it was. With
+  `applePayMultiTokenContexts`, an update must keep the total. iOS only for now: Android ignores
+  the callbacks until [#72](https://github.com/gmi-software/react-native-pay/issues/72). See the
+  [guide](https://gmi-software.github.io/react-native-pay/docs/guides/dynamic-cart#update-the-cart-in-the-sheet)
+  ([#77](https://github.com/gmi-software/react-native-pay/issues/77)).
 - **Subscriptions and later payments.** `PaymentRequest` takes `recurring`, `deferred` or
   `automaticReload`, mapped to PassKit's `PKRecurringPaymentRequest`, `PKDeferredPaymentRequest`
   and `PKAutomaticReloadPaymentRequest` on iOS, and to Google Pay's `recurringTransactionInfo`,

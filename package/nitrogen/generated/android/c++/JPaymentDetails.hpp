@@ -50,12 +50,15 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> phoneNumber = this->getFieldValue(fieldPhoneNumber);
       static const auto fieldShippingMethod = clazz->getField<JShippingMethod>("shippingMethod");
       jni::local_ref<JShippingMethod> shippingMethod = this->getFieldValue(fieldShippingMethod);
+      static const auto fieldCouponCode = clazz->getField<jni::JString>("couponCode");
+      jni::local_ref<jni::JString> couponCode = this->getFieldValue(fieldCouponCode);
       return PaymentDetails(
         billingContact != nullptr ? std::make_optional(billingContact->toCpp()) : std::nullopt,
         shippingContact != nullptr ? std::make_optional(shippingContact->toCpp()) : std::nullopt,
         emailAddress != nullptr ? std::make_optional(emailAddress->toStdString()) : std::nullopt,
         phoneNumber != nullptr ? std::make_optional(phoneNumber->toStdString()) : std::nullopt,
-        shippingMethod != nullptr ? std::make_optional(shippingMethod->toCpp()) : std::nullopt
+        shippingMethod != nullptr ? std::make_optional(shippingMethod->toCpp()) : std::nullopt,
+        couponCode != nullptr ? std::make_optional(couponCode->toStdString()) : std::nullopt
       );
     }
 
@@ -65,7 +68,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentDetails::javaobject> fromCpp(const PaymentDetails& value) {
-      using JSignature = JPaymentDetails(jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JShippingMethod>);
+      using JSignature = JPaymentDetails(jni::alias_ref<JPaymentContact>, jni::alias_ref<JPaymentContact>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JShippingMethod>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -74,7 +77,8 @@ namespace margelo::nitro::pay {
         value.shippingContact.has_value() ? JPaymentContact::fromCpp(value.shippingContact.value()) : nullptr,
         value.emailAddress.has_value() ? jni::make_jstring(value.emailAddress.value()) : nullptr,
         value.phoneNumber.has_value() ? jni::make_jstring(value.phoneNumber.value()) : nullptr,
-        value.shippingMethod.has_value() ? JShippingMethod::fromCpp(value.shippingMethod.value()) : nullptr
+        value.shippingMethod.has_value() ? JShippingMethod::fromCpp(value.shippingMethod.value()) : nullptr,
+        value.couponCode.has_value() ? jni::make_jstring(value.couponCode.value()) : nullptr
       );
     }
   };

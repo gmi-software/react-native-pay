@@ -4,63 +4,6 @@ import XCTest
 
 final class PaymentRequestBuilderTests: XCTestCase {
 
-    private func item(_ label: String, _ amount: String, _ type: PaymentItemType = .final) -> PaymentItem {
-        return PaymentItem(label: label, amount: .second(amount), type: type, kind: nil)
-    }
-
-    private func method(
-        _ identifier: String,
-        _ label: String,
-        _ amount: String,
-        detail: String? = nil
-    ) -> ShippingMethod {
-        return ShippingMethod(identifier: identifier, label: label, amount: .second(amount), detail: detail)
-    }
-
-    private func paymentRequest(
-        items: [PaymentItem],
-        merchantIdentifier: String? = "merchant.com.example",
-        merchantName: String? = nil,
-        merchantCapabilities: [String] = ["3DS"],
-        supportedNetworks: [String] = ["visa"],
-        shippingType: String? = nil,
-        shippingMethods: [ShippingMethod]? = nil,
-        billingContactRequired: Bool? = nil,
-        shippingContactRequired: Bool? = nil,
-        emailRequired: Bool? = nil,
-        phoneNumberRequired: Bool? = nil,
-        recurring: RecurringPaymentRequest? = nil,
-        deferred: DeferredPaymentRequest? = nil,
-        automaticReload: AutomaticReloadPaymentRequest? = nil,
-        multiTokenContexts: [PaymentTokenContext]? = nil
-    ) -> PaymentRequest {
-        return PaymentRequest(
-            applePayMerchantIdentifier: merchantIdentifier,
-            merchantName: merchantName,
-            totalLabel: nil,
-            countryCode: "US",
-            currencyCode: "USD",
-            paymentItems: items,
-            merchantCapabilities: merchantCapabilities,
-            supportedNetworks: supportedNetworks,
-            shippingType: shippingType,
-            shippingMethods: shippingMethods,
-            billingContactRequired: billingContactRequired,
-            shippingContactRequired: shippingContactRequired,
-            emailRequired: emailRequired,
-            phoneNumberRequired: phoneNumberRequired,
-            recurring: recurring,
-            deferred: deferred,
-            automaticReload: automaticReload,
-            applePayMultiTokenContexts: multiTokenContexts,
-            googlePayMerchantId: nil,
-            googlePayEnvironment: nil,
-            googlePayGateway: nil,
-            googlePayGatewayMerchantId: nil,
-            googlePayAllowedAuthMethods: nil
-        )
-    }
-
     private func assertBuildFails(
         _ request: PaymentRequest,
         with message: String,
@@ -236,12 +179,9 @@ final class PaymentRequestBuilderTests: XCTestCase {
 
     func testSummaryIncludesTheSelectedShippingMethod() throws {
         let items = try PaymentRequestBuilder.buildSummaryItems(
-            for: paymentRequest(
-                items: [item("Coffee", "18.00"), item("Tax", "1.44")],
-                merchantName: "Coffee Shop",
-                shippingMethods: shippingMethods
-            ),
-            selectedShippingMethodIdentifier: "express",
+            [item("Coffee", "18.00"), item("Tax", "1.44")],
+            shippingMethod: shippingMethods[1],
+            merchantName: "Coffee Shop",
             laterCharges: []
         )
 
@@ -251,20 +191,13 @@ final class PaymentRequestBuilderTests: XCTestCase {
     }
 
     func testSummaryHasNoShippingLineWithoutASelectedMethod() throws {
-        let request = paymentRequest(
-            items: [item("Coffee", "18.00")],
+        let items = try PaymentRequestBuilder.buildSummaryItems(
+            [item("Coffee", "18.00")],
+            shippingMethod: nil,
             merchantName: "Coffee Shop",
-            shippingMethods: shippingMethods
+            laterCharges: []
         )
-
-        for identifier in [nil, "unknown"] {
-            let items = try PaymentRequestBuilder.buildSummaryItems(
-                for: request,
-                selectedShippingMethodIdentifier: identifier,
-                laterCharges: []
-            )
-            XCTAssertEqual(summary(items), ["Coffee 18", "Coffee Shop 18"])
-        }
+        XCTAssertEqual(summary(items), ["Coffee 18", "Coffee Shop 18"])
     }
 
     func testIgnoresAnEmptyShippingMethodList() throws {
@@ -281,22 +214,22 @@ final class PaymentRequestBuilderTests: XCTestCase {
     func testRejectsInvalidShippingMethods() {
         let coffee = [item("Coffee", "18.00")]
         assertBuildFails(
-            paymentRequest(items: coffee, shippingMethods: [method(" ", "Standard", "0")]),
+            paymentRequest(items: coffee, shippingMethods: [shippingMethod(" ", "Standard", "0")]),
             with: "Shipping method \"Standard\" needs an identifier"
         )
         assertBuildFails(
             paymentRequest(items: coffee, shippingMethods: [
-                method("express", "Express", "7.50"),
-                method("express", "Express (again)", "9.00"),
+                shippingMethod("express", "Express", "7.50"),
+                shippingMethod("express", "Express (again)", "9.00"),
             ]),
             with: "Shipping method identifier \"express\" is used more than once"
         )
         assertBuildFails(
-            paymentRequest(items: coffee, shippingMethods: [method("pickup", "Pickup", "-1.00")]),
+            paymentRequest(items: coffee, shippingMethods: [shippingMethod("pickup", "Pickup", "-1.00")]),
             with: "Amount for \"Pickup\" must not be negative"
         )
         assertBuildFails(
-            paymentRequest(items: coffee, shippingMethods: [method("express", "Express", "7,50")]),
+            paymentRequest(items: coffee, shippingMethods: [shippingMethod("express", "Express", "7,50")]),
             with: "Amount for \"Express\" must be a finite number or a decimal string like \"19.99\""
         )
     }
@@ -306,7 +239,7 @@ final class PaymentRequestBuilderTests: XCTestCase {
         assertBuildFails(
             paymentRequest(
                 items: [item("Coffee", "4.99"), item("Discount", "-10.00")],
-                shippingMethods: [method("express", "Express", "6.00"), method("standard", "Standard", "0")]
+                shippingMethods: [shippingMethod("express", "Express", "6.00"), shippingMethod("standard", "Standard", "0")]
             ),
             with: "Payment total must not be negative"
         )
@@ -555,8 +488,9 @@ final class PaymentRequestBuilderTests: XCTestCase {
         guard #available(iOS 16.0, *) else { return assertNotAvailable(request) }
         // As the delegate rebuilds it when the payer picks another method.
         let items = try PaymentRequestBuilder.buildSummaryItems(
-            for: request,
-            selectedShippingMethodIdentifier: "express",
+            request.paymentItems,
+            shippingMethod: shippingMethods[1],
+            merchantName: "Shop",
             laterCharges: MerchantTokenRequestBuilder.laterCharges(of: PaymentRequestBuilder.build(from: request))
         )
 
@@ -622,8 +556,8 @@ final class PaymentRequestBuilderTests: XCTestCase {
 
     func testAddsASharedShippingAmountToTheMultiTokenTotal() throws {
         let sameAmount = [
-            method("standard", "Standard", "5.00"),
-            method("express", "Express", "5"),
+            shippingMethod("standard", "Standard", "5.00"),
+            shippingMethod("express", "Express", "5"),
         ]
         let input = paymentRequest(
             items: [item("Starter kit", "10.00")],

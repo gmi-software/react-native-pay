@@ -27,7 +27,8 @@ class AuthorizationAttemptTest {
         shippingContact = null,
         emailAddress = null,
         phoneNumber = null,
-        shippingMethod = null
+        shippingMethod = null,
+        couponCode = null
     )
 
     private val settled = mutableListOf<PaymentResult>()
