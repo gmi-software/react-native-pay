@@ -9,11 +9,9 @@ All notable changes to this project are documented in this file.
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
   invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it
-  has none) for a failed `PaymentResult`. `startPayment` still returns `null` for an empty cart, an
-  invalid request or a throw, and still returns a failed `PaymentResult` as it is. `message` is
-  unchanged. `error` keeps its `Error | null` type: narrow it with `error instanceof PaymentError`
-  before reading `code`, from the render after the update
-  ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
+  has none) for a failed `PaymentResult`. `message` is unchanged. `error` keeps its `Error | null`
+  type: narrow it with `error instanceof PaymentError` before reading `code`, from the render after
+  the update ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
 - **Cart updates in the Apple Pay sheet.** `StartPaymentOptions` and the `usePaymentCheckout`
   config take `onShippingAddressChange`, `onShippingMethodChange`, `onPaymentMethodChange` and
   `onCouponCodeChange`. Each gets the change and a `PaymentSheetSelection` of everything chosen so
@@ -46,6 +44,16 @@ All notable changes to this project are documented in this file.
   it. See the [guide](https://gmi-software.github.io/react-native-pay/docs/guides/multi-merchant).
 
 ### Changed
+
+- **Breaking: `usePaymentCheckout().startPayment` never returns `null`.** An empty cart, an invalid
+  request, a throwing in-progress check or a native throw now resolves with
+  `{ status: 'failed', code, success: false, error }`, where `code` and `error` match the
+  `PaymentError` the hook sets: `'CONFIGURATION'` for an empty cart or an invalid request, as
+  `HybridPaymentHandler` returns for an invalid request, and `'UNKNOWN'` for a throw. The hook
+  also sets `result` to that failed result, so an earlier success no longer stays in `result`
+  next to the new `error`. The return type is `Promise<PaymentResult>`, and the caller can branch on
+  `code` without waiting for the next render
+  ([#65](https://github.com/gmi-software/react-native-pay/issues/65)).
 
 - **`usePaymentCheckout` wraps a thrown error.** When native code, the request validation or the
   in-progress check throws, `error` is a `PaymentError` that holds the thrown value as
@@ -85,6 +93,9 @@ All notable changes to this project are documented in this file.
    token.
 2. If you logged it or sent it to your server, drop it. On iOS, `result.token.transactionIdentifier`
    is Apple's identifier for the payment; it is missing on Android.
+3. Replace `null` checks on what `usePaymentCheckout().startPayment()` returns, such as
+   `if (!result)` or `result === null`, which no longer match: check
+   `result.status === 'failed'` and read `result.code`. `result?.status` still works.
 
 ### Fixed
 

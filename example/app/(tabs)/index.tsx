@@ -130,7 +130,7 @@ export default function TabOneScreen() {
     setPaidWithServer(withServer);
     const paymentResult = await startPayment();
 
-    if (paymentResult?.status === "success") {
+    if (paymentResult.status === "success") {
       const card = paymentResult.token?.paymentMethod.displayName ?? "your card";
       Alert.alert(
         withServer ? "Payment Successful!" : "Authorized (no server)",
@@ -148,7 +148,7 @@ export default function TabOneScreen() {
         ],
       );
     } else if (
-      paymentResult?.status === "failed" &&
+      paymentResult.status === "failed" &&
       paymentResult.code !== "IN_PROGRESS"
     ) {
       Alert.alert(

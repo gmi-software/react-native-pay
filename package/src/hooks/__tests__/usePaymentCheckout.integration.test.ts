@@ -135,7 +135,13 @@ describe('usePaymentCheckout integration', () => {
       paymentResult = await result.current.startPayment()
     })
 
-    expect(paymentResult).toBeNull()
+    expect(paymentResult).toEqual({
+      status: 'failed',
+      code: 'CONFIGURATION',
+      success: false,
+      error: 'Cart is empty',
+    })
+    expect(result.current.result).toEqual(paymentResult)
     expect(result.current.error).toBeInstanceOf(PaymentError)
     expect(result.current.error).toMatchObject({
       message: 'Cart is empty',
@@ -261,9 +267,15 @@ describe('usePaymentCheckout integration', () => {
         paymentResult = await result.current.startPayment()
       })
 
-      expect(paymentResult).toBeNull()
+      expect(paymentResult).toEqual({
+        status: 'failed',
+        code: 'CONFIGURATION',
+        success: false,
+        error: expect.stringContaining(message),
+      })
+      expect(result.current.result).toEqual(paymentResult)
       expect(result.current.error).toBeInstanceOf(PaymentError)
-      expect(result.current.error?.message).toContain(message)
+      expect(result.current.error?.message).toBe(paymentResult.error)
       expect(result.current.error).toHaveProperty('code', 'CONFIGURATION')
       expect(result.current.error?.cause).toBeInstanceOf(Error)
       expect(result.current.isProcessing).toBe(false)
@@ -288,6 +300,36 @@ describe('usePaymentCheckout integration', () => {
       'more than 0 decimal places'
     )
     expect(mockStartPayment).not.toHaveBeenCalled()
+  })
+
+  it('replaces an earlier result when the next payment cannot start', async () => {
+    const nativeSuccess = { status: 'success', success: true }
+    mockStartPayment.mockResolvedValueOnce(nativeSuccess)
+    const { result } = renderCheckout()
+
+    act(() => {
+      result.current.addItem('Order', 5)
+    })
+    await act(async () => {
+      await result.current.startPayment()
+    })
+    expect(result.current.result).toEqual(nativeSuccess)
+
+    act(() => {
+      result.current.clearItems()
+    })
+    let paymentResult: any = 'not-called'
+    await act(async () => {
+      paymentResult = await result.current.startPayment()
+    })
+
+    expect(paymentResult).toMatchObject({
+      status: 'failed',
+      code: 'CONFIGURATION',
+    })
+    expect(result.current.result).toEqual(paymentResult)
+    expect(result.current.error).toHaveProperty('code', 'CONFIGURATION')
+    expect(mockStartPayment).toHaveBeenCalledTimes(1)
   })
 
   it('starts the next payment after an amount is rejected', async () => {
@@ -859,7 +901,13 @@ describe('usePaymentCheckout integration', () => {
       paymentResult = await result.current.startPayment()
     })
 
-    expect(paymentResult).toBeNull()
+    expect(paymentResult).toEqual({
+      status: 'failed',
+      code: 'UNKNOWN',
+      success: false,
+      error: 'Payment processing failed',
+    })
+    expect(result.current.result).toEqual(paymentResult)
     expect(result.current.error).toBeInstanceOf(PaymentError)
     expect(result.current.error).toMatchObject({
       message: 'Payment processing failed',
@@ -882,7 +930,13 @@ describe('usePaymentCheckout integration', () => {
       paymentResult = await result.current.startPayment()
     })
 
-    expect(paymentResult).toBeNull()
+    expect(paymentResult).toEqual({
+      status: 'failed',
+      code: 'UNKNOWN',
+      success: false,
+      error: 'Bridge torn down',
+    })
+    expect(result.current.result).toEqual(paymentResult)
     expect(result.current.error).toBeInstanceOf(PaymentError)
     expect(result.current.error).toMatchObject({
       message: 'Bridge torn down',
@@ -1048,7 +1102,13 @@ describe('usePaymentCheckout integration', () => {
       paymentResult = await result.current.startPayment()
     })
 
-    expect(paymentResult).toBeNull()
+    expect(paymentResult).toEqual({
+      status: 'failed',
+      code: 'UNKNOWN',
+      success: false,
+      error: 'Native unavailable',
+    })
+    expect(result.current.result).toEqual(paymentResult)
     expect(result.current.error).toBeInstanceOf(PaymentError)
     expect(result.current.error).toMatchObject({
       message: 'Native unavailable',

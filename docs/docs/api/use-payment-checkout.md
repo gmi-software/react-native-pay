@@ -79,7 +79,7 @@ interface UsePaymentCheckoutReturn {
   clearItems: () => void
 
   // Payment
-  startPayment: () => Promise<PaymentResult | null>
+  startPayment: () => Promise<PaymentResult>
   isProcessing: boolean
   result: PaymentResult | null   // last result; check result.status
   error: Error | null            // a PaymentError with a `code`; null after a cancel
@@ -97,16 +97,16 @@ interface UsePaymentCheckoutReturn {
 
 Which button to show for each combination is in [Check availability](/docs/guides/availability).
 - **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.
-- **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult | null>`.
-  - Returns `null` and sets `error` with `code: 'CONFIGURATION'` when the cart is empty.
-  - Returns `null` and sets `error` with `code: 'CONFIGURATION'`, without opening the sheet, when an amount is invalid or the total is negative (see [`PaymentAmount`](/docs/api/types#paymentamount)). The validation error is in `error.cause`.
-  - Returns the native `PaymentResult` when the sheet closes. Check `status` and `code` (see [Error codes](/docs/payment-flow#error-codes)).
+- **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult>` and never rejects, so check `status` and `code` (see [Error codes](/docs/payment-flow#error-codes)). Except for `'IN_PROGRESS'`, it also sets `result` to what it returns, and sets `error` to a `PaymentError` with its `code` whenever `status` is `'failed'` (`'UNKNOWN'` if a native result has none).
+  - Returns `{ status: 'failed', code: 'CONFIGURATION', success: false, error: 'Cart is empty' }` when the cart is empty.
+  - Returns `status: 'failed'` and `code: 'CONFIGURATION'`, without opening the sheet, when an amount is invalid or the total is negative (see [`PaymentAmount`](/docs/api/types#paymentamount)). `error` holds the validation message, and the validation error is in the hook's `error.cause`. [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) returns the same result.
+  - Returns the native `PaymentResult` when the sheet closes.
   - A cancel returns `status: 'cancelled'` and `code: 'CANCELLED'`. It sets `result` but leaves `error` as `null`, so the user closing the sheet doesn't show up as a failed payment.
   - Any other failure from the native flow returns `status: 'failed'` with its `code`, and sets `error` with the same `code` and the result's message. A result without them gets `code: 'UNKNOWN'` and the message `'Payment failed'`.
-  - Returns `null` and sets `error` with `code: 'UNKNOWN'` if an exception is thrown while starting/processing the payment. What was thrown is in `error.cause`.
+  - Returns `status: 'failed'` and `code: 'UNKNOWN'` if an exception is thrown while starting/processing the payment, with the thrown message in `error` (`'Payment processing failed'` if it wasn't an `Error`). What was thrown is in the hook's `error.cause`.
   - With `onAuthorize`, resolves after your callback settles. A `'failure'` result becomes `{ status: 'failed', code: 'PROVIDER_ERROR', error }` and sets `error`.
   - Returns `{ status: 'failed', code: 'IN_PROGRESS', success: false, error: 'A payment is already in progress' }` without opening a second sheet if a payment is still in flight, whether this hook, another `usePaymentCheckout` or [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) started it. `isProcessing`, `result` and `error` stay as they were. This check comes first, so it also applies when the cart is empty.
-- **error** — A [`PaymentError`](/docs/api/types#paymenterror) whenever it is set. Its `code` uses the [error codes](/docs/payment-flow#error-codes) of `PaymentResult`, so it tells you why `startPayment()` returned `null`. It is state: read it in the render after `startPayment()` settles, and narrow it with `instanceof PaymentError` to read `code`.
+- **error** — A [`PaymentError`](/docs/api/types#paymenterror) whenever it is set. Its `code` uses the [error codes](/docs/payment-flow#error-codes) of `PaymentResult` and matches the failed result's `code`. It is state: read it in the render after `startPayment()` settles, and narrow it with `instanceof PaymentError` to read `code`.
 - **paymentRequest** / **startPayment** — Keep their identity until a config value or the cart changes. The hook compares the config by value (arrays such as `supportedNetworks` by content), so an inline config object is fine, and both are safe as hook dependencies and props of memoized components.
 - **reset()** — Clears `result` and `error` (does not clear cart). It does not clear `isProcessing` while a payment is in flight; `isProcessing` becomes `false` when that payment settles. Call it after `startPayment()` resolves, once you no longer need `result`, so the token doesn't stay in the hook's state. Calling it inside `onAuthorize` is too early: the hook stores the result after the callback settles.
 
@@ -147,17 +147,17 @@ addItems([
 ])
 
 const result = await startPayment()
-if (result?.status === 'success' && result.token) {
+if (result.status === 'success' && result.token) {
   // Send result.token to your server, then drop it from the hook's state.
   reset()
 }
 // 'cancelled': the user closed the sheet; `error` stays null.
-// 'failed': `error` is set, and result.code says why.
+// 'failed': result.code says why, and `error` is set with the same code.
 ```
 
 ## Empty cart
 
-If you call `startPayment()` when `items.length === 0`, the hook sets `error` to a “Cart is empty” error and returns `null`. Add at least one item before starting payment.
+If you call `startPayment()` when `items.length === 0`, it returns `status: 'failed'` with `code: 'CONFIGURATION'` and sets `error` to a “Cart is empty” error. Add at least one item before starting payment.
 
 ## Hook vs low-level API
 
