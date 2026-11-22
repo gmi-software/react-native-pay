@@ -6,6 +6,8 @@
   "validAttributes": {
     "buttonType": true,
     "buttonStyle": true,
+    "disableCardArt": true,
+    "cornerRadius": true,
     "onPress": true,
     "hybridRef": true
   }

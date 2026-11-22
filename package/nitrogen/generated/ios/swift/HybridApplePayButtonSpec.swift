@@ -12,6 +12,8 @@ public protocol HybridApplePayButtonSpec_protocol: HybridObject, HybridView {
   // Properties
   var buttonType: ApplePayButtonType { get set }
   var buttonStyle: ApplePayButtonStyle { get set }
+  var disableCardArt: Bool? { get set }
+  var cornerRadius: Double? { get set }
   var onPress: (() -> Void)? { get set }
 
   // Methods

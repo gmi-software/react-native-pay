@@ -18,8 +18,8 @@
 
 #include "ApplePayButtonType.hpp"
 #include "ApplePayButtonStyle.hpp"
-#include <functional>
 #include <optional>
+#include <functional>
 #include <memory>
 #include "HybridApplePayButtonSpec.hpp"
 
@@ -45,6 +45,8 @@ namespace margelo::nitro::pay::views {
   public:
     CachedProp<ApplePayButtonType> buttonType;
     CachedProp<ApplePayButtonStyle> buttonStyle;
+    CachedProp<std::optional<bool>> disableCardArt;
+    CachedProp<std::optional<double>> cornerRadius;
     CachedProp<std::optional<std::function<void()>>> onPress;
     CachedProp<std::optional<std::function<void(const std::shared_ptr<HybridApplePayButtonSpec>& /* ref */)>>> hybridRef;
 

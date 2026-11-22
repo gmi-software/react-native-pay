@@ -12,6 +12,8 @@ Renders the system Apple Pay button. Only available on iOS.
 |------|------|----------|-------------|
 | `buttonType` | `ApplePayButtonType` | Yes | Button label type. |
 | `buttonStyle` | `ApplePayButtonStyle` | Yes | Visual style. |
+| `disableCardArt` | `boolean` | No | iOS 26+: show the plain button instead of the payer's default card. Defaults to `false`. See [Card art](#card-art). |
+| `cornerRadius` | `number` | No | Corner radius in points. Defaults to the system radius. |
 | `onPress` | `() => void` | No | Called when the user taps the button. |
 | `disabled` | `boolean` | No | Ignores taps while `true`. See [Disabled buttons](#disabled-buttons). |
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
@@ -34,10 +36,19 @@ const handlePayment = async () => {
 <ApplePayButton
   buttonType="buy"
   buttonStyle="black"
+  cornerRadius={24}
   onPress={handlePayment}
   style={{ width: '100%', height: 48 }}
 />
 ```
+
+`cornerRadius={24}` on a 48 pt high button gives a capsule. Set the radius with this prop, not by clipping the button in a `View` with `borderRadius` and `overflow: 'hidden'`: Apple's guidelines ask apps not to crop the Apple Pay button.
+
+### Card art
+
+From iOS 26 the button can show the payer's default card from Wallet instead of the plain Apple Pay label. iOS picks this on its own; it is the default. Pass `disableCardArt` when your layout needs the plain button, for example a white button on a branded background. Earlier iOS versions ignore the prop.
+
+Card art only shows on a real device with a card in Wallet. The simulator always shows the plain button, so check this prop on a device.
 
 ---
 

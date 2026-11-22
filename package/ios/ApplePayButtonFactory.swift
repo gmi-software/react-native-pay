@@ -35,18 +35,36 @@ enum ApplePayButtonFactory {
     }
     
     /// Creates a configured PKPaymentButton
+    ///
+    /// `disableCardArt` takes effect on iOS 26 and later, where the button can
+    /// show the payer's default card instead of the plain label.
     static func createButton(
         type: ApplePayButtonType,
         style: ApplePayButtonStyle,
+        disableCardArt: Bool,
         target: Any?,
         action: Selector
     ) -> PKPaymentButton {
         let pkButtonType = mapButtonType(type)
         let pkButtonStyle = mapButtonStyle(style)
-        let button = PKPaymentButton(paymentButtonType: pkButtonType, paymentButtonStyle: pkButtonStyle)
+        let button = makeButton(type: pkButtonType, style: pkButtonStyle, disableCardArt: disableCardArt)
         button.addTarget(target, action: action, for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
+    }
+
+    private static func makeButton(
+        type: PKPaymentButtonType,
+        style: PKPaymentButtonStyle,
+        disableCardArt: Bool
+    ) -> PKPaymentButton {
+        // The iOS 26 initializer is only in the iOS 26 SDK, which ships with Swift 6.2 (Xcode 26).
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            return PKPaymentButton(type: type, style: style, disableCardArt: disableCardArt)
+        }
+        #endif
+        return PKPaymentButton(paymentButtonType: type, paymentButtonStyle: style)
     }
 }
 

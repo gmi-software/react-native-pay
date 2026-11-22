@@ -18,6 +18,10 @@ namespace margelo::nitro::pay {
       prototype.registerHybridSetter("buttonType", &HybridApplePayButtonSpec::setButtonType);
       prototype.registerHybridGetter("buttonStyle", &HybridApplePayButtonSpec::getButtonStyle);
       prototype.registerHybridSetter("buttonStyle", &HybridApplePayButtonSpec::setButtonStyle);
+      prototype.registerHybridGetter("disableCardArt", &HybridApplePayButtonSpec::getDisableCardArt);
+      prototype.registerHybridSetter("disableCardArt", &HybridApplePayButtonSpec::setDisableCardArt);
+      prototype.registerHybridGetter("cornerRadius", &HybridApplePayButtonSpec::getCornerRadius);
+      prototype.registerHybridSetter("cornerRadius", &HybridApplePayButtonSpec::setCornerRadius);
       prototype.registerHybridGetter("onPress", &HybridApplePayButtonSpec::getOnPress);
       prototype.registerHybridSetter("onPress", &HybridApplePayButtonSpec::setOnPress);
     });

@@ -19,8 +19,8 @@ namespace margelo::nitro::pay { enum class ApplePayButtonStyle; }
 
 #include "ApplePayButtonType.hpp"
 #include "ApplePayButtonStyle.hpp"
-#include <functional>
 #include <optional>
+#include <functional>
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -81,6 +81,20 @@ namespace margelo::nitro::pay {
     }
     inline void setButtonStyle(ApplePayButtonStyle buttonStyle) noexcept override {
       _swiftPart.setButtonStyle(static_cast<int>(buttonStyle));
+    }
+    inline std::optional<bool> getDisableCardArt() noexcept override {
+      auto __result = _swiftPart.getDisableCardArt();
+      return __result;
+    }
+    inline void setDisableCardArt(std::optional<bool> disableCardArt) noexcept override {
+      _swiftPart.setDisableCardArt(disableCardArt);
+    }
+    inline std::optional<double> getCornerRadius() noexcept override {
+      auto __result = _swiftPart.getCornerRadius();
+      return __result;
+    }
+    inline void setCornerRadius(std::optional<double> cornerRadius) noexcept override {
+      _swiftPart.setCornerRadius(cornerRadius);
     }
     inline std::optional<std::function<void()>> getOnPress() noexcept override {
       auto __result = _swiftPart.getOnPress();
