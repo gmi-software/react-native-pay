@@ -49,7 +49,7 @@ namespace margelo::nitro::pay {
   using namespace facebook;
 
   /**
-   * Represents the Java/Kotlin callback `(method: ShippingMethod, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>`.
+   * Represents the Java/Kotlin callback `(shippingMethod: ShippingMethod, selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>`.
    * This can be passed around between C++ and Java/Kotlin.
    */
   struct JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection: public jni::JavaClass<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection> {
@@ -60,9 +60,9 @@ namespace margelo::nitro::pay {
     /**
      * Invokes the function this `JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection` instance holds through JNI.
      */
-    std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> invoke(const ShippingMethod& method, const PaymentSheetSelection& selection) const {
-      static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JShippingMethod> /* method */, jni::alias_ref<JPaymentSheetSelection> /* selection */)>("invoke");
-      auto __result = method(self(), JShippingMethod::fromCpp(method), JPaymentSheetSelection::fromCpp(selection));
+    std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> invoke(const ShippingMethod& shippingMethod, const PaymentSheetSelection& selection) const {
+      static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JShippingMethod> /* shippingMethod */, jni::alias_ref<JPaymentSheetSelection> /* selection */)>("invoke");
+      auto __result = method(self(), JShippingMethod::fromCpp(shippingMethod), JPaymentSheetSelection::fromCpp(selection));
       return [&]() {
         auto __promise = Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>::create();
         __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
@@ -94,7 +94,7 @@ namespace margelo::nitro::pay {
    */
   class JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx final: public jni::HybridClass<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx, JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection> {
   public:
-    static jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::javaobject> fromCpp(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>& func) {
+    static jni::local_ref<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::javaobject> fromCpp(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>& func) {
       return JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::newObjectCxxArgs(func);
     }
 
@@ -102,8 +102,8 @@ namespace margelo::nitro::pay {
     /**
      * Invokes the C++ `std::function<...>` this `JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx` instance holds.
      */
-    jni::local_ref<JPromise::javaobject> invoke_cxx(jni::alias_ref<JShippingMethod> method, jni::alias_ref<JPaymentSheetSelection> selection) {
-      std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> __result = _func(method->toCpp(), selection->toCpp());
+    jni::local_ref<JPromise::javaobject> invoke_cxx(jni::alias_ref<JShippingMethod> shippingMethod, jni::alias_ref<JPaymentSheetSelection> selection) {
+      std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> __result = _func(shippingMethod->toCpp(), selection->toCpp());
       return [&]() {
         jni::local_ref<JPromise::javaobject> __localPromise = JPromise::create();
         jni::global_ref<JPromise::javaobject> __promise = jni::make_global(__localPromise);
@@ -131,7 +131,7 @@ namespace margelo::nitro::pay {
 
   public:
     [[nodiscard]]
-    inline const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>& getFunction() const {
+    inline const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>& getFunction() const {
       return _func;
     }
 
@@ -142,11 +142,11 @@ namespace margelo::nitro::pay {
     }
 
   private:
-    explicit JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>& func): _func(func) { }
+    explicit JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx(const std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>& func): _func(func) { }
 
   private:
     friend HybridBase;
-    std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)> _func;
+    std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)> _func;
   };
 
 } // namespace margelo::nitro::pay

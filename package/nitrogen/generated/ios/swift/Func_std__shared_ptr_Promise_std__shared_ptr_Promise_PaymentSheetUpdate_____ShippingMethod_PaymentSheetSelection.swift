@@ -8,21 +8,21 @@
 import NitroModules
 
 /**
- * Wraps a Swift `(_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>` as a class.
+ * Wraps a Swift `(_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>` as a class.
  * This class can be used from C++, e.g. to wrap the Swift closure as a `std::function`.
  */
 public final class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection {
   public typealias bridge = margelo.nitro.pay.bridge.swift
 
-  private let closure: (_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>
+  private let closure: (_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>
 
-  public init(_ closure: @escaping (_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>) {
+  public init(_ closure: @escaping (_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>) {
     self.closure = closure
   }
 
   @inline(__always)
-  public func call(method: ShippingMethod, selection: PaymentSheetSelection) -> bridge.std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____ {
-    let __result: Promise<Promise<PaymentSheetUpdate>> = self.closure(method, selection)
+  public func call(shippingMethod: ShippingMethod, selection: PaymentSheetSelection) -> bridge.std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____ {
+    let __result: Promise<Promise<PaymentSheetUpdate>> = self.closure(shippingMethod, selection)
     return { () -> bridge.std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____ in
       let __promise = bridge.create_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____()
       let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate____(__promise)

@@ -113,11 +113,11 @@ namespace margelo::nitro::pay::bridge::swift {
     };
   }
   
-  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)>
+  // pragma MARK: std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)>
   Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroPay::Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection::fromUnsafe(swiftClosureWrapper);
-    return [swiftClosure = std::move(swiftClosure)](const ShippingMethod& method, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
-      auto __result = swiftClosure.call(method, selection);
+    return [swiftClosure = std::move(swiftClosure)](const ShippingMethod& shippingMethod, const PaymentSheetSelection& selection) mutable -> std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>> {
+      auto __result = swiftClosure.call(shippingMethod, selection);
       return __result;
     };
   }

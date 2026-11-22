@@ -18,7 +18,7 @@ public extension StartPaymentOptions {
   /**
    * Create a new instance of `StartPaymentOptions`.
    */
-  init(onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?, onShippingAddressChange: ((_ address: PaymentSheetAddress, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onShippingMethodChange: ((_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onPaymentMethodChange: ((_ card: PaymentSheetCard, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onCouponCodeChange: ((_ couponCode: String, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?) {
+  init(onAuthorize: ((_ token: PaymentToken, _ details: PaymentDetails) -> Promise<Promise<PaymentAuthorizationResult>>)?, onShippingAddressChange: ((_ address: PaymentSheetAddress, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onShippingMethodChange: ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onPaymentMethodChange: ((_ card: PaymentSheetCard, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?, onCouponCodeChange: ((_ couponCode: String, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)?) {
     self.init({ () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______ in
       if let __unwrappedValue = onAuthorize {
         return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____const_PaymentToken_____token_____const_PaymentDetails_____details______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentAuthorizationResult_____PaymentToken_PaymentDetails in
@@ -37,9 +37,9 @@ public extension StartPaymentOptions {
       } else {
         return .init()
       }
-    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______ in
+    }(), { () -> bridge.std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______ in
       if let __unwrappedValue = onShippingMethodChange {
-        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection in
+        return bridge.create_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______({ () -> bridge.Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection in
           let __closureWrapper = Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__unwrappedValue)
           return bridge.create_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__closureWrapper.toUnsafe())
         }())
@@ -144,14 +144,14 @@ public extension StartPaymentOptions {
   }
   
   @inline(__always)
-  var onShippingMethodChange: ((_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
-    return { () -> ((_ method: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
-      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange) {
-        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____method_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange)
+  var onShippingMethodChange: ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? {
+    return { () -> ((_ shippingMethod: ShippingMethod, _ selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>)? in
+      if bridge.has_value_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange) {
+        let __unwrapped = bridge.get_std__optional_std__function_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____const_ShippingMethod_____shippingMethod_____const_PaymentSheetSelection_____selection______(self.__onShippingMethodChange)
         return { () -> (ShippingMethod, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
           let __wrappedFunction = bridge.wrap_Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection(__unwrapped)
-          return { (__method: ShippingMethod, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
-            let __result = __wrappedFunction.call(__method, __selection)
+          return { (__shippingMethod: ShippingMethod, __selection: PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>> in
+            let __result = __wrappedFunction.call(__shippingMethod, __selection)
             return { () -> Promise<Promise<PaymentSheetUpdate>> in
               let __promise = Promise<Promise<PaymentSheetUpdate>>()
               let __resolver = { (__result: Promise<PaymentSheetUpdate>) in

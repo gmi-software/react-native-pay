@@ -127,7 +127,7 @@ namespace margelo::nitro::pay {
             return JNICallable<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetAddress_PaymentSheetSelection, std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(PaymentSheetAddress, PaymentSheetSelection)>(std::move(onShippingAddressChangeRef));
           }
         }()) : std::nullopt,
-        onShippingMethodChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* method */, const PaymentSheetSelection& /* selection */)> {
+        onShippingMethodChange != nullptr ? std::make_optional([&]() -> std::function<std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>(const ShippingMethod& /* shippingMethod */, const PaymentSheetSelection& /* selection */)> {
           if (onShippingMethodChange->isInstanceOf(JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::javaClassStatic())) [[likely]] {
             auto downcast = jni::static_ref_cast<JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_cxx::javaobject>(onShippingMethodChange);
             return downcast->cthis()->getFunction();

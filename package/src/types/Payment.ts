@@ -543,7 +543,7 @@ export interface StartPaymentOptions {
    * now; Android ignores it (#72).
    */
   onShippingMethodChange?: (
-    method: ShippingMethod,
+    shippingMethod: ShippingMethod,
     selection: PaymentSheetSelection
   ) => Promise<PaymentSheetUpdate>
   /**

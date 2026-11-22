@@ -14,7 +14,7 @@ import dalvik.annotation.optimization.FastNative
 import com.margelo.nitro.core.Promise
 
 /**
- * Represents the JavaScript callback `(method: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
+ * Represents the JavaScript callback `(shippingMethod: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
  * This can be either implemented in C++ (in which case it might be a callback coming from JS),
  * or in Kotlin/Java (in which case it is a native callback).
  */
@@ -28,11 +28,11 @@ fun interface Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetU
    */
   @DoNotStrip
   @Keep
-  override fun invoke(method: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
+  override fun invoke(shippingMethod: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
 }
 
 /**
- * Represents the JavaScript callback `(method: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
+ * Represents the JavaScript callback `(shippingMethod: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
  * This is implemented in C++, via a `std::function<...>`.
  * The callback might be coming from JS.
  */
@@ -56,15 +56,15 @@ class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate___
 
   @DoNotStrip
   @Keep
-  override fun invoke(method: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
-    = invoke_cxx(method,selection)
+  override fun invoke(shippingMethod: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
+    = invoke_cxx(shippingMethod,selection)
 
   @FastNative
-  private external fun invoke_cxx(method: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
+  private external fun invoke_cxx(shippingMethod: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>>
 }
 
 /**
- * Represents the JavaScript callback `(method: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
+ * Represents the JavaScript callback `(shippingMethod: struct, selection: struct) => std::shared_ptr<Promise<std::shared_ptr<Promise<PaymentSheetUpdate>>>>`.
  * This is implemented in Java/Kotlin, via a `(ShippingMethod, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>`.
  * The callback is always coming from native.
  */
@@ -74,7 +74,7 @@ class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate___
 class Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection_java(private val function: (ShippingMethod, PaymentSheetSelection) -> Promise<Promise<PaymentSheetUpdate>>): Func_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection {
   @DoNotStrip
   @Keep
-  override fun invoke(method: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>> {
-    return this.function(method, selection)
+  override fun invoke(shippingMethod: ShippingMethod, selection: PaymentSheetSelection): Promise<Promise<PaymentSheetUpdate>> {
+    return this.function(shippingMethod, selection)
   }
 }
