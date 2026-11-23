@@ -39,6 +39,10 @@ interface UsePaymentCheckoutConfig {
   emailRequired?: boolean
   phoneNumberRequired?: boolean
   couponCode?: string           // iOS: a code already applied
+  // Charge again later; set at most one
+  recurring?: RecurringPaymentRequest
+  deferred?: DeferredPaymentRequest
+  automaticReload?: AutomaticReloadPaymentRequest
   // Charge the token before the sheet closes
   onAuthorize?: (
     token: PaymentToken,
@@ -66,6 +70,7 @@ interface UsePaymentCheckoutConfig {
 - **onAuthorize** — Called with the token and the requested contact details after the user authorizes the payment. Charge it on your server and resolve with `{ status: 'success' }` or `{ status: 'failure', error }`. See [Charge before the sheet closes](/docs/guides/server-processing#charge-before-the-sheet-closes). An inline function is fine: `startPayment()` uses the one from the latest render, and a payment keeps that function until it settles, even if the config changes meanwhile.
 - **onShippingAddressChange**, **onShippingMethodChange**, **onPaymentMethodChange**, **onCouponCodeChange** — Update the cart while the sheet is open, as in [`StartPaymentOptions`](/docs/api/types#startpaymentoptions). What they return changes only the sheet: `items` stays as you set it, so a coupon the payer tried and then cancelled leaves no discount behind. Inline functions are fine, as for `onAuthorize`. Android has no coupon field and differs in a few ways; see [On Android](/docs/guides/dynamic-cart#on-android). See [Update the cart in the sheet](/docs/guides/dynamic-cart#update-the-cart-in-the-sheet).
 - **couponCode** — A coupon code already applied, shown in the sheet's coupon field. `items` must already include its discount. Needs `onCouponCodeChange`. iOS only.
+- **recurring**, **deferred**, **automaticReload** — Charge the payer again later: a subscription, a payment on a later date, or a balance top-up. Set at most one. `items` stay what the payer pays today, and the cart may then be empty, as in a free trial. The hook compares them by value, `Date`s included, so build the dates once, for example in a `useState` initializer: a `new Date(...)` built on every render gives a new `paymentRequest` and `startPayment` on every render. A date that has passed by the time the payer taps fails with `'CONFIGURATION'`. See [Subscriptions and later payments](/docs/guides/merchant-tokens).
 
 ## Return value
 
@@ -106,7 +111,7 @@ interface UsePaymentCheckoutReturn {
 Which button to show for each combination is in [Check availability](/docs/guides/availability).
 - **items** / **total** — Current cart and its exact decimal total, as a number (`NaN` if an amount is invalid). Amounts are `number | string` ([`PaymentAmount`](/docs/api/types#paymentamount)); use `formatAmount(item.amount, currencyCode)` to display them.
 - **startPayment()** — Opens the native sheet. Returns `Promise<PaymentResult>` and never rejects, so check `status` and `code` (see [Error codes](/docs/payment-flow#error-codes)). Except for `'IN_PROGRESS'`, it also sets `result` to what it returns, and sets `error` to a `PaymentError` with its `code` whenever `status` is `'failed'` (`'UNKNOWN'` if a native result has none).
-  - Returns `{ status: 'failed', code: 'CONFIGURATION', success: false, error: 'Cart is empty' }` when the cart is empty.
+  - Returns `{ status: 'failed', code: 'CONFIGURATION', success: false, error: 'Cart is empty' }` when the cart is empty, unless `recurring`, `deferred` or `automaticReload` is set.
   - Returns `status: 'failed'` and `code: 'CONFIGURATION'`, without opening the sheet, when an amount is invalid or the total is negative (see [`PaymentAmount`](/docs/api/types#paymentamount)). `error` holds the validation message, and the validation error is in the hook's `error.cause`. [`HybridPaymentHandler`](/docs/api/hybrid-payment-handler) returns the same result.
   - Returns the native `PaymentResult` when the sheet closes.
   - A cancel returns `status: 'cancelled'` and `code: 'CANCELLED'`. It sets `result` but leaves `error` as `null`, so the user closing the sheet doesn't show up as a failed payment.
@@ -167,11 +172,13 @@ if (result.status === 'success' && result.token) {
 
 If you call `startPayment()` when `items.length === 0`, it returns `status: 'failed'` with `code: 'CONFIGURATION'` and sets `error` to a “Cart is empty” error. Add at least one item before starting payment.
 
+With `recurring`, `deferred` or `automaticReload`, an empty cart is allowed: the payer pays nothing today, and `paymentRequest.paymentItems` is `[]`. Without them, `paymentRequest.paymentItems` holds a `Total` item of `0` while the cart is empty.
+
 ## Hook vs low-level API
 
 Use `usePaymentCheckout` when you want cart state + defaults managed in React state.
 
-Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example `shippingMethods`, `shippingType`, [subscriptions and later payments](/docs/guides/merchant-tokens) or prebuilt request payloads from your backend). The hook's `total` covers only the cart, so it doesn't take `shippingMethods`, `recurring`, `deferred` or `automaticReload`. Utility helpers for this path are documented in [Utility functions](/docs/api/utils).
+Use [HybridPaymentHandler](/docs/api/hybrid-payment-handler) when you need to build the full `PaymentRequest` yourself (for example `shippingMethods`, `shippingType` or prebuilt request payloads from your backend). The hook's `total` covers only the cart, so it doesn't take `shippingMethods`. Utility helpers for this path are documented in [Utility functions](/docs/api/utils).
 
 ## Next
 
