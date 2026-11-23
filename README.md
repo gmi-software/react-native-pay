@@ -364,6 +364,7 @@ interface UsePaymentCheckoutConfig {
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
+  googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out. Default: true
   googlePayCheckoutOption?: GooglePayCheckoutOption; // Sheet button label. Default: Google Pay picks
   // Contact details, returned in the result (see "Shipping and contact details")
   billingContactRequired?: boolean;
@@ -456,7 +457,7 @@ The native handler is created the first time you use `HybridPaymentHandler`, not
 
 ##### `payServiceStatus(options?: PayServiceStatusOptions): Promise<PayServiceStatus>`
 
-Check payment service availability without blocking the JS thread. Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods` and `googlePayEnvironment` your payment request uses. The Promise rejects with the payment's configuration error for a value the payment would refuse.
+Check payment service availability without blocking the JS thread. Pass the `supportedNetworks`, `merchantCapabilities`, `googlePayAllowedAuthMethods`, `googlePayAllowPrepaidCards` and `googlePayEnvironment` your payment request uses. The Promise rejects with the payment's configuration error for a value the payment would refuse.
 
 ```typescript
 import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
@@ -654,6 +655,7 @@ interface GooglePayButtonProps {
   // The cards your payment accepts, so the button never shows another card.
   supportedNetworks?: string[]; // as PaymentRequest.supportedNetworks
   googlePayAllowedAuthMethods?: string[]; // as PaymentRequest.googlePayAllowedAuthMethods
+  googlePayAllowPrepaidCards?: boolean; // as PaymentRequest.googlePayAllowPrepaidCards
   merchantCapabilities?: string[]; // as PaymentRequest.merchantCapabilities
 
   onPress?: () => void;
@@ -802,6 +804,7 @@ interface PaymentRequest {
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
   googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
+  googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out
   googlePayCheckoutOption?: GooglePayCheckoutOption; // the sheet's button label
 }
 

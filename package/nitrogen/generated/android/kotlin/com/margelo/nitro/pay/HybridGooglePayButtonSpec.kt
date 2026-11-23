@@ -60,6 +60,12 @@ abstract class HybridGooglePayButtonSpec: HybridView() {
   @get:Keep
   @set:DoNotStrip
   @set:Keep
+  abstract var googlePayAllowPrepaidCards: Boolean?
+  
+  @get:DoNotStrip
+  @get:Keep
+  @set:DoNotStrip
+  @set:Keep
   abstract var merchantCapabilities: Array<String>?
   
   abstract var onPress: (() -> Unit)?

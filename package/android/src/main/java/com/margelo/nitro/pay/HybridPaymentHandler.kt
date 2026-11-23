@@ -79,7 +79,8 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
             GooglePayCardParameters.from(
                 options?.supportedNetworks,
                 options?.googlePayAllowedAuthMethods,
-                options?.merchantCapabilities
+                options?.merchantCapabilities,
+                options?.googlePayAllowPrepaidCards
             )
         } catch (e: IllegalArgumentException) {
             return Promise.rejected(e)

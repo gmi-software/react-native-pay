@@ -674,6 +674,47 @@ class GooglePayRequestBuilderTest {
         }
     }
 
+    // Prepaid cards
+
+    @Test
+    fun allowPrepaidCardsFalse_leavesPrepaidCardsOutOfTheRequestTheReadinessCheckAndTheButton() {
+        val request = build(paymentRequest(coffee, googlePayAllowPrepaidCards = false))
+        val parameters = GooglePayCardParameters.from(arrayOf("visa"), null, null, allowPrepaidCards = false)
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(parameters, existingPaymentMethodRequired = true)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(parameters)
+
+        assertFalse(request.cardParameters().getBoolean("allowPrepaidCards"))
+        assertFalse(readiness.cardParameters().getBoolean("allowPrepaidCards"))
+        assertFalse(button.getJSONObject(0).getJSONObject("parameters").getBoolean("allowPrepaidCards"))
+        assertEquals(
+            readiness.getJSONArray("allowedPaymentMethods").toString(),
+            button.toString()
+        )
+    }
+
+    @Test
+    fun allowPrepaidCardsOmittedOrTrue_sendsTheSameRequestAsBefore() {
+        val omitted = build(paymentRequest(coffee))
+        val allowed = build(paymentRequest(coffee, googlePayAllowPrepaidCards = true))
+
+        assertFalse(omitted.cardParameters().has("allowPrepaidCards"))
+        assertEquals(omitted.toString(), allowed.toString())
+        assertFalse(
+            GooglePayRequestBuilder.createIsReadyToPayRequest(GooglePayCardParameters.DEFAULT)
+                .cardParameters().has("allowPrepaidCards")
+        )
+    }
+
+    @Test
+    fun allowPrepaidCardsFalse_combinesWithDebitOnly() {
+        val parameters = build(
+            paymentRequest(coffee, merchantCapabilities = arrayOf("3DS", "Debit"), googlePayAllowPrepaidCards = false)
+        ).cardParameters()
+
+        assertFalse(parameters.getBoolean("allowCreditCards"))
+        assertFalse(parameters.getBoolean("allowPrepaidCards"))
+    }
+
     // Payment data callbacks
 
     private fun buildWithCallbacks(request: PaymentRequest, callbacks: CallbackIntents): JSONObject =

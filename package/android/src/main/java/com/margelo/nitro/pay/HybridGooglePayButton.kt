@@ -31,6 +31,7 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
     override var supportedNetworks: Array<String>? = null
     override var googlePayAllowedAuthMethods: Array<String>? = null
     override var merchantCapabilities: Array<String>? = null
+    override var googlePayAllowPrepaidCards: Boolean? = null
     override var onPress: (() -> Unit)? = null
     
     override var view: View = container
@@ -59,7 +60,8 @@ class HybridGooglePayButton(context: ThemedReactContext) : HybridGooglePayButton
                 GooglePayCardParameters.from(
                     supportedNetworks,
                     googlePayAllowedAuthMethods,
-                    merchantCapabilities
+                    merchantCapabilities,
+                    googlePayAllowPrepaidCards
                 )
             )
             if (payButton?.parent == container && config == buttonConfig) {

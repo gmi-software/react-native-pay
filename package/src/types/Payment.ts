@@ -450,6 +450,11 @@ export interface PaymentRequest {
    */
   googlePayAllowedAuthMethods?: string[]
   /**
+   * `false` leaves prepaid cards out, so the payer cannot pick one. Defaults
+   * to `true`. Android only; Apple Pay has no such option.
+   */
+  googlePayAllowPrepaidCards?: boolean
+  /**
    * The label of the Google Pay sheet's button. Omitted, Google Pay picks
    * "Continue" or "Pay", as with `'default'`. `'completeImmediatePurchase'`
    * with a `'pending'` payment item fails the payment with
@@ -728,6 +733,9 @@ export interface PayServiceStatusOptions {
   // Android only. As `PaymentRequest.googlePayAllowedAuthMethods`. Defaults
   // to both.
   googlePayAllowedAuthMethods?: string[]
+  // Android only. As `PaymentRequest.googlePayAllowPrepaidCards`. Defaults
+  // to `true`.
+  googlePayAllowPrepaidCards?: boolean
   // Android only. The Google Pay environment to ask. Defaults to `'TEST'`.
   googlePayEnvironment?: GooglePayEnvironment
 }

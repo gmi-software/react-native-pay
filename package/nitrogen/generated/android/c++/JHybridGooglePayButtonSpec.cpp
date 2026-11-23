@@ -134,6 +134,15 @@ namespace margelo::nitro::pay {
       return __array;
     }(googlePayAllowedAuthMethods.value()) : nullptr);
   }
+  std::optional<bool> JHybridGooglePayButtonSpec::getGooglePayAllowPrepaidCards() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JBoolean>()>("getGooglePayAllowPrepaidCards");
+    auto __result = method(_javaPart);
+    return __result != nullptr ? std::make_optional(static_cast<bool>(__result->value())) : std::nullopt;
+  }
+  void JHybridGooglePayButtonSpec::setGooglePayAllowPrepaidCards(std::optional<bool> googlePayAllowPrepaidCards) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JBoolean> /* googlePayAllowPrepaidCards */)>("setGooglePayAllowPrepaidCards");
+    method(_javaPart, googlePayAllowPrepaidCards.has_value() ? jni::JBoolean::valueOf(googlePayAllowPrepaidCards.value()) : nullptr);
+  }
   std::optional<std::vector<std::string>> JHybridGooglePayButtonSpec::getMerchantCapabilities() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JArrayClass<jni::JString>>()>("getMerchantCapabilities");
     auto __result = method(_javaPart);

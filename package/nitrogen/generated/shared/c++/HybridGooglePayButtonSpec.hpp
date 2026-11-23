@@ -62,6 +62,8 @@ namespace margelo::nitro::pay {
       virtual void setSupportedNetworks(const std::optional<std::vector<std::string>>& supportedNetworks) = 0;
       virtual std::optional<std::vector<std::string>> getGooglePayAllowedAuthMethods() = 0;
       virtual void setGooglePayAllowedAuthMethods(const std::optional<std::vector<std::string>>& googlePayAllowedAuthMethods) = 0;
+      virtual std::optional<bool> getGooglePayAllowPrepaidCards() = 0;
+      virtual void setGooglePayAllowPrepaidCards(std::optional<bool> googlePayAllowPrepaidCards) = 0;
       virtual std::optional<std::vector<std::string>> getMerchantCapabilities() = 0;
       virtual void setMerchantCapabilities(const std::optional<std::vector<std::string>>& merchantCapabilities) = 0;
       virtual std::optional<std::function<void()>> getOnPress() = 0;

@@ -18,7 +18,7 @@ public extension PayServiceStatusOptions {
   /**
    * Create a new instance of `PayServiceStatusOptions`.
    */
-  init(supportedNetworks: [String]?, merchantCapabilities: [String]?, googlePayAllowedAuthMethods: [String]?, googlePayEnvironment: GooglePayEnvironment?) {
+  init(supportedNetworks: [String]?, merchantCapabilities: [String]?, googlePayAllowedAuthMethods: [String]?, googlePayAllowPrepaidCards: Bool?, googlePayEnvironment: GooglePayEnvironment?) {
     self.init({ () -> bridge.std__optional_std__vector_std__string__ in
       if let __unwrappedValue = supportedNetworks {
         return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
@@ -52,6 +52,12 @@ public extension PayServiceStatusOptions {
           }
           return __vector
         }())
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = googlePayAllowPrepaidCards {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -94,6 +100,18 @@ public extension PayServiceStatusOptions {
       if bridge.has_value_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__googlePayAllowedAuthMethods)
         return __unwrapped.map({ __item in String(__item) })
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var googlePayAllowPrepaidCards: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__googlePayAllowPrepaidCards) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__googlePayAllowPrepaidCards)
+        return __unwrapped
       } else {
         return nil
       }

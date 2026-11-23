@@ -337,6 +337,7 @@ export default function TabOneScreen() {
                   // The cards the request accepts, so the button shows one of them.
                   supportedNetworks={paymentRequest.supportedNetworks}
                   googlePayAllowedAuthMethods={paymentRequest.googlePayAllowedAuthMethods}
+                  googlePayAllowPrepaidCards={paymentRequest.googlePayAllowPrepaidCards}
                   merchantCapabilities={paymentRequest.merchantCapabilities}
                   onPress={handlePayment}
                   style={styles.payButton}

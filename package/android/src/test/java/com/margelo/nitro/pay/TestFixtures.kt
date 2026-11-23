@@ -32,6 +32,7 @@ internal fun paymentRequest(
     shippingMethods: Array<ShippingMethod>? = null,
     supportedNetworks: Array<String> = arrayOf("visa"),
     googlePayAllowedAuthMethods: Array<String>? = null,
+    googlePayAllowPrepaidCards: Boolean? = null,
     merchantCapabilities: Array<String> = arrayOf("3DS"),
     recurring: RecurringPaymentRequest? = null,
     deferred: DeferredPaymentRequest? = null,
@@ -62,6 +63,7 @@ internal fun paymentRequest(
     googlePayGateway = googlePayGateway,
     googlePayGatewayMerchantId = googlePayGatewayMerchantId,
     googlePayAllowedAuthMethods = googlePayAllowedAuthMethods,
+    googlePayAllowPrepaidCards = googlePayAllowPrepaidCards,
     googlePayCheckoutOption = googlePayCheckoutOption
 )
 

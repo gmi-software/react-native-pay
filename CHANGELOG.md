@@ -42,6 +42,14 @@ All notable changes to this project are documented in this file.
   `code: 'CONFIGURATION'` before the sheet opens. Without the option the request is unchanged. No
   effect on `recurring`, `deferred` and `automaticReload` payments. Android only
   ([#85](https://github.com/gmi-software/react-native-pay/issues/85)).
+- **`googlePayAllowPrepaidCards`** in `PaymentRequest`, the `usePaymentCheckout` config,
+  `PayServiceStatusOptions` and the `GooglePayButton` props. `false` sends Google Pay's
+  `allowPrepaidCards: false`, so the payer can't pick a prepaid card your gateway or risk policy
+  would refuse. Each takes its own value, so pass the payment's value to `payServiceStatus` and
+  `GooglePayButton` too; `usePaymentCheckout` passes it to its availability check, and
+  `paymentRequest.googlePayAllowPrepaidCards` gives it for the button. Omitted or `true`, the
+  requests are unchanged. Android only
+  ([#87](https://github.com/gmi-software/react-native-pay/issues/87)).
 - **`PaymentError` with a `code`.** `usePaymentCheckout` now sets `error` to a `PaymentError`, an
   `Error` subclass whose `code` is a `PaymentErrorCode`: `'CONFIGURATION'` for an empty cart or an
   invalid request, `'UNKNOWN'` when native code threw, and the result's `code` (`'UNKNOWN'` if it

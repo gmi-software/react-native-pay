@@ -175,6 +175,7 @@ describe('GooglePayButton', () => {
         radius={8}
         supportedNetworks={['visa']}
         googlePayAllowedAuthMethods={['CRYPTOGRAM_3DS']}
+        googlePayAllowPrepaidCards={false}
         merchantCapabilities={['Debit']}
         onPress={onPress}
       />
@@ -188,6 +189,7 @@ describe('GooglePayButton', () => {
       radius: 8,
       supportedNetworks: ['visa'],
       googlePayAllowedAuthMethods: ['CRYPTOGRAM_3DS'],
+      googlePayAllowPrepaidCards: false,
       merchantCapabilities: ['Debit'],
     })
 
