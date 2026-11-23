@@ -36,6 +36,8 @@ namespace margelo::nitro::pay { enum class PaymentMethodType; }
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `CNContact` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNContact; }
+// Forward declaration of `GooglePayAssuranceDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayAssuranceDetails; }
 
 #include <string>
 #include <optional>
@@ -43,6 +45,7 @@ namespace margelo::nitro::pay { struct CNContact; }
 #include "PaymentMethodType.hpp"
 #include "PKSecureElementPass.hpp"
 #include "CNContact.hpp"
+#include "GooglePayAssuranceDetails.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -56,10 +59,11 @@ namespace margelo::nitro::pay {
     PaymentMethodType type     SWIFT_PRIVATE;
     std::optional<PKSecureElementPass> secureElementPass     SWIFT_PRIVATE;
     std::optional<CNContact> billingAddress     SWIFT_PRIVATE;
+    std::optional<GooglePayAssuranceDetails> assuranceDetails     SWIFT_PRIVATE;
 
   public:
     PaymentMethod() = default;
-    explicit PaymentMethod(std::optional<std::string> displayName, std::optional<PaymentNetwork> network, PaymentMethodType type, std::optional<PKSecureElementPass> secureElementPass, std::optional<CNContact> billingAddress): displayName(displayName), network(network), type(type), secureElementPass(secureElementPass), billingAddress(billingAddress) {}
+    explicit PaymentMethod(std::optional<std::string> displayName, std::optional<PaymentNetwork> network, PaymentMethodType type, std::optional<PKSecureElementPass> secureElementPass, std::optional<CNContact> billingAddress, std::optional<GooglePayAssuranceDetails> assuranceDetails): displayName(displayName), network(network), type(type), secureElementPass(secureElementPass), billingAddress(billingAddress), assuranceDetails(assuranceDetails) {}
 
   public:
     friend bool operator==(const PaymentMethod& lhs, const PaymentMethod& rhs) = default;
@@ -79,7 +83,8 @@ namespace margelo::nitro {
         JSIConverter<std::optional<margelo::nitro::pay::PaymentNetwork>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "network"))),
         JSIConverter<margelo::nitro::pay::PaymentMethodType>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type"))),
         JSIConverter<std::optional<margelo::nitro::pay::PKSecureElementPass>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "secureElementPass"))),
-        JSIConverter<std::optional<margelo::nitro::pay::CNContact>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingAddress")))
+        JSIConverter<std::optional<margelo::nitro::pay::CNContact>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingAddress"))),
+        JSIConverter<std::optional<margelo::nitro::pay::GooglePayAssuranceDetails>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "assuranceDetails")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::PaymentMethod& arg) {
@@ -89,6 +94,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "type"), JSIConverter<margelo::nitro::pay::PaymentMethodType>::toJSI(runtime, arg.type));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "secureElementPass"), JSIConverter<std::optional<margelo::nitro::pay::PKSecureElementPass>>::toJSI(runtime, arg.secureElementPass));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "billingAddress"), JSIConverter<std::optional<margelo::nitro::pay::CNContact>>::toJSI(runtime, arg.billingAddress));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "assuranceDetails"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayAssuranceDetails>>::toJSI(runtime, arg.assuranceDetails));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -104,6 +110,7 @@ namespace margelo::nitro {
       if (!JSIConverter<margelo::nitro::pay::PaymentMethodType>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "type")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::PKSecureElementPass>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "secureElementPass")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::CNContact>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "billingAddress")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayAssuranceDetails>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "assuranceDetails")))) return false;
       return true;
     }
   };

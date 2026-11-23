@@ -41,6 +41,8 @@ namespace margelo::nitro::pay { struct CNLabeledEmailAddress; }
 namespace margelo::nitro::pay { struct CNLabeledPostalAddress; }
 // Forward declaration of `CNPostalAddress` to properly resolve imports.
 namespace margelo::nitro::pay { struct CNPostalAddress; }
+// Forward declaration of `GooglePayAssuranceDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayAssuranceDetails; }
 // Forward declaration of `PaymentContact` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentContact; }
 // Forward declaration of `ShippingMethod` to properly resolve imports.
@@ -141,6 +143,8 @@ namespace margelo::nitro::pay { struct PaymentSheetCard; }
 #include "JCNLabeledPostalAddress.hpp"
 #include "CNPostalAddress.hpp"
 #include "JCNPostalAddress.hpp"
+#include "GooglePayAssuranceDetails.hpp"
+#include "JGooglePayAssuranceDetails.hpp"
 #include "PaymentContact.hpp"
 #include "JPaymentContact.hpp"
 #include "ShippingMethod.hpp"

@@ -127,6 +127,8 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JArrayClass<jni::JString>> googlePayAllowedAuthMethods = this->getFieldValue(fieldGooglePayAllowedAuthMethods);
       static const auto fieldGooglePayAllowPrepaidCards = clazz->getField<jni::JBoolean>("googlePayAllowPrepaidCards");
       jni::local_ref<jni::JBoolean> googlePayAllowPrepaidCards = this->getFieldValue(fieldGooglePayAllowPrepaidCards);
+      static const auto fieldGooglePayAssuranceDetailsRequired = clazz->getField<jni::JBoolean>("googlePayAssuranceDetailsRequired");
+      jni::local_ref<jni::JBoolean> googlePayAssuranceDetailsRequired = this->getFieldValue(fieldGooglePayAssuranceDetailsRequired);
       static const auto fieldGooglePayCheckoutOption = clazz->getField<JGooglePayCheckoutOption>("googlePayCheckoutOption");
       jni::local_ref<JGooglePayCheckoutOption> googlePayCheckoutOption = this->getFieldValue(fieldGooglePayCheckoutOption);
       return PaymentRequest(
@@ -212,6 +214,7 @@ namespace margelo::nitro::pay {
           return __vector;
         }(googlePayAllowedAuthMethods)) : std::nullopt,
         googlePayAllowPrepaidCards != nullptr ? std::make_optional(static_cast<bool>(googlePayAllowPrepaidCards->value())) : std::nullopt,
+        googlePayAssuranceDetailsRequired != nullptr ? std::make_optional(static_cast<bool>(googlePayAssuranceDetailsRequired->value())) : std::nullopt,
         googlePayCheckoutOption != nullptr ? std::make_optional(googlePayCheckoutOption->toCpp()) : std::nullopt
       );
     }
@@ -222,7 +225,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentRequest::javaobject> fromCpp(const PaymentRequest& value) {
-      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JShippingMethod>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JRecurringPaymentRequest>, jni::alias_ref<JDeferredPaymentRequest>, jni::alias_ref<JAutomaticReloadPaymentRequest>, jni::alias_ref<jni::JArrayClass<JPaymentTokenContext>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayTokenization>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JGooglePayCheckoutOption>);
+      using JSignature = JPaymentRequest(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JPaymentItem>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<JShippingMethod>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JRecurringPaymentRequest>, jni::alias_ref<JDeferredPaymentRequest>, jni::alias_ref<JAutomaticReloadPaymentRequest>, jni::alias_ref<jni::JArrayClass<JPaymentTokenContext>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayEnvironment>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JGooglePayTokenization>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JGooglePayCheckoutOption>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -309,6 +312,7 @@ namespace margelo::nitro::pay {
           return __array;
         }(value.googlePayAllowedAuthMethods.value()) : nullptr,
         value.googlePayAllowPrepaidCards.has_value() ? jni::JBoolean::valueOf(value.googlePayAllowPrepaidCards.value()) : nullptr,
+        value.googlePayAssuranceDetailsRequired.has_value() ? jni::JBoolean::valueOf(value.googlePayAssuranceDetailsRequired.value()) : nullptr,
         value.googlePayCheckoutOption.has_value() ? JGooglePayCheckoutOption::fromCpp(value.googlePayCheckoutOption.value()) : nullptr
       );
     }

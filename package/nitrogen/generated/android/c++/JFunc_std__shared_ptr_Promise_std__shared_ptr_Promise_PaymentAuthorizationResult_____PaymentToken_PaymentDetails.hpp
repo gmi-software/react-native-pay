@@ -48,6 +48,8 @@
 #include "JCNLabeledPostalAddress.hpp"
 #include "CNPostalAddress.hpp"
 #include "JCNPostalAddress.hpp"
+#include "GooglePayAssuranceDetails.hpp"
+#include "JGooglePayAssuranceDetails.hpp"
 #include "JPaymentDetails.hpp"
 #include "PaymentContact.hpp"
 #include "JPaymentContact.hpp"

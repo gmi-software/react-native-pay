@@ -93,6 +93,7 @@ interface PaymentRequest {
   googlePayTokenization?: GooglePayTokenization // default: gateway
   googlePayAllowedAuthMethods?: string[] // GooglePayAuthMethod values
   googlePayAllowPrepaidCards?: boolean // default: true
+  googlePayAssuranceDetailsRequired?: boolean // default: false
   googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
 }
 ```
@@ -114,6 +115,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
 
 `googlePayAllowPrepaidCards: false` leaves prepaid cards out of the Google Pay sheet, for a gateway or risk policy that refuses them. Sent as Google Pay's `allowPrepaidCards`. Omitted or `true`, prepaid cards are accepted. Android only: Apple Pay cannot leave prepaid cards out.
+
+`googlePayAssuranceDetailsRequired: true` asks Google Pay whether it verified the card and authenticated the cardholder, returned as [`token.paymentMethod.assuranceDetails`](#googlepayassurancedetails). Sent as Google Pay's `assuranceDetailsRequired`. Omitted or `false`, the request and the result are unchanged. Android only.
 
 `googlePayCheckoutOption` sets the label of the Google Pay sheet's button: see [`GooglePayCheckoutOption`](#googlepaycheckoutoption). Omitted, Google Pay picks "Continue" or "Pay". Android only.
 
@@ -328,6 +331,7 @@ interface PaymentMethod {
   type: PaymentMethodType
   secureElementPass?: PKSecureElementPass  // iOS
   billingAddress?: CNContact                // iOS
+  assuranceDetails?: GooglePayAssuranceDetails // Android
 }
 
 type PaymentMethodType = 'unknown' | 'debit' | 'credit' | 'prepaid' | 'store'
@@ -338,6 +342,21 @@ type PaymentMethodType = 'unknown' | 'debit' | 'credit' | 'prepaid' | 'store'
 - **displayName** — Describes the card to the payer, as the wallet words it: `PKPaymentMethod.displayName` on iOS, `paymentMethodData.description` on Android (for example "Visa •••• 1234"). Show it as is; don't parse it.
 - **network** — The card's [`PaymentNetwork`](#paymentnetwork), or `'unknown'` for a network the library cannot name. Use `network` rather than `displayName` for logic.
 - **type** — How the card is funded: `PKPaymentMethod.type` on iOS, Google Pay's `cardFundingSource` on Android. Android reports `'credit'`, `'debit'` or `'prepaid'`, and `'unknown'` when Google Pay does not know; `'store'` (a store card) is iOS only.
+- **assuranceDetails** — What Google checked about the card. Set only when `googlePayAssuranceDetailsRequired` asked for it and Google Pay returned it. Android only. See [GooglePayAssuranceDetails](#googlepayassurancedetails).
+
+### GooglePayAssuranceDetails
+
+```ts no-check
+interface GooglePayAssuranceDetails {
+  accountVerified: boolean
+  cardHolderAuthenticated: boolean
+}
+```
+
+- **accountVerified** — Google validated that the payer possesses the card.
+- **cardHolderAuthenticated** — Google identified and verified the cardholder (ID&V). `false` leaves it to the risk checks you run for other card payments, such as a 3-D Secure step-up.
+
+When both are `true`, Google says you don't need to step up the payment. A flag missing from Google Pay's response reads as `false`. The details are not part of the encrypted `paymentData`: they reach your server through your app, with nothing to prove Google sent them. Treat them as a risk signal, not as the only reason to skip 3-D Secure, and prefer your gateway's own report of them if it has one. See [Card authentication and 3-D Secure](/docs/setup/android-google-pay#card-authentication-and-3-d-secure) and Google's [AssuranceDetailsSpecifications](https://developers.google.com/pay/api/android/reference/response-objects#assurance-details-specifications).
 
 ---
 

@@ -124,7 +124,30 @@ usePaymentCheckout({
 })
 ```
 
-Google can also report whether it has already verified the card and the cardholder ([`assuranceDetailsRequired`](https://developers.google.com/pay/api/android/reference/response-objects#assurance-details-specifications)), so you can skip the step-up when both checks pass. This library does not request it yet.
+Google can also report whether it has already verified the card and authenticated the cardholder. Ask for it with `googlePayAssuranceDetailsRequired`, and read [`token.paymentMethod.assuranceDetails`](/docs/api/types#googlepayassurancedetails). When both `accountVerified` and `cardHolderAuthenticated` are `true`, Google says you don't need to step up the payment:
+
+```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+const order = { id: 'order_123' } // your order
+
+usePaymentCheckout({
+  googlePayAssuranceDetailsRequired: true,
+  onAuthorize: async (token) => {
+    const assurance = token.paymentMethod.assuranceDetails
+    // Your server charges each order at most once, also when the app
+    // retries after a lost response.
+    const response = await fetch('https://api.yourserver.com/process-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, orderId: order.id, assurance }),
+    })
+    return response.ok ? { status: 'success' } : { status: 'failure' }
+  },
+})
+```
+
+The details are not part of the encrypted token: they reach your server through your app, as above, with nothing to prove Google sent them. Treat them as a risk signal, not as the only reason to skip 3-D Secure, and prefer your gateway's own report of them if it has one. See Google's [AssuranceDetailsSpecifications](https://developers.google.com/pay/api/android/reference/response-objects#assurance-details-specifications).
 
 ## The `donate` button
 

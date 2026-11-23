@@ -17,7 +17,8 @@ class AuthorizationAttemptTest {
                 network = PaymentNetwork.VISA,
                 type = PaymentMethodType.CREDIT,
                 secureElementPass = null,
-                billingAddress = null
+                billingAddress = null,
+                assuranceDetails = null
             ),
             transactionIdentifier = null,
             paymentData = "gateway-token"

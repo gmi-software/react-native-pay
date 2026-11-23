@@ -32,6 +32,8 @@ namespace margelo::nitro::pay { struct DeferredBillingItem; }
 namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
 // Forward declaration of `FreeCancellation` to properly resolve imports.
 namespace margelo::nitro::pay { struct FreeCancellation; }
+// Forward declaration of `GooglePayAssuranceDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayAssuranceDetails; }
 // Forward declaration of `GooglePayCheckoutOption` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
@@ -124,6 +126,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "DeferredBillingItem.hpp"
 #include "DeferredPaymentRequest.hpp"
 #include "FreeCancellation.hpp"
+#include "GooglePayAssuranceDetails.hpp"
 #include "GooglePayCheckoutOption.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "GooglePayTokenization.hpp"
@@ -474,6 +477,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline CNContact get_std__optional_CNContact_(const std::optional<CNContact>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<GooglePayAssuranceDetails>
+  /**
+   * Specialized version of `std::optional<GooglePayAssuranceDetails>`.
+   */
+  using std__optional_GooglePayAssuranceDetails_ = std::optional<GooglePayAssuranceDetails>;
+  inline std::optional<GooglePayAssuranceDetails> create_std__optional_GooglePayAssuranceDetails_(const GooglePayAssuranceDetails& value) noexcept {
+    return std::optional<GooglePayAssuranceDetails>(value);
+  }
+  inline bool has_value_std__optional_GooglePayAssuranceDetails_(const std::optional<GooglePayAssuranceDetails>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline GooglePayAssuranceDetails get_std__optional_GooglePayAssuranceDetails_(const std::optional<GooglePayAssuranceDetails>& optional) noexcept {
     return optional.value();
   }
   

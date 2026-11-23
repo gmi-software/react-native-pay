@@ -41,7 +41,8 @@ object PaymentMapper {
                 network = GooglePayNetworks.fromGooglePay(cardNetwork),
                 type = mapCardFundingSource(cardFundingSource),
                 secureElementPass = null,
-                billingAddress = null
+                billingAddress = null,
+                assuranceDetails = info.optJSONObject("assuranceDetails")?.let(::mapAssuranceDetails)
             )
             
             // Create payment token
@@ -122,6 +123,17 @@ object PaymentMapper {
                 // Only with the FULL-ISO3166 format, which MIN billing addresses don't use
                 isoAdministrativeArea = address.optNonEmpty("iso3166AdministrativeArea")?.uppercase()
             )
+        )
+    }
+    
+    /**
+     * Maps Google Pay's `assuranceDetails`, returned only when the request set
+     * `assuranceDetailsRequired`. A missing flag reads as `false`: not checked.
+     */
+    private fun mapAssuranceDetails(details: JSONObject): GooglePayAssuranceDetails {
+        return GooglePayAssuranceDetails(
+            accountVerified = details.optBoolean("accountVerified", false),
+            cardHolderAuthenticated = details.optBoolean("cardHolderAuthenticated", false)
         )
     }
     

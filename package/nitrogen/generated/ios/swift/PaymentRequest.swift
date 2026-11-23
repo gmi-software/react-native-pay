@@ -18,7 +18,7 @@ public extension PaymentRequest {
   /**
    * Create a new instance of `PaymentRequest`.
    */
-  init(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: [PaymentTokenContext]?, couponCode: String?, applePayMerchantCategoryCode: Double?, applePayLaterAvailability: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayTokenization: GooglePayTokenization?, googlePayAllowedAuthMethods: [String]?, googlePayAllowPrepaidCards: Bool?, googlePayCheckoutOption: GooglePayCheckoutOption?) {
+  init(applePayMerchantIdentifier: String?, merchantName: String?, totalLabel: String?, countryCode: String, currencyCode: String, paymentItems: [PaymentItem], merchantCapabilities: [String], supportedNetworks: [String], shippingType: String?, shippingMethods: [ShippingMethod]?, billingContactRequired: Bool?, shippingContactRequired: Bool?, emailRequired: Bool?, phoneNumberRequired: Bool?, recurring: RecurringPaymentRequest?, deferred: DeferredPaymentRequest?, automaticReload: AutomaticReloadPaymentRequest?, applePayMultiTokenContexts: [PaymentTokenContext]?, couponCode: String?, applePayMerchantCategoryCode: Double?, applePayLaterAvailability: String?, googlePayMerchantId: String?, googlePayEnvironment: GooglePayEnvironment?, googlePayGateway: String?, googlePayGatewayMerchantId: String?, googlePayTokenization: GooglePayTokenization?, googlePayAllowedAuthMethods: [String]?, googlePayAllowPrepaidCards: Bool?, googlePayAssuranceDetailsRequired: Bool?, googlePayCheckoutOption: GooglePayCheckoutOption?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = applePayMerchantIdentifier {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -189,6 +189,12 @@ public extension PaymentRequest {
       }
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = googlePayAllowPrepaidCards {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = googlePayAssuranceDetailsRequired {
         return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
@@ -461,6 +467,18 @@ public extension PaymentRequest {
     return { () -> Bool? in
       if bridge.has_value_std__optional_bool_(self.__googlePayAllowPrepaidCards) {
         let __unwrapped = bridge.get_std__optional_bool_(self.__googlePayAllowPrepaidCards)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var googlePayAssuranceDetailsRequired: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__googlePayAssuranceDetailsRequired) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__googlePayAssuranceDetailsRequired)
         return __unwrapped
       } else {
         return nil

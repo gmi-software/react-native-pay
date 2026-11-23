@@ -99,6 +99,60 @@ class PaymentMapperTest {
     }
 
     @Test
+    fun mapPaymentDataToResult_readsTheAssuranceDetails() {
+        // Google's sample response for a request with assuranceDetailsRequired
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "type": "CARD",
+                  "description": "Visa •••• 1234",
+                  "info": {
+                    "cardNetwork": "VISA",
+                    "cardDetails": "1234",
+                    "assuranceDetails": {"accountVerified": true, "cardHolderAuthenticated": false}
+                  },
+                  "tokenizationData": {"type": "PAYMENT_GATEWAY", "token": "gateway-token"}
+                }
+                """
+            )
+        )
+
+        assertEquals(
+            GooglePayAssuranceDetails(accountVerified = true, cardHolderAuthenticated = false),
+            result.token!!.paymentMethod.assuranceDetails
+        )
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsAMissingAssuranceFlagAsNotChecked() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData(
+                """
+                {
+                  "info": {"cardNetwork": "VISA", "assuranceDetails": {"cardHolderAuthenticated": true}},
+                  "tokenizationData": {"token": "gateway-token"}
+                }
+                """
+            )
+        )
+
+        assertEquals(
+            GooglePayAssuranceDetails(accountVerified = false, cardHolderAuthenticated = true),
+            result.token!!.paymentMethod.assuranceDetails
+        )
+    }
+
+    @Test
+    fun mapPaymentDataToResult_reportsNoAssuranceDetailsWithoutThem() {
+        val result = PaymentMapper.mapPaymentDataToResult(
+            paymentData("""{"info": {"cardNetwork": "VISA"}, "tokenizationData": {"token": "gateway-token"}}""")
+        )
+
+        assertNull(result.token!!.paymentMethod.assuranceDetails)
+    }
+
+    @Test
     fun mapPaymentDataToResult_fillsMissingCardInfo() {
         val result = PaymentMapper.mapPaymentDataToResult(
             paymentData("""{"info": {}, "tokenizationData": {"token": "gateway-token"}}""")

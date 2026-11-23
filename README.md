@@ -366,6 +366,7 @@ interface UsePaymentCheckoutConfig {
   googlePayTokenization?: GooglePayTokenization; // Default: gateway. { type: "direct", publicKey } to decrypt yourself
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
   googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out. Default: true
+  googlePayAssuranceDetailsRequired?: boolean; // true returns token.paymentMethod.assuranceDetails. Default: false
   googlePayCheckoutOption?: GooglePayCheckoutOption; // Sheet button label. Default: Google Pay picks
   // Contact details, returned in the result (see "Shipping and contact details")
   billingContactRequired?: boolean;
@@ -811,6 +812,7 @@ interface PaymentRequest {
   googlePayTokenization?: GooglePayTokenization; // who encrypts the token
   googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
   googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out
+  googlePayAssuranceDetailsRequired?: boolean; // ask whether Google verified the card
   googlePayCheckoutOption?: GooglePayCheckoutOption; // the sheet's button label
 }
 
@@ -847,6 +849,13 @@ interface PaymentMethod {
   type: PaymentMethodType; // funding source; "store" is iOS only
   secureElementPass?: PKSecureElementPass;
   billingAddress?: CNContact;
+  assuranceDetails?: GooglePayAssuranceDetails; // Android, with googlePayAssuranceDetailsRequired
+}
+
+// What Google checked about the card (Android)
+interface GooglePayAssuranceDetails {
+  accountVerified: boolean; // the payer possesses the card
+  cardHolderAuthenticated: boolean; // Google identified and verified the cardholder
 }
 
 // Payment Networks. Google Pay offers visa, mastercard, amex, discover, jcb
