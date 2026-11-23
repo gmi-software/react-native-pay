@@ -16,6 +16,12 @@ export interface CNPostalAddress {
   postalCode?: string
   country?: string
   isoCountryCode?: string
+  /**
+   * Android only: the region as an ISO 3166-2 code, such as `'US-CA'`, with
+   * the country prefix. Google Pay can return it for full billing and shipping
+   * addresses, and omits it when it has no code. On iOS it is always omitted.
+   */
+  isoAdministrativeArea?: string
 }
 
 export interface CNLabeledPhoneNumber {

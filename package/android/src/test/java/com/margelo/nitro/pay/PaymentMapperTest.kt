@@ -42,6 +42,7 @@ class PaymentMapperTest {
             "address3": "",
             "locality": "Springfield",
             "administrativeArea": "IL",
+            "iso3166AdministrativeArea": "US-IL",
             "countryCode": "us",
             "postalCode": "62701",
             "sortingCode": "",
@@ -57,6 +58,7 @@ class PaymentMapperTest {
                 "address1": "1 Billing St",
                 "locality": "Cupertino",
                 "administrativeArea": "CA",
+                "iso3166AdministrativeArea": " us-ca ",
                 "countryCode": "US",
                 "postalCode": "95014",
                 "phoneNumber": "+1 555 0100"
@@ -176,7 +178,8 @@ class PaymentMapperTest {
                     state = "CA",
                     postalCode = "95014",
                     country = null,
-                    isoCountryCode = "US"
+                    isoCountryCode = "US",
+                    isoAdministrativeArea = "US-CA"
                 )
             ),
             result.billingContact
@@ -192,7 +195,8 @@ class PaymentMapperTest {
                     state = "IL",
                     postalCode = "62701",
                     country = null,
-                    isoCountryCode = "US"
+                    isoCountryCode = "US",
+                    isoAdministrativeArea = "US-IL"
                 )
             ),
             result.shippingContact
@@ -253,7 +257,9 @@ class PaymentMapperTest {
                     state = null,
                     postalCode = null,
                     country = null,
-                    isoCountryCode = "GB"
+                    isoCountryCode = "GB",
+                    // A MIN billing address has no ISO 3166-2 code.
+                    isoAdministrativeArea = null
                 )
             ),
             result.billingContact

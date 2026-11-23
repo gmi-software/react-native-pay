@@ -18,9 +18,10 @@ object PaymentConstants {
     const val AUTH_PAN_ONLY = "PAN_ONLY"
     const val AUTH_CRYPTOGRAM_3DS = "CRYPTOGRAM_3DS"
     
-    // Billing address formats
+    // Address formats. MIN is for billing only.
     const val BILLING_ADDRESS_FORMAT_MIN = "MIN"
-    const val BILLING_ADDRESS_FORMAT_FULL = "FULL"
+    // FULL plus `iso3166AdministrativeArea`, the region as an ISO 3166-2 code
+    const val ADDRESS_FORMAT_FULL_ISO3166 = "FULL-ISO3166"
     
     // Tokenization
     const val TOKENIZATION_PAYMENT_GATEWAY = "PAYMENT_GATEWAY"

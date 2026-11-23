@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **ISO 3166-2 region codes in Google Pay addresses.** `CNPostalAddress` adds
+  `isoAdministrativeArea`, the region as an ISO 3166-2 code such as `'US-CA'`, for tax and shipping
+  systems that need a code rather than the free-text `state`. Android now requests full billing
+  addresses and shipping addresses in Google Pay's `FULL-ISO3166` format, which is `FULL` plus that
+  code. A `MIN` billing address, requested for a phone number alone, is unchanged. Apple Pay has no
+  such code, so it is always omitted on iOS
+  ([#90](https://github.com/gmi-software/react-native-pay/issues/90)).
 - **`pix` and `ewallet` Google Pay buttons.** `GooglePayButtonType` adds `'pix'` and `'ewallet'`,
   Google's `PIX` and `EWALLET` button types. `'pix'` shows "Direct Pix payment"; Google Play
   services draws `'ewallet'` like `'buy'` so far. They change only the button: the sheet still

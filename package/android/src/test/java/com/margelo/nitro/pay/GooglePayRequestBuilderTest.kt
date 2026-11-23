@@ -357,12 +357,12 @@ class GooglePayRequestBuilderTest {
     }
 
     @Test
-    fun billingContact_requestsAFullBillingAddress() {
+    fun billingContact_requestsAFullBillingAddressWithTheIsoRegion() {
         val json = build(paymentRequest(coffee, billingContactRequired = true))
 
         val parameters = json.cardParameters()
         assertTrue(parameters.getBoolean("billingAddressRequired"))
-        assertEquals("FULL", parameters.getJSONObject("billingAddressParameters").getString("format"))
+        assertEquals("FULL-ISO3166", parameters.getJSONObject("billingAddressParameters").getString("format"))
         assertFalse(parameters.getJSONObject("billingAddressParameters").getBoolean("phoneNumberRequired"))
         assertFalse(json.has("shippingAddressRequired"))
     }
@@ -380,7 +380,9 @@ class GooglePayRequestBuilderTest {
 
         assertTrue(json.getBoolean("emailRequired"))
         assertTrue(json.getBoolean("shippingAddressRequired"))
-        assertTrue(json.getJSONObject("shippingAddressParameters").getBoolean("phoneNumberRequired"))
+        val shippingParameters = json.getJSONObject("shippingAddressParameters")
+        assertEquals("FULL-ISO3166", shippingParameters.getString("format"))
+        assertTrue(shippingParameters.getBoolean("phoneNumberRequired"))
         assertFalse(json.cardParameters().has("billingAddressRequired"))
     }
 
@@ -401,7 +403,7 @@ class GooglePayRequestBuilderTest {
         val json = build(paymentRequest(coffee, billingContactRequired = true, phoneNumberRequired = true))
 
         val billingParameters = json.cardParameters().getJSONObject("billingAddressParameters")
-        assertEquals("FULL", billingParameters.getString("format"))
+        assertEquals("FULL-ISO3166", billingParameters.getString("format"))
         assertTrue(billingParameters.getBoolean("phoneNumberRequired"))
     }
 

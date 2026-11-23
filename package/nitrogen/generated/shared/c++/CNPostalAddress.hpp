@@ -46,10 +46,11 @@ namespace margelo::nitro::pay {
     std::optional<std::string> postalCode     SWIFT_PRIVATE;
     std::optional<std::string> country     SWIFT_PRIVATE;
     std::optional<std::string> isoCountryCode     SWIFT_PRIVATE;
+    std::optional<std::string> isoAdministrativeArea     SWIFT_PRIVATE;
 
   public:
     CNPostalAddress() = default;
-    explicit CNPostalAddress(std::optional<std::string> street, std::optional<std::string> city, std::optional<std::string> state, std::optional<std::string> postalCode, std::optional<std::string> country, std::optional<std::string> isoCountryCode): street(street), city(city), state(state), postalCode(postalCode), country(country), isoCountryCode(isoCountryCode) {}
+    explicit CNPostalAddress(std::optional<std::string> street, std::optional<std::string> city, std::optional<std::string> state, std::optional<std::string> postalCode, std::optional<std::string> country, std::optional<std::string> isoCountryCode, std::optional<std::string> isoAdministrativeArea): street(street), city(city), state(state), postalCode(postalCode), country(country), isoCountryCode(isoCountryCode), isoAdministrativeArea(isoAdministrativeArea) {}
 
   public:
     friend bool operator==(const CNPostalAddress& lhs, const CNPostalAddress& rhs) = default;
@@ -70,7 +71,8 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "state"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "postalCode"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "country"))),
-        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isoCountryCode")))
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isoCountryCode"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isoAdministrativeArea")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::pay::CNPostalAddress& arg) {
@@ -81,6 +83,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "postalCode"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.postalCode));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "country"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.country));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isoCountryCode"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.isoCountryCode));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "isoAdministrativeArea"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.isoAdministrativeArea));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -97,6 +100,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "postalCode")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "country")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isoCountryCode")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isoAdministrativeArea")))) return false;
       return true;
     }
   };

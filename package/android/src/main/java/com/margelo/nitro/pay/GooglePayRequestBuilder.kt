@@ -78,6 +78,7 @@ object GooglePayRequestBuilder {
             if (requested.shippingContact) {
                 put("shippingAddressRequired", true)
                 put("shippingAddressParameters", JSONObject().apply {
+                    put("format", PaymentConstants.ADDRESS_FORMAT_FULL_ISO3166)
                     put("phoneNumberRequired", requested.phoneNumberOnShippingAddress)
                 })
             }
@@ -190,7 +191,7 @@ object GooglePayRequestBuilder {
                     put(
                         "format",
                         if (requested.billingContact)
-                            PaymentConstants.BILLING_ADDRESS_FORMAT_FULL
+                            PaymentConstants.ADDRESS_FORMAT_FULL_ISO3166
                         else
                             PaymentConstants.BILLING_ADDRESS_FORMAT_MIN
                     )

@@ -44,13 +44,16 @@ namespace margelo::nitro::pay {
       jni::local_ref<jni::JString> country = this->getFieldValue(fieldCountry);
       static const auto fieldIsoCountryCode = clazz->getField<jni::JString>("isoCountryCode");
       jni::local_ref<jni::JString> isoCountryCode = this->getFieldValue(fieldIsoCountryCode);
+      static const auto fieldIsoAdministrativeArea = clazz->getField<jni::JString>("isoAdministrativeArea");
+      jni::local_ref<jni::JString> isoAdministrativeArea = this->getFieldValue(fieldIsoAdministrativeArea);
       return CNPostalAddress(
         street != nullptr ? std::make_optional(street->toStdString()) : std::nullopt,
         city != nullptr ? std::make_optional(city->toStdString()) : std::nullopt,
         state != nullptr ? std::make_optional(state->toStdString()) : std::nullopt,
         postalCode != nullptr ? std::make_optional(postalCode->toStdString()) : std::nullopt,
         country != nullptr ? std::make_optional(country->toStdString()) : std::nullopt,
-        isoCountryCode != nullptr ? std::make_optional(isoCountryCode->toStdString()) : std::nullopt
+        isoCountryCode != nullptr ? std::make_optional(isoCountryCode->toStdString()) : std::nullopt,
+        isoAdministrativeArea != nullptr ? std::make_optional(isoAdministrativeArea->toStdString()) : std::nullopt
       );
     }
 
@@ -60,7 +63,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JCNPostalAddress::javaobject> fromCpp(const CNPostalAddress& value) {
-      using JSignature = JCNPostalAddress(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JCNPostalAddress(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -70,7 +73,8 @@ namespace margelo::nitro::pay {
         value.state.has_value() ? jni::make_jstring(value.state.value()) : nullptr,
         value.postalCode.has_value() ? jni::make_jstring(value.postalCode.value()) : nullptr,
         value.country.has_value() ? jni::make_jstring(value.country.value()) : nullptr,
-        value.isoCountryCode.has_value() ? jni::make_jstring(value.isoCountryCode.value()) : nullptr
+        value.isoCountryCode.has_value() ? jni::make_jstring(value.isoCountryCode.value()) : nullptr,
+        value.isoAdministrativeArea.has_value() ? jni::make_jstring(value.isoAdministrativeArea.value()) : nullptr
       );
     }
   };

@@ -35,7 +35,10 @@ data class CNPostalAddress(
   val country: String?,
   @DoNotStrip
   @Keep
-  val isoCountryCode: String?
+  val isoCountryCode: String?,
+  @DoNotStrip
+  @Keep
+  val isoAdministrativeArea: String?
 ) {
   /* primary constructor */
 
@@ -48,6 +51,7 @@ data class CNPostalAddress(
       && Objects.deepEquals(this.postalCode, other.postalCode)
       && Objects.deepEquals(this.country, other.country)
       && Objects.deepEquals(this.isoCountryCode, other.isoCountryCode)
+      && Objects.deepEquals(this.isoAdministrativeArea, other.isoAdministrativeArea)
   }
 
   override fun hashCode(): Int {
@@ -57,7 +61,8 @@ data class CNPostalAddress(
       state,
       postalCode,
       country,
-      isoCountryCode
+      isoCountryCode,
+      isoAdministrativeArea
     ).contentDeepHashCode()
   }
 
@@ -69,8 +74,8 @@ data class CNPostalAddress(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(street: String?, city: String?, state: String?, postalCode: String?, country: String?, isoCountryCode: String?): CNPostalAddress {
-      return CNPostalAddress(street, city, state, postalCode, country, isoCountryCode)
+    private fun fromCpp(street: String?, city: String?, state: String?, postalCode: String?, country: String?, isoCountryCode: String?, isoAdministrativeArea: String?): CNPostalAddress {
+      return CNPostalAddress(street, city, state, postalCode, country, isoCountryCode, isoAdministrativeArea)
     }
   }
 }
