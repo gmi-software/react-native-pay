@@ -40,6 +40,10 @@ namespace margelo::nitro::pay { struct FreeCancellation; }
 namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
+// Forward declaration of `GooglePayTokenizationType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayTokenizationType; }
+// Forward declaration of `GooglePayTokenization` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayTokenization; }
 // Forward declaration of `HybridApplePayButtonSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
@@ -124,6 +128,8 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "FreeCancellation.hpp"
 #include "GooglePayCheckoutOption.hpp"
 #include "GooglePayEnvironment.hpp"
+#include "GooglePayTokenization.hpp"
+#include "GooglePayTokenizationType.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
 #include "PKSecureElementPass.hpp"

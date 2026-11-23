@@ -25,6 +25,8 @@ object PaymentConstants {
     
     // Tokenization
     const val TOKENIZATION_PAYMENT_GATEWAY = "PAYMENT_GATEWAY"
+    const val TOKENIZATION_DIRECT = "DIRECT"
+    const val DIRECT_PROTOCOL_VERSION = "ECv2"
     const val DEFAULT_GATEWAY = "example"
     const val DEFAULT_GATEWAY_MERCHANT_ID = "exampleGatewayMerchantId"
     

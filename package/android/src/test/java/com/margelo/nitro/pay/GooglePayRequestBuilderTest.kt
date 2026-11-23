@@ -340,6 +340,130 @@ class GooglePayRequestBuilderTest {
         assertTrue(error.message!!.contains("googlePayMerchantId"))
     }
 
+    // Tokenization
+
+    private fun JSONObject.tokenizationSpec(): JSONObject =
+        getJSONArray("allowedPaymentMethods").getJSONObject(0)
+            .getJSONObject("tokenizationSpecification")
+
+    private val publicKey =
+        "BOdoXP+9Aq473SnGwg3JU1aiNpsd9vH2ognq4PtDtlLGa3Kj8TPf+jaQNPyDSkh3JUhiS0KyrrlWhAgNZKHYF2Y="
+
+    private fun gatewaySpec(gateway: String, gatewayMerchantId: String) =
+        """{"type":"PAYMENT_GATEWAY","parameters":{"gateway":"$gateway","gatewayMerchantId":"$gatewayMerchantId"}}"""
+
+    // org.json's JVM build doesn't keep key order, so compare as maps.
+    private fun JSONObject.toMap(): Map<String, Any?> = keys().asSequence().associateWith { key ->
+        get(key).let { if (it is JSONObject) it.toMap() else it }
+    }
+
+    private fun assertJsonEquals(expected: String, actual: JSONObject) {
+        assertEquals(JSONObject(expected).toMap(), actual.toMap())
+    }
+
+    @Test
+    fun tokenization_defaultsToExampleGatewayInTest() {
+        val json = build(paymentRequest(coffee))
+
+        assertJsonEquals(gatewaySpec("example", "exampleGatewayMerchantId"), json.tokenizationSpec())
+    }
+
+    @Test
+    fun tokenization_gatewayTypeSendsTheSameJsonAsOmitted() {
+        val gateway = GooglePayTokenization(GooglePayTokenizationType.GATEWAY, publicKey)
+        listOf(WalletConstants.ENVIRONMENT_TEST, WalletConstants.ENVIRONMENT_PRODUCTION).forEach { env ->
+            fun request(tokenization: GooglePayTokenization?) = paymentRequest(
+                coffee,
+                googlePayMerchantId = "BCR2DN4T000000",
+                googlePayGateway = " stripe ",
+                googlePayGatewayMerchantId = "acct_123",
+                googlePayTokenization = tokenization
+            )
+
+            val omitted = build(request(null), environment = env)
+            val explicit = build(request(gateway), environment = env)
+
+            assertEquals(omitted.toString(), explicit.toString())
+            assertJsonEquals(gatewaySpec("stripe", "acct_123"), explicit.tokenizationSpec())
+        }
+    }
+
+    @Test
+    fun tokenization_directSendsPublicKey() {
+        val json = build(
+            paymentRequest(
+                coffee,
+                googlePayGateway = "stripe",
+                googlePayGatewayMerchantId = "acct_123",
+                googlePayTokenization = GooglePayTokenization(
+                    GooglePayTokenizationType.DIRECT,
+                    " $publicKey\n"
+                )
+            )
+        )
+
+        assertJsonEquals(
+            """{"type":"DIRECT","parameters":{"protocolVersion":"ECv2","publicKey":"$publicKey"}}""",
+            json.tokenizationSpec()
+        )
+    }
+
+    @Test
+    fun tokenization_directInProductionNeedsNoGateway() {
+        val json = build(
+            paymentRequest(
+                coffee,
+                googlePayMerchantId = "BCR2DN4T000000",
+                googlePayTokenization = GooglePayTokenization(GooglePayTokenizationType.DIRECT, publicKey)
+            ),
+            environment = WalletConstants.ENVIRONMENT_PRODUCTION
+        )
+
+        assertEquals("DIRECT", json.tokenizationSpec().getString("type"))
+        assertEquals("BCR2DN4T000000", json.merchantInfo().getString("merchantId"))
+    }
+
+    @Test
+    fun tokenization_directInProductionStillRequiresMerchantId() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            build(
+                paymentRequest(
+                    coffee,
+                    googlePayTokenization = GooglePayTokenization(GooglePayTokenizationType.DIRECT, publicKey)
+                ),
+                environment = WalletConstants.ENVIRONMENT_PRODUCTION
+            )
+        }
+
+        assertTrue(error.message!!.contains("googlePayMerchantId"))
+    }
+
+    @Test
+    fun tokenization_directRequiresPublicKeyInEveryEnvironment() {
+        listOf(WalletConstants.ENVIRONMENT_TEST, WalletConstants.ENVIRONMENT_PRODUCTION).forEach { env ->
+            listOf(null, "", "  ").forEach { key ->
+                val error = assertThrows(IllegalArgumentException::class.java) {
+                    build(
+                        paymentRequest(
+                            coffee,
+                            googlePayMerchantId = "BCR2DN4T000000",
+                            googlePayTokenization = GooglePayTokenization(
+                                GooglePayTokenizationType.DIRECT,
+                                key
+                            )
+                        ),
+                        environment = env
+                    )
+                }
+
+                assertEquals(
+                    "googlePayTokenization.publicKey is required for 'direct' tokenization",
+                    error.message
+                )
+            }
+        }
+    }
+
     // Contact details
 
     private fun JSONObject.cardParameters(): JSONObject =

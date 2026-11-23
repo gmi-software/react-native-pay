@@ -42,6 +42,8 @@ namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
 namespace margelo::nitro::pay { struct PaymentTokenContext; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayEnvironment; }
+// Forward declaration of `GooglePayTokenization` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayTokenization; }
 // Forward declaration of `GooglePayCheckoutOption` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 
@@ -55,6 +57,7 @@ namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 #include "AutomaticReloadPaymentRequest.hpp"
 #include "PaymentTokenContext.hpp"
 #include "GooglePayEnvironment.hpp"
+#include "GooglePayTokenization.hpp"
 #include "GooglePayCheckoutOption.hpp"
 
 namespace margelo::nitro::pay {
@@ -89,13 +92,14 @@ namespace margelo::nitro::pay {
     std::optional<GooglePayEnvironment> googlePayEnvironment     SWIFT_PRIVATE;
     std::optional<std::string> googlePayGateway     SWIFT_PRIVATE;
     std::optional<std::string> googlePayGatewayMerchantId     SWIFT_PRIVATE;
+    std::optional<GooglePayTokenization> googlePayTokenization     SWIFT_PRIVATE;
     std::optional<std::vector<std::string>> googlePayAllowedAuthMethods     SWIFT_PRIVATE;
     std::optional<bool> googlePayAllowPrepaidCards     SWIFT_PRIVATE;
     std::optional<GooglePayCheckoutOption> googlePayCheckoutOption     SWIFT_PRIVATE;
 
   public:
     PaymentRequest() = default;
-    explicit PaymentRequest(std::optional<std::string> applePayMerchantIdentifier, std::optional<std::string> merchantName, std::optional<std::string> totalLabel, std::string countryCode, std::string currencyCode, std::vector<PaymentItem> paymentItems, std::vector<std::string> merchantCapabilities, std::vector<std::string> supportedNetworks, std::optional<std::string> shippingType, std::optional<std::vector<ShippingMethod>> shippingMethods, std::optional<bool> billingContactRequired, std::optional<bool> shippingContactRequired, std::optional<bool> emailRequired, std::optional<bool> phoneNumberRequired, std::optional<RecurringPaymentRequest> recurring, std::optional<DeferredPaymentRequest> deferred, std::optional<AutomaticReloadPaymentRequest> automaticReload, std::optional<std::vector<PaymentTokenContext>> applePayMultiTokenContexts, std::optional<std::string> couponCode, std::optional<double> applePayMerchantCategoryCode, std::optional<std::string> applePayLaterAvailability, std::optional<std::string> googlePayMerchantId, std::optional<GooglePayEnvironment> googlePayEnvironment, std::optional<std::string> googlePayGateway, std::optional<std::string> googlePayGatewayMerchantId, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<bool> googlePayAllowPrepaidCards, std::optional<GooglePayCheckoutOption> googlePayCheckoutOption): applePayMerchantIdentifier(applePayMerchantIdentifier), merchantName(merchantName), totalLabel(totalLabel), countryCode(countryCode), currencyCode(currencyCode), paymentItems(paymentItems), merchantCapabilities(merchantCapabilities), supportedNetworks(supportedNetworks), shippingType(shippingType), shippingMethods(shippingMethods), billingContactRequired(billingContactRequired), shippingContactRequired(shippingContactRequired), emailRequired(emailRequired), phoneNumberRequired(phoneNumberRequired), recurring(recurring), deferred(deferred), automaticReload(automaticReload), applePayMultiTokenContexts(applePayMultiTokenContexts), couponCode(couponCode), applePayMerchantCategoryCode(applePayMerchantCategoryCode), applePayLaterAvailability(applePayLaterAvailability), googlePayMerchantId(googlePayMerchantId), googlePayEnvironment(googlePayEnvironment), googlePayGateway(googlePayGateway), googlePayGatewayMerchantId(googlePayGatewayMerchantId), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), googlePayAllowPrepaidCards(googlePayAllowPrepaidCards), googlePayCheckoutOption(googlePayCheckoutOption) {}
+    explicit PaymentRequest(std::optional<std::string> applePayMerchantIdentifier, std::optional<std::string> merchantName, std::optional<std::string> totalLabel, std::string countryCode, std::string currencyCode, std::vector<PaymentItem> paymentItems, std::vector<std::string> merchantCapabilities, std::vector<std::string> supportedNetworks, std::optional<std::string> shippingType, std::optional<std::vector<ShippingMethod>> shippingMethods, std::optional<bool> billingContactRequired, std::optional<bool> shippingContactRequired, std::optional<bool> emailRequired, std::optional<bool> phoneNumberRequired, std::optional<RecurringPaymentRequest> recurring, std::optional<DeferredPaymentRequest> deferred, std::optional<AutomaticReloadPaymentRequest> automaticReload, std::optional<std::vector<PaymentTokenContext>> applePayMultiTokenContexts, std::optional<std::string> couponCode, std::optional<double> applePayMerchantCategoryCode, std::optional<std::string> applePayLaterAvailability, std::optional<std::string> googlePayMerchantId, std::optional<GooglePayEnvironment> googlePayEnvironment, std::optional<std::string> googlePayGateway, std::optional<std::string> googlePayGatewayMerchantId, std::optional<GooglePayTokenization> googlePayTokenization, std::optional<std::vector<std::string>> googlePayAllowedAuthMethods, std::optional<bool> googlePayAllowPrepaidCards, std::optional<GooglePayCheckoutOption> googlePayCheckoutOption): applePayMerchantIdentifier(applePayMerchantIdentifier), merchantName(merchantName), totalLabel(totalLabel), countryCode(countryCode), currencyCode(currencyCode), paymentItems(paymentItems), merchantCapabilities(merchantCapabilities), supportedNetworks(supportedNetworks), shippingType(shippingType), shippingMethods(shippingMethods), billingContactRequired(billingContactRequired), shippingContactRequired(shippingContactRequired), emailRequired(emailRequired), phoneNumberRequired(phoneNumberRequired), recurring(recurring), deferred(deferred), automaticReload(automaticReload), applePayMultiTokenContexts(applePayMultiTokenContexts), couponCode(couponCode), applePayMerchantCategoryCode(applePayMerchantCategoryCode), applePayLaterAvailability(applePayLaterAvailability), googlePayMerchantId(googlePayMerchantId), googlePayEnvironment(googlePayEnvironment), googlePayGateway(googlePayGateway), googlePayGatewayMerchantId(googlePayGatewayMerchantId), googlePayTokenization(googlePayTokenization), googlePayAllowedAuthMethods(googlePayAllowedAuthMethods), googlePayAllowPrepaidCards(googlePayAllowPrepaidCards), googlePayCheckoutOption(googlePayCheckoutOption) {}
 
   public:
     friend bool operator==(const PaymentRequest& lhs, const PaymentRequest& rhs) = default;
@@ -136,6 +140,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayGateway"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayGatewayMerchantId"))),
+        JSIConverter<std::optional<margelo::nitro::pay::GooglePayTokenization>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayTokenization"))),
         JSIConverter<std::optional<std::vector<std::string>>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards"))),
         JSIConverter<std::optional<margelo::nitro::pay::GooglePayCheckoutOption>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayCheckoutOption")))
@@ -168,6 +173,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::toJSI(runtime, arg.googlePayEnvironment));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayGateway"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.googlePayGateway));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayGatewayMerchantId"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.googlePayGatewayMerchantId));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayTokenization"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayTokenization>>::toJSI(runtime, arg.googlePayTokenization));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods"), JSIConverter<std::optional<std::vector<std::string>>>::toJSI(runtime, arg.googlePayAllowedAuthMethods));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.googlePayAllowPrepaidCards));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "googlePayCheckoutOption"), JSIConverter<std::optional<margelo::nitro::pay::GooglePayCheckoutOption>>::toJSI(runtime, arg.googlePayCheckoutOption));
@@ -206,6 +212,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayEnvironment>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayEnvironment")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayGateway")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayGatewayMerchantId")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayTokenization>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayTokenization")))) return false;
       if (!JSIConverter<std::optional<std::vector<std::string>>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowedAuthMethods")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayAllowPrepaidCards")))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::pay::GooglePayCheckoutOption>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "googlePayCheckoutOption")))) return false;

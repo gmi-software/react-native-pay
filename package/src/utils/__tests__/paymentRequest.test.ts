@@ -113,6 +113,45 @@ describe('normalizePaymentRequest', () => {
     }
   )
 
+  it.each([{ type: 'gateway' }, { type: 'direct', publicKey: 'key' }] as const)(
+    'keeps the Google Pay tokenization %p',
+    (googlePayTokenization) => {
+      const normalized = normalizePaymentRequest({
+        ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+        googlePayTokenization,
+      })
+
+      expect(normalized.googlePayTokenization).toEqual(googlePayTokenization)
+    }
+  )
+
+  // Android checks the key, since iOS ignores the field.
+  it('keeps a direct tokenization without a key for native to check', () => {
+    const normalized = normalizePaymentRequest({
+      ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+      googlePayTokenization: { type: 'direct' },
+    })
+
+    expect(normalized.googlePayTokenization).toEqual({ type: 'direct' })
+  })
+
+  it.each([
+    [{ type: 'DIRECT' }, '"DIRECT"'],
+    [{ type: 'PAYMENT_GATEWAY' }, '"PAYMENT_GATEWAY"'],
+    [{}, 'undefined'],
+    [null, 'undefined'],
+    ['direct', 'undefined'],
+  ])('rejects the Google Pay tokenization %p', (tokenization, got) => {
+    expect(() =>
+      normalizePaymentRequest({
+        ...request([{ label: 'Coffee', amount: 1, type: 'final' }]),
+        googlePayTokenization: tokenization as { type: 'direct' },
+      })
+    ).toThrow(
+      `googlePayTokenization.type must be one of "gateway", "direct", got ${got}`
+    )
+  })
+
   // Google Pay's rule: iOS has no such button, so a pending item is fine here.
   it('keeps completeImmediatePurchase with a pending item for native to check', () => {
     const normalized = normalizePaymentRequest({

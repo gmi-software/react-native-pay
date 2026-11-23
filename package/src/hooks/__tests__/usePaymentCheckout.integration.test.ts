@@ -533,6 +533,30 @@ describe('usePaymentCheckout integration', () => {
     expect(request.googlePayCheckoutOption).toBe('continueToReview')
   })
 
+  it('sends the Google Pay tokenization', async () => {
+    mockStartPayment.mockResolvedValueOnce({ success: true })
+
+    const { result } = renderHook(() =>
+      usePaymentCheckout({
+        googlePayTokenization: { type: 'direct', publicKey: 'key' },
+      })
+    )
+
+    act(() => {
+      result.current.addItem('Coffee', 10)
+    })
+
+    await act(async () => {
+      await result.current.startPayment()
+    })
+
+    const [request] = mockStartPayment.mock.calls[0]
+    expect(request.googlePayTokenization).toEqual({
+      type: 'direct',
+      publicKey: 'key',
+    })
+  })
+
   it('leaves the Google Pay checkout option out when not set', async () => {
     mockStartPayment.mockResolvedValueOnce({ success: true })
 
@@ -614,6 +638,14 @@ describe('usePaymentCheckout integration', () => {
       googlePayEnvironment: ['TEST', 'PRODUCTION'],
       googlePayGateway: ['stripe', 'adyen'],
       googlePayGatewayMerchantId: ['gateway-a', 'gateway-b'],
+      googlePayTokenization: [
+        { type: 'gateway' },
+        {
+          type: 'direct',
+          publicKey:
+            'BOdoXP+9Aq473SnGwg3JU1aiNpsd9vH2ognq4PtDtlLGa3Kj8TPf+jaQNPyDSkh3JUhiS0KyrrlWhAgNZKHYF2Y=',
+        },
+      ],
       googlePayAllowedAuthMethods: [
         ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
         ['CRYPTOGRAM_3DS'],
@@ -645,6 +677,20 @@ describe('usePaymentCheckout integration', () => {
         expect(result.current.startPayment).not.toBe(initial.startPayment)
       }
     )
+
+    it('ignores the key order of googlePayTokenization', () => {
+      const { result, rerender } = renderWithConfig({
+        googlePayTokenization: { type: 'direct', publicKey: 'key' },
+      })
+      const initial = result.current
+
+      rerender({ googlePayTokenization: { publicKey: 'key', type: 'direct' } })
+      expect(result.current.paymentRequest).toBe(initial.paymentRequest)
+      expect(result.current.paymentRequest.googlePayTokenization).toEqual({
+        type: 'direct',
+        publicKey: 'key',
+      })
+    })
 
     it('starts the payment with the config from the latest render', async () => {
       mockStartPayment.mockResolvedValueOnce({ success: true })

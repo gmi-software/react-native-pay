@@ -6,6 +6,7 @@
 
 import type {
   GooglePayCheckoutOption,
+  GooglePayTokenizationType,
   PaymentItem,
   PaymentItemKind,
   PaymentRequest,
@@ -34,6 +35,10 @@ const GOOGLE_PAY_CHECKOUT_OPTIONS: readonly GooglePayCheckoutOption[] = [
   'default',
   'completeImmediatePurchase',
   'continueToReview',
+]
+const GOOGLE_PAY_TOKENIZATION_TYPES: readonly GooglePayTokenizationType[] = [
+  'gateway',
+  'direct',
 ]
 
 function checkCode(
@@ -84,6 +89,23 @@ function checkGooglePayCheckoutOption(option: unknown) {
   }
 }
 
+// Native code would reject an unknown type without naming the field. Android
+// checks the public key: iOS ignores the field.
+function checkGooglePayTokenization(tokenization: unknown) {
+  if (tokenization === undefined) return
+  const type =
+    typeof tokenization === 'object' && tokenization !== null
+      ? (tokenization as { type?: unknown }).type
+      : undefined
+  if (
+    !GOOGLE_PAY_TOKENIZATION_TYPES.includes(type as GooglePayTokenizationType)
+  ) {
+    throw new Error(
+      `googlePayTokenization.type must be one of ${GOOGLE_PAY_TOKENIZATION_TYPES.map((t) => `"${t}"`).join(', ')}, got ${JSON.stringify(type)}`
+    )
+  }
+}
+
 /**
  * Validates a payment request and returns a copy whose amounts are exact
  * decimal strings. `createPaymentRequest`, `usePaymentCheckout` and
@@ -94,7 +116,8 @@ function checkGooglePayCheckoutOption(option: unknown) {
  * ISO 3166-1 alpha-2 code (`'US'`), both upper case. Line items may be
  * negative (discounts), but the total may not. An item's `kind` must be a
  * `PaymentItemKind`, `googlePayCheckoutOption` a `GooglePayCheckoutOption`,
- * and `totalLabel` must not be blank. An Android release build warns once if
+ * `googlePayTokenization.type` a `GooglePayTokenizationType`, and
+ * `totalLabel` must not be blank. An Android release build warns once if
  * `googlePayEnvironment` is omitted.
  *
  * `recurring`, `deferred` and `automaticReload` follow the stricter of Apple
@@ -106,8 +129,8 @@ function checkGooglePayCheckoutOption(option: unknown) {
  * shipping methods must then all cost the same. On Android the field is
  * removed without being checked.
  *
- * @throws Error if a code, an amount, a `kind`, `totalLabel` or
- *   `googlePayCheckoutOption` is invalid,
+ * @throws Error if a code, an amount, a `kind`, `totalLabel`,
+ *   `googlePayCheckoutOption` or `googlePayTokenization.type` is invalid,
  *   the total is negative, a recurring, deferred or automatic reload request
  *   is invalid, or `applePayMultiTokenContexts` is invalid.
  */
@@ -120,6 +143,7 @@ export function normalizePaymentRequest(
   checkCode('countryCode', request.countryCode, COUNTRY_CODE_PATTERN, 'US')
   checkTotalLabel(request.totalLabel)
   checkGooglePayCheckoutOption(request.googlePayCheckoutOption)
+  checkGooglePayTokenization(request.googlePayTokenization)
   const paymentItems = normalizePaymentItems(request.paymentItems, currencyCode)
   const total = sumExactly(paymentItems.map((item) => item.amount))
 

@@ -90,6 +90,7 @@ interface PaymentRequest {
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  googlePayTokenization?: GooglePayTokenization // default: gateway
   googlePayAllowedAuthMethods?: string[] // GooglePayAuthMethod values
   googlePayAllowPrepaidCards?: boolean // default: true
   googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
@@ -107,6 +108,8 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `merchantCapabilities` takes [`MerchantCapability`](#merchantcapability) values.
 
 `supportedNetworks` takes [`PaymentNetwork`](#paymentnetwork) names, matched ignoring case, and limits the cards the payer can choose on both platforms. A name that is not a `PaymentNetwork` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `Unknown payment network "<value>". Use a PaymentNetwork value such as "visa" or "mastercard"`. A network the platform does not offer is left out, so one cross-platform list works: Android drops `cartesBancaires`, for example. The payment fails when no network is left.
+
+`googlePayTokenization` sets who encrypts the Google Pay token: your gateway, from `googlePayGateway` and `googlePayGatewayMerchantId`, or your own server with `'direct'`. See [`GooglePayTokenization`](#googlepaytokenization). Omitted, it is `'gateway'`. Android only.
 
 `googlePayAllowedAuthMethods` takes [`GooglePayAuthMethod`](#googlepayauthmethod) values and defaults to both. Android only.
 
@@ -446,6 +449,26 @@ type GooglePayCheckoutOption =
 - `'continueToReview'` — "Review Order", when your app shows a review step after the sheet.
 
 Any other value fails the payment on both platforms with `code: 'CONFIGURATION'`. It has no effect on `recurring`, `deferred` and `automaticReload` payments: their Google Pay objects have no checkout option. iOS has no such label and ignores it.
+
+---
+
+## GooglePayTokenization
+
+Who encrypts the Google Pay token, used in `googlePayTokenization` (Android only). Sent as the card's `tokenizationSpecification`.
+
+```ts
+type GooglePayTokenizationType = 'gateway' | 'direct'
+
+interface GooglePayTokenization {
+  type: GooglePayTokenizationType
+  publicKey?: string // required for 'direct'
+}
+```
+
+- `'gateway'` — Google encrypts the token for your payment gateway, named by `googlePayGateway` and `googlePayGatewayMerchantId`. Google Pay calls it `PAYMENT_GATEWAY`. The same request as leaving `googlePayTokenization` out; `publicKey` is ignored.
+- `'direct'` — Google encrypts the token with your own public key, and your server decrypts it. Sent as `{"type":"DIRECT","parameters":{"protocolVersion":"ECv2","publicKey":"<publicKey>"}}`; the gateway fields are ignored. It needs Google's approval and PCI DSS compliance. See [Decrypt the token yourself](/docs/guides/server-processing#decrypt-the-token-yourself-google-pay-direct).
+
+With `'direct'`, a missing or blank `publicKey` fails the payment with `code: 'CONFIGURATION'` and an `error` that contains `googlePayTokenization.publicKey is required for 'direct' tokenization`, in `TEST` too: unlike the gateway, there is no example key to fall back to. In `PRODUCTION`, `'direct'` still needs `googlePayMerchantId`, but not `googlePayGateway` or `googlePayGatewayMerchantId`. Another `type` fails the payment on both platforms with `code: 'CONFIGURATION'`. iOS ignores the rest.
 
 ---
 

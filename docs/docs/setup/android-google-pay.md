@@ -49,6 +49,37 @@ If you omit `googlePayEnvironment`, Google Pay runs in `TEST`, in release builds
 
 Supported gateways include: `stripe`, `braintree`, `square`, `adyen`, `authorizenet`, `checkoutltd`. See [Google Pay Gateway Tokens](https://developers.google.com/pay/api/android/reference/request-objects#gateway) for the full list and exact identifiers.
 
+### Direct tokenization
+
+With a gateway, Google encrypts the token for your gateway, which decrypts it. With `'direct'`, Google encrypts it with your own public key, and your server decrypts it and gets the card data. Use it only when you process card data yourself:
+
+- Your servers must be PCI DSS compliant, and Google must approve the direct integration. Each year you send Google updated PCI documentation and rotate the key.
+- Register the public key in the [Google Pay & Wallet Console](https://pay.google.com/business/console), under **Google Pay API** > **Direct integration**.
+
+Generate a key pair on the NIST P-256 curve, and the public key as base64 of its uncompressed point, with the commands in Google's [payment data cryptography guide](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography):
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+openssl ec -in key.pem -pubout -text -noout 2> /dev/null | grep "pub:" -A5 | sed 1d | xxd -r -p | base64 | paste -sd "\0" - | tr -d '\n\r ' > publicKey.txt
+```
+
+Keep `key.pem` on your server. Pass the public key as `googlePayTokenization`:
+
+```ts
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+// From your server, so you can rotate it without an app release.
+declare const publicKey: string
+
+usePaymentCheckout({
+  googlePayMerchantId: 'your_google_pay_merchant_id',
+  googlePayEnvironment: 'PRODUCTION',
+  googlePayTokenization: { type: 'direct', publicKey },
+})
+```
+
+The library sends `{"type":"DIRECT","parameters":{"protocolVersion":"ECv2","publicKey":"…"}}` and ignores `googlePayGateway` and `googlePayGatewayMerchantId`. Without a `publicKey`, the payment fails with `code: 'CONFIGURATION'`, in `TEST` too, since there is no example key like the `example` gateway. To decrypt the token, see [Decrypt the token yourself](/docs/guides/server-processing#decrypt-the-token-yourself-google-pay-direct).
+
 ## 4. Prebuild and run
 
 ```bash

@@ -363,6 +363,7 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayTokenization?: GooglePayTokenization; // Default: gateway. { type: "direct", publicKey } to decrypt yourself
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[]; // Default: ['PAN_ONLY', 'CRYPTOGRAM_3DS']
   googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out. Default: true
   googlePayCheckoutOption?: GooglePayCheckoutOption; // Sheet button label. Default: Google Pay picks
@@ -807,6 +808,7 @@ interface PaymentRequest {
   googlePayEnvironment?: "TEST" | "PRODUCTION";
   googlePayGateway?: string;
   googlePayGatewayMerchantId?: string;
+  googlePayTokenization?: GooglePayTokenization; // who encrypts the token
   googlePayAllowedAuthMethods?: string[]; // GooglePayAuthMethod values
   googlePayAllowPrepaidCards?: boolean; // false leaves prepaid cards out
   googlePayCheckoutOption?: GooglePayCheckoutOption; // the sheet's button label
@@ -905,6 +907,14 @@ type GooglePayCheckoutOption =
   | "default"
   | "completeImmediatePurchase"
   | "continueToReview";
+
+// Who encrypts the Google Pay token (Android). 'direct' needs Google's approval,
+// PCI DSS compliance and your base64 EC public key; your server decrypts the token.
+type GooglePayTokenizationType = "gateway" | "direct";
+interface GooglePayTokenization {
+  type: GooglePayTokenizationType;
+  publicKey?: string; // required for 'direct'
+}
 
 // Payment Method Type
 type PaymentMethodType = "unknown" | "debit" | "credit" | "prepaid" | "store";

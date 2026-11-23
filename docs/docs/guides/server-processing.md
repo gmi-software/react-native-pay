@@ -171,6 +171,15 @@ app.post('/process-payment', async (req, res) => {
 - Handling failures and refunds.
 - Provider-specific walkthroughs in [Przelewy24 Apple Pay + Google Pay cookbook](/docs/integrations/przelewy24).
 
+## Decrypt the token yourself (Google Pay `DIRECT`)
+
+With [`googlePayTokenization: { type: 'direct', publicKey }`](/docs/setup/android-google-pay#direct-tokenization), no gateway decrypts the Google Pay token: your server does. `token.paymentData` is then Google's `ECv2` payment method token, a JSON string with `protocolVersion`, `signature`, `intermediateSigningKey` and `signedMessage`.
+
+- Decrypt it with the private key that matches `publicKey`. Google recommends Tink's [`apps-paymentmethodtoken`](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#using-tink) library (Java), with `protocolVersion("ECv2")`. For `PRODUCTION` tokens, the recipient ID is `merchant:<your Google Pay merchant ID>` and the signing keys are Google's production keys. `TEST` tokens use Google's test signing keys; the library sends no merchant ID in `TEST`, so take the recipient ID for them from Google's guide.
+- Check `messageExpiration` before you charge.
+- The decrypted message holds the card number and, for `CRYPTOGRAM_3DS` cards, a cryptogram. It is card data: your servers must be PCI DSS compliant.
+- Rotate the key every year. Google encrypts with the key in the request, so serve `publicKey` from your server, and keep the old private key for a while after the switch to decrypt tokens made with the old key, as Google's [key rotation](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#key-rotation) section describes.
+
 ## Security
 
 - Use **HTTPS** and authenticate the client (e.g. session or API key).

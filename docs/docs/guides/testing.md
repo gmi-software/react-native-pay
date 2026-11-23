@@ -85,7 +85,7 @@ Some gateways, such as Stripe, Braintree, and Adyen, show their own test cards i
 
 - **Availability.** With `existingPaymentMethodRequired`, `isReadyToPay` [always returns `true` in `TEST`](https://developers.google.com/pay/api/android/reference/request-objects#IsReadyToPayRequest), so `hasActiveCard` is `true` even with no card. An emulator with no Google account signed in answers `false` instead. You can't test the "no card" path of a signed-in user in `TEST`.
 - **A live charge.** `TEST` tokens never carry real card data. With your gateway's test values, its test environment can process them, but nothing is charged.
-- **Your production request.** The library sends `googlePayMerchantId` and requires `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` only in `PRODUCTION`. A missing value fails with, for example, `googlePayMerchantId is required in PRODUCTION`, which you only see in a `PRODUCTION` build.
+- **Your production request.** The library sends `googlePayMerchantId` and requires `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` only in `PRODUCTION`; with [`'direct'` tokenization](/docs/setup/android-google-pay#direct-tokenization) it requires `googlePayMerchantId` and no gateway values. A missing value fails with, for example, `googlePayMerchantId is required in PRODUCTION`, which you only see in a `PRODUCTION` build.
 
 ### Production access
 
