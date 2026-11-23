@@ -118,7 +118,9 @@ object PaymentMapper {
                 state = address.optNonEmpty("administrativeArea"),
                 postalCode = address.optNonEmpty("postalCode"),
                 country = null,
-                isoCountryCode = address.optNonEmpty("countryCode")?.uppercase()
+                isoCountryCode = address.optNonEmpty("countryCode")?.uppercase(),
+                // Only with the FULL-ISO3166 format, which MIN billing addresses don't use
+                isoAdministrativeArea = address.optNonEmpty("iso3166AdministrativeArea")?.uppercase()
             )
         )
     }

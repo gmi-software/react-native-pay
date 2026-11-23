@@ -316,7 +316,9 @@ enum PassKitTypeMapper {
             state: nonEmpty(address.state),
             postalCode: nonEmpty(address.postalCode),
             country: nonEmpty(address.country),
-            isoCountryCode: nonEmpty(address.isoCountryCode)?.uppercased()
+            isoCountryCode: nonEmpty(address.isoCountryCode)?.uppercased(),
+            // Apple Pay has no ISO 3166-2 code, and `state` is free text.
+            isoAdministrativeArea: nil
         )
     }
 
@@ -366,7 +368,8 @@ enum PassKitTypeMapper {
                 state: contactsAddress.state,
                 postalCode: contactsAddress.postalCode,
                 country: contactsAddress.country,
-                isoCountryCode: contactsAddress.isoCountryCode
+                isoCountryCode: contactsAddress.isoCountryCode,
+                isoAdministrativeArea: nil
             )
             
             return CNLabeledPostalAddress.init(

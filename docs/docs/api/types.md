@@ -658,7 +658,7 @@ interface PaymentContact {
 }
 ```
 
-In `postalAddress`, `street` joins the address lines with `'\n'`, `isoCountryCode` is uppercase ISO 3166-1 alpha-2, and `country` (the country name) is iOS only.
+In `postalAddress`, `street` joins the address lines with `'\n'`, `isoCountryCode` is uppercase ISO 3166-1 alpha-2, and `country` (the country name) is iOS only. `isoAdministrativeArea` is Android only: the region as an ISO 3166-2 code with the country prefix, such as `'US-CA'`, next to the free-text `state`.
 
 ---
 
@@ -680,6 +680,7 @@ interface CNPostalAddress {
   postalCode?: string
   country?: string
   isoCountryCode?: string
+  isoAdministrativeArea?: string // Android only, ISO 3166-2, e.g. 'US-CA'
 }
 
 interface CNLabeledPhoneNumber {

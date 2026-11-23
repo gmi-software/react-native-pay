@@ -1007,6 +1007,7 @@ interface CNPostalAddress {
   postalCode?: string;
   country?: string;
   isoCountryCode?: string;
+  isoAdministrativeArea?: string; // Android only, ISO 3166-2, e.g. "US-CA"
 }
 ```
 

@@ -18,7 +18,7 @@ public extension CNPostalAddress {
   /**
    * Create a new instance of `CNPostalAddress`.
    */
-  init(street: String?, city: String?, state: String?, postalCode: String?, country: String?, isoCountryCode: String?) {
+  init(street: String?, city: String?, state: String?, postalCode: String?, country: String?, isoCountryCode: String?, isoAdministrativeArea: String?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = street {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -51,6 +51,12 @@ public extension CNPostalAddress {
       }
     }(), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = isoCountryCode {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = isoAdministrativeArea {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
         return .init()
@@ -123,6 +129,18 @@ public extension CNPostalAddress {
     return { () -> String? in
       if bridge.has_value_std__optional_std__string_(self.__isoCountryCode) {
         let __unwrapped = bridge.get_std__optional_std__string_(self.__isoCountryCode)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var isoAdministrativeArea: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__isoAdministrativeArea) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__isoAdministrativeArea)
         return String(__unwrapped)
       } else {
         return nil

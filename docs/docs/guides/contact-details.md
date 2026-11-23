@@ -64,7 +64,7 @@ With `HybridPaymentHandler`, set the same flags on the `PaymentRequest`; the det
 
 - **name**: the full name, for example `'Jane Appleseed'`.
 - **givenName**, **familyName**: iOS only. Google Pay returns the name as one string.
-- **postalAddress**: `street` (address lines joined with `'\n'`), `city`, `state`, `postalCode`, `country` (iOS only) and `isoCountryCode` (uppercase ISO 3166-1 alpha-2, such as `'US'`).
+- **postalAddress**: `street` (address lines joined with `'\n'`), `city`, `state`, `postalCode`, `country` (iOS only), `isoCountryCode` (uppercase ISO 3166-1 alpha-2, such as `'US'`) and `isoAdministrativeArea` (Android only: the ISO 3166-2 region code, such as `'US-CA'`). Use `isoAdministrativeArea` where a tax or shipping system needs a region code; on iOS, `state` is the only region you get.
 
 `emailAddress` and `phoneNumber` are plain strings. The phone number is in the format the payer entered. Parts the payer left empty are omitted, not empty strings.
 
