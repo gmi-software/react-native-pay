@@ -42,6 +42,10 @@ namespace margelo::nitro::pay {
     SUPPORT      SWIFT_NAME(support) = 10,
     CONTRIBUTE      SWIFT_NAME(contribute) = 11,
     TIP      SWIFT_NAME(tip) = 12,
+    PLAIN      SWIFT_NAME(plain) = 13,
+    CHECKOUT      SWIFT_NAME(checkout) = 14,
+    SUBSCRIBE      SWIFT_NAME(subscribe) = 15,
+    INSTORE      SWIFT_NAME(instore) = 16,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::pay
@@ -67,6 +71,10 @@ namespace margelo::nitro {
         case hashString("support"): return margelo::nitro::pay::ApplePayButtonType::SUPPORT;
         case hashString("contribute"): return margelo::nitro::pay::ApplePayButtonType::CONTRIBUTE;
         case hashString("tip"): return margelo::nitro::pay::ApplePayButtonType::TIP;
+        case hashString("plain"): return margelo::nitro::pay::ApplePayButtonType::PLAIN;
+        case hashString("checkout"): return margelo::nitro::pay::ApplePayButtonType::CHECKOUT;
+        case hashString("subscribe"): return margelo::nitro::pay::ApplePayButtonType::SUBSCRIBE;
+        case hashString("inStore"): return margelo::nitro::pay::ApplePayButtonType::INSTORE;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum ApplePayButtonType - invalid value!");
       }
@@ -86,6 +94,10 @@ namespace margelo::nitro {
         case margelo::nitro::pay::ApplePayButtonType::SUPPORT: return JSIConverter<std::string>::toJSI(runtime, "support");
         case margelo::nitro::pay::ApplePayButtonType::CONTRIBUTE: return JSIConverter<std::string>::toJSI(runtime, "contribute");
         case margelo::nitro::pay::ApplePayButtonType::TIP: return JSIConverter<std::string>::toJSI(runtime, "tip");
+        case margelo::nitro::pay::ApplePayButtonType::PLAIN: return JSIConverter<std::string>::toJSI(runtime, "plain");
+        case margelo::nitro::pay::ApplePayButtonType::CHECKOUT: return JSIConverter<std::string>::toJSI(runtime, "checkout");
+        case margelo::nitro::pay::ApplePayButtonType::SUBSCRIBE: return JSIConverter<std::string>::toJSI(runtime, "subscribe");
+        case margelo::nitro::pay::ApplePayButtonType::INSTORE: return JSIConverter<std::string>::toJSI(runtime, "inStore");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert ApplePayButtonType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -110,6 +122,10 @@ namespace margelo::nitro {
         case hashString("support"):
         case hashString("contribute"):
         case hashString("tip"):
+        case hashString("plain"):
+        case hashString("checkout"):
+        case hashString("subscribe"):
+        case hashString("inStore"):
           return true;
         default:
           return false;

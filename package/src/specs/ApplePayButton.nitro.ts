@@ -18,6 +18,10 @@ export type ApplePayButtonType =
   | 'support'
   | 'contribute'
   | 'tip'
+  | 'plain'
+  | 'checkout'
+  | 'subscribe'
+  | 'inStore'
 export type ApplePayButtonStyle = 'white' | 'whiteOutline' | 'black'
 
 export interface ApplePayButtonProps extends HybridViewProps {

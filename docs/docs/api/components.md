@@ -19,7 +19,9 @@ Renders the system Apple Pay button. Only available on iOS.
 | `style` | `ViewStyle` | No | Layout/style (e.g. width, height). |
 
 **ApplePayButtonType:**  
-`'buy'` | `'setUp'` | `'book'` | `'donate'` | `'continue'` | `'reload'` | `'addMoney'` | `'topUp'` | `'order'` | `'rent'` | `'support'` | `'contribute'` | `'tip'`
+`'buy'` | `'setUp'` | `'book'` | `'donate'` | `'continue'` | `'reload'` | `'addMoney'` | `'topUp'` | `'order'` | `'rent'` | `'support'` | `'contribute'` | `'tip'` | `'plain'` | `'checkout'` | `'subscribe'` | `'inStore'`
+
+`'plain'` shows only the Apple Pay mark, for narrow layouts. `'inStore'` reads "Pay with Apple Pay".
 
 **ApplePayButtonStyle:**  
 `'white'` | `'whiteOutline'` | `'black'`

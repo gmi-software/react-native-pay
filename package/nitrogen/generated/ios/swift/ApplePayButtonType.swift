@@ -43,6 +43,14 @@ public extension ApplePayButtonType {
         self = .contribute
       case "tip":
         self = .tip
+      case "plain":
+        self = .plain
+      case "checkout":
+        self = .checkout
+      case "subscribe":
+        self = .subscribe
+      case "inStore":
+        self = .instore
       default:
         return nil
     }
@@ -79,6 +87,14 @@ public extension ApplePayButtonType {
         return "contribute"
       case .tip:
         return "tip"
+      case .plain:
+        return "plain"
+      case .checkout:
+        return "checkout"
+      case .subscribe:
+        return "subscribe"
+      case .instore:
+        return "inStore"
     }
   }
 }

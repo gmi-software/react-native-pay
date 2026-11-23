@@ -78,7 +78,7 @@ The payment fails with `code: 'CONFIGURATION'` and `Unknown merchant capability 
 
 Use only supported Apple button values:
 
-- `buttonType`: `'buy' | 'setUp' | 'book' | 'donate' | 'continue' | 'reload' | 'addMoney' | 'topUp' | 'order' | 'rent' | 'support' | 'contribute' | 'tip'`
+- `buttonType`: `'buy' | 'setUp' | 'book' | 'donate' | 'continue' | 'reload' | 'addMoney' | 'topUp' | 'order' | 'rent' | 'support' | 'contribute' | 'tip' | 'plain' | 'checkout' | 'subscribe' | 'inStore'`
 - `buttonStyle`: `'white' | 'whiteOutline' | 'black'`
 
 ## Android (Google Pay)

@@ -21,6 +21,10 @@ enum ApplePayButtonFactory {
         case .support: return .support
         case .contribute: return .contribute
         case .tip: return .tip
+        case .plain: return .plain
+        case .checkout: return .checkout
+        case .subscribe: return .subscribe
+        case .instore: return .inStore
         }
     }
     
