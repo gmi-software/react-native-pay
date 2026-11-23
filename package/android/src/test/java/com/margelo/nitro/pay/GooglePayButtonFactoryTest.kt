@@ -1,5 +1,6 @@
 package com.margelo.nitro.pay
 
+import com.google.android.gms.wallet.button.ButtonConstants
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -32,6 +33,34 @@ class GooglePayButtonFactoryTest {
         listener.onClick(null)
 
         assertEquals(listOf("first", "second"), calls)
+    }
+
+    @Test
+    fun mapButtonType_mapsEveryTypeToItsGooglePayButton() {
+        val expected = mapOf(
+            GooglePayButtonType.BUY to ButtonConstants.ButtonType.BUY,
+            GooglePayButtonType.BOOK to ButtonConstants.ButtonType.BOOK,
+            GooglePayButtonType.CHECKOUT to ButtonConstants.ButtonType.CHECKOUT,
+            GooglePayButtonType.DONATE to ButtonConstants.ButtonType.DONATE,
+            GooglePayButtonType.ORDER to ButtonConstants.ButtonType.ORDER,
+            GooglePayButtonType.PAY to ButtonConstants.ButtonType.PAY,
+            GooglePayButtonType.SUBSCRIBE to ButtonConstants.ButtonType.SUBSCRIBE,
+            GooglePayButtonType.PLAIN to ButtonConstants.ButtonType.PLAIN,
+            GooglePayButtonType.PIX to ButtonConstants.ButtonType.PIX,
+            GooglePayButtonType.EWALLET to ButtonConstants.ButtonType.EWALLET,
+        )
+
+        assertEquals(GooglePayButtonType.entries.toSet(), expected.keys)
+        for ((type, buttonType) in expected) {
+            assertEquals(type.name, buttonType, GooglePayButtonFactory.mapButtonType(type))
+        }
+    }
+
+    @Test
+    fun mapButtonType_givesEachTypeADifferentButton() {
+        val buttonTypes = GooglePayButtonType.entries.map(GooglePayButtonFactory::mapButtonType)
+
+        assertEquals(buttonTypes.size, buttonTypes.toSet().size)
     }
 
     @Test

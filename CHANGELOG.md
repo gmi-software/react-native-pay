@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`pix` and `ewallet` Google Pay buttons.** `GooglePayButtonType` adds `'pix'` and `'ewallet'`,
+  Google's `PIX` and `EWALLET` button types. `'pix'` shows "Direct Pix payment"; Google Play
+  services draws `'ewallet'` like `'buy'` so far. They change only the button: the sheet still
+  offers cards ([#91](https://github.com/gmi-software/react-native-pay/issues/91)).
 - **Apple Pay networks from iOS 26.2 to 27.** `PaymentNetwork` adds `conecs` (iOS 26.2),
   `elCorteIngles` (iOS 26.4) and `ruPay`, `verve`, `humo`, `uzCard`, `payPak`, `maal` and `elcard`
   (iOS 27). A request may name them, and a card on one of them is reported by name instead of

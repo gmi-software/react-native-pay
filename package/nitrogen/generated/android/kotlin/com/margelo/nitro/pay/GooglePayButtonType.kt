@@ -23,7 +23,9 @@ enum class GooglePayButtonType(@DoNotStrip @Keep val value: Int) {
   CHECKOUT(4),
   PAY(5),
   SUBSCRIBE(6),
-  PLAIN(7);
+  PLAIN(7),
+  PIX(8),
+  EWALLET(9);
 
   companion object
 }

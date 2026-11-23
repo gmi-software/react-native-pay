@@ -64,7 +64,7 @@ object GooglePayButtonFactory {
     /**
      * Maps GooglePayButtonType to ButtonConstants
      */
-    private fun mapButtonType(type: GooglePayButtonType): Int {
+    internal fun mapButtonType(type: GooglePayButtonType): Int {
         return when (type) {
             GooglePayButtonType.BUY -> ButtonConstants.ButtonType.BUY
             GooglePayButtonType.BOOK -> ButtonConstants.ButtonType.BOOK
@@ -74,6 +74,8 @@ object GooglePayButtonFactory {
             GooglePayButtonType.PAY -> ButtonConstants.ButtonType.PAY
             GooglePayButtonType.SUBSCRIBE -> ButtonConstants.ButtonType.SUBSCRIBE
             GooglePayButtonType.PLAIN -> ButtonConstants.ButtonType.PLAIN
+            GooglePayButtonType.PIX -> ButtonConstants.ButtonType.PIX
+            GooglePayButtonType.EWALLET -> ButtonConstants.ButtonType.EWALLET
         }
     }
     
