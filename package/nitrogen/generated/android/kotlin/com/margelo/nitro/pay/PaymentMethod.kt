@@ -32,7 +32,10 @@ data class PaymentMethod(
   val secureElementPass: PKSecureElementPass?,
   @DoNotStrip
   @Keep
-  val billingAddress: CNContact?
+  val billingAddress: CNContact?,
+  @DoNotStrip
+  @Keep
+  val assuranceDetails: GooglePayAssuranceDetails?
 ) {
   /* primary constructor */
 
@@ -44,6 +47,7 @@ data class PaymentMethod(
       && Objects.deepEquals(this.type, other.type)
       && Objects.deepEquals(this.secureElementPass, other.secureElementPass)
       && Objects.deepEquals(this.billingAddress, other.billingAddress)
+      && Objects.deepEquals(this.assuranceDetails, other.assuranceDetails)
   }
 
   override fun hashCode(): Int {
@@ -52,7 +56,8 @@ data class PaymentMethod(
       network,
       type,
       secureElementPass,
-      billingAddress
+      billingAddress,
+      assuranceDetails
     ).contentDeepHashCode()
   }
 
@@ -64,8 +69,8 @@ data class PaymentMethod(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(displayName: String?, network: PaymentNetwork?, type: PaymentMethodType, secureElementPass: PKSecureElementPass?, billingAddress: CNContact?): PaymentMethod {
-      return PaymentMethod(displayName, network, type, secureElementPass, billingAddress)
+    private fun fromCpp(displayName: String?, network: PaymentNetwork?, type: PaymentMethodType, secureElementPass: PKSecureElementPass?, billingAddress: CNContact?, assuranceDetails: GooglePayAssuranceDetails?): PaymentMethod {
+      return PaymentMethod(displayName, network, type, secureElementPass, billingAddress, assuranceDetails)
     }
   }
 }

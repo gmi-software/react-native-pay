@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **`googlePayAssuranceDetailsRequired`** in `PaymentRequest` and the `usePaymentCheckout` config.
+  `true` sends Google Pay's `assuranceDetailsRequired` in the payment request, and the token's
+  `paymentMethod.assuranceDetails` (`GooglePayAssuranceDetails`: `accountVerified`,
+  `cardHolderAuthenticated`) reports whether Google verified the card and authenticated the
+  cardholder, in `onAuthorize` and the result. When both are `true`, Google says the payment
+  needs no 3-D Secure step-up. The details are not in the encrypted token, so your server gets
+  them only from your app, unsigned: treat them as a risk signal. Omitted or `false`, the request
+  and the result are unchanged. Android only
+  ([#88](https://github.com/gmi-software/react-native-pay/issues/88)).
 - **Google Pay `DIRECT` tokenization.** `PaymentRequest` and `usePaymentCheckout` add
   `googlePayTokenization`. `{ type: 'direct', publicKey }` has Google encrypt the token with your
   own EC public key (`protocolVersion: "ECv2"`), for a PCI DSS compliant server that decrypts it;

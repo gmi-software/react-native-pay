@@ -419,7 +419,9 @@ private struct PaymentTokenConverter {
             network: pkMethod.network.map { PassKitTypeMapper.convert($0) },
             type: PassKitTypeMapper.convert(pkMethod.type),
             secureElementPass: convertSecureElementPass(pkMethod),
-            billingAddress: convertBillingAddress(pkMethod)
+            billingAddress: convertBillingAddress(pkMethod),
+            // Google Pay only
+            assuranceDetails: nil
         )
     }
     

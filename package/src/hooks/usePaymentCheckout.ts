@@ -181,6 +181,13 @@ export interface UsePaymentCheckoutConfig
   googlePayAllowPrepaidCards?: boolean
 
   /**
+   * `true` asks Google Pay whether it verified the card and authenticated
+   * the cardholder, returned as `token.paymentMethod.assuranceDetails`, for
+   * example to skip a 3-D Secure step-up. Defaults to `false`. Android only.
+   */
+  googlePayAssuranceDetailsRequired?: boolean
+
+  /**
    * The label of the Google Pay sheet's button: `'default'` ("Continue" or
    * "Pay"), `'completeImmediatePurchase'` ("Pay now") or
    * `'continueToReview'` ("Review Order"). Omitted, Google Pay picks, as with
@@ -439,6 +446,7 @@ export function usePaymentCheckout(
       googlePayTokenization,
       googlePayAllowedAuthMethods,
       googlePayAllowPrepaidCards,
+      googlePayAssuranceDetailsRequired,
       googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,
@@ -464,6 +472,7 @@ export function usePaymentCheckout(
       googlePayTokenization,
       googlePayAllowedAuthMethods,
       googlePayAllowPrepaidCards,
+      googlePayAssuranceDetailsRequired,
       googlePayCheckoutOption,
       billingContactRequired,
       shippingContactRequired,

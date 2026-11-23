@@ -36,6 +36,8 @@ namespace margelo::nitro::pay { struct DeferredBillingItem; }
 namespace margelo::nitro::pay { struct DeferredPaymentRequest; }
 // Forward declaration of `FreeCancellation` to properly resolve imports.
 namespace margelo::nitro::pay { struct FreeCancellation; }
+// Forward declaration of `GooglePayAssuranceDetails` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayAssuranceDetails; }
 // Forward declaration of `GooglePayCheckoutOption` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 // Forward declaration of `GooglePayEnvironment` to properly resolve imports.
@@ -126,6 +128,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "DeferredBillingItem.hpp"
 #include "DeferredPaymentRequest.hpp"
 #include "FreeCancellation.hpp"
+#include "GooglePayAssuranceDetails.hpp"
 #include "GooglePayCheckoutOption.hpp"
 #include "GooglePayEnvironment.hpp"
 #include "GooglePayTokenization.hpp"

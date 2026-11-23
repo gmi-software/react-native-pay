@@ -18,7 +18,7 @@ public extension PaymentMethod {
   /**
    * Create a new instance of `PaymentMethod`.
    */
-  init(displayName: String?, network: PaymentNetwork?, type: PaymentMethodType, secureElementPass: PKSecureElementPass?, billingAddress: CNContact?) {
+  init(displayName: String?, network: PaymentNetwork?, type: PaymentMethodType, secureElementPass: PKSecureElementPass?, billingAddress: CNContact?, assuranceDetails: GooglePayAssuranceDetails?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = displayName {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -40,6 +40,12 @@ public extension PaymentMethod {
     }(), { () -> bridge.std__optional_CNContact_ in
       if let __unwrappedValue = billingAddress {
         return bridge.create_std__optional_CNContact_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_GooglePayAssuranceDetails_ in
+      if let __unwrappedValue = assuranceDetails {
+        return bridge.create_std__optional_GooglePayAssuranceDetails_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -76,5 +82,10 @@ public extension PaymentMethod {
   @inline(__always)
   var billingAddress: CNContact? {
     return self.__billingAddress.value
+  }
+  
+  @inline(__always)
+  var assuranceDetails: GooglePayAssuranceDetails? {
+    return self.__assuranceDetails.value
   }
 }

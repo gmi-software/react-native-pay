@@ -17,6 +17,7 @@
 #include "CNLabeledPostalAddress.hpp"
 #include "CNPhoneNumber.hpp"
 #include "CNPostalAddress.hpp"
+#include "GooglePayAssuranceDetails.hpp"
 #include "JCNContact.hpp"
 #include "JCNContactType.hpp"
 #include "JCNLabeledEmailAddress.hpp"
@@ -24,6 +25,7 @@
 #include "JCNLabeledPostalAddress.hpp"
 #include "JCNPhoneNumber.hpp"
 #include "JCNPostalAddress.hpp"
+#include "JGooglePayAssuranceDetails.hpp"
 #include "JPKSecureElementPass.hpp"
 #include "JPassActivationState.hpp"
 #include "JPaymentMethodType.hpp"
@@ -65,12 +67,15 @@ namespace margelo::nitro::pay {
       jni::local_ref<JPKSecureElementPass> secureElementPass = this->getFieldValue(fieldSecureElementPass);
       static const auto fieldBillingAddress = clazz->getField<JCNContact>("billingAddress");
       jni::local_ref<JCNContact> billingAddress = this->getFieldValue(fieldBillingAddress);
+      static const auto fieldAssuranceDetails = clazz->getField<JGooglePayAssuranceDetails>("assuranceDetails");
+      jni::local_ref<JGooglePayAssuranceDetails> assuranceDetails = this->getFieldValue(fieldAssuranceDetails);
       return PaymentMethod(
         displayName != nullptr ? std::make_optional(displayName->toStdString()) : std::nullopt,
         network != nullptr ? std::make_optional(network->toCpp()) : std::nullopt,
         type->toCpp(),
         secureElementPass != nullptr ? std::make_optional(secureElementPass->toCpp()) : std::nullopt,
-        billingAddress != nullptr ? std::make_optional(billingAddress->toCpp()) : std::nullopt
+        billingAddress != nullptr ? std::make_optional(billingAddress->toCpp()) : std::nullopt,
+        assuranceDetails != nullptr ? std::make_optional(assuranceDetails->toCpp()) : std::nullopt
       );
     }
 
@@ -80,7 +85,7 @@ namespace margelo::nitro::pay {
      */
     [[maybe_unused]]
     static jni::local_ref<JPaymentMethod::javaobject> fromCpp(const PaymentMethod& value) {
-      using JSignature = JPaymentMethod(jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentNetwork>, jni::alias_ref<JPaymentMethodType>, jni::alias_ref<JPKSecureElementPass>, jni::alias_ref<JCNContact>);
+      using JSignature = JPaymentMethod(jni::alias_ref<jni::JString>, jni::alias_ref<JPaymentNetwork>, jni::alias_ref<JPaymentMethodType>, jni::alias_ref<JPKSecureElementPass>, jni::alias_ref<JCNContact>, jni::alias_ref<JGooglePayAssuranceDetails>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -89,7 +94,8 @@ namespace margelo::nitro::pay {
         value.network.has_value() ? JPaymentNetwork::fromCpp(value.network.value()) : nullptr,
         JPaymentMethodType::fromCpp(value.type),
         value.secureElementPass.has_value() ? JPKSecureElementPass::fromCpp(value.secureElementPass.value()) : nullptr,
-        value.billingAddress.has_value() ? JCNContact::fromCpp(value.billingAddress.value()) : nullptr
+        value.billingAddress.has_value() ? JCNContact::fromCpp(value.billingAddress.value()) : nullptr,
+        value.assuranceDetails.has_value() ? JGooglePayAssuranceDetails::fromCpp(value.assuranceDetails.value()) : nullptr
       );
     }
   };

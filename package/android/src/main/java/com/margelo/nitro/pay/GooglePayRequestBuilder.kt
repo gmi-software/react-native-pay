@@ -199,6 +199,10 @@ object GooglePayRequestBuilder {
                 })
             }
         }
+        if (request.googlePayAssuranceDetailsRequired == true) {
+            // Only the payment request: the readiness check and the button have no result to carry it.
+            baseMethod.getJSONObject("parameters").put("assuranceDetailsRequired", true)
+        }
         baseMethod.put("tokenizationSpecification", createTokenizationSpec(request, environment))
         return baseMethod
     }

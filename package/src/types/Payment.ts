@@ -217,6 +217,20 @@ export interface ShippingMethod {
   detail?: string
 }
 
+/**
+ * What Google checked about the card the payer picked. Requested with
+ * `PaymentRequest.googlePayAssuranceDetailsRequired`. Android only.
+ */
+export interface GooglePayAssuranceDetails {
+  /** Google validated that the payer possesses the card. */
+  accountVerified: boolean
+  /**
+   * Google authenticated the cardholder (identification and verification).
+   * `false` leaves it to your usual risk checks, such as 3-D Secure.
+   */
+  cardHolderAuthenticated: boolean
+}
+
 export interface PaymentMethod {
   /**
    * Describes the card to the payer, for example `'Visa 1234'`. Comes from
@@ -228,6 +242,11 @@ export interface PaymentMethod {
   type: PaymentMethodType
   secureElementPass?: PKSecureElementPass // Available from iOS 13.4+
   billingAddress?: CNContact // Available from iOS 13.0+
+  /**
+   * Set when `PaymentRequest.googlePayAssuranceDetailsRequired` asked for it
+   * and Google Pay returned it. Android only.
+   */
+  assuranceDetails?: GooglePayAssuranceDetails
 }
 
 export interface PaymentToken {
@@ -517,6 +536,12 @@ export interface PaymentRequest {
    * to `true`. Android only; Apple Pay has no such option.
    */
   googlePayAllowPrepaidCards?: boolean
+  /**
+   * `true` asks Google Pay whether it verified the card and authenticated
+   * the cardholder, returned as `token.paymentMethod.assuranceDetails`.
+   * Defaults to `false`. Android only.
+   */
+  googlePayAssuranceDetailsRequired?: boolean
   /**
    * The label of the Google Pay sheet's button. Omitted, Google Pay picks
    * "Continue" or "Pay", as with `'default'`. `'completeImmediatePurchase'`

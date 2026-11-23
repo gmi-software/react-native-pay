@@ -841,6 +841,38 @@ class GooglePayRequestBuilderTest {
         assertFalse(parameters.getBoolean("allowPrepaidCards"))
     }
 
+    // Assurance details
+
+    @Test
+    fun assuranceDetailsRequired_asksForThemInThePaymentRequestOnly() {
+        val request = build(paymentRequest(coffee, googlePayAssuranceDetailsRequired = true))
+        val readiness = GooglePayRequestBuilder.createIsReadyToPayRequest(GooglePayCardParameters.DEFAULT)
+        val button = GooglePayRequestBuilder.createAllowedPaymentMethods(GooglePayCardParameters.DEFAULT)
+
+        assertTrue(request.cardParameters().getBoolean("assuranceDetailsRequired"))
+        assertFalse(readiness.cardParameters().has("assuranceDetailsRequired"))
+        assertFalse(button.getJSONObject(0).getJSONObject("parameters").has("assuranceDetailsRequired"))
+    }
+
+    @Test
+    fun assuranceDetailsOmittedOrFalse_sendsTheSameRequestAsBefore() {
+        val omitted = build(paymentRequest(coffee))
+        val notRequired = build(paymentRequest(coffee, googlePayAssuranceDetailsRequired = false))
+
+        assertFalse(omitted.cardParameters().has("assuranceDetailsRequired"))
+        assertEquals(omitted.toString(), notRequired.toString())
+    }
+
+    @Test
+    fun assuranceDetailsRequired_combinesWithABillingAddress() {
+        val parameters = build(
+            paymentRequest(coffee, billingContactRequired = true, googlePayAssuranceDetailsRequired = true)
+        ).cardParameters()
+
+        assertTrue(parameters.getBoolean("assuranceDetailsRequired"))
+        assertTrue(parameters.getBoolean("billingAddressRequired"))
+    }
+
     // Payment data callbacks
 
     private fun buildWithCallbacks(request: PaymentRequest, callbacks: CallbackIntents): JSONObject =

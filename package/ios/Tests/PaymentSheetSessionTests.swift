@@ -32,7 +32,8 @@ final class PaymentSheetSessionTests: XCTestCase {
             network: .visa,
             type: .credit,
             secureElementPass: nil,
-            billingAddress: nil
+            billingAddress: nil,
+            assuranceDetails: nil
         ),
         transactionIdentifier: "transaction",
         paymentData: "data"
@@ -85,6 +86,7 @@ final class PaymentSheetSessionTests: XCTestCase {
             googlePayTokenization: nil,
             googlePayAllowedAuthMethods: nil,
             googlePayAllowPrepaidCards: nil,
+            googlePayAssuranceDetailsRequired: nil,
             googlePayCheckoutOption: nil
         )
     }
