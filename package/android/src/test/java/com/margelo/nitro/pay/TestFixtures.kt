@@ -58,6 +58,8 @@ internal fun paymentRequest(
     automaticReload = automaticReload,
     applePayMultiTokenContexts = null,
     couponCode = null,
+    applePayMerchantCategoryCode = null,
+    applePayLaterAvailability = null,
     googlePayMerchantId = googlePayMerchantId,
     googlePayEnvironment = environment,
     googlePayGateway = googlePayGateway,

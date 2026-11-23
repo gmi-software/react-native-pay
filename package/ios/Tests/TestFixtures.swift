@@ -32,7 +32,9 @@ func paymentRequest(
     deferred: DeferredPaymentRequest? = nil,
     automaticReload: AutomaticReloadPaymentRequest? = nil,
     multiTokenContexts: [PaymentTokenContext]? = nil,
-    couponCode: String? = nil
+    couponCode: String? = nil,
+    merchantCategoryCode: Double? = nil,
+    applePayLaterAvailability: String? = nil
 ) -> PaymentRequest {
     return PaymentRequest(
         applePayMerchantIdentifier: merchantIdentifier,
@@ -54,6 +56,8 @@ func paymentRequest(
         automaticReload: automaticReload,
         applePayMultiTokenContexts: multiTokenContexts,
         couponCode: couponCode,
+        applePayMerchantCategoryCode: merchantCategoryCode,
+        applePayLaterAvailability: applePayLaterAvailability,
         googlePayMerchantId: nil,
         googlePayEnvironment: nil,
         googlePayGateway: nil,

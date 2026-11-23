@@ -252,6 +252,81 @@ final class PaymentRequestBuilderTests: XCTestCase {
         )
     }
 
+    func testSetsTheMerchantCategoryCode() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(
+            items: [item("Coffee", "4.99")],
+            merchantCategoryCode: 5411
+        ))
+
+        guard #available(iOS 18.0, *) else { throw XCTSkip("Needs iOS 18") }
+        XCTAssertEqual(request.merchantCategoryCode?.rawValue, 5411)
+    }
+
+    func testAcceptsTheEdgesOfTheMerchantCategoryCodeRange() throws {
+        for code in [0.0, 9999.0] {
+            let request = try PaymentRequestBuilder.build(from: paymentRequest(
+                items: [item("Coffee", "4.99")],
+                merchantCategoryCode: code
+            ))
+            if #available(iOS 18.0, *) {
+                XCTAssertEqual(request.merchantCategoryCode?.rawValue, Int16(code))
+            }
+        }
+    }
+
+    func testLeavesTheMerchantCategoryCodeAloneWithoutOne() throws {
+        let request = try PaymentRequestBuilder.build(from: paymentRequest(items: [item("Coffee", "4.99")]))
+
+        guard #available(iOS 18.0, *) else { throw XCTSkip("Needs iOS 18") }
+        // PassKit's own default, which is 0000 rather than nil on iOS 26.
+        XCTAssertEqual(request.merchantCategoryCode, PKPaymentRequest().merchantCategoryCode)
+    }
+
+    func testRejectsAnInvalidMerchantCategoryCode() {
+        let cases: [(Double, String)] = [
+            (-1, "-1"),
+            (10000, "10000"),
+            (5411.5, "5411.5"),
+            (40000, "40000"),
+            (.nan, "nan"),
+        ]
+        for (code, shown) in cases {
+            assertBuildFails(
+                paymentRequest(items: [item("Coffee", "4.99")], merchantCategoryCode: code),
+                with: "Invalid merchant category code \(shown). Use a whole number from 0 to 9999"
+            )
+        }
+    }
+
+    func testSetsApplePayLaterAvailability() throws {
+        guard #available(iOS 17.0, *) else { throw XCTSkip("Needs iOS 17") }
+        func availability(_ value: String) throws -> PKPaymentRequest.ApplePayLaterAvailability {
+            return try PaymentRequestBuilder.build(from: paymentRequest(
+                items: [item("Coffee", "4.99")],
+                applePayLaterAvailability: value
+            )).applePayLaterAvailability
+        }
+
+        guard case .available = try availability("available") else {
+            return XCTFail("Expected available")
+        }
+        guard case .unavailable(.itemIneligible) = try availability("itemIneligible") else {
+            return XCTFail("Expected unavailable(.itemIneligible)")
+        }
+        guard case .unavailable(.recurringTransaction) = try availability("recurringTransaction") else {
+            return XCTFail("Expected unavailable(.recurringTransaction)")
+        }
+    }
+
+    func testRejectsUnknownApplePayLaterAvailability() {
+        for value in ["unavailable", "ItemIneligible", ""] {
+            assertBuildFails(
+                paymentRequest(items: [item("Coffee", "4.99")], applePayLaterAvailability: value),
+                with: "Unknown Apple Pay Later availability \"\(value)\". Use \"available\", \"itemIneligible\" or \"recurringTransaction\""
+            )
+        }
+    }
+
     func testAppendsAMerchantTotalToASingleItem() throws {
         // PassKit shows the last item as the total, so one item still gets one.
         let request = try PaymentRequestBuilder.build(from: paymentRequest(

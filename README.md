@@ -798,6 +798,8 @@ interface PaymentRequest {
   automaticReload?: AutomaticReloadPaymentRequest; // top-ups, iOS 16+
   applePayMultiTokenContexts?: PaymentTokenContext[]; // several merchants, iOS 16+
   couponCode?: string; // iOS only, needs onCouponCodeChange
+  applePayMerchantCategoryCode?: number; // ISO 18245 code, iOS 18+
+  applePayLaterAvailability?: string; // ApplePayLaterAvailability value, iOS 17+
   // Google Pay specific
   googlePayMerchantId?: string;
   googlePayEnvironment?: "TEST" | "PRODUCTION";
@@ -924,6 +926,8 @@ Google Pay accepts at most two decimal places, so three-decimal amounts (`"1.234
 `"3DS"` and `"EMV"` are Apple Pay payment protocols, and PassKit needs at least one of them: EMV only covers China UnionPay, so every other card needs 3DS. Android ignores them. `"Credit"` and `"Debit"` limit the accepted card types. iOS adds `"3DS"` when neither protocol is given, so `["Credit"]` is sent as 3DS + Credit. Both platforms match the values case-insensitively, and any other value fails the payment with `Unknown merchant capability "<value>". Use "3DS", "EMV", "Credit" or "Debit"`.
 
 Google Pay can leave credit cards out, but not debit cards. On Android, `"Debit"` without `"Credit"` sends `allowCreditCards: false`, which UK gambling merchants must do; prepaid cards stay allowed. `["3DS", "Credit"]` accepts every card type on Android, so check the card on your server if you must refuse debit cards. Give `GooglePayButton` and `payServiceStatus` the same `merchantCapabilities` as the payment.
+
+`applePayMerchantCategoryCode` (an ISO 18245 code from 0 to 9999, iOS 18+) leaves out the cards that don't accept your category. `applePayLaterAvailability` (`"available"`, `"itemIneligible"` or `"recurringTransaction"`, iOS 17+) hides Apple Pay Later and tells the payer why. Earlier iOS versions and Android ignore both; an invalid value fails the payment on iOS. See [`PaymentRequest`](https://gmi-software.github.io/react-native-pay/docs/api/types#paymentrequest).
 
 ### Shipping and contact details
 

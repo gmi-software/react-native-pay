@@ -83,6 +83,8 @@ interface PaymentRequest {
   automaticReload?: AutomaticReloadPaymentRequest
   applePayMultiTokenContexts?: PaymentTokenContext[] // several merchants, iOS 16+
   couponCode?: string               // iOS only, needs onCouponCodeChange
+  applePayMerchantCategoryCode?: number // ISO 18245 code, iOS 18+
+  applePayLaterAvailability?: string    // ApplePayLaterAvailability value, iOS 17+
   // Google Pay (Android)
   googlePayMerchantId?: string
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
@@ -121,6 +123,10 @@ Without `googlePayEnvironment`, Android uses `'TEST'`. When it is omitted, an An
 `applePayMultiTokenContexts` pays several merchants with one sheet: see [Several merchants](#several-merchants). iOS only.
 
 `couponCode` is a code already applied, shown in the sheet's coupon field; `paymentItems` must already include its discount. It needs `StartPaymentOptions.onCouponCodeChange`, or the payment fails with `code: 'CONFIGURATION'`. iOS only; Android ignores it.
+
+`applePayMerchantCategoryCode` is your ISO 18245 merchant category code, a whole number from 0 to 9999, for example `5411` for grocery stores. Apple Pay leaves out the cards that don't accept the category. iOS 18 and later use it; earlier versions ignore it. Another value, including a fraction, fails the payment on any iOS version: the result has `code: 'CONFIGURATION'` and `error: 'Invalid merchant category code <value>. Use a whole number from 0 to 9999'`. iOS only; Android ignores it.
+
+`applePayLaterAvailability` takes an [`ApplePayLaterAvailability`](#applepaylateravailability) value. iOS only; Android ignores it.
 
 ---
 
@@ -480,6 +486,21 @@ type ShippingType = 'shipping' | 'delivery' | 'storePickup' | 'servicePickup'
 ```
 
 For example, `'delivery'` shows "Delivery Address" instead of "Shipping Address". Without `shippingType`, Apple Pay uses `'shipping'`. Any other value fails the payment: the result has `code: 'CONFIGURATION'` and `error: 'Unknown shipping type "<value>". Use "shipping", "delivery", "storePickup" or "servicePickup"'`.
+
+---
+
+## ApplePayLaterAvailability
+
+Whether the payer may pay with Apple Pay Later, used in `PaymentRequest.applePayLaterAvailability` (iOS 17 and later; earlier versions and Android ignore the field).
+
+```ts
+type ApplePayLaterAvailability =
+  | 'available'
+  | 'itemIneligible'
+  | 'recurringTransaction'
+```
+
+`'itemIneligible'` and `'recurringTransaction'` hide Apple Pay Later, and the sheet tells the payer why: an item can't be paid over time (gift cards, for example, must not be), or the cart holds a subscription. Without the field, Apple Pay uses `'available'`. Any other value fails the payment on any iOS version: the result has `code: 'CONFIGURATION'` and `error: 'Unknown Apple Pay Later availability "<value>". Use "available", "itemIneligible" or "recurringTransaction"'`.
 
 ---
 
