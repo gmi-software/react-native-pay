@@ -94,9 +94,9 @@ Google Pay only works in `PRODUCTION` after Google approves your app. Google's [
 1. In the [Google Pay & Wallet Console](https://pay.google.com/business/console), choose the **Merchant** business type and complete your business profile.
 2. Open **Google Pay API**, then **Get started**, and accept the Google Pay API Terms of Service and Acceptable Use Policy. Your Google Pay merchant ID then appears in the Console. Pass it as `googlePayMerchantId`.
 3. Go through the [integration checklist](https://developers.google.com/pay/api/android/guides/test-and-deploy/integration-checklist) against your `TEST` build.
-4. Under **Google Pay API → Integrations → Integrate with your Android app**, pick your app and the **Gateway** integration type. The Console only lists apps published on Google Play under the same Google account.
+4. Under **Google Pay API → Integrations → Integrate with your Android app**, pick your app and the integration type: **Gateway** if a payment service provider decrypts the token, or **Direct** with [`'direct'` tokenization](/docs/setup/android-google-pay#direct-tokenization), where you register your public key. The Console only lists apps published on Google Play under the same Google account.
 5. Upload screenshots of your `TEST` integration, and submit the app for approval.
-6. Once approved, set `googlePayEnvironment: 'PRODUCTION'` and your production gateway values, sign the app with your release key, and publish it on Google Play. Google says the debug key doesn't work in `PRODUCTION`.
+6. Once approved, set `googlePayEnvironment: 'PRODUCTION'` and your production gateway values (or your production `publicKey` with `'direct'`), sign the app with your release key, and publish it on Google Play. Google says the debug key doesn't work in `PRODUCTION`.
 
 Until your app has production access, the sheet shows an "Unrecognized App" error. To find out why a `PRODUCTION` request fails, read the merchant error log:
 
