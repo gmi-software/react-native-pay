@@ -100,6 +100,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **`GooglePayButtonType` has two more values**, `'pix'` and `'ewallet'` (see Added). An
+  exhaustive `switch` over `GooglePayButtonType`, or a `Record<GooglePayButtonType, …>`, stops
+  compiling until it handles them ([#91](https://github.com/gmi-software/react-native-pay/issues/91)).
+
 - **`PaymentNetwork` has nine more values**, so `token.paymentMethod.network` can report
   `conecs`, `elCorteIngles`, `ruPay`, `verve`, `humo`, `uzCard`, `payPak`, `maal` or `elcard`
   for a card it reported as `'unknown'` before (see Added). An exhaustive `switch` over
