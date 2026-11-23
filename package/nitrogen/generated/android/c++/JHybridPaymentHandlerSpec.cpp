@@ -103,6 +103,8 @@ namespace margelo::nitro::pay { struct PaymentSheetError; }
 namespace margelo::nitro::pay { enum class PaymentSheetErrorCode; }
 // Forward declaration of `PaymentSheetCard` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentSheetCard; }
+// Forward declaration of `OpenPaymentSetupOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct OpenPaymentSetupOptions; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -216,6 +218,8 @@ namespace margelo::nitro::pay { struct PaymentSheetCard; }
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____ShippingMethod_PaymentSheetSelection.hpp"
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____PaymentSheetCard_PaymentSheetSelection.hpp"
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_PaymentSheetUpdate_____std__string_PaymentSheetSelection.hpp"
+#include "OpenPaymentSetupOptions.hpp"
+#include "JOpenPaymentSetupOptions.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -287,9 +291,9 @@ namespace margelo::nitro::pay {
     auto __result = method(_javaPart);
     return static_cast<bool>(__result);
   }
-  void JHybridPaymentHandlerSpec::openPaymentSetup() {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("openPaymentSetup");
-    method(_javaPart);
+  void JHybridPaymentHandlerSpec::openPaymentSetup(const std::optional<OpenPaymentSetupOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JOpenPaymentSetupOptions> /* options */)>("openPaymentSetup");
+    method(_javaPart, options.has_value() ? JOpenPaymentSetupOptions::fromCpp(options.value()) : nullptr);
   }
 
 } // namespace margelo::nitro::pay

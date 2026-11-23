@@ -23,6 +23,8 @@ namespace margelo::nitro::pay { struct PaymentResult; }
 namespace margelo::nitro::pay { struct PaymentRequest; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
 namespace margelo::nitro::pay { struct StartPaymentOptions; }
+// Forward declaration of `OpenPaymentSetupOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct OpenPaymentSetupOptions; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -31,6 +33,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "PaymentResult.hpp"
 #include "PaymentRequest.hpp"
 #include "StartPaymentOptions.hpp"
+#include "OpenPaymentSetupOptions.hpp"
 
 namespace margelo::nitro::pay {
 
@@ -66,7 +69,7 @@ namespace margelo::nitro::pay {
       virtual std::shared_ptr<Promise<PayServiceStatus>> payServiceStatus(const std::optional<PayServiceStatusOptions>& options) = 0;
       virtual std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) = 0;
       virtual bool isPaymentInProgress() = 0;
-      virtual void openPaymentSetup() = 0;
+      virtual void openPaymentSetup(const std::optional<OpenPaymentSetupOptions>& options) = 0;
 
     protected:
       // Hybrid Setup

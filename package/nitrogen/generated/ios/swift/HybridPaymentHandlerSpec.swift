@@ -16,7 +16,7 @@ public protocol HybridPaymentHandlerSpec_protocol: HybridObject {
   func payServiceStatus(options: PayServiceStatusOptions?) throws -> Promise<PayServiceStatus>
   func startPayment(request: PaymentRequest, options: StartPaymentOptions?) throws -> Promise<PaymentResult>
   func isPaymentInProgress() throws -> Bool
-  func openPaymentSetup() throws -> Void
+  func openPaymentSetup(options: OpenPaymentSetupOptions?) throws -> Void
 }
 
 public extension HybridPaymentHandlerSpec_protocol {

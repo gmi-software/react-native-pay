@@ -106,7 +106,7 @@ class HybridPaymentHandler : HybridPaymentHandlerSpec() {
         return pendingPayment.isInProgress
     }
     
-    override fun openPaymentSetup() {
+    override fun openPaymentSetup(options: OpenPaymentSetupOptions?) {
         // Google Pay has no setup screen to open: its sheet lets the user add a card.
         PayLog.d(PaymentConstants.TAG_PAYMENT_HANDLER, "openPaymentSetup does nothing on Android")
     }

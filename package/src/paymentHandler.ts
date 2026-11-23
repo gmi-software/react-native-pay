@@ -187,5 +187,8 @@ export const validatingPaymentHandler: PaymentHandlerMethods = {
       : getPaymentHandler().startPayment(validatedRequest, preparedOptions)
   },
   isPaymentInProgress: () => getPaymentHandler().isPaymentInProgress(),
-  openPaymentSetup: () => getPaymentHandler().openPaymentSetup(),
+  openPaymentSetup: (options) =>
+    options === undefined
+      ? getPaymentHandler().openPaymentSetup()
+      : getPaymentHandler().openPaymentSetup(options),
 }

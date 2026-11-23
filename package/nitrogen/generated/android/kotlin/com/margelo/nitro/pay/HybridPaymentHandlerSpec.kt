@@ -43,7 +43,7 @@ abstract class HybridPaymentHandlerSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun openPaymentSetup(): Unit
+  abstract fun openPaymentSetup(options: OpenPaymentSetupOptions?): Unit
 
   // Default implementation of `HybridObject.toString()`
   override fun toString(): String {

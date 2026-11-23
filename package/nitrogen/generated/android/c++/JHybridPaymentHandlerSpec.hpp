@@ -57,7 +57,7 @@ namespace margelo::nitro::pay {
     std::shared_ptr<Promise<PayServiceStatus>> payServiceStatus(const std::optional<PayServiceStatusOptions>& options) override;
     std::shared_ptr<Promise<PaymentResult>> startPayment(const PaymentRequest& request, const std::optional<StartPaymentOptions>& options) override;
     bool isPaymentInProgress() override;
-    void openPaymentSetup() override;
+    void openPaymentSetup(const std::optional<OpenPaymentSetupOptions>& options) override;
 
   private:
     jni::global_ref<JHybridPaymentHandlerSpec::JavaPart> _javaPart;

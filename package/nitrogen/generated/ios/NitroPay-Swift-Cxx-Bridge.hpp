@@ -46,6 +46,8 @@ namespace margelo::nitro::pay { struct GooglePayTokenization; }
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
+// Forward declaration of `OpenPaymentSetupOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct OpenPaymentSetupOptions; }
 // Forward declaration of `PKSecureElementPass` to properly resolve imports.
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
@@ -133,6 +135,7 @@ namespace NitroPay { class HybridPaymentHandlerSpec_cxx; }
 #include "GooglePayTokenizationType.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
+#include "OpenPaymentSetupOptions.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PayServiceStatus.hpp"
@@ -1214,6 +1217,21 @@ namespace margelo::nitro::pay::bridge::swift {
     return optional.has_value();
   }
   inline StartPaymentOptions get_std__optional_StartPaymentOptions_(const std::optional<StartPaymentOptions>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<OpenPaymentSetupOptions>
+  /**
+   * Specialized version of `std::optional<OpenPaymentSetupOptions>`.
+   */
+  using std__optional_OpenPaymentSetupOptions_ = std::optional<OpenPaymentSetupOptions>;
+  inline std::optional<OpenPaymentSetupOptions> create_std__optional_OpenPaymentSetupOptions_(const OpenPaymentSetupOptions& value) noexcept {
+    return std::optional<OpenPaymentSetupOptions>(value);
+  }
+  inline bool has_value_std__optional_OpenPaymentSetupOptions_(const std::optional<OpenPaymentSetupOptions>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline OpenPaymentSetupOptions get_std__optional_OpenPaymentSetupOptions_(const std::optional<OpenPaymentSetupOptions>& optional) noexcept {
     return optional.value();
   }
   
