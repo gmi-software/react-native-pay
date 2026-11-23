@@ -54,18 +54,18 @@ namespace margelo::nitro::pay {
         case GooglePayButtonType::ORDER:
           static const auto fieldORDER = clazz->getStaticField<JGooglePayButtonType>("ORDER");
           return clazz->getStaticFieldValue(fieldORDER);
-        case GooglePayButtonType::CHECKOUT:
-          static const auto fieldCHECKOUT = clazz->getStaticField<JGooglePayButtonType>("CHECKOUT");
-          return clazz->getStaticFieldValue(fieldCHECKOUT);
-        case GooglePayButtonType::PAY:
-          static const auto fieldPAY = clazz->getStaticField<JGooglePayButtonType>("PAY");
-          return clazz->getStaticFieldValue(fieldPAY);
-        case GooglePayButtonType::SUBSCRIBE:
-          static const auto fieldSUBSCRIBE = clazz->getStaticField<JGooglePayButtonType>("SUBSCRIBE");
-          return clazz->getStaticFieldValue(fieldSUBSCRIBE);
         case GooglePayButtonType::PLAIN:
           static const auto fieldPLAIN = clazz->getStaticField<JGooglePayButtonType>("PLAIN");
           return clazz->getStaticFieldValue(fieldPLAIN);
+        case GooglePayButtonType::CHECKOUT:
+          static const auto fieldCHECKOUT = clazz->getStaticField<JGooglePayButtonType>("CHECKOUT");
+          return clazz->getStaticFieldValue(fieldCHECKOUT);
+        case GooglePayButtonType::SUBSCRIBE:
+          static const auto fieldSUBSCRIBE = clazz->getStaticField<JGooglePayButtonType>("SUBSCRIBE");
+          return clazz->getStaticFieldValue(fieldSUBSCRIBE);
+        case GooglePayButtonType::PAY:
+          static const auto fieldPAY = clazz->getStaticField<JGooglePayButtonType>("PAY");
+          return clazz->getStaticFieldValue(fieldPAY);
         case GooglePayButtonType::PIX:
           static const auto fieldPIX = clazz->getStaticField<JGooglePayButtonType>("PIX");
           return clazz->getStaticFieldValue(fieldPIX);

@@ -33,10 +33,10 @@ namespace margelo::nitro::pay {
     BOOK      SWIFT_NAME(book) = 1,
     DONATE      SWIFT_NAME(donate) = 2,
     ORDER      SWIFT_NAME(order) = 3,
-    CHECKOUT      SWIFT_NAME(checkout) = 4,
-    PAY      SWIFT_NAME(pay) = 5,
+    PLAIN      SWIFT_NAME(plain) = 4,
+    CHECKOUT      SWIFT_NAME(checkout) = 5,
     SUBSCRIBE      SWIFT_NAME(subscribe) = 6,
-    PLAIN      SWIFT_NAME(plain) = 7,
+    PAY      SWIFT_NAME(pay) = 7,
     PIX      SWIFT_NAME(pix) = 8,
     EWALLET      SWIFT_NAME(ewallet) = 9,
   } CLOSED_ENUM;
@@ -55,10 +55,10 @@ namespace margelo::nitro {
         case hashString("book"): return margelo::nitro::pay::GooglePayButtonType::BOOK;
         case hashString("donate"): return margelo::nitro::pay::GooglePayButtonType::DONATE;
         case hashString("order"): return margelo::nitro::pay::GooglePayButtonType::ORDER;
-        case hashString("checkout"): return margelo::nitro::pay::GooglePayButtonType::CHECKOUT;
-        case hashString("pay"): return margelo::nitro::pay::GooglePayButtonType::PAY;
-        case hashString("subscribe"): return margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE;
         case hashString("plain"): return margelo::nitro::pay::GooglePayButtonType::PLAIN;
+        case hashString("checkout"): return margelo::nitro::pay::GooglePayButtonType::CHECKOUT;
+        case hashString("subscribe"): return margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE;
+        case hashString("pay"): return margelo::nitro::pay::GooglePayButtonType::PAY;
         case hashString("pix"): return margelo::nitro::pay::GooglePayButtonType::PIX;
         case hashString("ewallet"): return margelo::nitro::pay::GooglePayButtonType::EWALLET;
         default: [[unlikely]]
@@ -71,10 +71,10 @@ namespace margelo::nitro {
         case margelo::nitro::pay::GooglePayButtonType::BOOK: return JSIConverter<std::string>::toJSI(runtime, "book");
         case margelo::nitro::pay::GooglePayButtonType::DONATE: return JSIConverter<std::string>::toJSI(runtime, "donate");
         case margelo::nitro::pay::GooglePayButtonType::ORDER: return JSIConverter<std::string>::toJSI(runtime, "order");
-        case margelo::nitro::pay::GooglePayButtonType::CHECKOUT: return JSIConverter<std::string>::toJSI(runtime, "checkout");
-        case margelo::nitro::pay::GooglePayButtonType::PAY: return JSIConverter<std::string>::toJSI(runtime, "pay");
-        case margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE: return JSIConverter<std::string>::toJSI(runtime, "subscribe");
         case margelo::nitro::pay::GooglePayButtonType::PLAIN: return JSIConverter<std::string>::toJSI(runtime, "plain");
+        case margelo::nitro::pay::GooglePayButtonType::CHECKOUT: return JSIConverter<std::string>::toJSI(runtime, "checkout");
+        case margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE: return JSIConverter<std::string>::toJSI(runtime, "subscribe");
+        case margelo::nitro::pay::GooglePayButtonType::PAY: return JSIConverter<std::string>::toJSI(runtime, "pay");
         case margelo::nitro::pay::GooglePayButtonType::PIX: return JSIConverter<std::string>::toJSI(runtime, "pix");
         case margelo::nitro::pay::GooglePayButtonType::EWALLET: return JSIConverter<std::string>::toJSI(runtime, "ewallet");
         default: [[unlikely]]
@@ -92,10 +92,10 @@ namespace margelo::nitro {
         case hashString("book"):
         case hashString("donate"):
         case hashString("order"):
-        case hashString("checkout"):
-        case hashString("pay"):
-        case hashString("subscribe"):
         case hashString("plain"):
+        case hashString("checkout"):
+        case hashString("subscribe"):
+        case hashString("pay"):
         case hashString("pix"):
         case hashString("ewallet"):
           return true;

@@ -598,7 +598,11 @@ interface ApplePayButtonProps {
     | "rent"
     | "support"
     | "contribute"
-    | "tip";
+    | "tip"
+    | "plain" // Apple Pay mark only, for narrow layouts
+    | "checkout"
+    | "subscribe"
+    | "inStore";
 
   buttonStyle: "white" | "whiteOutline" | "black";
 

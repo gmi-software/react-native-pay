@@ -20,10 +20,10 @@ enum class GooglePayButtonType(@DoNotStrip @Keep val value: Int) {
   BOOK(1),
   DONATE(2),
   ORDER(3),
-  CHECKOUT(4),
-  PAY(5),
+  PLAIN(4),
+  CHECKOUT(5),
   SUBSCRIBE(6),
-  PLAIN(7),
+  PAY(7),
   PIX(8),
   EWALLET(9);
 
