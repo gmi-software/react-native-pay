@@ -175,10 +175,11 @@ app.post('/process-payment', async (req, res) => {
 
 With [`googlePayTokenization: { type: 'direct', publicKey }`](/docs/setup/android-google-pay#direct-tokenization), no gateway decrypts the Google Pay token: your server does. `token.paymentData` is then Google's `ECv2` payment method token, a JSON string with `protocolVersion`, `signature`, `intermediateSigningKey` and `signedMessage`.
 
+- Verify the token before you decrypt it. Check the `intermediateSigningKey` signatures against Google's root signing keys, check that the intermediate key has not expired, and check the `signature` over `signedMessage` with the intermediate signing key. Reject the token if any check fails. Tink does this for you; on another stack, follow the verification steps in Google's guide.
 - Decrypt it with the private key that matches `publicKey`. Google recommends Tink's [`apps-paymentmethodtoken`](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#using-tink) library (Java), with `protocolVersion("ECv2")`. For `PRODUCTION` tokens, the recipient ID is `merchant:<your Google Pay merchant ID>` and the signing keys are Google's production keys. `TEST` tokens use Google's test signing keys; the library sends no merchant ID in `TEST`, so take the recipient ID for them from Google's guide.
 - Check `messageExpiration` before you charge.
 - The decrypted message holds the card number and, for `CRYPTOGRAM_3DS` cards, a cryptogram. It is card data: your servers must be PCI DSS compliant.
-- Rotate the key every year. Google encrypts with the key in the request, so serve `publicKey` from your server, and keep the old private key for a while after the switch to decrypt tokens made with the old key, as Google's [key rotation](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#key-rotation) section describes.
+- Rotate the key every year. Google encrypts with the key in the request, so serve `publicKey` from your server. Keep the old private key for at least eight days after you remove the old public key from the Google Pay & Wallet Console, so it can decrypt tokens made with the old key. See Google's [key rotation](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#key-rotation) section for the full steps.
 
 ## Security
 
