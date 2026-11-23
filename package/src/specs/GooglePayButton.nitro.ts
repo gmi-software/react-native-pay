@@ -13,6 +13,8 @@ export type GooglePayButtonType =
   | 'pay'
   | 'subscribe'
   | 'plain'
+  | 'pix'
+  | 'ewallet'
 
 export type GooglePayButtonTheme = 'dark' | 'light'
 

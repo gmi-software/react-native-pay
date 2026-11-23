@@ -37,6 +37,8 @@ namespace margelo::nitro::pay {
     PAY      SWIFT_NAME(pay) = 5,
     SUBSCRIBE      SWIFT_NAME(subscribe) = 6,
     PLAIN      SWIFT_NAME(plain) = 7,
+    PIX      SWIFT_NAME(pix) = 8,
+    EWALLET      SWIFT_NAME(ewallet) = 9,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::pay
@@ -57,6 +59,8 @@ namespace margelo::nitro {
         case hashString("pay"): return margelo::nitro::pay::GooglePayButtonType::PAY;
         case hashString("subscribe"): return margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE;
         case hashString("plain"): return margelo::nitro::pay::GooglePayButtonType::PLAIN;
+        case hashString("pix"): return margelo::nitro::pay::GooglePayButtonType::PIX;
+        case hashString("ewallet"): return margelo::nitro::pay::GooglePayButtonType::EWALLET;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum GooglePayButtonType - invalid value!");
       }
@@ -71,6 +75,8 @@ namespace margelo::nitro {
         case margelo::nitro::pay::GooglePayButtonType::PAY: return JSIConverter<std::string>::toJSI(runtime, "pay");
         case margelo::nitro::pay::GooglePayButtonType::SUBSCRIBE: return JSIConverter<std::string>::toJSI(runtime, "subscribe");
         case margelo::nitro::pay::GooglePayButtonType::PLAIN: return JSIConverter<std::string>::toJSI(runtime, "plain");
+        case margelo::nitro::pay::GooglePayButtonType::PIX: return JSIConverter<std::string>::toJSI(runtime, "pix");
+        case margelo::nitro::pay::GooglePayButtonType::EWALLET: return JSIConverter<std::string>::toJSI(runtime, "ewallet");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert GooglePayButtonType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -90,6 +96,8 @@ namespace margelo::nitro {
         case hashString("pay"):
         case hashString("subscribe"):
         case hashString("plain"):
+        case hashString("pix"):
+        case hashString("ewallet"):
           return true;
         default:
           return false;

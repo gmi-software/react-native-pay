@@ -66,6 +66,12 @@ namespace margelo::nitro::pay {
         case GooglePayButtonType::PLAIN:
           static const auto fieldPLAIN = clazz->getStaticField<JGooglePayButtonType>("PLAIN");
           return clazz->getStaticFieldValue(fieldPLAIN);
+        case GooglePayButtonType::PIX:
+          static const auto fieldPIX = clazz->getStaticField<JGooglePayButtonType>("PIX");
+          return clazz->getStaticFieldValue(fieldPIX);
+        case GooglePayButtonType::EWALLET:
+          static const auto fieldEWALLET = clazz->getStaticField<JGooglePayButtonType>("EWALLET");
+          return clazz->getStaticFieldValue(fieldEWALLET);
         default:
           std::string stringValue = std::to_string(static_cast<int>(value));
           throw std::invalid_argument("Invalid enum value (" + stringValue + "!");

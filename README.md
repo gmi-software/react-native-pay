@@ -646,7 +646,9 @@ interface GooglePayButtonProps {
     | "order"
     | "pay"
     | "subscribe"
-    | "plain";
+    | "plain"
+    | "pix" // "Direct Pix payment"; the sheet still offers cards
+    | "ewallet"; // Google's EWALLET type; the sheet still offers cards
 
   theme: "dark" | "light";
 
