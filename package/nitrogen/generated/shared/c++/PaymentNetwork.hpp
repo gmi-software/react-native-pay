@@ -62,7 +62,16 @@ namespace margelo::nitro::pay {
     HIMYAN      SWIFT_NAME(himyan) = 30,
     JAYWAN      SWIFT_NAME(jaywan) = 31,
     MYDEBIT      SWIFT_NAME(mydebit) = 32,
-    UNKNOWN      SWIFT_NAME(unknown) = 33,
+    CONECS      SWIFT_NAME(conecs) = 33,
+    ELCORTEINGLES      SWIFT_NAME(elcorteingles) = 34,
+    RUPAY      SWIFT_NAME(rupay) = 35,
+    VERVE      SWIFT_NAME(verve) = 36,
+    HUMO      SWIFT_NAME(humo) = 37,
+    UZCARD      SWIFT_NAME(uzcard) = 38,
+    PAYPAK      SWIFT_NAME(paypak) = 39,
+    MAAL      SWIFT_NAME(maal) = 40,
+    ELCARD      SWIFT_NAME(elcard) = 41,
+    UNKNOWN      SWIFT_NAME(unknown) = 42,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::pay
@@ -108,6 +117,15 @@ namespace margelo::nitro {
         case hashString("himyan"): return margelo::nitro::pay::PaymentNetwork::HIMYAN;
         case hashString("jaywan"): return margelo::nitro::pay::PaymentNetwork::JAYWAN;
         case hashString("myDebit"): return margelo::nitro::pay::PaymentNetwork::MYDEBIT;
+        case hashString("conecs"): return margelo::nitro::pay::PaymentNetwork::CONECS;
+        case hashString("elCorteIngles"): return margelo::nitro::pay::PaymentNetwork::ELCORTEINGLES;
+        case hashString("ruPay"): return margelo::nitro::pay::PaymentNetwork::RUPAY;
+        case hashString("verve"): return margelo::nitro::pay::PaymentNetwork::VERVE;
+        case hashString("humo"): return margelo::nitro::pay::PaymentNetwork::HUMO;
+        case hashString("uzCard"): return margelo::nitro::pay::PaymentNetwork::UZCARD;
+        case hashString("payPak"): return margelo::nitro::pay::PaymentNetwork::PAYPAK;
+        case hashString("maal"): return margelo::nitro::pay::PaymentNetwork::MAAL;
+        case hashString("elcard"): return margelo::nitro::pay::PaymentNetwork::ELCARD;
         case hashString("unknown"): return margelo::nitro::pay::PaymentNetwork::UNKNOWN;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum PaymentNetwork - invalid value!");
@@ -148,6 +166,15 @@ namespace margelo::nitro {
         case margelo::nitro::pay::PaymentNetwork::HIMYAN: return JSIConverter<std::string>::toJSI(runtime, "himyan");
         case margelo::nitro::pay::PaymentNetwork::JAYWAN: return JSIConverter<std::string>::toJSI(runtime, "jaywan");
         case margelo::nitro::pay::PaymentNetwork::MYDEBIT: return JSIConverter<std::string>::toJSI(runtime, "myDebit");
+        case margelo::nitro::pay::PaymentNetwork::CONECS: return JSIConverter<std::string>::toJSI(runtime, "conecs");
+        case margelo::nitro::pay::PaymentNetwork::ELCORTEINGLES: return JSIConverter<std::string>::toJSI(runtime, "elCorteIngles");
+        case margelo::nitro::pay::PaymentNetwork::RUPAY: return JSIConverter<std::string>::toJSI(runtime, "ruPay");
+        case margelo::nitro::pay::PaymentNetwork::VERVE: return JSIConverter<std::string>::toJSI(runtime, "verve");
+        case margelo::nitro::pay::PaymentNetwork::HUMO: return JSIConverter<std::string>::toJSI(runtime, "humo");
+        case margelo::nitro::pay::PaymentNetwork::UZCARD: return JSIConverter<std::string>::toJSI(runtime, "uzCard");
+        case margelo::nitro::pay::PaymentNetwork::PAYPAK: return JSIConverter<std::string>::toJSI(runtime, "payPak");
+        case margelo::nitro::pay::PaymentNetwork::MAAL: return JSIConverter<std::string>::toJSI(runtime, "maal");
+        case margelo::nitro::pay::PaymentNetwork::ELCARD: return JSIConverter<std::string>::toJSI(runtime, "elcard");
         case margelo::nitro::pay::PaymentNetwork::UNKNOWN: return JSIConverter<std::string>::toJSI(runtime, "unknown");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert PaymentNetwork to JS - invalid value: "
@@ -193,6 +220,15 @@ namespace margelo::nitro {
         case hashString("himyan"):
         case hashString("jaywan"):
         case hashString("myDebit"):
+        case hashString("conecs"):
+        case hashString("elCorteIngles"):
+        case hashString("ruPay"):
+        case hashString("verve"):
+        case hashString("humo"):
+        case hashString("uzCard"):
+        case hashString("payPak"):
+        case hashString("maal"):
+        case hashString("elcard"):
         case hashString("unknown"):
           return true;
         default:

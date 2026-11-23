@@ -877,6 +877,15 @@ type PaymentNetwork =
   | "himyan"
   | "jaywan"
   | "myDebit"
+  | "conecs"
+  | "elCorteIngles"
+  | "ruPay"
+  | "verve"
+  | "humo"
+  | "uzCard"
+  | "payPak"
+  | "maal"
+  | "elcard"
   | "unknown"; // results only
 
 // Google Pay auth methods (Android). PAN_ONLY payments need a 3-D Secure step-up:

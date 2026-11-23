@@ -273,6 +273,15 @@ export function formatNetworkName(network: PaymentNetwork): string {
     himyan: 'Himyan',
     jaywan: 'Jaywan',
     myDebit: 'MyDebit',
+    conecs: 'Conecs',
+    elCorteIngles: 'El Corte Inglés',
+    ruPay: 'RuPay',
+    verve: 'Verve',
+    humo: 'HUMO',
+    uzCard: 'UZCARD',
+    payPak: 'PayPak',
+    maal: 'Maal',
+    elcard: 'Elcard',
     unknown: 'Unknown',
   }
   return networkNames[network] || network

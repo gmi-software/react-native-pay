@@ -49,7 +49,16 @@ enum class PaymentNetwork(@DoNotStrip @Keep val value: Int) {
   HIMYAN(30),
   JAYWAN(31),
   MYDEBIT(32),
-  UNKNOWN(33);
+  CONECS(33),
+  ELCORTEINGLES(34),
+  RUPAY(35),
+  VERVE(36),
+  HUMO(37),
+  UZCARD(38),
+  PAYPAK(39),
+  MAAL(40),
+  ELCARD(41),
+  UNKNOWN(42);
 
   companion object
 }
