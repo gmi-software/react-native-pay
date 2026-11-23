@@ -99,7 +99,7 @@ A Google Pay error arrives either from `loadPaymentData` or as the sheet's `RESU
 
 ### Empty cart or invalid amounts (hook)
 
-- Calling `startPayment()` with no cart items returns `status: 'failed'` with `code: 'CONFIGURATION'`, and sets a "Cart is empty" error with the same `code`.
+- Calling `startPayment()` with no cart items returns `status: 'failed'` with `code: 'CONFIGURATION'`, and sets a "Cart is empty" error with the same `code`. With `recurring`, `deferred` or `automaticReload` in the config, an empty cart is allowed.
 - An invalid amount or a negative total also returns `code: 'CONFIGURATION'` and sets `error`, without opening the sheet.
 - Gate the pay button on `items.length > 0`.
 

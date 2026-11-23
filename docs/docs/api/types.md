@@ -596,7 +596,7 @@ interface PaymentDetails {
 
 ## Recurring and later payments
 
-Set at most one of these on `PaymentRequest`. Use them with `HybridPaymentHandler.startPayment`; see [Subscriptions and later payments](/docs/guides/merchant-tokens) for examples and the validation rules. On Android they become Google Pay's Merchant Initiated Transactions; see [On Android](/docs/guides/merchant-tokens#on-android).
+Set at most one of these on `PaymentRequest`. Use them with `HybridPaymentHandler.startPayment` or in the config of [`usePaymentCheckout`](/docs/api/use-payment-checkout); see [Subscriptions and later payments](/docs/guides/merchant-tokens) for examples and the validation rules. On Android they become Google Pay's Merchant Initiated Transactions; see [On Android](/docs/guides/merchant-tokens#on-android).
 
 ```ts no-check
 // Shared by all three

@@ -29,6 +29,9 @@ import type {
   PaymentDetails,
   PaymentErrorCode,
   StartPaymentOptions,
+  RecurringPaymentRequest,
+  DeferredPaymentRequest,
+  AutomaticReloadPaymentRequest,
 } from '../types'
 import { PaymentError } from '../errors'
 import {
@@ -57,6 +60,17 @@ function sortObjectKeys(_key: string, value: unknown): unknown {
   }
   const entries = Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1))
   return Object.fromEntries(entries)
+}
+
+// Whether the payment charges again later, so its cart may be empty.
+function hasLaterCharge(
+  request: Pick<PaymentRequest, 'recurring' | 'deferred' | 'automaticReload'>
+): boolean {
+  return (
+    request.recurring !== undefined ||
+    request.deferred !== undefined ||
+    request.automaticReload !== undefined
+  )
 }
 
 // Wraps what a call threw, keeping its message and the original as `cause`.
@@ -226,6 +240,29 @@ export interface UsePaymentCheckoutConfig
   couponCode?: string
 
   /**
+   * A subscription, charged again later. Set at most one of `recurring`,
+   * `deferred` and `automaticReload`. With one of them, `items` stay what
+   * the payer pays today, and the cart may be empty, as in a free trial.
+   * Their `Date`s are compared by value: build them once, for example in a
+   * `useState` initializer, or a `Date` built on every render changes
+   * `paymentRequest` and `startPayment` on every render. See
+   * `PaymentRequest.recurring`.
+   */
+  recurring?: RecurringPaymentRequest
+
+  /**
+   * A payment charged later, on one date, such as a hotel booking. See
+   * `recurring` and `PaymentRequest.deferred`.
+   */
+  deferred?: DeferredPaymentRequest
+
+  /**
+   * A balance topped up whenever it runs low. See `recurring` and
+   * `PaymentRequest.automaticReload`.
+   */
+  automaticReload?: AutomaticReloadPaymentRequest
+
+  /**
    * Called with the token after the user authorizes the payment. Charge it on
    * your server and resolve with the outcome; `startPayment` then resolves
    * with `status: 'failed'`, `code: 'PROVIDER_ERROR'` and your `error` on
@@ -282,7 +319,8 @@ export interface UsePaymentCheckoutReturn {
   // Payment processing
   /**
    * Opens the payment sheet and resolves with the outcome. A payment that
-   * can't start, such as with an empty cart or an invalid amount, or whose
+   * can't start, such as with an empty cart (allowed with `recurring`,
+   * `deferred` or `automaticReload`) or an invalid amount, or whose
    * native call throws resolves with `status: 'failed'` and a `code`, and
    * sets `result` and `error` to match. A call while a payment is in flight
    * resolves with `code: 'IN_PROGRESS'` and leaves `result` and `error` to
@@ -386,13 +424,16 @@ export function usePaymentCheckout(
     onShippingMethodChange,
     onPaymentMethodChange,
     onCouponCodeChange,
+    recurring,
+    deferred,
+    automaticReload,
     ...requestConfig
   } = config
 
   // Apps usually pass an inline config, which is new on every render, so
   // compare the rest of it by value, with the keys of every object sorted. A
-  // callback added to the config fails `satisfies` here: pull it out above,
-  // like `onAuthorize`.
+  // callback or a `Date` added to the config fails `satisfies` here: pull it
+  // out above, like `onAuthorize` or `recurring`.
   const requestConfigKey = JSON.stringify(
     requestConfig satisfies { readonly [key: string]: JsonValue },
     sortObjectKeys
@@ -400,6 +441,21 @@ export function usePaymentCheckout(
   const stableRequestConfig = useMemo<typeof requestConfig>(
     () => JSON.parse(requestConfigKey),
     [requestConfigKey]
+  )
+
+  // Compared by value too, but kept as passed: a JSON round trip would turn
+  // their `Date`s into strings. A `Date` is in the key as its ISO string.
+  const merchantTokensKey = JSON.stringify(
+    { recurring, deferred, automaticReload },
+    sortObjectKeys
+  )
+  const merchantTokens = useMemo<
+    Pick<PaymentRequest, 'recurring' | 'deferred' | 'automaticReload'>
+  >(
+    () => ({ recurring, deferred, automaticReload }),
+    // The objects of the render where the key last changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [merchantTokensKey]
   )
 
   // The latest callbacks, so `startPayment` can stay stable when they change.
@@ -455,13 +511,18 @@ export function usePaymentCheckout(
       couponCode,
     } = stableRequestConfig
 
+    // A later charge may leave nothing to pay today, as in a free trial.
+    const chargesLater = hasLaterCharge(merchantTokens)
+
     return sanitizePaymentRequest({
       countryCode,
       currencyCode,
       supportedNetworks,
       merchantCapabilities,
       paymentItems:
-        items.length > 0 ? items : [createPaymentItem('Total', 0, 'final')],
+        items.length > 0 || chargesLater
+          ? items
+          : [createPaymentItem('Total', 0, 'final')],
       applePayMerchantIdentifier,
       merchantName,
       totalLabel,
@@ -479,8 +540,9 @@ export function usePaymentCheckout(
       emailRequired,
       phoneNumberRequired,
       couponCode,
+      ...merchantTokens,
     })
-  }, [stableRequestConfig, items])
+  }, [stableRequestConfig, merchantTokens, items])
 
   // Check exactly what the payment will use. By value: the request changes
   // with the cart and the rest of the config, these fields rarely do.
@@ -598,7 +660,7 @@ export function usePaymentCheckout(
       return { ...PAYMENT_IN_PROGRESS_RESULT }
     }
 
-    if (items.length === 0) {
+    if (items.length === 0 && !hasLaterCharge(paymentRequest)) {
       return fail(new PaymentError('Cart is empty', 'CONFIGURATION'))
     }
 

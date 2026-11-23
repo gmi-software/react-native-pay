@@ -20,7 +20,12 @@ import {
 } from '../usePaymentCheckout'
 import { PAYMENT_IN_PROGRESS_RESULT as IN_PROGRESS_RESULT } from '../../paymentHandler'
 import { PaymentError } from '../../errors'
-import type { StartPaymentOptions } from '../../types'
+import type {
+  AutomaticReloadPaymentRequest,
+  DeferredPaymentRequest,
+  RecurringPaymentRequest,
+  StartPaymentOptions,
+} from '../../types'
 
 const CANCELLED_RESULT = {
   status: 'cancelled',
@@ -28,6 +33,42 @@ const CANCELLED_RESULT = {
   success: false,
   error: 'Payment cancelled by user',
 }
+
+const DAY = 24 * 60 * 60 * 1000
+const inDays = (days: number) => new Date(Date.now() + days * DAY)
+
+const subscription = (trialEnd: Date): RecurringPaymentRequest => ({
+  description: 'Coffee Club membership',
+  managementUrl: 'https://example.com/membership',
+  trialBilling: {
+    label: 'Free trial',
+    amount: '0.00',
+    intervalUnit: 'day',
+    intervalCount: 7,
+    endDate: trialEnd,
+  },
+  regularBilling: {
+    label: 'Coffee Club Monthly',
+    amount: '9.99',
+    intervalUnit: 'month',
+  },
+})
+
+const booking = (date: Date): DeferredPaymentRequest => ({
+  description: 'Seaside Hotel, 2 nights',
+  managementUrl: 'https://example.com/bookings',
+  deferredBilling: { label: 'Room', amount: '240.00', date },
+})
+
+const topUp = (amount: string): AutomaticReloadPaymentRequest => ({
+  description: 'Coffee card auto top-up',
+  managementUrl: 'https://example.com/card',
+  automaticReloadBilling: {
+    label: 'Coffee Card Top-Up',
+    amount,
+    thresholdAmount: '5.00',
+  },
+})
 
 function createDeferred<T>() {
   let resolve!: (value: T) => void
@@ -148,6 +189,121 @@ describe('usePaymentCheckout integration', () => {
       code: 'CONFIGURATION',
     })
     expect(mockStartPayment).not.toHaveBeenCalled()
+  })
+
+  describe('later charges', () => {
+    it('starts a subscription with an empty cart', async () => {
+      mockStartPayment.mockResolvedValueOnce({
+        status: 'success',
+        success: true,
+      })
+      const trialEnd = inDays(7)
+      const { result } = renderWithConfig({ recurring: subscription(trialEnd) })
+
+      expect(result.current.paymentRequest.paymentItems).toEqual([])
+      let paymentResult: any = null
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(paymentResult).toEqual({ status: 'success', success: true })
+      expect(result.current.error).toBeNull()
+      expect(mockStartPayment).toHaveBeenCalledTimes(1)
+      const request = mockStartPayment.mock.calls[0][0]
+      expect(request.paymentItems).toEqual([])
+      expect(request.recurring).toMatchObject({
+        description: 'Coffee Club membership',
+        trialBilling: {
+          label: 'Free trial',
+          amount: '0.00',
+          endDate: trialEnd,
+        },
+        regularBilling: { label: 'Coffee Club Monthly', amount: '9.99' },
+      })
+      expect(request.recurring.trialBilling.endDate).toBeInstanceOf(Date)
+    })
+
+    it.each([
+      ['deferred', { deferred: booking(inDays(7)) }],
+      ['automaticReload', { automaticReload: topUp('25.00') }],
+    ] as const)(
+      'starts a %s payment with an empty cart',
+      async (key, config) => {
+        mockStartPayment.mockResolvedValueOnce({ success: true })
+        const { result } = renderWithConfig(config)
+
+        await act(async () => {
+          await result.current.startPayment()
+        })
+
+        expect(mockStartPayment).toHaveBeenCalledWith(
+          expect.objectContaining({
+            paymentItems: [],
+            [key]: expect.any(Object),
+          })
+        )
+      }
+    )
+
+    it('sends the cart as what is paid today', async () => {
+      mockStartPayment.mockResolvedValueOnce({ success: true })
+      const { result } = renderWithConfig({ automaticReload: topUp('25.00') })
+      act(() => {
+        result.current.addItem('Initial load', '25.00')
+      })
+
+      await act(async () => {
+        await result.current.startPayment()
+      })
+
+      expect(mockStartPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paymentItems: [
+            { label: 'Initial load', amount: '25.00', type: 'final' },
+          ],
+        })
+      )
+    })
+
+    it('fails without opening the sheet when the request is invalid', async () => {
+      const { result } = renderWithConfig({
+        recurring: subscription(inDays(7)),
+        deferred: booking(inDays(7)),
+      })
+
+      let paymentResult: any = null
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(paymentResult).toMatchObject({
+        status: 'failed',
+        code: 'CONFIGURATION',
+        error: 'Set at most one of recurring, deferred and automaticReload',
+      })
+      expect(result.current.error).toMatchObject({ code: 'CONFIGURATION' })
+      expect(mockStartPayment).not.toHaveBeenCalled()
+    })
+
+    it('fails when a date has passed by the time the payer taps', async () => {
+      const { result } = renderWithConfig({
+        deferred: booking(new Date(Date.now() - DAY)),
+      })
+
+      let paymentResult: any = null
+      await act(async () => {
+        paymentResult = await result.current.startPayment()
+      })
+
+      expect(paymentResult).toMatchObject({
+        status: 'failed',
+        code: 'CONFIGURATION',
+      })
+      expect(paymentResult.error).toMatch(
+        /^deferred\.deferredBilling\.date must be in the future/
+      )
+      expect(mockStartPayment).not.toHaveBeenCalled()
+    })
   })
 
   it('handles successful payments', async () => {
@@ -658,6 +814,9 @@ describe('usePaymentCheckout integration', () => {
       emailRequired: [false, true],
       phoneNumberRequired: [false, true],
       couponCode: ['WELCOME', 'SAVE10'],
+      recurring: [subscription(inDays(7)), subscription(inDays(14))],
+      deferred: [booking(inDays(7)), booking(inDays(14))],
+      automaticReload: [topUp('25.00'), topUp('50.00')],
     }
 
     it.each(Object.entries(configChanges))(
@@ -678,6 +837,30 @@ describe('usePaymentCheckout integration', () => {
         expect(result.current.startPayment).not.toBe(initial.startPayment)
       }
     )
+
+    it('keeps the Date objects of the config', () => {
+      const trialEnd = inDays(7)
+      const { result, rerender } = renderWithConfig({
+        recurring: subscription(trialEnd),
+      })
+      const initial = result.current
+      expect(
+        initial.paymentRequest.recurring?.trialBilling?.endDate
+      ).toBeInstanceOf(Date)
+
+      // Another Date at the same time is the same config.
+      rerender({ recurring: subscription(new Date(trialEnd.getTime())) })
+      expect(result.current.paymentRequest).toBe(initial.paymentRequest)
+      expect(result.current.startPayment).toBe(initial.startPayment)
+
+      const later = new Date(trialEnd.getTime() + 1)
+      rerender({ recurring: subscription(later) })
+      expect(result.current.paymentRequest).not.toBe(initial.paymentRequest)
+      expect(
+        result.current.paymentRequest.recurring?.trialBilling?.endDate
+      ).toBe(later)
+      expect(result.current.startPayment).not.toBe(initial.startPayment)
+    })
 
     it('ignores the key order of googlePayTokenization', () => {
       const { result, rerender } = renderWithConfig({

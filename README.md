@@ -374,6 +374,10 @@ interface UsePaymentCheckoutConfig {
   emailRequired?: boolean;
   phoneNumberRequired?: boolean;
   couponCode?: string; // iOS: a code already applied, needs onCouponCodeChange
+  // Charge again later; set at most one, and the cart may then be empty
+  recurring?: RecurringPaymentRequest; // subscriptions, iOS 16+
+  deferred?: DeferredPaymentRequest; // one later charge, iOS 16.4+
+  automaticReload?: AutomaticReloadPaymentRequest; // top-ups, iOS 16+
   // Charge the token while the sheet waits (see "Charging before the sheet closes")
   onAuthorize?: (
     token: PaymentToken,
@@ -964,7 +968,7 @@ The cart can follow the payer's choices while the Apple Pay or Google Pay sheet 
 
 ### Subscriptions and later payments
 
-`recurring`, `deferred` and `automaticReload` (with `HybridPaymentHandler`) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment asks for a merchant token your payment provider can charge later. When the card's network has no merchant tokens, Apple Pay returns a device token instead, so check with your provider. `paymentItems` stay what the payer pays today, which may be nothing. Android sends them to Google Pay as Merchant Initiated Transactions. See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
+`recurring`, `deferred` and `automaticReload` (in the `PaymentRequest` or the hook's config) charge the payer again later: a subscription, a payment on a later date, or a balance top-up. The sheet shows the schedule, and the payment asks for a merchant token your payment provider can charge later. When the card's network has no merchant tokens, Apple Pay returns a device token instead, so check with your provider. `paymentItems`, or the hook's cart, stay what the payer pays today, which may be nothing. Android sends them to Google Pay as Merchant Initiated Transactions. See the [subscriptions guide](https://gmi-software.github.io/react-native-pay/docs/guides/merchant-tokens).
 
 ### Several merchants (iOS)
 

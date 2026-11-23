@@ -12,7 +12,7 @@ The sheet shows the schedule and your management URL, and the payment asks Apple
 
 A merchant token is not guaranteed: when the card's network doesn't offer merchant tokens, Apple Pay returns a device token, as for a one-off payment. Ask your payment provider how it tells the two apart and which one it can charge later.
 
-These requests need `HybridPaymentHandler.startPayment`. `usePaymentCheckout` does not take them.
+Pass them to `HybridPaymentHandler.startPayment`, or in the config of `usePaymentCheckout`. See [With usePaymentCheckout](#with-usepaymentcheckout).
 
 ## What is charged today
 
@@ -133,11 +133,50 @@ export async function enableTopUp() {
 }
 ```
 
+## With usePaymentCheckout
+
+The hook takes the same three fields in its config. Its cart is what the payer pays today, and with one of the fields set it may be empty:
+
+```tsx
+import { useState } from 'react'
+import { usePaymentCheckout } from '@gmisoftware/react-native-pay'
+
+const DAY = 24 * 60 * 60 * 1000
+
+export function useMembershipCheckout() {
+  // Built once: a new Date on every render would give a new paymentRequest
+  // and startPayment on every render.
+  const [trialEnd] = useState(() => new Date(Date.now() + 7 * DAY))
+
+  return usePaymentCheckout({
+    merchantName: 'Coffee Club',
+    recurring: {
+      description: 'Coffee Club membership',
+      managementUrl: 'https://example.com/account/membership',
+      trialBilling: {
+        label: 'Free trial',
+        amount: '0.00',
+        intervalUnit: 'day',
+        intervalCount: 7,
+        endDate: trialEnd,
+      },
+      regularBilling: {
+        label: 'Coffee Club Monthly',
+        amount: '9.99',
+        intervalUnit: 'month',
+      },
+    },
+  })
+}
+```
+
+Call `startPayment()` from the returned object with the cart empty. The hook compares the config by value, `Date`s included, so an inline config is fine as long as its dates don't change. A date checked at render can pass while the screen stays open: the payment then fails with `code: 'CONFIGURATION'`, so build a new one when that matters, for example when the screen comes back into focus.
+
 ## Rules
 
 `normalizePaymentRequest` checks these before the sheet opens. How a broken rule surfaces depends on what you call:
 
-- `HybridPaymentHandler.startPayment` resolves with `status: 'failed'` and `code: 'CONFIGURATION'`, and the sheet doesn't open.
+- `HybridPaymentHandler.startPayment` and the hook's `startPayment` resolve with `status: 'failed'` and `code: 'CONFIGURATION'`, and the sheet doesn't open. The hook also sets its `error`.
 - `normalizePaymentRequest` and `createPaymentRequest` throw an `Error`. Call them in a `try`/`catch`.
 
 The rules are the stricter of Apple Pay's and Google Pay's, so a request that passes works on both, with one exception below:
