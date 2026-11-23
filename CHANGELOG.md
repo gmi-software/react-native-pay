@@ -81,6 +81,13 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- **`PaymentNetwork` has nine more values**, so `token.paymentMethod.network` can report
+  `conecs`, `elCorteIngles`, `ruPay`, `verve`, `humo`, `uzCard`, `payPak`, `maal` or `elcard`
+  for a card it reported as `'unknown'` before (see Added). An exhaustive `switch` over
+  `PaymentNetwork` stops compiling until it handles them, and code that treats `'unknown'` as
+  one of these cards now gets the network's name instead
+  ([#79](https://github.com/gmi-software/react-native-pay/issues/79)).
+
 - **Android: the payer picks the shipping method in the Google Pay sheet** when the payment has
   a sheet callback, `shippingContactRequired` and `shippingMethods`, as on iOS. Before, Android
   always charged the first method. `result.shippingMethod` and the `details` of `onAuthorize` hold
