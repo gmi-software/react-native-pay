@@ -21,7 +21,7 @@ On Android, the check goes to the Google Pay environment you pass as `googlePayE
 ## Show the right button
 
 - **Android**: show the Google Pay button when `isSupported` is `true`. A user without a card adds one in the Google Pay sheet. Google offers no separate setup screen, so `openPaymentSetup()` does nothing on Android.
-- **iOS**: show the Apple Pay buy button when `hasActiveCard` is `true`. When only `isSupported` is `true`, show the **Set up Apple Pay** button (`buttonType="setUp"`) and call `HybridPaymentHandler.openPaymentSetup()` on tap. It opens Wallet (Settings on iPad) to add a card.
+- **iOS**: show the Apple Pay buy button when `hasActiveCard` is `true`. When only `isSupported` is `true`, show the **Set up Apple Pay** button (`buttonType="setUp"`) and call `HybridPaymentHandler.openPaymentSetup()` on tap. It opens Wallet (Settings on iPad) to add a card. On iOS 26.4 and later it also passes your merchant ID, so Apple can attribute the new card to your app.
 - **Neither platform**: when `isSupported` is `false`, hide the wallet buttons and offer another way to pay.
 
 In the example below, the checkout screen owns the hook and the cart, and `WalletButton` picks the button from the status. The user comes back from Wallet with a card the status does not know about yet, so the screen checks again when the app returns to the foreground:

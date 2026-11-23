@@ -9,7 +9,10 @@ const DECLINED_RESULT = {
   error: 'Declined',
 }
 
-const mockInstances: Array<{ startPayment: jest.Mock }> = []
+const mockInstances: Array<{
+  startPayment: jest.Mock
+  openPaymentSetup: jest.Mock
+}> = []
 const mockPresentations: Array<(result: any) => void> = []
 
 jest.mock('react-native-nitro-modules', () => ({
@@ -21,6 +24,7 @@ jest.mock('react-native-nitro-modules', () => ({
         payServiceStatus: () =>
           Promise.resolve({ isSupported: true, hasActiveCard: true }),
         isPaymentInProgress: () => inFlight,
+        openPaymentSetup: jest.fn(),
         startPayment: jest.fn(() => {
           if (inFlight) {
             return Promise.resolve({
@@ -373,5 +377,30 @@ describe('request validation', () => {
     await payment
 
     expect(nativeStartPayment().mock.calls[0]).toHaveLength(1)
+  })
+})
+
+describe('openPaymentSetup', () => {
+  const nativeOpenPaymentSetup = () => {
+    getPaymentHandler()
+    return mockInstances[0]!.openPaymentSetup
+  }
+
+  beforeEach(() => nativeOpenPaymentSetup().mockClear())
+
+  it('passes the merchant identifier to native', () => {
+    HybridPaymentHandler.openPaymentSetup({
+      applePayMerchantIdentifier: 'merchant.com.example',
+    })
+
+    expect(nativeOpenPaymentSetup()).toHaveBeenCalledWith({
+      applePayMerchantIdentifier: 'merchant.com.example',
+    })
+  })
+
+  it('calls native without options when none are given', () => {
+    HybridPaymentHandler.openPaymentSetup()
+
+    expect(nativeOpenPaymentSetup().mock.calls[0]).toHaveLength(0)
   })
 })

@@ -828,5 +828,15 @@ export interface PayServiceStatusOptions {
   googlePayEnvironment?: GooglePayEnvironment
 }
 
+/**
+ * What `openPaymentSetup` passes to Wallet. iOS only.
+ */
+export interface OpenPaymentSetupOptions {
+  // The merchant ID that Apple attributes a card added in this setup to, on
+  // iOS 26.4 and later. Defaults to the first ID in the Info.plist key
+  // `ReactNativePayApplePayMerchantIdentifiers`, as `PaymentRequest`.
+  applePayMerchantIdentifier?: string
+}
+
 // Backward compatibility alias
 export type ApplePayStatus = PayServiceStatus

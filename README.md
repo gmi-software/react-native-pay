@@ -567,9 +567,11 @@ import { HybridPaymentHandler } from "@gmisoftware/react-native-pay";
 const isBusy = HybridPaymentHandler.isPaymentInProgress();
 ```
 
-##### `openPaymentSetup(): void`
+##### `openPaymentSetup(options?: OpenPaymentSetupOptions): void`
 
 iOS only: opens Wallet so the user can add a card. Call it from an `ApplePayButton` with `buttonType="setUp"`. It does nothing on Android, where the Google Pay sheet lets the user add a card.
+
+On iOS 26.4 and later it passes your merchant ID to Wallet, so Apple can attribute a card added there to your app. It uses the first ID in `ReactNativePayApplePayMerchantIdentifiers`, or `options.applePayMerchantIdentifier` when given.
 
 ---
 

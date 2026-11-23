@@ -702,4 +702,22 @@ final class PaymentRequestBuilderTests: XCTestCase {
             with: "No Apple Pay merchant identifier configured. Add one to the Info.plist key ReactNativePayApplePayMerchantIdentifiers (the Expo plugin does this), or pass applePayMerchantIdentifier."
         )
     }
+
+    func testResolvesMerchantIdentifierFromOverrideThenInfoPlist() {
+        let configured = [" ", "merchant.com.example.first", "merchant.com.example.second"]
+        XCTAssertEqual(
+            PaymentRequestBuilder.resolveMerchantIdentifier(override: " merchant.com.example.override\n", configured: configured),
+            "merchant.com.example.override"
+        )
+        XCTAssertEqual(
+            PaymentRequestBuilder.resolveMerchantIdentifier(override: " ", configured: configured),
+            "merchant.com.example.first"
+        )
+        XCTAssertEqual(
+            PaymentRequestBuilder.resolveMerchantIdentifier(override: nil, configured: " merchant.com.example "),
+            "merchant.com.example"
+        )
+        XCTAssertNil(PaymentRequestBuilder.resolveMerchantIdentifier(override: nil, configured: [" "]))
+        XCTAssertNil(PaymentRequestBuilder.resolveMerchantIdentifier(override: "", configured: nil))
+    }
 }

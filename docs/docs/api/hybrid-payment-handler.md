@@ -109,7 +109,7 @@ const isBusy = HybridPaymentHandler.isPaymentInProgress()
 
 ---
 
-### openPaymentSetup()
+### openPaymentSetup(options?)
 
 iOS only. Opens Wallet (Settings on iPad) so the user can add a card. Call it from a **Set up Apple Pay** button (`ApplePayButton` with `buttonType="setUp"`) when `isSupported` is `true` and `hasActiveCard` is `false`. It does nothing on devices without Apple Pay, and nothing on Android, where the Google Pay sheet lets the user add a card.
 
@@ -118,6 +118,18 @@ import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
 
 HybridPaymentHandler.openPaymentSetup()
 ```
+
+On iOS 26.4 and later it passes your merchant ID to Wallet, which Apple uses to attribute a card added there to your app. The ID is the first one in the Info.plist key `ReactNativePayApplePayMerchantIdentifiers`, which the Expo plugin writes. Pass `applePayMerchantIdentifier` ([OpenPaymentSetupOptions](/docs/api/types#openpaymentsetupoptions)) to use another, as in `PaymentRequest`:
+
+```ts
+import { HybridPaymentHandler } from '@gmisoftware/react-native-pay'
+
+HybridPaymentHandler.openPaymentSetup({
+  applePayMerchantIdentifier: 'merchant.com.example.store',
+})
+```
+
+Earlier iOS versions, apps built with Xcode older than 26.4, and apps with no merchant ID configured open the setup without one.
 
 ---
 

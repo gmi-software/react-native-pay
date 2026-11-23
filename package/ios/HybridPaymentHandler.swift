@@ -155,22 +155,32 @@ struct PaymentRequestBuilder {
     }
 
     private static func resolveMerchantIdentifier(from request: PaymentRequest) -> String? {
-        if let overrideIdentifier = request.applePayMerchantIdentifier?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
+        resolveMerchantIdentifier(override: request.applePayMerchantIdentifier)
+    }
+
+    /// The override when it isn't blank, else the first ID in the Info.plist key.
+    /// Internal so `openPaymentSetup` can use it.
+    static func resolveMerchantIdentifier(override: String?) -> String? {
+        resolveMerchantIdentifier(
+            override: override,
+            configured: Bundle.main.object(forInfoDictionaryKey: BundleKey.applePayMerchantIdentifiers)
+        )
+    }
+
+    /// `configured` is the Info.plist value. Internal so the NitroPay unit tests can pass one.
+    static func resolveMerchantIdentifier(override: String?, configured: Any?) -> String? {
+        if let overrideIdentifier = override?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines),
            !overrideIdentifier.isEmpty {
             return overrideIdentifier
         }
 
-        if let merchantIdentifiers = Bundle.main.object(
-            forInfoDictionaryKey: BundleKey.applePayMerchantIdentifiers
-        ) as? [String] {
+        if let merchantIdentifiers = configured as? [String] {
             return merchantIdentifiers.first {
                 !$0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty
             }
         }
 
-        if let merchantIdentifier = Bundle.main.object(
-            forInfoDictionaryKey: BundleKey.applePayMerchantIdentifiers
-        ) as? String {
+        if let merchantIdentifier = configured as? String {
             let trimmedIdentifier = merchantIdentifier.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             return trimmedIdentifier.isEmpty ? nil : trimmedIdentifier
         }
@@ -837,10 +847,22 @@ class HybridPaymentHandler: HybridPaymentHandlerSpec {
         }
     }
     
-    func openPaymentSetup() throws {
+    func openPaymentSetup(options: OpenPaymentSetupOptions?) throws {
+        let merchantIdentifier = PaymentRequestBuilder.resolveMerchantIdentifier(
+            override: options?.applePayMerchantIdentifier
+        )
         // Hands over to Wallet (Settings on iPad); does nothing without Apple Pay support.
         DispatchQueue.main.async {
-            PKPassLibrary().openPaymentSetup()
+            let library = PKPassLibrary()
+            // iOS 26.4 attributes a card added in the setup to the merchant ID.
+            // Needs the iOS 26.4 SDK, which ships with Swift 6.3.
+            #if compiler(>=6.3)
+            if #available(iOS 26.4, *), let merchantIdentifier {
+                library.openPaymentSetup(merchantIdentifier: merchantIdentifier)
+                return
+            }
+            #endif
+            library.openPaymentSetup()
         }
     }
     

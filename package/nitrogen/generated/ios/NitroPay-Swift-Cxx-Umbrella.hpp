@@ -50,6 +50,8 @@ namespace margelo::nitro::pay { struct GooglePayTokenization; }
 namespace margelo::nitro::pay { class HybridApplePayButtonSpec; }
 // Forward declaration of `HybridPaymentHandlerSpec` to properly resolve imports.
 namespace margelo::nitro::pay { class HybridPaymentHandlerSpec; }
+// Forward declaration of `OpenPaymentSetupOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct OpenPaymentSetupOptions; }
 // Forward declaration of `PKSecureElementPass` to properly resolve imports.
 namespace margelo::nitro::pay { struct PKSecureElementPass; }
 // Forward declaration of `PassActivationState` to properly resolve imports.
@@ -135,6 +137,7 @@ namespace margelo::nitro::pay { struct StartPaymentOptions; }
 #include "GooglePayTokenizationType.hpp"
 #include "HybridApplePayButtonSpec.hpp"
 #include "HybridPaymentHandlerSpec.hpp"
+#include "OpenPaymentSetupOptions.hpp"
 #include "PKSecureElementPass.hpp"
 #include "PassActivationState.hpp"
 #include "PayServiceStatus.hpp"

@@ -425,6 +425,20 @@ The values are checked as in `startPayment`, and the Promise rejects with the sa
 
 ---
 
+## OpenPaymentSetupOptions
+
+What `openPaymentSetup` passes to Wallet (iOS only).
+
+```ts
+interface OpenPaymentSetupOptions {
+  applePayMerchantIdentifier?: string // default: the first ID in ReactNativePayApplePayMerchantIdentifiers
+}
+```
+
+On iOS 26.4 and later, Apple attributes a card the user adds in the setup to this merchant ID. A blank value falls back to the default.
+
+---
+
 ## GooglePayEnvironment
 
 Used in config and `PaymentRequest` for Android.

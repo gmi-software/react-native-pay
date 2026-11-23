@@ -175,9 +175,9 @@ open class HybridPaymentHandlerSpec_cxx {
   }
   
   @inline(__always)
-  public final func openPaymentSetup() -> bridge.Result_void_ {
+  public final func openPaymentSetup(options: bridge.std__optional_OpenPaymentSetupOptions_) -> bridge.Result_void_ {
     do {
-      try self.__implementation.openPaymentSetup()
+      try self.__implementation.openPaymentSetup(options: options.value)
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()

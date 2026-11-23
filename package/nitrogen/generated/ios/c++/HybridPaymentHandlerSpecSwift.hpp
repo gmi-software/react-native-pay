@@ -108,6 +108,8 @@ namespace margelo::nitro::pay { struct PaymentSheetError; }
 namespace margelo::nitro::pay { enum class PaymentSheetErrorCode; }
 // Forward declaration of `PaymentSheetCard` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentSheetCard; }
+// Forward declaration of `OpenPaymentSetupOptions` to properly resolve imports.
+namespace margelo::nitro::pay { struct OpenPaymentSetupOptions; }
 
 #include "PayServiceStatus.hpp"
 #include <NitroModules/Promise.hpp>
@@ -164,6 +166,7 @@ namespace margelo::nitro::pay { struct PaymentSheetCard; }
 #include "PaymentSheetError.hpp"
 #include "PaymentSheetErrorCode.hpp"
 #include "PaymentSheetCard.hpp"
+#include "OpenPaymentSetupOptions.hpp"
 
 #include "NitroPay-Swift-Cxx-Umbrella.hpp"
 
@@ -239,8 +242,8 @@ namespace margelo::nitro::pay {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline void openPaymentSetup() override {
-      auto __result = _swiftPart.openPaymentSetup();
+    inline void openPaymentSetup(const std::optional<OpenPaymentSetupOptions>& options) override {
+      auto __result = _swiftPart.openPaymentSetup(options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
