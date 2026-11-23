@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- **Google Pay `DIRECT` tokenization.** `PaymentRequest` and `usePaymentCheckout` add
+  `googlePayTokenization`. `{ type: 'direct', publicKey }` has Google encrypt the token with your
+  own EC public key (`protocolVersion: "ECv2"`), for a PCI DSS compliant server that decrypts it;
+  it needs Google's approval. A missing `publicKey` fails with `'CONFIGURATION'` in every
+  environment, and `PRODUCTION` then needs no gateway values. Omitted or `{ type: 'gateway' }`
+  sends the same request as before. See
+  [Direct tokenization](https://gmi-software.github.io/react-native-pay/docs/setup/android-google-pay#direct-tokenization)
+  ([#89](https://github.com/gmi-software/react-native-pay/issues/89)).
 - **ISO 3166-2 region codes in Google Pay addresses.** `CNPostalAddress` adds
   `isoAdministrativeArea`, the region as an ISO 3166-2 code such as `'US-CA'`, for tax and shipping
   systems that need a code rather than the free-text `state`. Android now requests full billing

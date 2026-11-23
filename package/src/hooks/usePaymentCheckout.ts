@@ -21,6 +21,7 @@ import type {
   GooglePayAuthMethod,
   GooglePayCheckoutOption,
   GooglePayEnvironment,
+  GooglePayTokenization,
   MerchantCapability,
   PayServiceStatusOptions,
   PaymentToken,
@@ -40,7 +41,23 @@ import {
 // Values that survive a JSON round trip unchanged: functions are dropped, and
 // NaN and Infinity become null. No objects: a `JSON.stringify` key list would
 // filter their keys too.
-type JsonValue = string | boolean | null | undefined | readonly JsonValue[]
+type JsonValue =
+  | string
+  | boolean
+  | null
+  | undefined
+  | readonly JsonValue[]
+  | GooglePayTokenization
+
+// A `JSON.stringify` replacer that writes the keys of every object in
+// sorted order, so the same config always gives the same string.
+function sortObjectKeys(_key: string, value: unknown): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return value
+  }
+  const entries = Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1))
+  return Object.fromEntries(entries)
+}
 
 // Wraps what a call threw, keeping its message and the original as `cause`.
 function toPaymentError(
@@ -141,6 +158,14 @@ export interface UsePaymentCheckoutConfig
    * Merchant ID provided by your payment gateway for Google Pay tokenization.
    */
   googlePayGatewayMerchantId?: string
+
+  /**
+   * Who encrypts the Google Pay token. Omitted, it is `'gateway'`, which
+   * uses `googlePayGateway` and `googlePayGatewayMerchantId`. Pass
+   * `{ type: 'direct', publicKey }` to decrypt the token on your own server.
+   * Android only. See `PaymentRequest.googlePayTokenization`.
+   */
+  googlePayTokenization?: GooglePayTokenization
 
   /**
    * How Google Pay may authenticate the card. Defaults to both
@@ -358,11 +383,12 @@ export function usePaymentCheckout(
   } = config
 
   // Apps usually pass an inline config, which is new on every render, so
-  // compare the rest of it by value, with its keys sorted. A callback added to
-  // the config fails `satisfies` here: pull it out above, like `onAuthorize`.
+  // compare the rest of it by value, with the keys of every object sorted. A
+  // callback added to the config fails `satisfies` here: pull it out above,
+  // like `onAuthorize`.
   const requestConfigKey = JSON.stringify(
     requestConfig satisfies { readonly [key: string]: JsonValue },
-    Object.keys(requestConfig).sort()
+    sortObjectKeys
   )
   const stableRequestConfig = useMemo<typeof requestConfig>(
     () => JSON.parse(requestConfigKey),
@@ -410,6 +436,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayTokenization,
       googlePayAllowedAuthMethods,
       googlePayAllowPrepaidCards,
       googlePayCheckoutOption,
@@ -434,6 +461,7 @@ export function usePaymentCheckout(
       googlePayEnvironment,
       googlePayGateway,
       googlePayGatewayMerchantId,
+      googlePayTokenization,
       googlePayAllowedAuthMethods,
       googlePayAllowPrepaidCards,
       googlePayCheckoutOption,

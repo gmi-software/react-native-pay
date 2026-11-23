@@ -25,6 +25,7 @@ internal fun paymentRequest(
     googlePayMerchantId: String? = null,
     googlePayGateway: String? = null,
     googlePayGatewayMerchantId: String? = null,
+    googlePayTokenization: GooglePayTokenization? = null,
     billingContactRequired: Boolean? = null,
     shippingContactRequired: Boolean? = null,
     emailRequired: Boolean? = null,
@@ -64,6 +65,7 @@ internal fun paymentRequest(
     googlePayEnvironment = environment,
     googlePayGateway = googlePayGateway,
     googlePayGatewayMerchantId = googlePayGatewayMerchantId,
+    googlePayTokenization = googlePayTokenization,
     googlePayAllowedAuthMethods = googlePayAllowedAuthMethods,
     googlePayAllowPrepaidCards = googlePayAllowPrepaidCards,
     googlePayCheckoutOption = googlePayCheckoutOption

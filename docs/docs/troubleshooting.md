@@ -94,7 +94,7 @@ Use only supported Apple button values:
 
 - Add at least one card in Google Pay on the device.
 - Use `googlePayEnvironment: 'TEST'` for test flows.
-- Verify `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`.
+- Verify `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId`, or with `'direct'` tokenization, `googlePayTokenization.publicKey` and the key registered in the Google Pay & Wallet Console.
 
 ### `hasActiveCard` is `true` without a card
 

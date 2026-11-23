@@ -80,6 +80,10 @@ namespace margelo::nitro::pay { struct AutomaticReloadPaymentRequest; }
 namespace margelo::nitro::pay { struct AutomaticReloadBillingItem; }
 // Forward declaration of `PaymentTokenContext` to properly resolve imports.
 namespace margelo::nitro::pay { struct PaymentTokenContext; }
+// Forward declaration of `GooglePayTokenization` to properly resolve imports.
+namespace margelo::nitro::pay { struct GooglePayTokenization; }
+// Forward declaration of `GooglePayTokenizationType` to properly resolve imports.
+namespace margelo::nitro::pay { enum class GooglePayTokenizationType; }
 // Forward declaration of `GooglePayCheckoutOption` to properly resolve imports.
 namespace margelo::nitro::pay { enum class GooglePayCheckoutOption; }
 // Forward declaration of `StartPaymentOptions` to properly resolve imports.
@@ -143,6 +147,8 @@ namespace margelo::nitro::pay { struct PaymentSheetCard; }
 #include "AutomaticReloadPaymentRequest.hpp"
 #include "AutomaticReloadBillingItem.hpp"
 #include "PaymentTokenContext.hpp"
+#include "GooglePayTokenization.hpp"
+#include "GooglePayTokenizationType.hpp"
 #include "GooglePayCheckoutOption.hpp"
 #include "StartPaymentOptions.hpp"
 #include "PaymentAuthorizationResult.hpp"

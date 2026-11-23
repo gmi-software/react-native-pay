@@ -171,6 +171,16 @@ app.post('/process-payment', async (req, res) => {
 - Handling failures and refunds.
 - Provider-specific walkthroughs in [Przelewy24 Apple Pay + Google Pay cookbook](/docs/integrations/przelewy24).
 
+## Decrypt the token yourself (Google Pay `DIRECT`)
+
+With [`googlePayTokenization: { type: 'direct', publicKey }`](/docs/setup/android-google-pay#direct-tokenization), no gateway decrypts the Google Pay token: your server does. `token.paymentData` is then Google's `ECv2` payment method token, a JSON string with `protocolVersion`, `signature`, `intermediateSigningKey` and `signedMessage`.
+
+- Verify the token before you decrypt it. Check the `intermediateSigningKey` signatures against Google's root signing keys, check that the intermediate key has not expired, and check `signature` with the intermediate signing key. That signature covers a length-prefixed string of the sender ID (`Google`), your recipient ID, the protocol version and `signedMessage`, not `signedMessage` alone. Reject the token if any check fails. Tink does this for you; on another stack, follow the verification steps in Google's guide.
+- Decrypt it with the private key that matches `publicKey`. Google recommends Tink's [`apps-paymentmethodtoken`](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#using-tink) library (Java), with `protocolVersion("ECv2")`. For `PRODUCTION` tokens, the recipient ID is `merchant:<your Google Pay merchant ID>` and the signing keys are Google's production keys. `TEST` tokens use Google's test signing keys; the library sends no merchant ID in `TEST`, so take the recipient ID for them from Google's guide.
+- Check `messageExpiration` before you charge.
+- The decrypted message holds the card number and, for `CRYPTOGRAM_3DS` cards, a cryptogram. It is card data: your servers must be PCI DSS compliant.
+- Rotate the key every year. Google encrypts with the key in the request, so serve `publicKey` from your server. Keep the old private key for at least eight days after you remove the old public key from the Google Pay & Wallet Console, so it can decrypt tokens made with the old key. See Google's [key rotation](https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#key-rotation) section for the full steps.
+
 ## Security
 
 - Use **HTTPS** and authenticate the client (e.g. session or API key).

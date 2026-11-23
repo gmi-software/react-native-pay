@@ -204,12 +204,23 @@ object GooglePayRequestBuilder {
     }
     
     /**
-     * Creates tokenization specification
+     * Creates tokenization specification: `PAYMENT_GATEWAY`, or `DIRECT`
+     * for [GooglePayTokenizationType.DIRECT]
      */
     private fun createTokenizationSpec(
         request: PaymentRequest,
         environment: Int
     ): JSONObject {
+        if (request.googlePayTokenization?.type == GooglePayTokenizationType.DIRECT) {
+            return JSONObject().apply {
+                put("type", PaymentConstants.TOKENIZATION_DIRECT)
+                put("parameters", JSONObject().apply {
+                    put("protocolVersion", PaymentConstants.DIRECT_PROTOCOL_VERSION)
+                    put("publicKey", request.googlePayTokenization.publicKey!!.trim())
+                })
+            }
+        }
+
         val isProduction = environment == WalletConstants.ENVIRONMENT_PRODUCTION
         val gateway = if (isProduction) {
             request.googlePayGateway!!.trim()
@@ -234,11 +245,17 @@ object GooglePayRequestBuilder {
     }
 
     private fun validatePaymentRequest(request: PaymentRequest, environment: Int) {
+        // No fallback key in TEST, unlike the example gateway.
+        val isDirect = request.googlePayTokenization?.type == GooglePayTokenizationType.DIRECT
+        require(!isDirect || !request.googlePayTokenization?.publicKey.isNullOrBlank()) {
+            "googlePayTokenization.publicKey is required for 'direct' tokenization"
+        }
         if (environment != WalletConstants.ENVIRONMENT_PRODUCTION) return
 
         require(!request.googlePayMerchantId.isNullOrBlank()) {
             "googlePayMerchantId is required in PRODUCTION"
         }
+        if (isDirect) return
         require(!request.googlePayGateway.isNullOrBlank()) {
             "googlePayGateway is required in PRODUCTION"
         }

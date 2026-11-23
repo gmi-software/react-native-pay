@@ -109,6 +109,33 @@ export type GooglePayCheckoutOption =
   | 'continueToReview'
 
 /**
+ * Who encrypts the Google Pay token. Android only.
+ *
+ * - `'gateway'`: Google encrypts it for your payment gateway, set with
+ *   `googlePayGateway` and `googlePayGatewayMerchantId`. Google Pay calls it
+ *   `PAYMENT_GATEWAY`.
+ * - `'direct'`: Google encrypts it with your own public key, and your server
+ *   decrypts it. Google Pay calls it `DIRECT`. Needs Google's approval and
+ *   PCI DSS compliance.
+ */
+export type GooglePayTokenizationType = 'gateway' | 'direct'
+
+/**
+ * How Google Pay tokenizes the card, sent as the card's
+ * `tokenizationSpecification`. Android only.
+ */
+export interface GooglePayTokenization {
+  type: GooglePayTokenizationType
+  /**
+   * Your base64-encoded uncompressed EC public key on the NIST P-256 curve,
+   * the one your server decrypts the `ECv2` token with. Required for
+   * `'direct'` in every environment, ignored for `'gateway'`. A missing or
+   * blank key fails the payment with `'CONFIGURATION'`.
+   */
+  publicKey?: string
+}
+
+/**
  * Merchant capability. `'3DS'` and `'EMV'` are Apple Pay payment protocols
  * (EMV only covers China UnionPay); `'Credit'` and `'Debit'` limit the
  * accepted card types. iOS adds `'3DS'` when neither protocol is given.
@@ -466,8 +493,19 @@ export interface PaymentRequest {
   // Google Pay specific configuration (Android only)
   googlePayMerchantId?: string
   googlePayEnvironment?: GooglePayEnvironment
+  /**
+   * The gateway for `'gateway'` tokenization, such as `'stripe'`. Required
+   * in PRODUCTION for `'gateway'`.
+   */
   googlePayGateway?: string
+  /** Your merchant ID at the gateway. Required in PRODUCTION for `'gateway'`. */
   googlePayGatewayMerchantId?: string
+  /**
+   * Who encrypts the token. Omitted, it is `'gateway'`, which uses
+   * `googlePayGateway` and `googlePayGatewayMerchantId`. `'direct'` needs
+   * `publicKey` and ignores the gateway fields. Android only.
+   */
+  googlePayTokenization?: GooglePayTokenization
   /**
    * `GooglePayAuthMethod` values, matched ignoring case. Defaults to both.
    * Android only. An unknown value fails the payment. Not typed as

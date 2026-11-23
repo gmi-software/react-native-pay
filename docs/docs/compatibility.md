@@ -65,7 +65,7 @@ No. The library works in bare React Native too. The Expo plugin only simplifies 
 Yes. Omit `enableGooglePay` for iOS-only (`false` removes an entry another plugin added); omit plugin `merchantIdentifier` for Android-only. In code, only render the button for the platform you support.
 
 **Which gateways are supported for Google Pay?**  
-Any gateway that supports the [Google Pay API](https://developers.google.com/pay/api/android) and the gateway token format. Commonly used: Stripe, Braintree, Square, Adyen, Authorize.net, Checkout.com. Set `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` accordingly.
+Any gateway that supports the [Google Pay API](https://developers.google.com/pay/api/android) and the gateway token format. Commonly used: Stripe, Braintree, Square, Adyen, Authorize.net, Checkout.com. Set `googlePayMerchantId`, `googlePayGateway`, and `googlePayGatewayMerchantId` accordingly. A PCI DSS compliant merchant that decrypts tokens itself can use [`'direct'` tokenization](/docs/setup/android-google-pay#direct-tokenization) instead.
 
 **Where do I report issues?**  
 [GitHub Issues](https://github.com/gmi-software/react-native-pay/issues).

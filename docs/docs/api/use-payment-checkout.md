@@ -28,6 +28,7 @@ interface UsePaymentCheckoutConfig {
   googlePayEnvironment?: 'TEST' | 'PRODUCTION'
   googlePayGateway?: string
   googlePayGatewayMerchantId?: string
+  googlePayTokenization?: GooglePayTokenization // default: gateway
   googlePayAllowedAuthMethods?: GooglePayAuthMethod[] // default: both
   googlePayAllowPrepaidCards?: boolean // default: true
   googlePayCheckoutOption?: GooglePayCheckoutOption // the sheet's button label
@@ -53,6 +54,7 @@ interface UsePaymentCheckoutConfig {
 - **merchantName** — The business name shown to the payer. On iOS, Apple Pay labels the total with it, so the sheet reads "Pay *merchantName*". On Android, it is the merchant name on the Google Pay sheet. Without it, iOS uses your app's display name (`CFBundleDisplayName`) and Android uses the app's label. Set it on both platforms.
 - **totalLabel** — Android only. The label of the total in the Google Pay sheet, such as `'Razem'`. Defaults to `'Total'`. iOS labels the total with `merchantName`. See [PaymentRequest](/docs/api/types#paymentrequest).
 - **supportedNetworks** — The card networks the payer can choose, as [PaymentNetwork](/docs/api/types#paymentnetwork) names. Both platforms honour it. A network the platform does not offer is left out, and an unknown name fails the payment. Pass the same list to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only).
+- **googlePayTokenization** — Android only. Who encrypts the Google Pay token. Omitted or `{ type: 'gateway' }`, your gateway does, from `googlePayGateway` and `googlePayGatewayMerchantId`. `{ type: 'direct', publicKey }` has Google encrypt it with your own key, for a PCI DSS compliant server that decrypts it; it needs Google's approval. A missing `publicKey` fails with a `'CONFIGURATION'` error. See [GooglePayTokenization](/docs/api/types#googlepaytokenization).
 - **googlePayAllowedAuthMethods** — Android only. Which Google Pay cards to accept: `'PAN_ONLY'` (saved to the Google account), `'CRYPTOGRAM_3DS'` (tokenized on the device), or both, the default. See [GooglePayAuthMethod](/docs/api/types#googlepayauthmethod).
 - **googlePayAllowPrepaidCards** — Android only. `false` leaves prepaid cards out of the Google Pay sheet, for a gateway or risk policy that refuses them; without it, the payer learns only when the charge fails. Defaults to `true`. Pass the same value to [`GooglePayButton`](/docs/api/components#googlepaybutton-android-only).
 - **googlePayCheckoutOption** — Android only. The label of the Google Pay sheet's button: `'default'` ("Continue" or "Pay", as when it is omitted), `'completeImmediatePurchase'` ("Pay now") or `'continueToReview'` ("Review Order"). `'completeImmediatePurchase'` needs a final total: with a `'pending'` item, `startPayment()` fails with a `'CONFIGURATION'` error before the sheet opens. See [GooglePayCheckoutOption](/docs/api/types#googlepaycheckoutoption).
